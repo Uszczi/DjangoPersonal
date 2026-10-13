@@ -1,3 +1,5 @@
+"""API behavior tests for the Project boundary."""
+
 import pytest
 from rest_framework import status
 from rest_framework.test import APIClient
