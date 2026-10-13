@@ -183,20 +183,32 @@ function App() {
     if (!isSavingTaskEdit) setEditingTask(null)
   }
 
-  function updateTaskInCurrentProject(updatedTask: Task) {
-    if (selectedProjectId === null) return
-
+  function updateTaskList(previousTask: Task, updatedTask: Task) {
     setLoadedTaskList((current) => {
-      const currentTasks =
-        current?.projectId === selectedProjectId ? current.tasks : []
+      if (!current) return current
+
+      const currentTasks = current.tasks
+      const taskWasVisible = currentTasks.some((task) => task.id === previousTask.id)
+      const taskBelongsInList = updatedTask.project === current.projectId
+      if (!taskWasVisible && !taskBelongsInList) return current
+
       const visibleTasks =
-        updatedTask.project === selectedProjectId
-          ? currentTasks.map((task) => task.id === updatedTask.id ? updatedTask : task)
+        taskBelongsInList
+          ? [
+              ...currentTasks.filter((task) => task.id !== updatedTask.id),
+              updatedTask,
+            ]
           : currentTasks.filter((task) => task.id !== updatedTask.id)
 
-      return { projectId: selectedProjectId, tasks: orderTasks(visibleTasks) }
+      return { projectId: current.projectId, tasks: orderTasks(visibleTasks) }
     })
-    setTaskLoadError(null)
+    setTaskLoadError((current) =>
+      current &&
+      (current.projectId === previousTask.project ||
+        current.projectId === updatedTask.project)
+        ? null
+        : current,
+    )
   }
 
   async function saveProject(event: FormEvent<HTMLFormElement>) {
@@ -284,7 +296,7 @@ function App() {
         id: task.id,
         patchedTaskUpdateRequest: { isCompleted: !task.isCompleted },
       })
-      updateTaskInCurrentProject(updatedTask)
+      updateTaskList(task, updatedTask)
     } catch (error) {
       setTaskActionError(await apiErrorMessage(error))
     }
@@ -318,7 +330,7 @@ function App() {
           project: projectId,
         },
       })
-      updateTaskInCurrentProject(updatedTask)
+      updateTaskList(editingTask, updatedTask)
       setEditingTask(null)
     } catch (error) {
       setTaskEditError(await apiErrorMessage(error))

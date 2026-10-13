@@ -1,6 +1,6 @@
 /** User-visible Project flow tests, with HTTP mocked at the network boundary. */
 
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
@@ -18,6 +18,14 @@ function jsonResponse(data: unknown, status = 200) {
     status,
     headers: { 'Content-Type': 'application/json' },
   })
+}
+
+function deferred<T>() {
+  let resolve: (value: T) => void = () => {}
+  const promise = new Promise<T>((resolvePromise) => {
+    resolve = resolvePromise
+  })
+  return { promise, resolve }
 }
 
 describe('Projects', () => {
@@ -379,5 +387,49 @@ describe('Projects', () => {
         }),
       }),
     )
+  })
+
+  test('late task updates do not replace the newly selected Project task list', async () => {
+    const pendingUpdate = deferred<Response>()
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse([
+        inbox,
+        { id: 2, name: 'Planning', description: '', is_inbox: false },
+        { id: 3, name: 'Archive', description: '', is_inbox: false },
+      ]))
+      .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(jsonResponse([
+        { id: 7, title: 'Planning task', description: '', project: 2, is_completed: false },
+      ]))
+      .mockReturnValueOnce(pendingUpdate.promise)
+      .mockResolvedValueOnce(jsonResponse([
+        { id: 9, title: 'Archive task', description: '', project: 3, is_completed: false },
+      ]))
+    const user = userEvent.setup()
+
+    render(<App />)
+    await user.click(await screen.findByRole('button', { name: 'Planning' }))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
+    await screen.findByText('Planning task')
+    await user.click(screen.getByRole('button', { name: 'Oznacz jako ukończone: Planning task' }))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(4))
+
+    await user.click(screen.getByRole('button', { name: 'Archive' }))
+    await screen.findByText('Archive task')
+
+    await act(async () => {
+      pendingUpdate.resolve(jsonResponse({
+        id: 7,
+        title: 'Planning task',
+        description: '',
+        project: 2,
+        is_completed: true,
+      }))
+      await pendingUpdate.promise
+    })
+
+    expect(screen.getByRole('heading', { name: 'Archive' })).toBeInTheDocument()
+    expect(screen.getByText('Archive task')).toBeInTheDocument()
+    expect(screen.queryByText('Wczytywanie zadań…')).not.toBeInTheDocument()
   })
 })
