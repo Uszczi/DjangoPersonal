@@ -3,6 +3,14 @@ from django.db import models
 from django.db.models import Q
 
 
+def normalize_project_name(name):
+    return name.strip()
+
+
+def project_name_key(name):
+    return normalize_project_name(name).casefold()
+
+
 class Project(models.Model):
     name = models.CharField(max_length=100)
     normalized_name = models.CharField(max_length=100, unique=True, editable=False)
@@ -26,8 +34,8 @@ class Project(models.Model):
         ]
 
     def save(self, *args, **kwargs):
-        self.name = self.name.strip()
-        self.normalized_name = self.name.casefold()
+        self.name = normalize_project_name(self.name)
+        self.normalized_name = project_name_key(self.name)
 
         if self.pk:
             original = type(self).objects.filter(pk=self.pk).values('name', 'is_inbox').first()

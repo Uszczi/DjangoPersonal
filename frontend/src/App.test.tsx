@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
@@ -97,5 +97,37 @@ describe('Projects', () => {
         body: JSON.stringify({ name: 'Research', description: 'Sources and notes' }),
       }),
     )
+  })
+
+  test('user sees Inbox first and other Projects alphabetically', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse([
+      { id: 3, name: 'Zulu', description: '', is_inbox: false },
+      inbox,
+      { id: 2, name: 'Alpha', description: '', is_inbox: false },
+    ]))
+
+    render(<App />)
+
+    await screen.findByRole('heading', { name: 'Inbox' })
+    const projectNavigation = screen.getByRole('navigation', { name: 'Projekty' })
+
+    expect(
+      within(projectNavigation)
+        .getAllByRole('button')
+        .map((button) => button.getAttribute('aria-label')),
+    ).toEqual(['Inbox', 'Alpha', 'Zulu'])
+  })
+
+  test('Inbox name is read-only in the project editor', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse([inbox]))
+    const user = userEvent.setup()
+
+    render(<App />)
+    await screen.findByRole('heading', { name: 'Inbox' })
+    await user.click(screen.getByRole('button', { name: 'Edytuj projekt' }))
+
+    const inboxName = screen.getByDisplayValue('Inbox')
+    expect(inboxName).toHaveAttribute('readonly')
+    expect(inboxName).toHaveValue('Inbox')
   })
 })

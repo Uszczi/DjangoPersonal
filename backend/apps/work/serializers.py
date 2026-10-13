@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Project
+from .models import Project, normalize_project_name, project_name_key
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -12,8 +12,8 @@ class ProjectSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'is_inbox']
 
     def validate_name(self, value):
-        name = value.strip()
-        normalized_name = name.casefold()
+        name = normalize_project_name(value)
+        normalized_name = project_name_key(name)
 
         if self.instance and self.instance.is_inbox:
             if name != self.instance.name:
