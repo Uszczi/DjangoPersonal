@@ -46,6 +46,14 @@ def test_project_names_are_trimmed_and_unique_without_case_sensitivity(api_clien
     assert reserved.status_code == status.HTTP_400_BAD_REQUEST
 
 
+def test_project_name_is_required_and_cannot_be_blank(api_client):
+    missing = api_client.post('/api/v1/projects/', {}, format='json')
+    blank = api_client.post('/api/v1/projects/', {'name': '   '}, format='json')
+
+    assert missing.status_code == status.HTTP_400_BAD_REQUEST
+    assert blank.status_code == status.HTTP_400_BAD_REQUEST
+
+
 def test_project_details_can_be_edited(api_client):
     created = api_client.post(
         '/api/v1/projects/', {'name': 'Reading', 'description': 'Books'}, format='json'
