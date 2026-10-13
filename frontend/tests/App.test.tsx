@@ -225,6 +225,7 @@ describe('Projects', () => {
       .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(jsonResponse([
         { id: 7, title: 'Prepare outline', description: '', project: 2, is_completed: false },
+        { id: 6, title: 'Completed note', description: '', project: 2, is_completed: true },
       ]))
       .mockResolvedValueOnce(jsonResponse({
         id: 7,
@@ -246,9 +247,16 @@ describe('Projects', () => {
     await user.click(await screen.findByRole('button', { name: 'Planning' }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
     await screen.findByText('Prepare outline')
+    const taskList = screen.getByRole('list', { name: 'Zadania' })
+    const listedTaskTitles = () =>
+      within(taskList)
+        .getAllByText(/Prepare outline|Completed note/)
+        .map((task) => task.textContent)
 
     await user.click(screen.getByRole('button', { name: 'Oznacz jako ukończone: Prepare outline' }))
-    await user.click(await screen.findByRole('button', { name: 'Otwórz zadanie: Prepare outline' }))
+    const reopenButton = await screen.findByRole('button', { name: 'Otwórz zadanie: Prepare outline' })
+    expect(listedTaskTitles()).toEqual(['Completed note', 'Prepare outline'])
+    await user.click(reopenButton)
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       4,
@@ -266,6 +274,7 @@ describe('Projects', () => {
         body: JSON.stringify({ is_completed: false }),
       }),
     )
+    expect(listedTaskTitles()).toEqual(['Prepare outline', 'Completed note'])
   })
 
   test('user can edit a task and move it to another project', async () => {

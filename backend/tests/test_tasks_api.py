@@ -141,11 +141,17 @@ def test_user_can_complete_and_reopen_a_task(api_client):
     completed = api_client.patch(
         f"/api/v1/tasks/{task['id']}/", {'is_completed': True}, format='json'
     )
+
+    assert completed.status_code == status.HTTP_200_OK
+    assert completed.data['is_completed'] is True
+    completed_list = api_client.get(f'/api/v1/tasks/?project={project_id}')
+    assert completed_list.data[0]['is_completed'] is True
+
     reopened = api_client.patch(
         f"/api/v1/tasks/{task['id']}/", {'is_completed': False}, format='json'
     )
 
-    assert completed.status_code == status.HTTP_200_OK
-    assert completed.data['is_completed'] is True
     assert reopened.status_code == status.HTTP_200_OK
     assert reopened.data['is_completed'] is False
+    reopened_list = api_client.get(f'/api/v1/tasks/?project={project_id}')
+    assert reopened_list.data[0]['is_completed'] is False
