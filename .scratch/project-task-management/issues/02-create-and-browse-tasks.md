@@ -4,7 +4,7 @@
 
 **Blocked by:** 01: Browse and manage Projects.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] The user can create a Task with a required title and optional description in the selected Project.
 - [x] A Task created without an explicitly selected Project is assigned to `Inbox`.
