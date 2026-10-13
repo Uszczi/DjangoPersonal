@@ -286,6 +286,15 @@ describe('Projects', () => {
         project: 3,
         is_completed: false,
       }))
+      .mockResolvedValueOnce(jsonResponse([
+        {
+          id: 8,
+          title: 'Capture requirements',
+          description: 'Confirm with the team',
+          project: 3,
+          is_completed: false,
+        },
+      ]))
     const user = userEvent.setup()
 
     render(<App />)
@@ -300,6 +309,9 @@ describe('Projects', () => {
     await user.click(screen.getByRole('button', { name: 'Zapisz zmiany' }))
 
     expect(await screen.findByText('Nie ma tu jeszcze zadań.')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Archive' }))
+    expect(await screen.findByText('Capture requirements')).toBeInTheDocument()
+    expect(screen.getByText('Confirm with the team')).toBeInTheDocument()
     expect(fetchMock).toHaveBeenNthCalledWith(
       4,
       '/api/v1/tasks/8/',
@@ -309,6 +321,52 @@ describe('Projects', () => {
           title: 'Capture requirements',
           description: 'Confirm with the team',
           project: 3,
+        }),
+      }),
+    )
+  })
+
+  test('user can edit task details and see the changes in the list', async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse([
+        inbox,
+        { id: 2, name: 'Planning', description: '', is_inbox: false },
+      ]))
+      .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(jsonResponse([
+        { id: 9, title: 'First title', description: 'Old note', project: 2, is_completed: false },
+      ]))
+      .mockResolvedValueOnce(jsonResponse({
+        id: 9,
+        title: 'Updated title',
+        description: 'New note',
+        project: 2,
+        is_completed: false,
+      }))
+    const user = userEvent.setup()
+
+    render(<App />)
+    await user.click(await screen.findByRole('button', { name: 'Planning' }))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
+    await screen.findByText('First title')
+    await user.click(screen.getByRole('button', { name: 'Edytuj zadanie: First title' }))
+    await user.clear(screen.getByLabelText('Tytuł zadania'))
+    await user.type(screen.getByLabelText('Tytuł zadania'), 'Updated title')
+    await user.clear(screen.getByLabelText('Opis (opcjonalnie)'))
+    await user.type(screen.getByLabelText('Opis (opcjonalnie)'), 'New note')
+    await user.click(screen.getByRole('button', { name: 'Zapisz zmiany' }))
+
+    expect(await screen.findByText('Updated title')).toBeInTheDocument()
+    expect(screen.getByText('New note')).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
+      '/api/v1/tasks/9/',
+      expect.objectContaining({
+        method: 'PATCH',
+        body: JSON.stringify({
+          title: 'Updated title',
+          description: 'New note',
+          project: 2,
         }),
       }),
     )
