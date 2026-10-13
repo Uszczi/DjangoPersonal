@@ -13,6 +13,7 @@ import './App.css'
 type EditorState = { kind: 'create' } | { kind: 'edit'; project: Project } | null
 type ProjectInput = { name: string; description: string }
 type TaskInput = { title: string; description: string; project?: number }
+type TaskEditInput = { title: string; description: string; projectId: string }
 
 const projectsApi = new ProjectsApi(new Configuration({ basePath: '' }))
 const tasksApi = new TasksApi(new Configuration({ basePath: '' }))
@@ -65,6 +66,15 @@ function App() {
   const [taskForm, setTaskForm] = useState({ title: '', description: '' })
   const [taskFormError, setTaskFormError] = useState('')
   const [isCreatingTask, setIsCreatingTask] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [taskEditForm, setTaskEditForm] = useState<TaskEditInput>({
+    title: '',
+    description: '',
+    projectId: '',
+  })
+  const [taskEditError, setTaskEditError] = useState('')
+  const [isSavingTaskEdit, setIsSavingTaskEdit] = useState(false)
+  const [taskActionError, setTaskActionError] = useState('')
   const [editor, setEditor] = useState<EditorState>(null)
   const [form, setForm] = useState<ProjectInput>({ name: '', description: '' })
   const [formError, setFormError] = useState('')
@@ -159,6 +169,36 @@ function App() {
     if (!isCreatingTask) setIsTaskEditorOpen(false)
   }
 
+  function openTaskEditForm(task: Task) {
+    setTaskEditForm({
+      title: task.title,
+      description: task.description ?? '',
+      projectId: String(task.project),
+    })
+    setTaskEditError('')
+    setEditingTask(task)
+  }
+
+  function closeTaskEditForm() {
+    if (!isSavingTaskEdit) setEditingTask(null)
+  }
+
+  function updateTaskInCurrentProject(updatedTask: Task) {
+    if (selectedProjectId === null) return
+
+    setLoadedTaskList((current) => {
+      const currentTasks =
+        current?.projectId === selectedProjectId ? current.tasks : []
+      const visibleTasks =
+        updatedTask.project === selectedProjectId
+          ? currentTasks.map((task) => task.id === updatedTask.id ? updatedTask : task)
+          : currentTasks.filter((task) => task.id !== updatedTask.id)
+
+      return { projectId: selectedProjectId, tasks: orderTasks(visibleTasks) }
+    })
+    setTaskLoadError(null)
+  }
+
   async function saveProject(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const input = { name: form.name.trim(), description: form.description.trim() }
@@ -233,6 +273,57 @@ function App() {
       setTaskFormError(await apiErrorMessage(error))
     } finally {
       setIsCreatingTask(false)
+    }
+  }
+
+  async function toggleTaskCompletion(task: Task) {
+    setTaskActionError('')
+
+    try {
+      const updatedTask = await tasksApi.tasksPartialUpdate({
+        id: task.id,
+        patchedTaskUpdateRequest: { isCompleted: !task.isCompleted },
+      })
+      updateTaskInCurrentProject(updatedTask)
+    } catch (error) {
+      setTaskActionError(await apiErrorMessage(error))
+    }
+  }
+
+  async function saveTaskEdit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const title = taskEditForm.title.trim()
+    const projectId = Number(taskEditForm.projectId)
+
+    if (!title) {
+      setTaskEditError('Podaj tytuł zadania.')
+      return
+    }
+    if (!Number.isInteger(projectId)) {
+      setTaskEditError('Wybierz projekt dla zadania.')
+      return
+    }
+
+    if (!editingTask) return
+
+    setIsSavingTaskEdit(true)
+    setTaskEditError('')
+
+    try {
+      const updatedTask = await tasksApi.tasksPartialUpdate({
+        id: editingTask.id,
+        patchedTaskUpdateRequest: {
+          title,
+          description: taskEditForm.description.trim(),
+          project: projectId,
+        },
+      })
+      updateTaskInCurrentProject(updatedTask)
+      setEditingTask(null)
+    } catch (error) {
+      setTaskEditError(await apiErrorMessage(error))
+    } finally {
+      setIsSavingTaskEdit(false)
     }
   }
 
@@ -357,20 +448,36 @@ function App() {
                   <ul className="task-list" aria-label="Zadania">
                     {tasks.map((task) => (
                       <li className={`task-row${task.isCompleted ? ' is-completed' : ''}`} key={task.id}>
-                        <span className="task-status-mark" aria-hidden="true">
+                        <button
+                          className={`task-status-toggle${task.isCompleted ? ' is-completed' : ''}`}
+                          type="button"
+                          aria-label={`${task.isCompleted ? 'Otwórz zadanie' : 'Oznacz jako ukończone'}: ${task.title}`}
+                          onClick={() => void toggleTaskCompletion(task)}
+                        >
                           {task.isCompleted ? '✓' : ''}
-                        </span>
+                        </button>
                         <div className="task-copy">
                           <p>{task.title}</p>
                           {task.description && <small>{task.description}</small>}
                         </div>
-                        <span className="task-status-label">
-                          {task.isCompleted ? 'UKOŃCZONE' : 'OTWARTE'}
-                        </span>
+                        <div className="task-row-actions">
+                          <span className="task-status-label">
+                            {task.isCompleted ? 'UKOŃCZONE' : 'OTWARTE'}
+                          </span>
+                          <button
+                            className="task-edit-button"
+                            type="button"
+                            aria-label={`Edytuj zadanie: ${task.title}`}
+                            onClick={() => openTaskEditForm(task)}
+                          >
+                            Edytuj
+                          </button>
+                        </div>
                       </li>
                     ))}
                   </ul>
                 )}
+                {taskActionError && <p className="task-error" role="alert">{taskActionError}</p>}
               </section>
 
               {projects.length === 1 && (
@@ -480,6 +587,66 @@ function App() {
                 </button>
                 <button className="primary-button" type="submit" disabled={isCreatingTask}>
                   {isCreatingTask ? 'Zapisywanie…' : 'Utwórz zadanie'}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
+
+      {editingTask && (
+        <div className="dialog-backdrop" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) closeTaskEditForm()
+        }}>
+          <section className="project-dialog" role="dialog" aria-modal="true" aria-labelledby="task-edit-title">
+            <div className="dialog-heading">
+              <div>
+                <p className="eyebrow">ZMIANA SZCZEGÓŁÓW</p>
+                <h2 id="task-edit-title">Edytuj zadanie</h2>
+              </div>
+              <button className="icon-button close-button" onClick={closeTaskEditForm} aria-label="Zamknij">
+                <span aria-hidden="true">×</span>
+              </button>
+            </div>
+
+            <form onSubmit={saveTaskEdit}>
+              <label className="form-field">
+                <span>Tytuł zadania</span>
+                <input
+                  autoFocus
+                  maxLength={200}
+                  value={taskEditForm.title}
+                  onChange={(event) => setTaskEditForm((current) => ({ ...current, title: event.target.value }))}
+                  required
+                />
+              </label>
+              <label className="form-field">
+                <span>Opis (opcjonalnie)</span>
+                <textarea
+                  rows={3}
+                  value={taskEditForm.description}
+                  onChange={(event) => setTaskEditForm((current) => ({ ...current, description: event.target.value }))}
+                />
+              </label>
+              <label className="form-field">
+                <span>Projekt zadania</span>
+                <select
+                  value={taskEditForm.projectId}
+                  onChange={(event) => setTaskEditForm((current) => ({ ...current, projectId: event.target.value }))}
+                  required
+                >
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>{project.name}</option>
+                  ))}
+                </select>
+              </label>
+              {taskEditError && <p className="form-error" role="alert">{taskEditError}</p>}
+              <div className="dialog-actions">
+                <button className="quiet-button" type="button" onClick={closeTaskEditForm} disabled={isSavingTaskEdit}>
+                  Anuluj
+                </button>
+                <button className="primary-button" type="submit" disabled={isSavingTaskEdit}>
+                  {isSavingTaskEdit ? 'Zapisywanie…' : 'Zapisz zmiany'}
                 </button>
               </div>
             </form>

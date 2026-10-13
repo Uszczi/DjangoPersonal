@@ -60,3 +60,8 @@ class TaskCreateSerializer(TaskSerializer):
 
     def to_representation(self, instance):
         return TaskSerializer(instance, context=self.context).data
+
+
+class TaskUpdateSerializer(TaskCreateSerializer):
+    class Meta(TaskCreateSerializer.Meta):
+        read_only_fields = ['id']

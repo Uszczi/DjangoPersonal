@@ -497,19 +497,22 @@
   padding: 10px 3px;
 }
 
-.task-status-mark {
+.task-status-toggle {
   align-items: center;
+  background: transparent;
   border: 1px solid #9aafaa;
   border-radius: 4px;
   color: #fff;
+  cursor: pointer;
   display: inline-flex;
   font-size: 11px;
   height: 16px;
   justify-content: center;
+  padding: 0;
   width: 16px;
 }
 
-.task-row.is-completed .task-status-mark {
+.task-status-toggle.is-completed {
   background: #668b79;
   border-color: #668b79;
 }
@@ -543,6 +546,29 @@
 
 .task-row.is-completed .task-status-label {
   color: #6c8f7d;
+}
+
+.task-row-actions {
+  align-items: center;
+  display: flex;
+  gap: 13px;
+}
+
+.task-edit-button {
+  background: transparent;
+  border: 0;
+  color: #567277;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  padding: 5px 0;
+  text-decoration: underline;
+  text-decoration-color: #b5c4bf;
+  text-underline-offset: 3px;
+}
+
+.task-edit-button:hover {
+  color: var(--signal);
 }
 
 .loading-state,
@@ -617,7 +643,8 @@
 }
 
 .form-field input,
-.form-field textarea {
+.form-field textarea,
+.form-field select {
   background: #fff;
   border: 1px solid #cbd7d3;
   border-radius: 4px;
@@ -631,7 +658,8 @@
 }
 
 .form-field input:focus,
-.form-field textarea:focus {
+.form-field textarea:focus,
+.form-field select:focus {
   border-color: #477c7c;
   box-shadow: 0 0 0 3px rgb(71 124 124 / 15%);
 }
@@ -781,8 +809,9 @@ a:focus-visible {
     gap: 10px;
   }
 
-  .task-status-label {
+  .task-row-actions {
     grid-column: 2;
+    justify-content: space-between;
   }
 }
 

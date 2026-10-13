@@ -163,8 +163,10 @@ describe('Projects', () => {
     const taskList = screen.getByRole('list', { name: 'Zadania' })
 
     expect(
-      within(taskList).getAllByRole('listitem').map((item) => item.textContent),
-    ).toEqual(['Open noteOTWARTE', '✓Completed noteUKOŃCZONE'])
+      within(taskList)
+        .getAllByText(/Open note|Completed note/)
+        .map((item) => item.textContent),
+    ).toEqual(['Open note', 'Completed note'])
   })
 
   test('user can create a task in the selected project', async () => {
@@ -209,6 +211,104 @@ describe('Projects', () => {
           title: 'Capture requirements',
           description: 'Talk to the team',
           project: 2,
+        }),
+      }),
+    )
+  })
+
+  test('user can complete and reopen a task', async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse([
+        inbox,
+        { id: 2, name: 'Planning', description: '', is_inbox: false },
+      ]))
+      .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(jsonResponse([
+        { id: 7, title: 'Prepare outline', description: '', project: 2, is_completed: false },
+      ]))
+      .mockResolvedValueOnce(jsonResponse({
+        id: 7,
+        title: 'Prepare outline',
+        description: '',
+        project: 2,
+        is_completed: true,
+      }))
+      .mockResolvedValueOnce(jsonResponse({
+        id: 7,
+        title: 'Prepare outline',
+        description: '',
+        project: 2,
+        is_completed: false,
+      }))
+    const user = userEvent.setup()
+
+    render(<App />)
+    await user.click(await screen.findByRole('button', { name: 'Planning' }))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
+    await screen.findByText('Prepare outline')
+
+    await user.click(screen.getByRole('button', { name: 'Oznacz jako ukończone: Prepare outline' }))
+    await user.click(await screen.findByRole('button', { name: 'Otwórz zadanie: Prepare outline' }))
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
+      '/api/v1/tasks/7/',
+      expect.objectContaining({
+        method: 'PATCH',
+        body: JSON.stringify({ is_completed: true }),
+      }),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      5,
+      '/api/v1/tasks/7/',
+      expect.objectContaining({
+        method: 'PATCH',
+        body: JSON.stringify({ is_completed: false }),
+      }),
+    )
+  })
+
+  test('user can edit a task and move it to another project', async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse([
+        inbox,
+        { id: 2, name: 'Planning', description: '', is_inbox: false },
+        { id: 3, name: 'Archive', description: '', is_inbox: false },
+      ]))
+      .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(jsonResponse([
+        { id: 8, title: 'Capture scope', description: '', project: 2, is_completed: false },
+      ]))
+      .mockResolvedValueOnce(jsonResponse({
+        id: 8,
+        title: 'Capture requirements',
+        description: 'Confirm with the team',
+        project: 3,
+        is_completed: false,
+      }))
+    const user = userEvent.setup()
+
+    render(<App />)
+    await user.click(await screen.findByRole('button', { name: 'Planning' }))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
+    await screen.findByText('Capture scope')
+    await user.click(screen.getByRole('button', { name: 'Edytuj zadanie: Capture scope' }))
+    await user.clear(screen.getByLabelText('Tytuł zadania'))
+    await user.type(screen.getByLabelText('Tytuł zadania'), 'Capture requirements')
+    await user.type(screen.getByLabelText('Opis (opcjonalnie)'), 'Confirm with the team')
+    await user.selectOptions(screen.getByLabelText('Projekt zadania'), '3')
+    await user.click(screen.getByRole('button', { name: 'Zapisz zmiany' }))
+
+    expect(await screen.findByText('Nie ma tu jeszcze zadań.')).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
+      '/api/v1/tasks/8/',
+      expect.objectContaining({
+        method: 'PATCH',
+        body: JSON.stringify({
+          title: 'Capture requirements',
+          description: 'Confirm with the team',
+          project: 3,
         }),
       }),
     )

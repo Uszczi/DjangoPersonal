@@ -94,3 +94,58 @@ def test_openapi_contract_requires_project_in_task_responses_but_not_requests(ap
 
     assert 'project' in task_response['required']
     assert 'project' not in task_request.get('required', [])
+
+
+def test_user_can_edit_a_task_and_move_it_to_another_project(api_client):
+    source_id = api_client.post(
+        '/api/v1/projects/', {'name': 'Drafting'}, format='json'
+    ).data['id']
+    destination_id = api_client.post(
+        '/api/v1/projects/', {'name': 'Review'}, format='json'
+    ).data['id']
+    task = api_client.post(
+        '/api/v1/tasks/',
+        {'title': 'Write section', 'project': source_id},
+        format='json',
+    ).data
+
+    response = api_client.patch(
+        f"/api/v1/tasks/{task['id']}/",
+        {
+            'title': 'Review section',
+            'description': 'Ask for feedback',
+            'project': destination_id,
+        },
+        format='json',
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data['title'] == 'Review section'
+    assert response.data['description'] == 'Ask for feedback'
+    assert response.data['project'] == destination_id
+
+    assert api_client.get(f'/api/v1/tasks/?project={source_id}').data == []
+    assert [task['id'] for task in api_client.get(
+        f'/api/v1/tasks/?project={destination_id}'
+    ).data] == [task['id']]
+
+
+def test_user_can_complete_and_reopen_a_task(api_client):
+    project_id = api_client.post(
+        '/api/v1/projects/', {'name': 'Reading'}, format='json'
+    ).data['id']
+    task = api_client.post(
+        '/api/v1/tasks/', {'title': 'Read chapter', 'project': project_id}, format='json'
+    ).data
+
+    completed = api_client.patch(
+        f"/api/v1/tasks/{task['id']}/", {'is_completed': True}, format='json'
+    )
+    reopened = api_client.patch(
+        f"/api/v1/tasks/{task['id']}/", {'is_completed': False}, format='json'
+    )
+
+    assert completed.status_code == status.HTTP_200_OK
+    assert completed.data['is_completed'] is True
+    assert reopened.status_code == status.HTTP_200_OK
+    assert reopened.data['is_completed'] is False

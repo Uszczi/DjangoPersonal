@@ -4,10 +4,10 @@
 
 **Blocked by:** 02: Create and browse Tasks in a Project.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] The user can edit a Task's title and optional description.
-- [ ] The user can move a Task to another Project; the Task always belongs to exactly one Project.
-- [ ] The user can mark a Task completed and reopen it later.
-- [ ] Task lists reflect edits, moves, and completion changes, with open Tasks before completed Tasks.
-- [ ] Backend API integration and frontend interaction tests cover editing, moving, completing, and reopening Tasks.
+- [x] The user can edit a Task's title and optional description.
+- [x] The user can move a Task to another Project; the Task always belongs to exactly one Project.
+- [x] The user can mark a Task completed and reopen it later.
+- [x] Task lists reflect edits, moves, and completion changes, with open Tasks before completed Tasks.
+- [x] Backend API integration and frontend interaction tests cover editing, moving, completing, and reopening Tasks.

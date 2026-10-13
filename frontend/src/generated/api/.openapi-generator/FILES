@@ -3,6 +3,7 @@ apis/SchemaApi.ts
 apis/TasksApi.ts
 apis/index.ts
 docs/PatchedProjectRequest.md
+docs/PatchedTaskUpdateRequest.md
 docs/Project.md
 docs/ProjectRequest.md
 docs/ProjectsApi.md
@@ -12,6 +13,7 @@ docs/TaskCreateRequest.md
 docs/TasksApi.md
 index.ts
 models/PatchedProjectRequest.ts
+models/PatchedTaskUpdateRequest.ts
 models/Project.ts
 models/ProjectRequest.ts
 models/Task.ts
