@@ -1,13 +1,6 @@
 """API behavior tests for the Project boundary."""
 
-import pytest
 from rest_framework import status
-from rest_framework.test import APIClient
-
-
-@pytest.fixture
-def api_client(db):
-    return APIClient()
 
 
 def test_projects_include_the_default_inbox(api_client):

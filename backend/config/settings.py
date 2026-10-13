@@ -50,6 +50,7 @@ SPECTACULAR_SETTINGS = {
     'TITLE': 'DjangoPersonal API',
     'DESCRIPTION': 'API for DjangoPersonal projects and tasks.',
     'VERSION': '1.0.0',
+    'COMPONENT_SPLIT_REQUEST': True,
 }
 
 MIDDLEWARE = [

@@ -6,8 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] The user can create a Task with a required title and optional description in the selected Project.
-- [ ] A Task created without an explicitly selected Project is assigned to `Inbox`.
-- [ ] Every Task belongs to exactly one Project and starts open.
-- [ ] The user can browse all Tasks in the selected Project; open Tasks appear before completed Tasks.
-- [ ] Backend API integration and frontend interaction tests cover Task creation and listing.
+- [x] The user can create a Task with a required title and optional description in the selected Project.
+- [x] A Task created without an explicitly selected Project is assigned to `Inbox`.
+- [x] Every Task belongs to exactly one Project and starts open.
+- [x] The user can browse all Tasks in the selected Project; open Tasks appear before completed Tasks.
+- [x] Backend API integration and frontend interaction tests cover Task creation and listing.

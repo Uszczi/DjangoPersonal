@@ -14,7 +14,7 @@ All URIs are relative to *http://localhost*
 
 ## projectsCreate
 
-> Project projectsCreate(project)
+> Project projectsCreate(projectRequest)
 
 
 
@@ -39,8 +39,8 @@ async function example() {
   const api = new ProjectsApi(config);
 
   const body = {
-    // Project
-    project: ...,
+    // ProjectRequest
+    projectRequest: ...,
   } satisfies ProjectsCreateRequest;
 
   try {
@@ -60,7 +60,7 @@ example().catch(console.error);
 
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **project** | [Project](Project.md) |  | |
+| **projectRequest** | [ProjectRequest](ProjectRequest.md) |  | |
 
 ### Return type
 
@@ -150,7 +150,7 @@ This endpoint does not need any parameter.
 
 ## projectsPartialUpdate
 
-> Project projectsPartialUpdate(id, patchedProject)
+> Project projectsPartialUpdate(id, patchedProjectRequest)
 
 
 
@@ -177,8 +177,8 @@ async function example() {
   const body = {
     // number | A unique integer value identifying this project.
     id: 56,
-    // PatchedProject (optional)
-    patchedProject: ...,
+    // PatchedProjectRequest (optional)
+    patchedProjectRequest: ...,
   } satisfies ProjectsPartialUpdateRequest;
 
   try {
@@ -199,7 +199,7 @@ example().catch(console.error);
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
 | **id** | `number` | A unique integer value identifying this project. | [Defaults to `undefined`] |
-| **patchedProject** | [PatchedProject](PatchedProject.md) |  | [Optional] |
+| **patchedProjectRequest** | [PatchedProjectRequest](PatchedProjectRequest.md) |  | [Optional] |
 
 ### Return type
 
@@ -297,7 +297,7 @@ example().catch(console.error);
 
 ## projectsUpdate
 
-> Project projectsUpdate(id, project)
+> Project projectsUpdate(id, projectRequest)
 
 
 
@@ -324,8 +324,8 @@ async function example() {
   const body = {
     // number | A unique integer value identifying this project.
     id: 56,
-    // Project
-    project: ...,
+    // ProjectRequest
+    projectRequest: ...,
   } satisfies ProjectsUpdateRequest;
 
   try {
@@ -346,7 +346,7 @@ example().catch(console.error);
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
 | **id** | `number` | A unique integer value identifying this project. | [Defaults to `undefined`] |
-| **project** | [Project](Project.md) |  | |
+| **projectRequest** | [ProjectRequest](ProjectRequest.md) |  | |
 
 ### Return type
 

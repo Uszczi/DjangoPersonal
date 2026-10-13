@@ -4,17 +4,21 @@ import {
   Configuration,
   ProjectsApi,
   ResponseError,
+  TasksApi,
   type Project,
+  type Task,
 } from './generated/api'
 import './App.css'
 
 type EditorState = { kind: 'create' } | { kind: 'edit'; project: Project } | null
 type ProjectInput = { name: string; description: string }
+type TaskInput = { title: string; description: string; project?: number }
 
 const projectsApi = new ProjectsApi(new Configuration({ basePath: '' }))
+const tasksApi = new TasksApi(new Configuration({ basePath: '' }))
 
 async function apiErrorMessage(error: unknown) {
-  if (error instanceof ResponseError) {
+  if (error instanceof ResponseError && error.response) {
     const payload: unknown = await error.response.clone().json().catch(() => undefined)
     if (typeof payload === 'object' && payload !== null) {
       const firstMessage = Object.values(payload)
@@ -22,12 +26,12 @@ async function apiErrorMessage(error: unknown) {
         .find((value) => typeof value === 'string')
       if (typeof firstMessage === 'string') return firstMessage
     }
-    return 'Nie udało się zapisać projektu. Sprawdź dane i spróbuj ponownie.'
+    return 'Nie udało się zapisać. Sprawdź dane i spróbuj ponownie.'
   }
 
   return error instanceof Error
     ? error.message
-    : 'Nie udało się zapisać projektu. Spróbuj ponownie.'
+    : 'Nie udało się zapisać. Spróbuj ponownie.'
 }
 
 function orderProjects(projects: Project[]) {
@@ -37,11 +41,30 @@ function orderProjects(projects: Project[]) {
   })
 }
 
+function orderTasks(tasks: Task[]) {
+  return [...tasks].sort((left, right) => {
+    if (left.isCompleted !== right.isCompleted) return left.isCompleted ? 1 : -1
+    return left.id - right.id
+  })
+}
+
 function App() {
   const [projects, setProjects] = useState<Project[]>([])
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [pageError, setPageError] = useState('')
+  const [loadedTaskList, setLoadedTaskList] = useState<{
+    projectId: number
+    tasks: Task[]
+  } | null>(null)
+  const [taskLoadError, setTaskLoadError] = useState<{
+    projectId: number
+    message: string
+  } | null>(null)
+  const [isTaskEditorOpen, setIsTaskEditorOpen] = useState(false)
+  const [taskForm, setTaskForm] = useState({ title: '', description: '' })
+  const [taskFormError, setTaskFormError] = useState('')
+  const [isCreatingTask, setIsCreatingTask] = useState(false)
   const [editor, setEditor] = useState<EditorState>(null)
   const [form, setForm] = useState<ProjectInput>({ name: '', description: '' })
   const [formError, setFormError] = useState('')
@@ -73,7 +96,41 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    if (selectedProjectId === null) return
+
+    let isCurrent = true
+
+    tasksApi.tasksList({ project: selectedProjectId })
+      .then((loadedTasks) => {
+        if (!isCurrent) return
+        setLoadedTaskList({
+          projectId: selectedProjectId,
+          tasks: orderTasks(loadedTasks),
+        })
+        setTaskLoadError(null)
+      })
+      .catch(() => {
+        if (isCurrent) {
+          setTaskLoadError({
+            projectId: selectedProjectId,
+            message: 'Nie udało się wczytać zadań. Spróbuj ponownie.',
+          })
+        }
+      })
+
+    return () => {
+      isCurrent = false
+    }
+  }, [selectedProjectId])
+
   const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? null
+  const tasks = loadedTaskList?.projectId === selectedProjectId ? loadedTaskList.tasks : []
+  const tasksError = taskLoadError?.projectId === selectedProjectId ? taskLoadError.message : ''
+  const isTasksLoading =
+    selectedProjectId !== null &&
+    loadedTaskList?.projectId !== selectedProjectId &&
+    taskLoadError?.projectId !== selectedProjectId
   const editingProject = editor?.kind === 'edit' ? editor.project : null
 
   function openCreateForm() {
@@ -92,6 +149,16 @@ function App() {
     if (!isSaving) setEditor(null)
   }
 
+  function openTaskForm() {
+    setTaskForm({ title: '', description: '' })
+    setTaskFormError('')
+    setIsTaskEditorOpen(true)
+  }
+
+  function closeTaskForm() {
+    if (!isCreatingTask) setIsTaskEditorOpen(false)
+  }
+
   async function saveProject(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const input = { name: form.name.trim(), description: form.description.trim() }
@@ -108,7 +175,7 @@ function App() {
       if (editor?.kind === 'edit') {
         const updatedProject = await projectsApi.projectsPartialUpdate({
           id: editor.project.id,
-          patchedProject: input,
+          patchedProjectRequest: input,
         })
         setProjects((current) =>
           orderProjects(
@@ -119,7 +186,7 @@ function App() {
         )
         setSelectedProjectId(updatedProject.id)
       } else {
-        const createdProject = await projectsApi.projectsCreate({ project: input })
+        const createdProject = await projectsApi.projectsCreate({ projectRequest: input })
         setProjects((current) => orderProjects([...current, createdProject]))
         setSelectedProjectId(createdProject.id)
       }
@@ -128,6 +195,44 @@ function App() {
       setFormError(await apiErrorMessage(error))
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  async function saveTask(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const title = taskForm.title.trim()
+
+    if (!title) {
+      setTaskFormError('Podaj tytuł zadania.')
+      return
+    }
+
+    const input: TaskInput = {
+      title,
+      description: taskForm.description.trim(),
+      ...(selectedProjectId === null ? {} : { project: selectedProjectId }),
+    }
+
+    setIsCreatingTask(true)
+    setTaskFormError('')
+
+    try {
+      const createdTask = await tasksApi.tasksCreate({ taskCreateRequest: input })
+      if (selectedProjectId !== null) {
+        setLoadedTaskList((current) => ({
+          projectId: selectedProjectId,
+          tasks: orderTasks([
+            ...(current?.projectId === selectedProjectId ? current.tasks : []),
+            createdTask,
+          ]),
+        }))
+      }
+      setTaskLoadError(null)
+      setIsTaskEditorOpen(false)
+    } catch (error) {
+      setTaskFormError(await apiErrorMessage(error))
+    } finally {
+      setIsCreatingTask(false)
     }
   }
 
@@ -227,6 +332,47 @@ function App() {
                 </div>
               </section>
 
+              <section className="tasks-section" aria-labelledby="tasks-heading">
+                <div className="task-section-heading">
+                  <div>
+                    <p className="eyebrow">W TYM PROJEKCIE</p>
+                    <h2 id="tasks-heading">Zadania</h2>
+                  </div>
+                  <div className="task-heading-actions">
+                    <span className="task-count">{tasks.length} {tasks.length === 1 ? 'ZADANIE' : 'ZADAŃ'}</span>
+                    <button className="primary-button new-task-button" onClick={openTaskForm}>
+                      <span aria-hidden="true">+</span>
+                      Nowe zadanie
+                    </button>
+                  </div>
+                </div>
+
+                {isTasksLoading ? (
+                  <p className="task-message" role="status">Wczytywanie zadań…</p>
+                ) : tasksError ? (
+                  <p className="task-error" role="alert">{tasksError}</p>
+                ) : tasks.length === 0 ? (
+                  <p className="task-empty-state">Nie ma tu jeszcze zadań.</p>
+                ) : (
+                  <ul className="task-list" aria-label="Zadania">
+                    {tasks.map((task) => (
+                      <li className={`task-row${task.isCompleted ? ' is-completed' : ''}`} key={task.id}>
+                        <span className="task-status-mark" aria-hidden="true">
+                          {task.isCompleted ? '✓' : ''}
+                        </span>
+                        <div className="task-copy">
+                          <p>{task.title}</p>
+                          {task.description && <small>{task.description}</small>}
+                        </div>
+                        <span className="task-status-label">
+                          {task.isCompleted ? 'UKOŃCZONE' : 'OTWARTE'}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+
               {projects.length === 1 && (
                 <p className="first-project-note">
                   Gdy będziesz gotowy, dodaj projekt, aby oddzielić różne obszary pracy.
@@ -286,6 +432,54 @@ function App() {
                 </button>
                 <button className="primary-button" type="submit" disabled={isSaving}>
                   {isSaving ? 'Zapisywanie…' : editingProject ? 'Zapisz zmiany' : 'Utwórz projekt'}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
+
+      {isTaskEditorOpen && (
+        <div className="dialog-backdrop" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) closeTaskForm()
+        }}>
+          <section className="project-dialog" role="dialog" aria-modal="true" aria-labelledby="task-dialog-title">
+            <div className="dialog-heading">
+              <div>
+                <p className="eyebrow">NOWE ZADANIE</p>
+                <h2 id="task-dialog-title">Dodaj do {selectedProject?.name ?? 'Inbox'}</h2>
+              </div>
+              <button className="icon-button close-button" onClick={closeTaskForm} aria-label="Zamknij">
+                <span aria-hidden="true">×</span>
+              </button>
+            </div>
+
+            <form onSubmit={saveTask}>
+              <label className="form-field">
+                <span>Tytuł zadania</span>
+                <input
+                  autoFocus
+                  maxLength={200}
+                  value={taskForm.title}
+                  onChange={(event) => setTaskForm((current) => ({ ...current, title: event.target.value }))}
+                  required
+                />
+              </label>
+              <label className="form-field">
+                <span>Opis (opcjonalnie)</span>
+                <textarea
+                  rows={3}
+                  value={taskForm.description}
+                  onChange={(event) => setTaskForm((current) => ({ ...current, description: event.target.value }))}
+                />
+              </label>
+              {taskFormError && <p className="form-error" role="alert">{taskFormError}</p>}
+              <div className="dialog-actions">
+                <button className="quiet-button" type="button" onClick={closeTaskForm} disabled={isCreatingTask}>
+                  Anuluj
+                </button>
+                <button className="primary-button" type="submit" disabled={isCreatingTask}>
+                  {isCreatingTask ? 'Zapisywanie…' : 'Utwórz zadanie'}
                 </button>
               </div>
             </form>

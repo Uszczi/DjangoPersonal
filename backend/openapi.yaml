@@ -30,13 +30,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Project'
+              $ref: '#/components/schemas/ProjectRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Project'
+              $ref: '#/components/schemas/ProjectRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Project'
+              $ref: '#/components/schemas/ProjectRequest'
         required: true
       security:
       - cookieAuth: []
@@ -87,13 +87,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Project'
+              $ref: '#/components/schemas/ProjectRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Project'
+              $ref: '#/components/schemas/ProjectRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Project'
+              $ref: '#/components/schemas/ProjectRequest'
         required: true
       security:
       - cookieAuth: []
@@ -121,13 +121,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedProject'
+              $ref: '#/components/schemas/PatchedProjectRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedProject'
+              $ref: '#/components/schemas/PatchedProjectRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedProject'
+              $ref: '#/components/schemas/PatchedProjectRequest'
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -286,22 +286,68 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/tasks/:
+    get:
+      operationId: tasks_list
+      parameters:
+      - in: query
+        name: project
+        schema:
+          type: integer
+        description: Project ID. Defaults to Inbox when omitted.
+      tags:
+      - tasks
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+          description: ''
+    post:
+      operationId: tasks_create
+      tags:
+      - tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskCreateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
 components:
   schemas:
-    PatchedProject:
+    PatchedProjectRequest:
       type: object
       properties:
-        id:
-          type: integer
-          readOnly: true
         name:
           type: string
+          minLength: 1
           maxLength: 100
         description:
           type: string
-        is_inbox:
-          type: boolean
-          readOnly: true
     Project:
       type: object
       properties:
@@ -320,6 +366,52 @@ components:
       - id
       - is_inbox
       - name
+    ProjectRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+      required:
+      - name
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        project:
+          type: integer
+          readOnly: true
+        is_completed:
+          type: boolean
+          readOnly: true
+      required:
+      - id
+      - is_completed
+      - project
+      - title
+    TaskCreateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+        project:
+          type: integer
+      required:
+      - title
   securitySchemes:
     basicAuth:
       type: http

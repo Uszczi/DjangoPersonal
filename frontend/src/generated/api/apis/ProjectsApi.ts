@@ -15,21 +15,26 @@
 
 import * as runtime from '../runtime';
 import {
-    type PatchedProject,
-    PatchedProjectFromJSON,
-    PatchedProjectToJSON,
-} from '../models/PatchedProject';
+    type PatchedProjectRequest,
+    PatchedProjectRequestFromJSON,
+    PatchedProjectRequestToJSON,
+} from '../models/PatchedProjectRequest';
 import {
     type Project,
     ProjectFromJSON,
     ProjectToJSON,
 } from '../models/Project';
+import {
+    type ProjectRequest,
+    ProjectRequestFromJSON,
+    ProjectRequestToJSON,
+} from '../models/ProjectRequest';
 
 export interface ProjectsCreateRequest {
     /**
      * 
      */
-    project: Omit<Project, 'id'|'isInbox'>;
+    projectRequest: ProjectRequest;
 }
 
 export interface ProjectsPartialUpdateRequest {
@@ -40,7 +45,7 @@ export interface ProjectsPartialUpdateRequest {
     /**
      * 
      */
-    patchedProject?: Omit<PatchedProject, 'id'|'isInbox'>;
+    patchedProjectRequest?: PatchedProjectRequest;
 }
 
 export interface ProjectsRetrieveRequest {
@@ -58,7 +63,7 @@ export interface ProjectsUpdateRequest {
     /**
      * 
      */
-    project: Omit<Project, 'id'|'isInbox'>;
+    projectRequest: ProjectRequest;
 }
 
 /**
@@ -70,10 +75,10 @@ export class ProjectsApi extends runtime.BaseAPI {
      * Creates request options for projectsCreate without sending the request
      */
     async projectsCreateRequestOpts(requestParameters: ProjectsCreateRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['project'] == null) {
+        if (requestParameters['projectRequest'] == null) {
             throw new runtime.RequiredError(
-                'project',
-                'Required parameter "project" was null or undefined when calling projectsCreate().'
+                'projectRequest',
+                'Required parameter "projectRequest" was null or undefined when calling projectsCreate().'
             );
         }
 
@@ -94,7 +99,7 @@ export class ProjectsApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: ProjectToJSON(requestParameters['project']),
+            body: ProjectRequestToJSON(requestParameters['projectRequest']),
         };
     }
 
@@ -181,7 +186,7 @@ export class ProjectsApi extends runtime.BaseAPI {
             method: 'PATCH',
             headers: headerParameters,
             query: queryParameters,
-            body: PatchedProjectToJSON(requestParameters['patchedProject']),
+            body: PatchedProjectRequestToJSON(requestParameters['patchedProjectRequest']),
         };
     }
 
@@ -258,10 +263,10 @@ export class ProjectsApi extends runtime.BaseAPI {
             );
         }
 
-        if (requestParameters['project'] == null) {
+        if (requestParameters['projectRequest'] == null) {
             throw new runtime.RequiredError(
-                'project',
-                'Required parameter "project" was null or undefined when calling projectsUpdate().'
+                'projectRequest',
+                'Required parameter "projectRequest" was null or undefined when calling projectsUpdate().'
             );
         }
 
@@ -283,7 +288,7 @@ export class ProjectsApi extends runtime.BaseAPI {
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: ProjectToJSON(requestParameters['project']),
+            body: ProjectRequestToJSON(requestParameters['projectRequest']),
         };
     }
 
