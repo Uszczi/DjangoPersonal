@@ -14,13 +14,11 @@ async function postProcessGeneratedFiles(directory) {
       return
     }
 
-    const isTypeScript = entry.name.endsWith('.ts')
-    const isMarkdown = entry.name.endsWith('.md')
-    if (!isTypeScript && !isMarkdown) return
+    if (!entry.name.endsWith('.ts')) return
 
     const content = await readFile(path, 'utf8')
     const trimmedContent = content.replace(/[ \t]+$/gm, '')
-    const processedContent = isTypeScript && !trimmedContent.startsWith('// @ts-nocheck')
+    const processedContent = !trimmedContent.startsWith('// @ts-nocheck')
       ? `// @ts-nocheck\n${trimmedContent}`
       : trimmedContent
 

@@ -2,15 +2,6 @@ apis/ProjectsApi.ts
 apis/SchemaApi.ts
 apis/TasksApi.ts
 apis/index.ts
-docs/PatchedProjectRequest.md
-docs/PatchedTaskUpdateRequest.md
-docs/Project.md
-docs/ProjectRequest.md
-docs/ProjectsApi.md
-docs/SchemaApi.md
-docs/Task.md
-docs/TaskCreateRequest.md
-docs/TasksApi.md
 index.ts
 models/PatchedProjectRequest.ts
 models/PatchedTaskUpdateRequest.ts
