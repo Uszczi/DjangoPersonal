@@ -1,75 +1,66 @@
-from rest_framework import status
+from http import HTTPStatus
 
 from apps.work.models import Task
 
 
-def test_user_can_create_and_browse_tasks_in_a_project(api_client):
-    project_response = api_client.post(
-        '/api/v1/projects/', {'name': 'Planning'}, format='json'
-    )
-    project_id = project_response.data['id']
+def test_user_can_create_and_browse_tasks_in_a_project(post_json, api_client):
+    project_response = post_json('/api/v1/projects/', {'name': 'Planning'})
+    project_id = project_response.json()['id']
 
-    create_response = api_client.post(
+    create_response = post_json(
         '/api/v1/tasks/',
         {
             'title': 'Outline the release',
             'description': 'List the main milestones',
             'project': project_id,
         },
-        format='json',
     )
 
-    assert create_response.status_code == status.HTTP_201_CREATED
-    assert create_response.data['title'] == 'Outline the release'
-    assert create_response.data['description'] == 'List the main milestones'
-    assert create_response.data['project'] == project_id
-    assert create_response.data['is_completed'] is False
+    assert create_response.status_code == HTTPStatus.CREATED
+    assert create_response.json()['title'] == 'Outline the release'
+    assert create_response.json()['description'] == 'List the main milestones'
+    assert create_response.json()['project'] == project_id
+    assert create_response.json()['is_completed'] is False
 
     list_response = api_client.get(f'/api/v1/tasks/?project={project_id}')
 
-    assert list_response.status_code == status.HTTP_200_OK
-    assert [task['id'] for task in list_response.data] == [create_response.data['id']]
+    assert list_response.status_code == HTTPStatus.OK
+    assert [task['id'] for task in list_response.json()] == [create_response.json()['id']]
 
 
-def test_task_without_a_project_is_assigned_to_inbox(api_client):
-    inbox_id = api_client.get('/api/v1/projects/').data[0]['id']
+def test_task_without_a_project_is_assigned_to_inbox(api_client, post_json):
+    inbox_id = api_client.get('/api/v1/projects/').json()[0]['id']
 
-    create_response = api_client.post(
-        '/api/v1/tasks/', {'title': 'Capture an idea'}, format='json'
-    )
+    create_response = post_json('/api/v1/tasks/', {'title': 'Capture an idea'})
 
-    assert create_response.status_code == status.HTTP_201_CREATED
-    assert create_response.data['project'] == inbox_id
+    assert create_response.status_code == HTTPStatus.CREATED
+    assert create_response.json()['project'] == inbox_id
 
     inbox_tasks = api_client.get('/api/v1/tasks/')
 
-    assert [task['id'] for task in inbox_tasks.data] == [create_response.data['id']]
+    assert [task['id'] for task in inbox_tasks.json()] == [create_response.json()['id']]
 
 
-def test_task_title_is_required_and_cannot_be_blank(api_client):
-    missing = api_client.post('/api/v1/tasks/', {}, format='json')
-    blank = api_client.post('/api/v1/tasks/', {'title': '   '}, format='json')
+def test_task_title_is_required_and_cannot_be_blank(post_json):
+    missing = post_json('/api/v1/tasks/', {})
+    blank = post_json('/api/v1/tasks/', {'title': '   '})
 
-    assert missing.status_code == status.HTTP_400_BAD_REQUEST
-    assert blank.status_code == status.HTTP_400_BAD_REQUEST
+    assert missing.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert missing.json()['detail'][0]['loc'] == ['body', 'payload', 'title']
+    assert missing.json()['detail'][0]['type'] == 'missing'
+    assert blank.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_task_list_is_scoped_to_a_project_and_shows_open_tasks_first(api_client):
-    project_id = api_client.post(
-        '/api/v1/projects/', {'name': 'Writing'}, format='json'
-    ).data['id']
-    other_project_id = api_client.post(
-        '/api/v1/projects/', {'name': 'Research'}, format='json'
-    ).data['id']
-    open_task = api_client.post(
+def test_task_list_is_scoped_to_a_project_and_shows_open_tasks_first(api_client, post_json):
+    project_id = post_json('/api/v1/projects/', {'name': 'Writing'}).json()['id']
+    other_project_id = post_json('/api/v1/projects/', {'name': 'Research'}).json()['id']
+    post_json(
         '/api/v1/tasks/',
         {'title': 'Draft introduction', 'project': project_id},
-        format='json',
     )
-    api_client.post(
+    post_json(
         '/api/v1/tasks/',
         {'title': 'Find sources', 'project': other_project_id},
-        format='json',
     )
     Task.objects.create(
         title='Archive old notes',
@@ -79,16 +70,17 @@ def test_task_list_is_scoped_to_a_project_and_shows_open_tasks_first(api_client)
 
     response = api_client.get(f'/api/v1/tasks/?project={project_id}')
 
-    assert response.status_code == status.HTTP_200_OK
-    assert [task['title'] for task in response.data] == [
+    assert response.status_code == HTTPStatus.OK
+    assert [task['title'] for task in response.json()] == [
         'Draft introduction',
         'Archive old notes',
     ]
-    assert [task['is_completed'] for task in response.data] == [False, True]
+    assert [task['is_completed'] for task in response.json()] == [False, True]
 
 
 def test_openapi_contract_requires_project_in_task_responses_but_not_requests(api_client):
-    schema = api_client.get('/api/v1/schema/').data
+    response = api_client.get('/api/v1/schema/')
+    schema = response.json()
     task_response = schema['components']['schemas']['Task']
     task_request = schema['components']['schemas']['TaskCreateRequest']
 
@@ -96,62 +88,54 @@ def test_openapi_contract_requires_project_in_task_responses_but_not_requests(ap
     assert 'project' not in task_request.get('required', [])
 
 
-def test_user_can_edit_a_task_and_move_it_to_another_project(api_client):
-    source_id = api_client.post(
-        '/api/v1/projects/', {'name': 'Drafting'}, format='json'
-    ).data['id']
-    destination_id = api_client.post(
-        '/api/v1/projects/', {'name': 'Review'}, format='json'
-    ).data['id']
-    task = api_client.post(
+def test_user_can_edit_a_task_and_move_it_to_another_project(api_client, post_json, patch_json):
+    source_id = post_json('/api/v1/projects/', {'name': 'Drafting'}).json()['id']
+    destination_id = post_json('/api/v1/projects/', {'name': 'Review'}).json()['id']
+    task = post_json(
         '/api/v1/tasks/',
         {'title': 'Write section', 'project': source_id},
-        format='json',
-    ).data
+    ).json()
 
-    response = api_client.patch(
+    response = patch_json(
         f"/api/v1/tasks/{task['id']}/",
         {
             'title': 'Review section',
             'description': 'Ask for feedback',
             'project': destination_id,
         },
-        format='json',
     )
 
-    assert response.status_code == status.HTTP_200_OK
-    assert response.data['title'] == 'Review section'
-    assert response.data['description'] == 'Ask for feedback'
-    assert response.data['project'] == destination_id
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['title'] == 'Review section'
+    assert response.json()['description'] == 'Ask for feedback'
+    assert response.json()['project'] == destination_id
 
-    assert api_client.get(f'/api/v1/tasks/?project={source_id}').data == []
+    assert api_client.get(f'/api/v1/tasks/?project={source_id}').json() == []
     assert [task['id'] for task in api_client.get(
         f'/api/v1/tasks/?project={destination_id}'
-    ).data] == [task['id']]
+    ).json()] == [task['id']]
 
 
-def test_user_can_complete_and_reopen_a_task(api_client):
-    project_id = api_client.post(
-        '/api/v1/projects/', {'name': 'Reading'}, format='json'
-    ).data['id']
-    task = api_client.post(
-        '/api/v1/tasks/', {'title': 'Read chapter', 'project': project_id}, format='json'
-    ).data
+def test_user_can_complete_and_reopen_a_task(api_client, post_json, patch_json):
+    project_id = post_json('/api/v1/projects/', {'name': 'Reading'}).json()['id']
+    task = post_json(
+        '/api/v1/tasks/', {'title': 'Read chapter', 'project': project_id}
+    ).json()
 
-    completed = api_client.patch(
-        f"/api/v1/tasks/{task['id']}/", {'is_completed': True}, format='json'
+    completed = patch_json(
+        f"/api/v1/tasks/{task['id']}/", {'is_completed': True}
     )
 
-    assert completed.status_code == status.HTTP_200_OK
-    assert completed.data['is_completed'] is True
+    assert completed.status_code == HTTPStatus.OK
+    assert completed.json()['is_completed'] is True
     completed_list = api_client.get(f'/api/v1/tasks/?project={project_id}')
-    assert completed_list.data[0]['is_completed'] is True
+    assert completed_list.json()[0]['is_completed'] is True
 
-    reopened = api_client.patch(
-        f"/api/v1/tasks/{task['id']}/", {'is_completed': False}, format='json'
+    reopened = patch_json(
+        f"/api/v1/tasks/{task['id']}/", {'is_completed': False}
     )
 
-    assert reopened.status_code == status.HTTP_200_OK
-    assert reopened.data['is_completed'] is False
+    assert reopened.status_code == HTTPStatus.OK
+    assert reopened.json()['is_completed'] is False
     reopened_list = api_client.get(f'/api/v1/tasks/?project={project_id}')
-    assert reopened_list.data[0]['is_completed'] is False
+    assert reopened_list.json()[0]['is_completed'] is False

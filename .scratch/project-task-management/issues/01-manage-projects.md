@@ -1,6 +1,6 @@
 # 01: Browse and manage Projects
 
-**What to build:** The user can create, browse, and edit Projects in the React interface, backed by the Django REST Framework API. A permanent `Inbox` is available from the start for Tasks that do not have another Project.
+**What to build:** The user can create, browse, and edit Projects in the React interface, backed by the Django Ninja API. A permanent `Inbox` is available from the start for Tasks that do not have another Project.
 
 **Blocked by:** None (can start immediately).
 

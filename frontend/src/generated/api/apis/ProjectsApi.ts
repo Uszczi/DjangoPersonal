@@ -39,25 +39,25 @@ export interface ProjectsCreateRequest {
 
 export interface ProjectsPartialUpdateRequest {
     /**
-     * A unique integer value identifying this project.
+     *
      */
     id: number;
     /**
      *
      */
-    patchedProjectRequest?: PatchedProjectRequest;
+    patchedProjectRequest: PatchedProjectRequest;
 }
 
 export interface ProjectsRetrieveRequest {
     /**
-     * A unique integer value identifying this project.
+     *
      */
     id: number;
 }
 
 export interface ProjectsUpdateRequest {
     /**
-     * A unique integer value identifying this project.
+     *
      */
     id: number;
     /**
@@ -88,9 +88,6 @@ export class ProjectsApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
-            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
-        }
 
         let urlPath = `/api/v1/projects/`;
 
@@ -104,6 +101,7 @@ export class ProjectsApi extends runtime.BaseAPI {
     }
 
     /**
+     * Create Project
      */
     async projectsCreateRaw(requestParameters: ProjectsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Project>> {
         const requestOptions = await this.projectsCreateRequestOpts(requestParameters);
@@ -113,6 +111,7 @@ export class ProjectsApi extends runtime.BaseAPI {
     }
 
     /**
+     * Create Project
      */
     async projectsCreate(requestParameters: ProjectsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Project> {
         const response = await this.projectsCreateRaw(requestParameters, initOverrides);
@@ -127,9 +126,6 @@ export class ProjectsApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
-            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
-        }
 
         let urlPath = `/api/v1/projects/`;
 
@@ -142,6 +138,7 @@ export class ProjectsApi extends runtime.BaseAPI {
     }
 
     /**
+     * List Projects
      */
     async projectsListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Project>>> {
         const requestOptions = await this.projectsListRequestOpts();
@@ -151,6 +148,7 @@ export class ProjectsApi extends runtime.BaseAPI {
     }
 
     /**
+     * List Projects
      */
     async projectsList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Project>> {
         const response = await this.projectsListRaw(initOverrides);
@@ -168,15 +166,19 @@ export class ProjectsApi extends runtime.BaseAPI {
             );
         }
 
+        if (requestParameters['patchedProjectRequest'] == null) {
+            throw new runtime.RequiredError(
+                'patchedProjectRequest',
+                'Required parameter "patchedProjectRequest" was null or undefined when calling projectsPartialUpdate().'
+            );
+        }
+
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
-            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
-        }
 
         let urlPath = `/api/v1/projects/{id}/`;
         urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
@@ -191,6 +193,7 @@ export class ProjectsApi extends runtime.BaseAPI {
     }
 
     /**
+     * Update Project
      */
     async projectsPartialUpdateRaw(requestParameters: ProjectsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Project>> {
         const requestOptions = await this.projectsPartialUpdateRequestOpts(requestParameters);
@@ -200,6 +203,7 @@ export class ProjectsApi extends runtime.BaseAPI {
     }
 
     /**
+     * Update Project
      */
     async projectsPartialUpdate(requestParameters: ProjectsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Project> {
         const response = await this.projectsPartialUpdateRaw(requestParameters, initOverrides);
@@ -221,9 +225,6 @@ export class ProjectsApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
-            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
-        }
 
         let urlPath = `/api/v1/projects/{id}/`;
         urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
@@ -237,6 +238,7 @@ export class ProjectsApi extends runtime.BaseAPI {
     }
 
     /**
+     * Get Project
      */
     async projectsRetrieveRaw(requestParameters: ProjectsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Project>> {
         const requestOptions = await this.projectsRetrieveRequestOpts(requestParameters);
@@ -246,6 +248,7 @@ export class ProjectsApi extends runtime.BaseAPI {
     }
 
     /**
+     * Get Project
      */
     async projectsRetrieve(requestParameters: ProjectsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Project> {
         const response = await this.projectsRetrieveRaw(requestParameters, initOverrides);
@@ -276,9 +279,6 @@ export class ProjectsApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
-            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
-        }
 
         let urlPath = `/api/v1/projects/{id}/`;
         urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
@@ -293,6 +293,7 @@ export class ProjectsApi extends runtime.BaseAPI {
     }
 
     /**
+     * Replace Project
      */
     async projectsUpdateRaw(requestParameters: ProjectsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Project>> {
         const requestOptions = await this.projectsUpdateRequestOpts(requestParameters);
@@ -302,6 +303,7 @@ export class ProjectsApi extends runtime.BaseAPI {
     }
 
     /**
+     * Replace Project
      */
     async projectsUpdate(requestParameters: ProjectsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Project> {
         const response = await this.projectsUpdateRaw(requestParameters, initOverrides);

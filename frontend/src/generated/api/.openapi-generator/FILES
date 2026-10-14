@@ -1,5 +1,4 @@
 apis/ProjectsApi.ts
-apis/SchemaApi.ts
 apis/TasksApi.ts
 apis/index.ts
 index.ts

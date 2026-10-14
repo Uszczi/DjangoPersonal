@@ -37,21 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
-    'drf_spectacular',
     'apps.work.apps.WorkConfig',
 ]
-
-REST_FRAMEWORK = {
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-}
-
-SPECTACULAR_SETTINGS = {
-    'TITLE': 'DjangoPersonal API',
-    'DESCRIPTION': 'API for DjangoPersonal projects and tasks.',
-    'VERSION': '1.0.0',
-    'COMPONENT_SPLIT_REQUEST': True,
-}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

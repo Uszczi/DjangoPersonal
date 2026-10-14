@@ -8,7 +8,7 @@ DjangoPersonal needs its first useful feature: a person must be able to organize
 
 ## Solution
 
-Provide project and task management across the React interface and Django REST Framework API. The first version is for one user and does not include authentication. Every task belongs to exactly one project. `Inbox` is always available as the default project and receives tasks that are created without a selected project, as well as tasks from a deleted project.
+Provide project and task management across the React interface and Django Ninja API. The first version is for one user and does not include authentication. Every task belongs to exactly one project. `Inbox` is always available as the default project and receives tasks that are created without a selected project, as well as tasks from a deleted project.
 
 ## User Stories
 
@@ -36,9 +36,9 @@ Provide project and task management across the React interface and Django REST F
 
 ## Implementation Decisions
 
-- Deliver a complete vertical slice: React user interface backed by Django REST Framework endpoints.
+- Deliver a complete vertical slice: React user interface backed by Django Ninja endpoints with Pydantic schemas.
 - Version application endpoints under `/api/v1/`.
-- Generate the OpenAPI schema from Django REST Framework with `drf-spectacular`; generate the TypeScript Fetch client with OpenAPI Generator CLI and use that client from React.
+- Generate the OpenAPI schema from Django Ninja; generate the TypeScript Fetch client with OpenAPI Generator CLI and use that client from React.
 - Keep Project and Task behavior in one Django app named `work`, because their invariants and lifecycle are closely related.
 - The first version is single-user and has no authentication flow.
 - A Project has a required name and optional description. Names are trimmed and unique case-insensitively; `Inbox` is reserved.
@@ -53,7 +53,7 @@ Provide project and task management across the React interface and Django REST F
 ## Testing Decisions
 
 - Tests should verify externally observable behavior, not internal implementation details.
-- Backend: use `pytest` with `pytest-django` and Django REST Framework's `APIClient` for API integration tests that exercise requests, responses, and persisted data. Cover project and task CRUD, name normalization and uniqueness, required project assignment, Inbox behavior, project deletion, and task movement/completion.
+- Backend: use `pytest` with `pytest-django` and Django's test client for API integration tests that exercise requests, responses, and persisted data. Cover project and task CRUD, name normalization and uniqueness, required project assignment, Inbox behavior, project deletion, and task movement/completion.
 - Frontend: add Vitest and React Testing Library and test user-visible project/task flows. Mock HTTP at the network boundary rather than testing component internals.
 - The repository has no existing application tests or frontend test runner; these test seams and their supporting tools are new.
 

@@ -39,20 +39,20 @@ export interface TasksCreateRequest {
 
 export interface TasksListRequest {
     /**
-     * Project ID. Defaults to Inbox when omitted.
+     *
      */
-    project?: number;
+    project?: number | null;
 }
 
 export interface TasksPartialUpdateRequest {
     /**
-     * A unique integer value identifying this task.
+     *
      */
     id: number;
     /**
      *
      */
-    patchedTaskUpdateRequest?: PatchedTaskUpdateRequest;
+    patchedTaskUpdateRequest: PatchedTaskUpdateRequest;
 }
 
 /**
@@ -77,9 +77,6 @@ export class TasksApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
-            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
-        }
 
         let urlPath = `/api/v1/tasks/`;
 
@@ -93,6 +90,7 @@ export class TasksApi extends runtime.BaseAPI {
     }
 
     /**
+     * Create Task
      */
     async tasksCreateRaw(requestParameters: TasksCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Task>> {
         const requestOptions = await this.tasksCreateRequestOpts(requestParameters);
@@ -102,6 +100,7 @@ export class TasksApi extends runtime.BaseAPI {
     }
 
     /**
+     * Create Task
      */
     async tasksCreate(requestParameters: TasksCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Task> {
         const response = await this.tasksCreateRaw(requestParameters, initOverrides);
@@ -120,9 +119,6 @@ export class TasksApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
-            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
-        }
 
         let urlPath = `/api/v1/tasks/`;
 
@@ -135,6 +131,7 @@ export class TasksApi extends runtime.BaseAPI {
     }
 
     /**
+     * List Tasks
      */
     async tasksListRaw(requestParameters: TasksListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Task>>> {
         const requestOptions = await this.tasksListRequestOpts(requestParameters);
@@ -144,6 +141,7 @@ export class TasksApi extends runtime.BaseAPI {
     }
 
     /**
+     * List Tasks
      */
     async tasksList(requestParameters: TasksListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Task>> {
         const response = await this.tasksListRaw(requestParameters, initOverrides);
@@ -161,15 +159,19 @@ export class TasksApi extends runtime.BaseAPI {
             );
         }
 
+        if (requestParameters['patchedTaskUpdateRequest'] == null) {
+            throw new runtime.RequiredError(
+                'patchedTaskUpdateRequest',
+                'Required parameter "patchedTaskUpdateRequest" was null or undefined when calling tasksPartialUpdate().'
+            );
+        }
+
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
 
         headerParameters['Content-Type'] = 'application/json';
 
-        if (this.configuration && (this.configuration.username !== undefined || this.configuration.password !== undefined)) {
-            headerParameters["Authorization"] = "Basic " + btoa(this.configuration.username + ":" + this.configuration.password);
-        }
 
         let urlPath = `/api/v1/tasks/{id}/`;
         urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
@@ -184,6 +186,7 @@ export class TasksApi extends runtime.BaseAPI {
     }
 
     /**
+     * Update Task
      */
     async tasksPartialUpdateRaw(requestParameters: TasksPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Task>> {
         const requestOptions = await this.tasksPartialUpdateRequestOpts(requestParameters);
@@ -193,6 +196,7 @@ export class TasksApi extends runtime.BaseAPI {
     }
 
     /**
+     * Update Task
      */
     async tasksPartialUpdate(requestParameters: TasksPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Task> {
         const response = await this.tasksPartialUpdateRaw(requestParameters, initOverrides);

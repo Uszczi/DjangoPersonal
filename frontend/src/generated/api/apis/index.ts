@@ -2,5 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export * from './ProjectsApi';
-export * from './SchemaApi';
 export * from './TasksApi';

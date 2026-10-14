@@ -31,7 +31,7 @@ export interface Task {
     /**
      *
      */
-    description?: string;
+    description: string;
     /**
      *
      */
@@ -48,6 +48,7 @@ export interface Task {
 export function instanceOfTask(value: object): value is Task {
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('title' in value) || value['title'] === undefined) return false;
+    if (!('description' in value) || value['description'] === undefined) return false;
     if (!('project' in value) || value['project'] === undefined) return false;
     if ((!('isCompleted' in (value as Record<string, any>)) && !('is_completed' in (value as Record<string, any>))) || ((value as Record<string, any>)['isCompleted'] === undefined && (value as Record<string, any>)['is_completed'] === undefined)) return false;
     return true;
@@ -65,7 +66,7 @@ export function TaskFromJSONTyped(json: any, ignoreDiscriminator: boolean): Task
 
         'id': json['id'],
         'title': json['title'],
-        'description': json['description'] == null ? undefined : json['description'],
+        'description': json['description'],
         'project': json['project'],
         'isCompleted': json['is_completed'],
     };

@@ -1,85 +1,82 @@
 """API behavior tests for the Project boundary."""
 
-from rest_framework import status
+from http import HTTPStatus
 
 
 def test_projects_include_the_default_inbox(api_client):
     response = api_client.get('/api/v1/projects/')
 
-    assert response.status_code == status.HTTP_200_OK
-    assert len(response.data) == 1
-    assert response.data[0]['name'] == 'Inbox'
-    assert response.data[0]['is_inbox'] is True
+    assert response.status_code == HTTPStatus.OK
+    assert len(response.json()) == 1
+    assert response.json()[0]['name'] == 'Inbox'
+    assert response.json()[0]['is_inbox'] is True
 
 
-def test_projects_can_be_created_and_are_listed_in_required_order(api_client):
-    create_zulu = api_client.post(
-        '/api/v1/projects/', {'name': 'Zulu', 'description': 'Later'}, format='json'
-    )
-    create_alpha = api_client.post(
-        '/api/v1/projects/', {'name': ' Alpha ', 'description': 'First'}, format='json'
-    )
+def test_projects_can_be_created_and_are_listed_in_required_order(post_json, api_client):
+    create_zulu = post_json('/api/v1/projects/', {'name': 'Zulu', 'description': 'Later'})
+    create_alpha = post_json('/api/v1/projects/', {'name': ' Alpha ', 'description': 'First'})
 
-    assert create_zulu.status_code == status.HTTP_201_CREATED
-    assert create_alpha.status_code == status.HTTP_201_CREATED
-    assert create_alpha.data['name'] == 'Alpha'
-    assert create_alpha.data['description'] == 'First'
+    assert create_zulu.status_code == HTTPStatus.CREATED
+    assert create_alpha.status_code == HTTPStatus.CREATED
+    assert create_alpha.json()['name'] == 'Alpha'
+    assert create_alpha.json()['description'] == 'First'
 
     response = api_client.get('/api/v1/projects/')
 
-    assert [project['name'] for project in response.data] == ['Inbox', 'Alpha', 'Zulu']
+    assert [project['name'] for project in response.json()] == ['Inbox', 'Alpha', 'Zulu']
 
 
-def test_project_names_are_trimmed_and_unique_without_case_sensitivity(api_client):
-    first = api_client.post('/api/v1/projects/', {'name': ' Work '}, format='json')
-    duplicate = api_client.post('/api/v1/projects/', {'name': 'work'}, format='json')
-    reserved = api_client.post('/api/v1/projects/', {'name': 'INBOX'}, format='json')
+def test_project_names_are_trimmed_and_unique_without_case_sensitivity(post_json):
+    first = post_json('/api/v1/projects/', {'name': ' Work '})
+    duplicate = post_json('/api/v1/projects/', {'name': 'work'})
+    reserved = post_json('/api/v1/projects/', {'name': 'INBOX'})
 
-    assert first.status_code == status.HTTP_201_CREATED
-    assert first.data['name'] == 'Work'
-    assert duplicate.status_code == status.HTTP_400_BAD_REQUEST
-    assert reserved.status_code == status.HTTP_400_BAD_REQUEST
-
-
-def test_project_name_is_required_and_cannot_be_blank(api_client):
-    missing = api_client.post('/api/v1/projects/', {}, format='json')
-    blank = api_client.post('/api/v1/projects/', {'name': '   '}, format='json')
-
-    assert missing.status_code == status.HTTP_400_BAD_REQUEST
-    assert blank.status_code == status.HTTP_400_BAD_REQUEST
+    assert first.status_code == HTTPStatus.CREATED
+    assert first.json()['name'] == 'Work'
+    assert duplicate.status_code == HTTPStatus.BAD_REQUEST
+    assert reserved.status_code == HTTPStatus.BAD_REQUEST
 
 
-def test_project_details_can_be_edited(api_client):
-    created = api_client.post(
-        '/api/v1/projects/', {'name': 'Reading', 'description': 'Books'}, format='json'
-    )
+def test_project_name_is_required_and_cannot_be_blank(post_json):
+    missing = post_json('/api/v1/projects/', {})
+    blank = post_json('/api/v1/projects/', {'name': '   '})
 
-    response = api_client.patch(
-        f"/api/v1/projects/{created.data['id']}/",
+    assert missing.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert missing.json()['detail'][0]['loc'] == ['body', 'payload', 'name']
+    assert missing.json()['detail'][0]['type'] == 'missing'
+    assert blank.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_project_details_can_be_edited(post_json, patch_json):
+    created = post_json('/api/v1/projects/', {'name': 'Reading', 'description': 'Books'})
+
+    response = patch_json(
+        f"/api/v1/projects/{created.json()['id']}/",
         {'name': 'Research', 'description': 'Sources'},
-        format='json',
     )
 
-    assert response.status_code == status.HTTP_200_OK
-    assert response.data['name'] == 'Research'
-    assert response.data['description'] == 'Sources'
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['name'] == 'Research'
+    assert response.json()['description'] == 'Sources'
 
 
-def test_inbox_cannot_be_renamed_or_deleted(api_client):
-    inbox = api_client.get('/api/v1/projects/').data[0]
+def test_inbox_cannot_be_renamed_or_deleted(api_client, patch_json):
+    inbox = api_client.get('/api/v1/projects/').json()[0]
 
-    rename = api_client.patch(
-        f"/api/v1/projects/{inbox['id']}/", {'name': 'Archive'}, format='json'
+    rename = patch_json(
+        f"/api/v1/projects/{inbox['id']}/", {'name': 'Archive'}
     )
     delete = api_client.delete(f"/api/v1/projects/{inbox['id']}/")
 
-    assert rename.status_code == status.HTTP_400_BAD_REQUEST
-    assert delete.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+    assert rename.status_code == HTTPStatus.BAD_REQUEST
+    assert delete.status_code == HTTPStatus.METHOD_NOT_ALLOWED
 
 
 def test_openapi_schema_describes_versioned_project_endpoints(api_client):
     response = api_client.get('/api/v1/schema/')
 
-    assert response.status_code == status.HTTP_200_OK
-    assert '/api/v1/projects/' in response.data['paths']
-    assert '/api/projects/' not in response.data['paths']
+    assert response.status_code == HTTPStatus.OK
+    schema = response.json()
+    assert schema['openapi'] == '3.1.0'
+    assert '/api/v1/projects/' in schema['paths']
+    assert '/api/projects/' not in schema['paths']

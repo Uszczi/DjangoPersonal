@@ -31,7 +31,7 @@ export interface Project {
     /**
      *
      */
-    description?: string;
+    description: string;
     /**
      *
      */
@@ -44,6 +44,7 @@ export interface Project {
 export function instanceOfProject(value: object): value is Project {
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
+    if (!('description' in value) || value['description'] === undefined) return false;
     if ((!('isInbox' in (value as Record<string, any>)) && !('is_inbox' in (value as Record<string, any>))) || ((value as Record<string, any>)['isInbox'] === undefined && (value as Record<string, any>)['is_inbox'] === undefined)) return false;
     return true;
 }
@@ -60,7 +61,7 @@ export function ProjectFromJSONTyped(json: any, ignoreDiscriminator: boolean): P
 
         'id': json['id'],
         'name': json['name'],
-        'description': json['description'] == null ? undefined : json['description'],
+        'description': json['description'],
         'isInbox': json['is_inbox'],
     };
 }

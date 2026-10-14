@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: DjangoPersonal API
   version: 1.0.0
@@ -7,23 +7,31 @@ paths:
   /api/v1/projects/:
     get:
       operationId: projects_list
-      tags:
-      - projects
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
+      summary: List Projects
+      parameters: []
       responses:
         '200':
+          description: OK
           content:
             application/json:
               schema:
-                type: array
                 items:
                   $ref: '#/components/schemas/Project'
-          description: ''
+                title: Response
+                type: array
+      tags:
+      - projects
     post:
       operationId: projects_create
+      summary: Create Project
+      parameters: []
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
       tags:
       - projects
       requestBody:
@@ -31,56 +39,44 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ProjectRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/ProjectRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/ProjectRequest'
         required: true
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Project'
-          description: ''
   /api/v1/projects/{id}/:
     get:
       operationId: projects_retrieve
+      summary: Get Project
       parameters:
       - in: path
         name: id
         schema:
+          title: Id
           type: integer
-        description: A unique integer value identifying this project.
         required: true
-      tags:
-      - projects
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
       responses:
         '200':
+          description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Project'
-          description: ''
+      tags:
+      - projects
     put:
       operationId: projects_update
+      summary: Replace Project
       parameters:
       - in: path
         name: id
         schema:
+          title: Id
           type: integer
-        description: A unique integer value identifying this project.
         required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
       tags:
       - projects
       requestBody:
@@ -88,33 +84,24 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ProjectRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/ProjectRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/ProjectRequest'
         required: true
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Project'
-          description: ''
     patch:
       operationId: projects_partial_update
+      summary: Update Project
       parameters:
       - in: path
         name: id
         schema:
+          title: Id
           type: integer
-        description: A unique integer value identifying this project.
         required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
       tags:
       - projects
       requestBody:
@@ -122,196 +109,43 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/PatchedProjectRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedProjectRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedProjectRequest'
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Project'
-          description: ''
-  /api/v1/schema/:
-    get:
-      operationId: schema_retrieve
-      description: |-
-        OpenApi3 schema for this API. Format can be selected via content negotiation.
-
-        - YAML: application/vnd.oai.openapi
-        - JSON: application/vnd.oai.openapi+json
-      parameters:
-      - in: query
-        name: format
-        schema:
-          type: string
-          enum:
-          - json
-          - yaml
-      - in: query
-        name: lang
-        schema:
-          type: string
-          enum:
-          - af
-          - ar
-          - ar-dz
-          - ast
-          - az
-          - be
-          - bg
-          - bn
-          - br
-          - bs
-          - ca
-          - ckb
-          - cs
-          - cy
-          - da
-          - de
-          - dsb
-          - el
-          - en
-          - en-au
-          - en-gb
-          - eo
-          - es
-          - es-ar
-          - es-co
-          - es-mx
-          - es-ni
-          - es-ve
-          - et
-          - eu
-          - fa
-          - fi
-          - fr
-          - fy
-          - ga
-          - gd
-          - gl
-          - he
-          - hi
-          - hr
-          - hsb
-          - ht
-          - hu
-          - hy
-          - ia
-          - id
-          - ig
-          - io
-          - is
-          - it
-          - ja
-          - ka
-          - kab
-          - kk
-          - km
-          - kn
-          - ko
-          - ky
-          - lb
-          - lt
-          - lv
-          - mk
-          - ml
-          - mn
-          - mr
-          - ms
-          - my
-          - nb
-          - ne
-          - nl
-          - nn
-          - os
-          - pa
-          - pl
-          - pt
-          - pt-br
-          - ro
-          - ru
-          - sk
-          - sl
-          - sq
-          - sr
-          - sr-latn
-          - sv
-          - sw
-          - ta
-          - te
-          - tg
-          - th
-          - tk
-          - tr
-          - tt
-          - udm
-          - ug
-          - uk
-          - ur
-          - uz
-          - vi
-          - zh-hans
-          - zh-hant
-      tags:
-      - schema
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/vnd.oai.openapi:
-              schema:
-                type: object
-                additionalProperties: {}
-            application/yaml:
-              schema:
-                type: object
-                additionalProperties: {}
-            application/vnd.oai.openapi+json:
-              schema:
-                type: object
-                additionalProperties: {}
-            application/json:
-              schema:
-                type: object
-                additionalProperties: {}
-          description: ''
+        required: true
   /api/v1/tasks/:
     get:
       operationId: tasks_list
+      summary: List Tasks
       parameters:
       - in: query
         name: project
         schema:
-          type: integer
-        description: Project ID. Defaults to Inbox when omitted.
-      tags:
-      - tasks
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Project
+        required: false
       responses:
         '200':
+          description: OK
           content:
             application/json:
               schema:
-                type: array
                 items:
                   $ref: '#/components/schemas/Task'
-          description: ''
+                title: Response
+                type: array
+      tags:
+      - tasks
     post:
       operationId: tasks_create
+      summary: Create Task
+      parameters: []
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
       tags:
       - tasks
       requestBody:
@@ -319,34 +153,25 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/TaskCreateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/TaskCreateRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/TaskCreateRequest'
         required: true
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Task'
-          description: ''
   /api/v1/tasks/{id}/:
     patch:
       operationId: tasks_partial_update
+      summary: Update Task
       parameters:
       - in: path
         name: id
         schema:
+          title: Id
           type: integer
-        description: A unique integer value identifying this task.
         required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
       tags:
       - tasks
       requestBody:
@@ -354,116 +179,122 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/PatchedTaskUpdateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedTaskUpdateRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedTaskUpdateRequest'
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Task'
-          description: ''
+        required: true
 components:
   schemas:
-    PatchedProjectRequest:
-      type: object
-      properties:
-        name:
-          type: string
-          minLength: 1
-          maxLength: 100
-        description:
-          type: string
-    PatchedTaskUpdateRequest:
-      type: object
-      properties:
-        title:
-          type: string
-          minLength: 1
-          maxLength: 200
-        description:
-          type: string
-        project:
-          type: integer
-        is_completed:
-          type: boolean
     Project:
-      type: object
       properties:
         id:
-          type: integer
           readOnly: true
+          title: Id
+          type: integer
         name:
+          title: Name
           type: string
-          maxLength: 100
         description:
+          title: Description
           type: string
         is_inbox:
-          type: boolean
           readOnly: true
+          title: Is Inbox
+          type: boolean
       required:
       - id
-      - is_inbox
       - name
-    ProjectRequest:
+      - description
+      - is_inbox
+      title: Project
       type: object
+    ProjectRequest:
       properties:
         name:
-          type: string
-          minLength: 1
           maxLength: 100
+          minLength: 1
+          title: Name
+          type: string
         description:
+          default: ''
+          title: Description
           type: string
       required:
       - name
-    Task:
+      title: ProjectRequest
       type: object
+    PatchedProjectRequest:
+      properties:
+        name:
+          maxLength: 100
+          minLength: 1
+          title: Name
+          type: string
+        description:
+          title: Description
+          type: string
+      title: PatchedProjectRequest
+      type: object
+    Task:
       properties:
         id:
-          type: integer
           readOnly: true
+          title: Id
+          type: integer
         title:
+          title: Title
           type: string
-          maxLength: 200
         description:
+          title: Description
           type: string
         project:
+          readOnly: true
+          title: Project
           type: integer
-          readOnly: true
         is_completed:
-          type: boolean
           readOnly: true
+          title: Is Completed
+          type: boolean
       required:
       - id
-      - is_completed
-      - project
       - title
-    TaskCreateRequest:
+      - description
+      - project
+      - is_completed
+      title: Task
       type: object
+    TaskCreateRequest:
       properties:
         title:
-          type: string
-          minLength: 1
           maxLength: 200
+          minLength: 1
+          title: Title
+          type: string
         description:
+          default: ''
+          title: Description
           type: string
         project:
+          title: Project
           type: integer
       required:
       - title
-  securitySchemes:
-    basicAuth:
-      type: http
-      scheme: basic
-    cookieAuth:
-      type: apiKey
-      in: cookie
-      name: sessionid
+      title: TaskCreateRequest
+      type: object
+    PatchedTaskUpdateRequest:
+      properties:
+        title:
+          maxLength: 200
+          minLength: 1
+          title: Title
+          type: string
+        description:
+          default: ''
+          title: Description
+          type: string
+        project:
+          title: Project
+          type: integer
+        is_completed:
+          title: Is Completed
+          type: boolean
+      title: PatchedTaskUpdateRequest
+      type: object
+servers: []
