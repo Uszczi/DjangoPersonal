@@ -139,3 +139,32 @@ def test_user_can_complete_and_reopen_a_task(api_client, post_json, patch_json):
     assert reopened.json()['is_completed'] is False
     reopened_list = api_client.get(f'/api/v1/tasks/?project={project_id}')
     assert reopened_list.json()[0]['is_completed'] is False
+
+
+def test_user_can_permanently_delete_a_task(api_client, post_json):
+    project_id = post_json('/api/v1/projects/', {'name': 'Reading'}).json()['id']
+    task = post_json(
+        '/api/v1/tasks/', {'title': 'Read chapter', 'project': project_id}
+    ).json()
+
+    response = api_client.delete(f"/api/v1/tasks/{task['id']}/")
+
+    assert response.status_code == HTTPStatus.NO_CONTENT
+    assert api_client.get(f'/api/v1/tasks/?project={project_id}').json() == []
+    assert api_client.get('/api/v1/tasks/').json() == []
+
+
+def test_task_with_time_entries_cannot_be_deleted(api_client, post_json):
+    project_id = post_json('/api/v1/projects/', {'name': 'Reading'}).json()['id']
+    task = post_json(
+        '/api/v1/tasks/', {'title': 'Read chapter', 'project': project_id}
+    ).json()
+    post_json(
+        '/api/v1/time-entries/',
+        {'task': task['id'], 'date': '2026-10-13', 'duration_minutes': 30},
+    )
+
+    response = api_client.delete(f"/api/v1/tasks/{task['id']}/")
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert api_client.get(f'/api/v1/tasks/?project={project_id}').json() != []

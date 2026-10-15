@@ -278,6 +278,13 @@
   padding-bottom: 25px;
 }
 
+.project-heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: end;
+}
+
 .project-kicker {
   margin-bottom: 12px;
 }
@@ -340,6 +347,33 @@
 
 .primary-button:disabled,
 .quiet-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.danger-button {
+  align-items: center;
+  background: #a23a28;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 15px;
+  transition: background 140ms ease, transform 140ms ease;
+}
+
+.danger-button:hover:not(:disabled) {
+  background: #872d1e;
+  transform: translateY(-1px);
+}
+
+.danger-button:disabled {
   cursor: wait;
   opacity: 0.7;
 }
@@ -569,6 +603,23 @@
 
 .task-edit-button:hover {
   color: var(--signal);
+}
+
+.task-delete-button {
+  background: transparent;
+  border: 0;
+  color: #8a5648;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  padding: 5px 0;
+  text-decoration: underline;
+  text-decoration-color: #d3b8b0;
+  text-underline-offset: 3px;
+}
+
+.task-delete-button:hover {
+  color: #a23a28;
 }
 
 .loading-state,
@@ -989,4 +1040,16 @@ a:focus-visible {
   color: #718487;
   font-size: 12px;
   margin: 0;
+}
+
+.confirm-dialog {
+  max-width: 430px;
+}
+
+.confirm-message {
+  color: #40595c;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 20px 0 0;
+  overflow-wrap: anywhere;
 }

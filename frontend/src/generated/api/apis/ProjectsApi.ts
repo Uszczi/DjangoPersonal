@@ -37,6 +37,13 @@ export interface ProjectsCreateRequest {
     projectRequest: ProjectRequest;
 }
 
+export interface ProjectsDestroyRequest {
+    /**
+     *
+     */
+    id: number;
+}
+
 export interface ProjectsPartialUpdateRequest {
     /**
      *
@@ -116,6 +123,50 @@ export class ProjectsApi extends runtime.BaseAPI {
     async projectsCreate(requestParameters: ProjectsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Project> {
         const response = await this.projectsCreateRaw(requestParameters, initOverrides);
         return await response.value();
+    }
+
+    /**
+     * Creates request options for projectsDestroy without sending the request
+     */
+    async projectsDestroyRequestOpts(requestParameters: ProjectsDestroyRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling projectsDestroy().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+
+        let urlPath = `/api/v1/projects/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Delete Project
+     */
+    async projectsDestroyRaw(requestParameters: ProjectsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.projectsDestroyRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Delete Project
+     */
+    async projectsDestroy(requestParameters: ProjectsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.projectsDestroyRaw(requestParameters, initOverrides);
     }
 
     /**

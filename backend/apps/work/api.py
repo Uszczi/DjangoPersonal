@@ -1,6 +1,7 @@
 from datetime import date as datetime_date, datetime, time, timedelta, timezone as datetime_timezone
 
 from django.db import IntegrityError, transaction
+from django.db.models import ProtectedError
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from ninja import Router, Schema, Status
@@ -201,6 +202,24 @@ def update_project(request, id: int, payload: PatchedProjectRequest):
     )
 
 
+@router.delete(
+    '/projects/{id}/',
+    response={204: None},
+    tags=['projects'],
+    operation_id='projects_destroy',
+)
+def delete_project(request, id: int):
+    project = get_object_or_404(ProjectModel, pk=id)
+    if project.is_inbox:
+        raise HttpError(400, 'Inbox cannot be deleted.')
+
+    inbox = ProjectModel.objects.get(is_inbox=True)
+    with transaction.atomic():
+        project.tasks.update(project=inbox)
+        project.delete()
+    return Status(204, None)
+
+
 @router.get(
     '/tasks/',
     response=list[Task],
@@ -254,6 +273,23 @@ def update_task(request, id: int, payload: PatchedTaskUpdateRequest):
         setattr(task, field, value)
     task.save()
     return task
+
+
+@router.delete(
+    '/tasks/{id}/',
+    response={204: None},
+    tags=['tasks'],
+    operation_id='tasks_destroy',
+)
+def delete_task(request, id: int):
+    task = get_object_or_404(TaskModel, pk=id)
+    try:
+        task.delete()
+    except ProtectedError as error:
+        raise HttpError(
+            400, 'A task with recorded time entries cannot be deleted.'
+        ) from error
+    return Status(204, None)
 
 
 @router.get(

@@ -110,6 +110,21 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedProjectRequest'
         required: true
+    delete:
+      operationId: projects_destroy
+      summary: Delete Project
+      parameters:
+      - in: path
+        name: id
+        schema:
+          title: Id
+          type: integer
+        required: true
+      responses:
+        '204':
+          description: No Content
+      tags:
+      - projects
   /api/v1/tasks/:
     get:
       operationId: tasks_list
@@ -187,6 +202,21 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedTaskUpdateRequest'
         required: true
+    delete:
+      operationId: tasks_destroy
+      summary: Delete Task
+      parameters:
+      - in: path
+        name: id
+        schema:
+          title: Id
+          type: integer
+        required: true
+      responses:
+        '204':
+          description: No Content
+      tags:
+      - tasks
   /api/v1/time-entries/:
     get:
       operationId: time_entries_list

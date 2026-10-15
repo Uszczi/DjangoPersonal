@@ -69,14 +69,42 @@ def test_inbox_cannot_be_renamed_or_deleted(api_client, patch_json):
     delete = api_client.delete(f"/api/v1/projects/{inbox['id']}/")
 
     assert rename.status_code == HTTPStatus.BAD_REQUEST
-    assert delete.status_code == HTTPStatus.METHOD_NOT_ALLOWED
+    assert delete.status_code == HTTPStatus.BAD_REQUEST
+    assert api_client.get('/api/v1/projects/').json()[0]['name'] == 'Inbox'
 
 
 def test_openapi_schema_describes_versioned_project_endpoints(api_client):
     response = api_client.get('/api/v1/schema/')
+    schema = response.json()
 
     assert response.status_code == HTTPStatus.OK
-    schema = response.json()
     assert schema['openapi'] == '3.1.0'
     assert '/api/v1/projects/' in schema['paths']
     assert '/api/projects/' not in schema['paths']
+
+
+def test_user_can_delete_an_empty_project(api_client, post_json):
+    project_id = post_json('/api/v1/projects/', {'name': 'Reading'}).json()['id']
+
+    response = api_client.delete(f'/api/v1/projects/{project_id}/')
+
+    assert response.status_code == HTTPStatus.NO_CONTENT
+    assert [
+        project['id'] for project in api_client.get('/api/v1/projects/').json()
+    ] != [project_id]
+
+
+def test_deleting_a_project_moves_its_tasks_to_inbox(api_client, post_json):
+    inbox_id = api_client.get('/api/v1/projects/').json()[0]['id']
+    project_id = post_json('/api/v1/projects/', {'name': 'Planning'}).json()['id']
+    task = post_json(
+        '/api/v1/tasks/', {'title': 'Outline the release', 'project': project_id}
+    ).json()
+
+    response = api_client.delete(f'/api/v1/projects/{project_id}/')
+
+    assert response.status_code == HTTPStatus.NO_CONTENT
+    inbox_tasks = api_client.get(f'/api/v1/tasks/?project={inbox_id}').json()
+    assert [listed['id'] for listed in inbox_tasks] == [task['id']]
+    assert api_client.get(f'/api/v1/tasks/?project={project_id}').json() == []
+    assert api_client.get('/api/v1/tasks/').json()[0]['id'] == task['id']

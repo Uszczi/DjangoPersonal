@@ -13,6 +13,21 @@ const inbox = {
   is_inbox: true,
 }
 
+const planning = {
+  id: 2,
+  name: 'Planning',
+  description: '',
+  is_inbox: false,
+}
+
+const task = {
+  id: 7,
+  title: 'Prepare outline',
+  description: '',
+  project: 2,
+  is_completed: false,
+}
+
 function jsonResponse(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -431,5 +446,144 @@ describe('Projects', () => {
     expect(screen.getByRole('heading', { name: 'Archive' })).toBeInTheDocument()
     expect(screen.getByText('Archive task')).toBeInTheDocument()
     expect(screen.queryByText('Wczytywanie zadań…')).not.toBeInTheDocument()
+  })
+})
+
+describe('Deleting tasks and projects', () => {
+  const fetchMock = vi.fn()
+
+  beforeEach(() => {
+    fetchMock.mockReset()
+    vi.stubGlobal('fetch', fetchMock)
+  })
+
+  afterEach(() => {
+    cleanup()
+    vi.unstubAllGlobals()
+  })
+
+  test('user must confirm before a task is permanently deleted', async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse([inbox]))
+      .mockResolvedValueOnce(jsonResponse([{ ...task, project: 1 }]))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+    const user = userEvent.setup()
+
+    render(<App />)
+    await screen.findByText('Prepare outline')
+    await user.click(screen.getByRole('button', { name: 'Usuń zadanie: Prepare outline' }))
+
+    expect(
+      screen.getByRole('heading', { name: 'Usunąć zadanie?' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/Zadanie .Prepare outline. zostanie trwale usunięte/),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Anuluj' }))
+
+    expect(screen.getByText('Prepare outline')).toBeInTheDocument()
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      '/api/v1/tasks/7/',
+      expect.objectContaining({ method: 'DELETE' }),
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Usuń zadanie: Prepare outline' }))
+    await user.click(screen.getByRole('button', { name: 'Usuń zadanie' }))
+
+    await waitFor(() =>
+      expect(screen.queryByText('Prepare outline')).not.toBeInTheDocument(),
+    )
+    expect(screen.getByText('Nie ma tu jeszcze zadań.')).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      '/api/v1/tasks/7/',
+      expect.objectContaining({ method: 'DELETE' }),
+    )
+  })
+
+  test('a task with recorded time cannot be deleted and the dialog explains why', async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse([inbox]))
+      .mockResolvedValueOnce(jsonResponse([{ ...task, project: 1 }]))
+      .mockResolvedValueOnce(
+        jsonResponse({ detail: 'A task with recorded time entries cannot be deleted.' }, 400),
+      )
+    const user = userEvent.setup()
+
+    render(<App />)
+    await screen.findByText('Prepare outline')
+    await user.click(screen.getByRole('button', { name: 'Usuń zadanie: Prepare outline' }))
+    await user.click(screen.getByRole('button', { name: 'Usuń zadanie' }))
+
+    expect(
+      await screen.findByText('A task with recorded time entries cannot be deleted.'),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Prepare outline')).toBeInTheDocument()
+  })
+
+  test('user must confirm before a project is deleted and learns its tasks move to Inbox', async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse([inbox, planning]))
+      .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(jsonResponse([task]))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(jsonResponse([task]))
+    const user = userEvent.setup()
+
+    render(<App />)
+    await user.click(await screen.findByRole('button', { name: 'Planning' }))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
+    await screen.findByText('Prepare outline')
+    await user.click(screen.getByRole('button', { name: 'Usuń projekt' }))
+
+    expect(screen.getByRole('heading', { name: 'Usunąć projekt?' })).toBeInTheDocument()
+    expect(
+      screen.getByText(/Projekt .Planning. zostanie trwale usunięty, a jego zadania trafią do Inbox/),
+    ).toBeInTheDocument()
+
+    const dialog = screen.getByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: 'Usuń projekt' }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(5))
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
+      '/api/v1/projects/2/',
+      expect.objectContaining({ method: 'DELETE' }),
+    )
+    expect(screen.queryByRole('button', { name: 'Planning' })).not.toBeInTheDocument()
+    expect(await screen.findByText('Prepare outline')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Inbox' })).toBeInTheDocument()
+  })
+
+  test('cancelling project deletion keeps the project and its tasks', async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse([inbox, planning]))
+      .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(jsonResponse([task]))
+    const user = userEvent.setup()
+
+    render(<App />)
+    await user.click(await screen.findByRole('button', { name: 'Planning' }))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
+    await user.click(screen.getByRole('button', { name: 'Usuń projekt' }))
+    await user.click(screen.getByRole('button', { name: 'Anuluj' }))
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Planning' })).toBeInTheDocument()
+    expect(screen.getByText('Prepare outline')).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+  })
+
+  test('Inbox offers no delete action', async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse([inbox]))
+      .mockResolvedValueOnce(jsonResponse([]))
+
+    render(<App />)
+    await screen.findByRole('heading', { name: 'Inbox' })
+
+    expect(screen.queryByRole('button', { name: 'Usuń projekt' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edytuj projekt' })).toBeInTheDocument()
   })
 })

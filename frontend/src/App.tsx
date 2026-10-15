@@ -63,6 +63,12 @@ function App() {
   const [taskEditError, setTaskEditError] = useState('')
   const [isSavingTaskEdit, setIsSavingTaskEdit] = useState(false)
   const [taskActionError, setTaskActionError] = useState('')
+  const [taskPendingDelete, setTaskPendingDelete] = useState<Task | null>(null)
+  const [isDeletingTask, setIsDeletingTask] = useState(false)
+  const [taskDeleteError, setTaskDeleteError] = useState('')
+  const [projectPendingDelete, setProjectPendingDelete] = useState<Project | null>(null)
+  const [isDeletingProject, setIsDeletingProject] = useState(false)
+  const [projectDeleteError, setProjectDeleteError] = useState('')
   const [editor, setEditor] = useState<EditorState>(null)
   const [form, setForm] = useState<ProjectInput>({ name: '', description: '' })
   const [formError, setFormError] = useState('')
@@ -301,6 +307,75 @@ function App() {
     }
   }
 
+  function openTaskDeleteDialog(task: Task) {
+    setTaskDeleteError('')
+    setTaskPendingDelete(task)
+  }
+
+  function closeTaskDeleteDialog() {
+    if (!isDeletingTask) setTaskPendingDelete(null)
+  }
+
+  async function confirmTaskDelete() {
+    if (!taskPendingDelete) return
+
+    setIsDeletingTask(true)
+    setTaskDeleteError('')
+
+    try {
+      const deletedTask = taskPendingDelete
+      await tasksApi.tasksDestroy({ id: deletedTask.id })
+      setLoadedTaskList((current) =>
+        current
+          ? {
+              projectId: current.projectId,
+              tasks: current.tasks.filter((task) => task.id !== deletedTask.id),
+            }
+          : current,
+      )
+      setTaskPendingDelete(null)
+    } catch (error) {
+      setTaskDeleteError(await apiErrorMessage(error))
+    } finally {
+      setIsDeletingTask(false)
+    }
+  }
+
+  function openProjectDeleteDialog(project: Project) {
+    setProjectDeleteError('')
+    setProjectPendingDelete(project)
+  }
+
+  function closeProjectDeleteDialog() {
+    if (!isDeletingProject) setProjectPendingDelete(null)
+  }
+
+  async function confirmProjectDelete() {
+    if (!projectPendingDelete) return
+
+    setIsDeletingProject(true)
+    setProjectDeleteError('')
+
+    try {
+      const deletedProject = projectPendingDelete
+      await projectsApi.projectsDestroy({ id: deletedProject.id })
+      const remainingProjects = projects.filter(
+        (project) => project.id !== deletedProject.id,
+      )
+      setProjects(remainingProjects)
+      setSelectedProjectId(
+        remainingProjects.find((project) => project.isInbox)?.id ??
+          remainingProjects[0]?.id ??
+          null,
+      )
+      setProjectPendingDelete(null)
+    } catch (error) {
+      setProjectDeleteError(await apiErrorMessage(error))
+    } finally {
+      setIsDeletingProject(false)
+    }
+  }
+
   async function saveTaskEdit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const title = taskEditForm.title.trim()
@@ -435,10 +510,20 @@ function App() {
                   </p>
                   <h1>{selectedProject.name}</h1>
                 </div>
-                <button className="quiet-button" onClick={() => openEditForm(selectedProject)}>
-                  Edytuj projekt
-                  <span aria-hidden="true">↗</span>
-                </button>
+                <div className="project-heading-actions">
+                  {!selectedProject.isInbox && (
+                    <button
+                      className="quiet-button"
+                      onClick={() => openProjectDeleteDialog(selectedProject)}
+                    >
+                      Usuń projekt
+                    </button>
+                  )}
+                  <button className="quiet-button" onClick={() => openEditForm(selectedProject)}>
+                    Edytuj projekt
+                    <span aria-hidden="true">↗</span>
+                  </button>
+                </div>
               </div>
 
               <section className="project-card" aria-label="Szczegóły projektu">
@@ -516,6 +601,14 @@ function App() {
                             onClick={() => openTaskEditForm(task)}
                           >
                             Edytuj
+                          </button>
+                          <button
+                            className="task-delete-button"
+                            type="button"
+                            aria-label={`Usuń zadanie: ${task.title}`}
+                            onClick={() => openTaskDeleteDialog(task)}
+                          >
+                            Usuń
                           </button>
                         </div>
                       </li>
@@ -695,6 +788,68 @@ function App() {
                 </button>
               </div>
             </form>
+          </section>
+        </div>
+      )}
+
+      {taskPendingDelete && (
+        <div className="dialog-backdrop" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) closeTaskDeleteDialog()
+        }}>
+          <section className="project-dialog confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="task-delete-title">
+            <div className="dialog-heading">
+              <div>
+                <p className="eyebrow">POTWIERDŹ USUNIĘCIE</p>
+                <h2 id="task-delete-title">Usunąć zadanie?</h2>
+              </div>
+              <button className="icon-button close-button" onClick={closeTaskDeleteDialog} aria-label="Zamknij">
+                <span aria-hidden="true">×</span>
+              </button>
+            </div>
+
+            <p className="confirm-message">
+              Zadanie „{taskPendingDelete.title}" zostanie trwale usunięte. Tej operacji nie można cofnąć.
+            </p>
+            {taskDeleteError && <p className="form-error" role="alert">{taskDeleteError}</p>}
+            <div className="dialog-actions">
+              <button className="quiet-button" type="button" onClick={closeTaskDeleteDialog} disabled={isDeletingTask}>
+                Anuluj
+              </button>
+              <button className="danger-button" type="button" onClick={() => void confirmTaskDelete()} disabled={isDeletingTask}>
+                {isDeletingTask ? 'Usuwanie…' : 'Usuń zadanie'}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {projectPendingDelete && (
+        <div className="dialog-backdrop" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) closeProjectDeleteDialog()
+        }}>
+          <section className="project-dialog confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="project-delete-title">
+            <div className="dialog-heading">
+              <div>
+                <p className="eyebrow">POTWIERDŹ USUNIĘCIE</p>
+                <h2 id="project-delete-title">Usunąć projekt?</h2>
+              </div>
+              <button className="icon-button close-button" onClick={closeProjectDeleteDialog} aria-label="Zamknij">
+                <span aria-hidden="true">×</span>
+              </button>
+            </div>
+
+            <p className="confirm-message">
+              Projekt „{projectPendingDelete.name}" zostanie trwale usunięty, a jego zadania trafią do Inbox.
+            </p>
+            {projectDeleteError && <p className="form-error" role="alert">{projectDeleteError}</p>}
+            <div className="dialog-actions">
+              <button className="quiet-button" type="button" onClick={closeProjectDeleteDialog} disabled={isDeletingProject}>
+                Anuluj
+              </button>
+              <button className="danger-button" type="button" onClick={() => void confirmProjectDelete()} disabled={isDeletingProject}>
+                {isDeletingProject ? 'Usuwanie…' : 'Usuń projekt'}
+              </button>
+            </div>
           </section>
         </div>
       )}

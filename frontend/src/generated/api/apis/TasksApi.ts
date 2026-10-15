@@ -37,6 +37,13 @@ export interface TasksCreateRequest {
     taskCreateRequest: TaskCreateRequest;
 }
 
+export interface TasksDestroyRequest {
+    /**
+     *
+     */
+    id: number;
+}
+
 export interface TasksListRequest {
     /**
      *
@@ -109,6 +116,50 @@ export class TasksApi extends runtime.BaseAPI {
     async tasksCreate(requestParameters: TasksCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Task> {
         const response = await this.tasksCreateRaw(requestParameters, initOverrides);
         return await response.value();
+    }
+
+    /**
+     * Creates request options for tasksDestroy without sending the request
+     */
+    async tasksDestroyRequestOpts(requestParameters: TasksDestroyRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling tasksDestroy().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+
+        let urlPath = `/api/v1/tasks/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Delete Task
+     */
+    async tasksDestroyRaw(requestParameters: TasksDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.tasksDestroyRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Delete Task
+     */
+    async tasksDestroy(requestParameters: TasksDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.tasksDestroyRaw(requestParameters, initOverrides);
     }
 
     /**
