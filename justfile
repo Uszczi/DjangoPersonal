@@ -15,7 +15,7 @@ migrate:
 
 # Generate the OpenAPI schema and the TypeScript API client.
 generate-api:
-    cd backend && uv run python manage.py spectacular --file openapi.yaml
+    cd backend && uv run python -c "import os, json, yaml; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings'); import django; django.setup(); from django.test import Client, override_settings; override = override_settings(ALLOWED_HOSTS=['*']); override.enable(); response = Client().get('/api/v1/schema/'); override.disable(); assert response.status_code == 200, response.status_code; schema = json.loads(response.content); open('openapi.yaml', 'w').write(yaml.safe_dump(schema, allow_unicode=True, sort_keys=False))"
     cd frontend && npm run generate:api
 
 # Run the Vite development server.

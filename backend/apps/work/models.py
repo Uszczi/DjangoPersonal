@@ -68,3 +68,19 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class TimeEntry(models.Model):
+    task = models.ForeignKey(
+        Task,
+        on_delete=models.PROTECT,
+        related_name='time_entries',
+    )
+    start = models.DateTimeField()
+    end = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-start', '-id']
+
+    def __str__(self):
+        return f'{self.task.title} ({self.start} – {self.end})'

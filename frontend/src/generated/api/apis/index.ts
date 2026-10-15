@@ -3,3 +3,5 @@
 /* eslint-disable */
 export * from './ProjectsApi';
 export * from './TasksApi';
+export * from './TimeEntriesApi';
+export * from './TimerApi';

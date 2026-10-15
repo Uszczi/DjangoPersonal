@@ -1,10 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react'
 
+import { apiErrorMessage } from './apiErrorMessage'
+import TimerPage from './TimerPage'
 import {
   Configuration,
   ProjectsApi,
-  ResponseError,
   TasksApi,
+  TimerApi,
   type Project,
   type Task,
 } from './generated/api'
@@ -14,26 +16,11 @@ type EditorState = { kind: 'create' } | { kind: 'edit'; project: Project } | nul
 type ProjectInput = { name: string; description: string }
 type TaskInput = { title: string; description: string; project?: number }
 type TaskEditInput = { title: string; description: string; projectId: string }
+type View = 'tasks' | 'timer'
 
 const projectsApi = new ProjectsApi(new Configuration({ basePath: '' }))
 const tasksApi = new TasksApi(new Configuration({ basePath: '' }))
-
-async function apiErrorMessage(error: unknown) {
-  if (error instanceof ResponseError && error.response) {
-    const payload: unknown = await error.response.clone().json().catch(() => undefined)
-    if (typeof payload === 'object' && payload !== null) {
-      const firstMessage = Object.values(payload)
-        .flat()
-        .find((value) => typeof value === 'string')
-      if (typeof firstMessage === 'string') return firstMessage
-    }
-    return 'Nie udało się zapisać. Sprawdź dane i spróbuj ponownie.'
-  }
-
-  return error instanceof Error
-    ? error.message
-    : 'Nie udało się zapisać. Spróbuj ponownie.'
-}
+const timerApi = new TimerApi(new Configuration({ basePath: '' }))
 
 function orderProjects(projects: Project[]) {
   return [...projects].sort((left, right) => {
@@ -54,6 +41,7 @@ function App() {
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [pageError, setPageError] = useState('')
+  const [view, setView] = useState<View>('tasks')
   const [loadedTaskList, setLoadedTaskList] = useState<{
     projectId: number
     tasks: Task[]
@@ -302,6 +290,17 @@ function App() {
     }
   }
 
+  async function startTaskTimer(task: Task) {
+    setTaskActionError('')
+
+    try {
+      await timerApi.timerStart({ timerStartRequest: { task: task.id } })
+      setView('timer')
+    } catch (error) {
+      setTaskActionError(await apiErrorMessage(error))
+    }
+  }
+
   async function saveTaskEdit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const title = taskEditForm.title.trim()
@@ -346,11 +345,31 @@ function App() {
           <span className="brand-mark" aria-hidden="true">D</span>
           <span>DjangoPersonal</span>
         </a>
+        <nav className="topbar-tabs" aria-label="Nawigacja widoków">
+          <button
+            type="button"
+            className={`topbar-tab${view === 'tasks' ? ' is-selected' : ''}`}
+            aria-current={view === 'tasks' ? 'page' : undefined}
+            onClick={() => setView('tasks')}
+          >
+            Zadania
+          </button>
+          <button
+            type="button"
+            className={`topbar-tab${view === 'timer' ? ' is-selected' : ''}`}
+            aria-current={view === 'timer' ? 'page' : undefined}
+            onClick={() => setView('timer')}
+          >
+            Czas
+          </button>
+        </nav>
         <div className="topbar-caption">
           <span className="topbar-dot" aria-hidden="true" />
           OSOBISTA PRZESTRZEŃ ROBOCZA
         </div>
-        <span className="topbar-index">01 / PROJEKTY</span>
+        <span className="topbar-index">
+          {view === 'tasks' ? '01 / PROJEKTY' : '02 / CZAS'}
+        </span>
       </header>
 
       <div className="workspace">
@@ -372,7 +391,10 @@ function App() {
               <button
                 className={`project-link${project.id === selectedProjectId ? ' is-selected' : ''}`}
                 key={project.id}
-                onClick={() => setSelectedProjectId(project.id)}
+                onClick={() => {
+                  setSelectedProjectId(project.id)
+                  setView('tasks')
+                }}
                 aria-current={project.id === selectedProjectId ? 'page' : undefined}
                 aria-label={project.name}
               >
@@ -394,7 +416,9 @@ function App() {
         </aside>
 
         <main className="main-panel">
-          {isLoading ? (
+          {view === 'timer' ? (
+            <TimerPage />
+          ) : isLoading ? (
             <div className="loading-state" role="status">Wczytywanie projektów…</div>
           ) : selectedProject ? (
             <>
@@ -473,6 +497,15 @@ function App() {
                           {task.description && <small>{task.description}</small>}
                         </div>
                         <div className="task-row-actions">
+                          <button
+                            className="task-timer-button"
+                            type="button"
+                            aria-label={`Uruchom timer: ${task.title}`}
+                            title="Uruchom timer"
+                            onClick={() => void startTaskTimer(task)}
+                          >
+                            <span aria-hidden="true">▶</span>
+                          </button>
                           <span className="task-status-label">
                             {task.isCompleted ? 'UKOŃCZONE' : 'OTWARTE'}
                           </span>

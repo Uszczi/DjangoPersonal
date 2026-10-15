@@ -123,6 +123,13 @@ paths:
           - type: 'null'
           title: Project
         required: false
+      - in: query
+        name: all
+        schema:
+          default: false
+          title: All
+          type: boolean
+        required: false
       responses:
         '200':
           description: OK
@@ -180,6 +187,148 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedTaskUpdateRequest'
         required: true
+  /api/v1/time-entries/:
+    get:
+      operationId: time_entries_list
+      summary: List Time Entries
+      parameters:
+      - in: query
+        name: task
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Task
+        required: false
+      - in: query
+        name: date
+        schema:
+          anyOf:
+          - format: date
+            type: string
+          - type: 'null'
+          title: Date
+        required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TimeEntry'
+                title: Response
+                type: array
+      tags:
+      - time-entries
+    post:
+      operationId: time_entries_create
+      summary: Create Time Entry
+      parameters: []
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntry'
+      tags:
+      - time-entries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeEntryCreateRequest'
+        required: true
+  /api/v1/timer/start/:
+    post:
+      operationId: timer_start
+      summary: Start Timer
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimerState'
+      tags:
+      - timer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimerStartRequest'
+        required: true
+  /api/v1/timer/:
+    get:
+      operationId: timer_retrieve
+      summary: Get Timer
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimerState'
+      tags:
+      - timer
+  /api/v1/timer/stop/:
+    post:
+      operationId: timer_stop
+      summary: Stop Timer
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimerState'
+      tags:
+      - timer
+  /api/v1/time-entries/{id}/:
+    patch:
+      operationId: time_entries_partial_update
+      summary: Update Time Entry
+      parameters:
+      - in: path
+        name: id
+        schema:
+          title: Id
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntry'
+      tags:
+      - time-entries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTimeEntryRequest'
+        required: true
+    delete:
+      operationId: time_entries_destroy
+      summary: Delete Time Entry
+      parameters:
+      - in: path
+        name: id
+        schema:
+          title: Id
+          type: integer
+        required: true
+      responses:
+        '204':
+          description: No Content
+      tags:
+      - time-entries
 components:
   schemas:
     Project:
@@ -296,5 +445,90 @@ components:
           title: Is Completed
           type: boolean
       title: PatchedTaskUpdateRequest
+      type: object
+    TimeEntry:
+      properties:
+        id:
+          readOnly: true
+          title: Id
+          type: integer
+        task:
+          readOnly: true
+          title: Task
+          type: integer
+        start:
+          format: date-time
+          title: Start
+          type: string
+        end:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: End
+      required:
+      - id
+      - task
+      - start
+      title: TimeEntry
+      type: object
+    TimeEntryCreateRequest:
+      properties:
+        task:
+          title: Task
+          type: integer
+        date:
+          format: date
+          title: Date
+          type: string
+        duration_minutes:
+          maximum: 1440
+          minimum: 1
+          title: Duration Minutes
+          type: integer
+      required:
+      - task
+      - date
+      - duration_minutes
+      title: TimeEntryCreateRequest
+      type: object
+    TimerState:
+      properties:
+        entry:
+          anyOf:
+          - $ref: '#/components/schemas/TimeEntry'
+          - type: 'null'
+        server_now:
+          format: date-time
+          title: Server Now
+          type: string
+      required:
+      - server_now
+      title: TimerState
+      type: object
+    TimerStartRequest:
+      properties:
+        task:
+          title: Task
+          type: integer
+      required:
+      - task
+      title: TimerStartRequest
+      type: object
+    PatchedTimeEntryRequest:
+      properties:
+        task:
+          title: Task
+          type: integer
+        date:
+          format: date
+          title: Date
+          type: string
+        duration_minutes:
+          maximum: 1440
+          minimum: 1
+          title: Duration Minutes
+          type: integer
+      title: PatchedTimeEntryRequest
       type: object
 servers: []

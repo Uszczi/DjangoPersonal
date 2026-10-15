@@ -42,6 +42,10 @@ export interface TasksListRequest {
      *
      */
     project?: number | null;
+    /**
+     *
+     */
+    all?: boolean;
 }
 
 export interface TasksPartialUpdateRequest {
@@ -115,6 +119,10 @@ export class TasksApi extends runtime.BaseAPI {
 
         if (requestParameters['project'] != null) {
             queryParameters['project'] = requestParameters['project'];
+        }
+
+        if (requestParameters['all'] != null) {
+            queryParameters['all'] = requestParameters['all'];
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
