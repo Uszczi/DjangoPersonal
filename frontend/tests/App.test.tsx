@@ -1,10 +1,10 @@
 /** User-visible Project flow tests, with HTTP mocked at the network boundary. */
 
-import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
-import App from '../src/App'
+import { renderApp } from './renderApp'
 
 const inbox = {
   id: 1,
@@ -68,10 +68,10 @@ describe('Projects', () => {
       )
     const user = userEvent.setup()
 
-    render(<App />)
+    renderApp('/tasks')
 
     expect(await screen.findByRole('heading', { name: 'Inbox' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Inbox' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Inbox' })).toBeInTheDocument()
     await screen.findByText('Nie ma tu jeszcze zadań.')
 
     await user.click(screen.getByRole('button', { name: 'Nowy projekt' }))
@@ -108,8 +108,8 @@ describe('Projects', () => {
       )
     const user = userEvent.setup()
 
-    render(<App />)
-    await user.click(await screen.findByRole('button', { name: 'Reading' }))
+    renderApp('/tasks')
+    await user.click(await screen.findByRole('link', { name: 'Reading' }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
     await screen.findByText('Nie ma tu jeszcze zadań.')
     await user.click(screen.getByRole('button', { name: 'Edytuj projekt' }))
@@ -139,14 +139,14 @@ describe('Projects', () => {
       ]))
       .mockResolvedValueOnce(jsonResponse([]))
 
-    render(<App />)
+    renderApp('/tasks')
 
     await screen.findByRole('heading', { name: 'Inbox' })
     const projectNavigation = screen.getByRole('navigation', { name: 'Projekty' })
 
     expect(
       within(projectNavigation)
-        .getAllByRole('button')
+        .getAllByRole('link')
         .map((button) => button.getAttribute('aria-label')),
     ).toEqual(['Inbox', 'Alpha', 'Zulu'])
   })
@@ -157,7 +157,7 @@ describe('Projects', () => {
       .mockResolvedValueOnce(jsonResponse([]))
     const user = userEvent.setup()
 
-    render(<App />)
+    renderApp('/tasks')
     await screen.findByRole('heading', { name: 'Inbox' })
     await user.click(screen.getByRole('button', { name: 'Edytuj projekt' }))
 
@@ -174,7 +174,7 @@ describe('Projects', () => {
         { id: 1, title: 'Open note', description: '', project: 1, is_completed: false },
       ]))
 
-    render(<App />)
+    renderApp('/tasks')
 
     await screen.findByRole('heading', { name: 'Zadania' })
     await screen.findByText('Open note')
@@ -214,8 +214,8 @@ describe('Projects', () => {
       )
     const user = userEvent.setup()
 
-    render(<App />)
-    await user.click(await screen.findByRole('button', { name: 'Planning' }))
+    renderApp('/tasks')
+    await user.click(await screen.findByRole('link', { name: 'Planning' }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
     await screen.findByRole('heading', { name: 'Planning' })
     await screen.findByText('Nie ma tu jeszcze zadań.')
@@ -266,8 +266,8 @@ describe('Projects', () => {
       }))
     const user = userEvent.setup()
 
-    render(<App />)
-    await user.click(await screen.findByRole('button', { name: 'Planning' }))
+    renderApp('/tasks')
+    await user.click(await screen.findByRole('link', { name: 'Planning' }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
     await screen.findByText('Prepare outline')
     const taskList = screen.getByRole('list', { name: 'Zadania' })
@@ -329,8 +329,8 @@ describe('Projects', () => {
       ]))
     const user = userEvent.setup()
 
-    render(<App />)
-    await user.click(await screen.findByRole('button', { name: 'Planning' }))
+    renderApp('/tasks')
+    await user.click(await screen.findByRole('link', { name: 'Planning' }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
     await screen.findByText('Capture scope')
     await user.click(screen.getByRole('button', { name: 'Edytuj zadanie: Capture scope' }))
@@ -341,7 +341,7 @@ describe('Projects', () => {
     await user.click(screen.getByRole('button', { name: 'Zapisz zmiany' }))
 
     expect(await screen.findByText('Nie ma tu jeszcze zadań.')).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Archive' }))
+    await user.click(screen.getByRole('link', { name: 'Archive' }))
     expect(await screen.findByText('Capture requirements')).toBeInTheDocument()
     expect(screen.getByText('Confirm with the team')).toBeInTheDocument()
     expect(fetchMock).toHaveBeenNthCalledWith(
@@ -377,8 +377,8 @@ describe('Projects', () => {
       }))
     const user = userEvent.setup()
 
-    render(<App />)
-    await user.click(await screen.findByRole('button', { name: 'Planning' }))
+    renderApp('/tasks')
+    await user.click(await screen.findByRole('link', { name: 'Planning' }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
     await screen.findByText('First title')
     await user.click(screen.getByRole('button', { name: 'Edytuj zadanie: First title' }))
@@ -422,14 +422,14 @@ describe('Projects', () => {
       ]))
     const user = userEvent.setup()
 
-    render(<App />)
-    await user.click(await screen.findByRole('button', { name: 'Planning' }))
+    renderApp('/tasks')
+    await user.click(await screen.findByRole('link', { name: 'Planning' }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
     await screen.findByText('Planning task')
     await user.click(screen.getByRole('button', { name: 'Oznacz jako ukończone: Planning task' }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(4))
 
-    await user.click(screen.getByRole('button', { name: 'Archive' }))
+    await user.click(screen.getByRole('link', { name: 'Archive' }))
     await screen.findByText('Archive task')
 
     await act(async () => {
@@ -469,7 +469,7 @@ describe('Deleting tasks and projects', () => {
       .mockResolvedValueOnce(new Response(null, { status: 204 }))
     const user = userEvent.setup()
 
-    render(<App />)
+    renderApp('/tasks')
     await screen.findByText('Prepare outline')
     await user.click(screen.getByRole('button', { name: 'Usuń zadanie: Prepare outline' }))
 
@@ -511,7 +511,7 @@ describe('Deleting tasks and projects', () => {
       )
     const user = userEvent.setup()
 
-    render(<App />)
+    renderApp('/tasks')
     await screen.findByText('Prepare outline')
     await user.click(screen.getByRole('button', { name: 'Usuń zadanie: Prepare outline' }))
     await user.click(screen.getByRole('button', { name: 'Usuń zadanie' }))
@@ -531,8 +531,8 @@ describe('Deleting tasks and projects', () => {
       .mockResolvedValueOnce(jsonResponse([task]))
     const user = userEvent.setup()
 
-    render(<App />)
-    await user.click(await screen.findByRole('button', { name: 'Planning' }))
+    renderApp('/tasks')
+    await user.click(await screen.findByRole('link', { name: 'Planning' }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
     await screen.findByText('Prepare outline')
     await user.click(screen.getByRole('button', { name: 'Usuń projekt' }))
@@ -551,7 +551,7 @@ describe('Deleting tasks and projects', () => {
       '/api/v1/projects/2/',
       expect.objectContaining({ method: 'DELETE' }),
     )
-    expect(screen.queryByRole('button', { name: 'Planning' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Planning' })).not.toBeInTheDocument()
     expect(await screen.findByText('Prepare outline')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Inbox' })).toBeInTheDocument()
   })
@@ -563,14 +563,14 @@ describe('Deleting tasks and projects', () => {
       .mockResolvedValueOnce(jsonResponse([task]))
     const user = userEvent.setup()
 
-    render(<App />)
-    await user.click(await screen.findByRole('button', { name: 'Planning' }))
+    renderApp('/tasks')
+    await user.click(await screen.findByRole('link', { name: 'Planning' }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
     await user.click(screen.getByRole('button', { name: 'Usuń projekt' }))
     await user.click(screen.getByRole('button', { name: 'Anuluj' }))
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Planning' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Planning' })).toBeInTheDocument()
     expect(screen.getByText('Prepare outline')).toBeInTheDocument()
     expect(fetchMock).toHaveBeenCalledTimes(3)
   })
@@ -580,7 +580,7 @@ describe('Deleting tasks and projects', () => {
       .mockResolvedValueOnce(jsonResponse([inbox]))
       .mockResolvedValueOnce(jsonResponse([]))
 
-    render(<App />)
+    renderApp('/tasks')
     await screen.findByRole('heading', { name: 'Inbox' })
 
     expect(screen.queryByRole('button', { name: 'Usuń projekt' })).not.toBeInTheDocument()

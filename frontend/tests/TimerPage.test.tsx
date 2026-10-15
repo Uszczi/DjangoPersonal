@@ -1,10 +1,10 @@
 /** User-visible Time tracking flow tests, with HTTP mocked at the network boundary. */
 
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
-import App from '../src/App'
+import { renderApp } from './renderApp'
 
 const inbox = {
   id: 1,
@@ -76,10 +76,10 @@ describe('Time tracking', () => {
       .mockResolvedValueOnce(jsonResponse([]))
     const user = userEvent.setup()
 
-    render(<App />)
+    renderApp('/tasks')
     await screen.findByRole('heading', { name: 'Inbox' })
 
-    await user.click(screen.getByRole('button', { name: 'Czas' }))
+    await user.click(screen.getByRole('link', { name: 'Czas' }))
 
     expect(await screen.findByRole('heading', { name: 'Timer' })).toBeInTheDocument()
     expect(screen.getByText('Brak aktywnego timera. Uruchom go obok zadania na liście zadań.')).toBeInTheDocument()
@@ -108,7 +108,7 @@ describe('Time tracking', () => {
       .mockResolvedValueOnce(jsonResponse([task]))
     const user = userEvent.setup()
 
-    render(<App />)
+    renderApp('/tasks')
     await user.click(await screen.findByRole('button', { name: 'Uruchom timer: Prepare outline' }))
 
     expect(await screen.findByRole('heading', { name: 'Timer' })).toBeInTheDocument()
@@ -145,11 +145,11 @@ describe('Time tracking', () => {
         .mockResolvedValueOnce(timerResponse(runningEntry))
         .mockResolvedValueOnce(jsonResponse([]))
         .mockResolvedValueOnce(jsonResponse([task]))
-      render(<App />)
+      renderApp('/tasks')
       await vi.waitFor(() =>
         expect(screen.getByRole('heading', { name: 'Inbox' })).toBeInTheDocument(),
       )
-      fireEvent.click(screen.getByRole('button', { name: 'Czas' }))
+      fireEvent.click(screen.getByRole('link', { name: 'Czas' }))
 
       await vi.waitFor(() => expect(screen.getByText('0:00:00')).toBeInTheDocument())
       await act(async () => {
@@ -175,9 +175,9 @@ describe('Time tracking', () => {
       .mockResolvedValueOnce(jsonResponse([task]))
     const user = userEvent.setup()
 
-    render(<App />)
+    renderApp('/tasks')
     await screen.findByRole('heading', { name: 'Inbox' })
-    await user.click(screen.getByRole('button', { name: 'Czas' }))
+    await user.click(screen.getByRole('link', { name: 'Czas' }))
     await screen.findByRole('heading', { name: 'Dodaj wpis ręcznie' })
 
     await user.selectOptions(screen.getByLabelText('Zadanie'), String(task.id))
@@ -220,9 +220,9 @@ describe('Time tracking', () => {
       .mockResolvedValueOnce(jsonResponse([]))
     const user = userEvent.setup()
 
-    render(<App />)
+    renderApp('/tasks')
     await screen.findByRole('heading', { name: 'Inbox' })
-    await user.click(screen.getByRole('button', { name: 'Czas' }))
+    await user.click(screen.getByRole('link', { name: 'Czas' }))
     await screen.findByText('45 MIN')
 
     await user.click(screen.getByRole('button', { name: 'Edytuj wpis: Prepare outline' }))
@@ -267,9 +267,9 @@ describe('Time tracking', () => {
       .mockResolvedValueOnce(jsonResponse([]))
     const user = userEvent.setup()
 
-    render(<App />)
+    renderApp('/tasks')
     await screen.findByRole('heading', { name: 'Inbox' })
-    await user.click(screen.getByRole('button', { name: 'Czas' }))
+    await user.click(screen.getByRole('link', { name: 'Czas' }))
     await screen.findByText('TIMER AKTYWNY')
 
     expect(
@@ -303,9 +303,9 @@ describe('Time tracking', () => {
       .mockResolvedValueOnce(jsonResponse([task]))
     const user = userEvent.setup()
 
-    render(<App />)
+    renderApp('/tasks')
     await screen.findByRole('heading', { name: 'Inbox' })
-    await user.click(screen.getByRole('button', { name: 'Czas' }))
+    await user.click(screen.getByRole('link', { name: 'Czas' }))
 
     const summary = await screen.findByRole('heading', { name: 'Suma czasu' })
     const summarySection = summary.closest('section')
