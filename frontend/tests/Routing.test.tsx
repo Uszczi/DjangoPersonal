@@ -74,6 +74,17 @@ describe('Routing', () => {
     expect(await screen.findByRole('heading', { name: 'Tej strony nie ma' })).toBeInTheDocument()
   })
 
+  test('a failed projects load does not masquerade as a missing Project', async () => {
+    fetchMock.mockImplementation(() =>
+      Promise.resolve(jsonResponse({ detail: 'Nie udało się' }, 500)),
+    )
+
+    renderApp('/tasks?project=2')
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Nie udało się wczytać projektów')
+    expect(screen.queryByRole('heading', { name: 'Tej strony nie ma' })).not.toBeInTheDocument()
+  })
+
   test('the selected Project is kept in the URL after a refresh', async () => {
     const user = userEvent.setup()
     const { router } = renderApp('/tasks')

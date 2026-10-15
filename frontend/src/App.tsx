@@ -27,6 +27,26 @@ function orderProjects(projects: Project[]) {
   })
 }
 
+/** The Project a task falls back to: Inbox when present, otherwise the first Project. */
+function defaultProject(projects: Project[]) {
+  return projects.find((item) => item.isInbox) ?? projects[0] ?? null
+}
+
+type TopTabPath = '/' | '/tasks' | '/timer'
+
+function TopTabLink({ to, children }: { to: TopTabPath; children: string }) {
+  return (
+    <Link
+      className="topbar-tab"
+      to={to}
+      activeOptions={{ exact: true }}
+      activeProps={{ className: 'topbar-tab is-selected', 'aria-current': 'page' }}
+    >
+      {children}
+    </Link>
+  )
+}
+
 function App() {
   const { project } = useSearch({ from: '__root__' })
   const { pathname } = useLocation()
@@ -64,10 +84,12 @@ function App() {
     }
   }, [])
 
-  const inbox = projects.find((item) => item.isInbox)
-  const selectedProjectId = project ?? inbox?.id ?? projects[0]?.id ?? null
+  const selectedProjectId = project ?? defaultProject(projects)?.id ?? null
   const projectNotFound =
-    !isLoading && project !== undefined && !projects.some((item) => item.id === project)
+    !isLoading &&
+    !pageError &&
+    project !== undefined &&
+    !projects.some((item) => item.id === project)
   const editingProject = editor?.kind === 'edit' ? editor.project : null
 
   function openCreateForm() {
@@ -143,9 +165,9 @@ function App() {
       await projectsApi.projectsDestroy({ id: deletedProject.id })
       setProjects((current) => current.filter((item) => item.id !== deletedProject.id))
       setProjectPendingDelete(null)
-      const inboxProject = projects.find((item) => item.isInbox)
-      if (inboxProject) {
-        navigate({ to: '/tasks', search: { project: inboxProject.id } })
+      const fallbackProject = defaultProject(projects)
+      if (fallbackProject) {
+        navigate({ to: '/tasks', search: { project: fallbackProject.id } })
       } else {
         navigate({ to: '/tasks' })
       }
@@ -171,30 +193,9 @@ function App() {
           <span>DjangoPersonal</span>
         </Link>
         <nav className="topbar-tabs" aria-label="Nawigacja widoków">
-          <Link
-            className="topbar-tab"
-            to="/"
-            activeOptions={{ exact: true }}
-            activeProps={{ className: 'topbar-tab is-selected', 'aria-current': 'page' }}
-          >
-            Start
-          </Link>
-          <Link
-            className="topbar-tab"
-            to="/tasks"
-            activeOptions={{ exact: true }}
-            activeProps={{ className: 'topbar-tab is-selected', 'aria-current': 'page' }}
-          >
-            Zadania
-          </Link>
-          <Link
-            className="topbar-tab"
-            to="/timer"
-            activeOptions={{ exact: true }}
-            activeProps={{ className: 'topbar-tab is-selected', 'aria-current': 'page' }}
-          >
-            Czas
-          </Link>
+          <TopTabLink to="/">Start</TopTabLink>
+          <TopTabLink to="/tasks">Zadania</TopTabLink>
+          <TopTabLink to="/timer">Czas</TopTabLink>
         </nav>
         <div className="topbar-caption">
           <span className="topbar-dot" aria-hidden="true" />
