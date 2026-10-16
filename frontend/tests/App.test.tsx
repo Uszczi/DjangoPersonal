@@ -4,10 +4,10 @@ import { act, cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
-import { DeleteProjectModal } from '../src/components/DeleteProjectModal'
-import { ProjectEditorModal } from '../src/components/ProjectEditorModal'
-import type { Project } from '../src/generated/api'
-import { ShowModal } from '../src/stores/modal'
+import { DeleteProjectModal } from '@/components/DeleteProjectModal'
+import { ProjectEditorModal } from '@/components/ProjectEditorModal'
+import type { Project } from '@/generated/api'
+import { ShowModal } from '@/stores/modal'
 import { renderApp } from './renderApp'
 
 const inbox = {

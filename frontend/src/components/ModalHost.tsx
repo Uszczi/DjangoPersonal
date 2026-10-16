@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 
-import { useModalStore } from "../stores/modal";
+import { useModalStore } from "@/stores/modal";
 
 /** Renders the modals opened through `ShowModal`. Mount it once in the app shell. */
 export function ModalHost() {

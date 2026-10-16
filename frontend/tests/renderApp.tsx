@@ -2,12 +2,12 @@
 import { render } from '@testing-library/react'
 import { RouterProvider, createMemoryHistory, createRouter } from '@tanstack/react-router'
 
-import { routeTree } from '../src/routeTree.gen'
-import { useLayoutStore } from '../src/stores/layout'
-import { useModalStore } from '../src/stores/modal'
-import { useProjectsStore } from '../src/stores/projects'
-import { useTasksStore } from '../src/stores/tasks'
-import { useTimerStore } from '../src/stores/timer'
+import { routeTree } from '@/routeTree.gen'
+import { useLayoutStore } from '@/stores/layout'
+import { useModalStore } from '@/stores/modal'
+import { useProjectsStore } from '@/stores/projects'
+import { useTasksStore } from '@/stores/tasks'
+import { useTimerStore } from '@/stores/timer'
 
 /** Reset every Zustand store so each render starts from a clean slate. */
 export function resetStores() {

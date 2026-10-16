@@ -3,10 +3,10 @@ import { createRootRoute, retainSearchParams } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Link, Outlet, useSearch } from "@tanstack/react-router";
 
-import { ModalHost } from "../components/ModalHost";
-import { NotFoundPage } from "../components/NotFoundPage";
-import { useProjectsStore } from "../stores/projects";
-import "../App.css";
+import { ModalHost } from "@/components/ModalHost";
+import { NotFoundPage } from "@/components/NotFoundPage";
+import { useProjectsStore } from "@/stores/projects";
+import "@/App.css";
 
 export const Route = createRootRoute({
   validateSearch: (search: Record<string, unknown>): { project?: number } => ({

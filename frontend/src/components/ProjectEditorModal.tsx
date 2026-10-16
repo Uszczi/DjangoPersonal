@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
-import { apiErrorMessage } from "../apiErrorMessage";
-import type { Project } from "../generated/api";
-import { useProjectsStore, type ProjectInput } from "../stores/projects";
+import { apiErrorMessage } from "@/apiErrorMessage";
+import type { Project } from "@/generated/api";
+import { useProjectsStore, type ProjectInput } from "@/stores/projects";
 
 type ProjectEditorModalProps = {
   /** Omit (or pass `null`) to create a new Project; pass a Project to edit it. */

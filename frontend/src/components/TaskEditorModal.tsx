@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from "react";
 
-import { apiErrorMessage } from "../apiErrorMessage";
-import type { Task } from "../generated/api";
-import { useProjectsStore } from "../stores/projects";
-import { useTasksStore, type TaskInput } from "../stores/tasks";
+import { apiErrorMessage } from "@/apiErrorMessage";
+import type { Task } from "@/generated/api";
+import { useProjectsStore } from "@/stores/projects";
+import { useTasksStore, type TaskInput } from "@/stores/tasks";
 
 type TaskEditorModalProps = {
   /** Omit (or pass `null`) to create a new Task; pass a Task to edit it. */

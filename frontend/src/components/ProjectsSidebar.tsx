@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
 
-import { ProjectEditorModal } from "./ProjectEditorModal";
-import { ShowModal } from "../stores/modal";
-import { useProjectsStore } from "../stores/projects";
+import { ProjectEditorModal } from "@/components/ProjectEditorModal";
+import { ShowModal } from "@/stores/modal";
+import { useProjectsStore } from "@/stores/projects";
 
 type ProjectsSidebarProps = {
   selectedProjectId: number | null;

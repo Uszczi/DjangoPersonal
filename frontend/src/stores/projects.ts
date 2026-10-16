@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import { Configuration, ProjectsApi, type Project } from "../generated/api";
+import { Configuration, ProjectsApi, type Project } from "@/generated/api";
 
 const projectsApi = new ProjectsApi(new Configuration({ basePath: "" }));
 

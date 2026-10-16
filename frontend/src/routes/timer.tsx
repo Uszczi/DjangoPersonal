@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { useEffect, useState, type FormEvent } from "react";
 
-import { apiErrorMessage } from "../apiErrorMessage";
-import { useTimerStore } from "../stores/timer";
-import type { TimeEntry } from "../generated/api";
+import { apiErrorMessage } from "@/apiErrorMessage";
+import { useTimerStore } from "@/stores/timer";
+import type { TimeEntry } from "@/generated/api";
 
 export const Route = createFileRoute("/timer")({
   component: TimerPage,

@@ -5,15 +5,15 @@ import {
 } from "@tanstack/react-router";
 import { useEffect } from "react";
 
-import { DeleteTaskModal } from "../components/DeleteTaskModal";
-import { ProjectEditorModal } from "../components/ProjectEditorModal";
-import { ProjectsSidebar } from "../components/ProjectsSidebar";
-import { TaskEditorModal } from "../components/TaskEditorModal";
-import { useLayoutStore } from "../stores/layout";
-import { ShowModal } from "../stores/modal";
-import { defaultProject, useProjectsStore } from "../stores/projects";
-import { useTasksStore } from "../stores/tasks";
-import type { Task } from "../generated/api";
+import { DeleteTaskModal } from "@/components/DeleteTaskModal";
+import { ProjectEditorModal } from "@/components/ProjectEditorModal";
+import { ProjectsSidebar } from "@/components/ProjectsSidebar";
+import { TaskEditorModal } from "@/components/TaskEditorModal";
+import { useLayoutStore } from "@/stores/layout";
+import { ShowModal } from "@/stores/modal";
+import { defaultProject, useProjectsStore } from "@/stores/projects";
+import { useTasksStore } from "@/stores/tasks";
+import type { Task } from "@/generated/api";
 
 export const Route = createFileRoute("/tasks")({
   component: TasksPage,

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import { apiErrorMessage } from "../apiErrorMessage";
+import { apiErrorMessage } from "@/apiErrorMessage";
 import {
   Configuration,
   TasksApi,
@@ -9,7 +9,7 @@ import {
   type Task,
   type TimeEntry,
   type TimerState,
-} from "../generated/api";
+} from "@/generated/api";
 
 const timeEntriesApi = new TimeEntriesApi(new Configuration({ basePath: "" }));
 const tasksApi = new TasksApi(new Configuration({ basePath: "" }));
