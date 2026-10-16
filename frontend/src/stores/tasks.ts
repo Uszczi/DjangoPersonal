@@ -9,13 +9,7 @@ const timerApi = new TimerApi(new Configuration({ basePath: "" }));
 export type TaskInput = {
   title: string;
   description: string;
-  project?: number;
-};
-
-export type TaskEditInput = {
-  title: string;
-  description: string;
-  projectId: number;
+  project: number;
 };
 
 export type TaskListState = { projectId: number; tasks: Task[] } | null;
@@ -32,35 +26,20 @@ function orderTasks(tasks: Task[]) {
 type TasksState = {
   taskList: TaskListState;
   loadError: TaskLoadError;
-  isEditorOpen: boolean;
-  editingTask: Task | null;
-  pendingDelete: Task | null;
   actionError: string;
-  deleteError: string;
   loadTasks: (projectId: number) => Promise<void>;
-  openCreateForm: () => void;
-  closeEditor: () => void;
-  openEditForm: (task: Task) => void;
-  closeEditForm: () => void;
-  createTask: (input: TaskInput, projectId: number | null) => Promise<void>;
+  saveTask: (input: TaskInput, task?: Task | null) => Promise<Task>;
   toggleTaskCompletion: (task: Task) => Promise<void>;
   startTaskTimer: (task: Task) => Promise<boolean>;
-  openDeleteDialog: (task: Task) => void;
-  closeDeleteDialog: () => void;
-  confirmDelete: () => Promise<void>;
-  updateTask: (task: Task, input: TaskEditInput) => Promise<void>;
+  confirmDelete: (task: Task) => Promise<void>;
 };
 
 let loadRequestId = 0;
 
-export const useTasksStore = create<TasksState>((set, get) => ({
+export const useTasksStore = create<TasksState>((set) => ({
   taskList: null,
   loadError: null,
-  isEditorOpen: false,
-  editingTask: null,
-  pendingDelete: null,
   actionError: "",
-  deleteError: "",
 
   loadTasks: async (projectId) => {
     const requestId = ++loadRequestId;
@@ -84,39 +63,33 @@ export const useTasksStore = create<TasksState>((set, get) => ({
     }
   },
 
-  openCreateForm: () => set({ isEditorOpen: true }),
+  saveTask: async (input, task) => {
+    if (task) {
+      const updatedTask = await tasksApi.tasksPartialUpdate({
+        id: task.id,
+        patchedTaskUpdateRequest: input,
+      });
+      upsertTask(set, task, updatedTask);
+      return updatedTask;
+    }
 
-  closeEditor: () => set({ isEditorOpen: false }),
-
-  openEditForm: (task) => set({ editingTask: task }),
-
-  closeEditForm: () => set({ editingTask: null }),
-
-  createTask: async (input, projectId) => {
     const createdTask = await tasksApi.tasksCreate({
       taskCreateRequest: input,
     });
-
     set((state) => {
       const current = state.taskList;
-      const belongsInCurrentList =
-        projectId !== null && current?.projectId === projectId;
+      const visibleTasks =
+        current && current.projectId === input.project ? current.tasks : [];
 
       return {
-        taskList:
-          projectId === null
-            ? current
-            : {
-                projectId,
-                tasks: orderTasks([
-                  ...(belongsInCurrentList ? current.tasks : []),
-                  createdTask,
-                ]),
-              },
+        taskList: {
+          projectId: input.project,
+          tasks: orderTasks([...visibleTasks, createdTask]),
+        },
         loadError: null,
-        isEditorOpen: false,
       };
     });
+    return createdTask;
   },
 
   toggleTaskCompletion: async (task) => {
@@ -145,45 +118,17 @@ export const useTasksStore = create<TasksState>((set, get) => ({
     }
   },
 
-  openDeleteDialog: (task) => set({ pendingDelete: task, deleteError: "" }),
-
-  closeDeleteDialog: () => set({ pendingDelete: null }),
-
-  confirmDelete: async () => {
-    const { pendingDelete } = get();
-    if (!pendingDelete) return;
-
-    try {
-      await tasksApi.tasksDestroy({ id: pendingDelete.id });
-    } catch (error) {
-      set({ deleteError: await apiErrorMessage(error) });
-      return;
-    }
+  confirmDelete: async (task) => {
+    await tasksApi.tasksDestroy({ id: task.id });
 
     set((state) => ({
       taskList: state.taskList
         ? {
             projectId: state.taskList.projectId,
-            tasks: state.taskList.tasks.filter(
-              (task) => task.id !== pendingDelete.id,
-            ),
+            tasks: state.taskList.tasks.filter((item) => item.id !== task.id),
           }
         : state.taskList,
-      pendingDelete: null,
     }));
-  },
-
-  updateTask: async (task, input) => {
-    const updatedTask = await tasksApi.tasksPartialUpdate({
-      id: task.id,
-      patchedTaskUpdateRequest: {
-        title: input.title,
-        description: input.description,
-        project: input.projectId,
-      },
-    });
-    upsertTask(set, task, updatedTask);
-    set({ editingTask: null });
   },
 }));
 
