@@ -3,8 +3,10 @@ import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { useEffect, useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "../apiErrorMessage";
+import { ProjectEditorModal } from "../components/ProjectEditorModal";
 import { ProjectsSidebar } from "../components/ProjectsSidebar";
 import { useLayoutStore } from "../stores/layout";
+import { ShowModal } from "../stores/modal";
 import { useProjectsStore } from "../stores/projects";
 import {
   useTasksStore,
@@ -23,7 +25,6 @@ function TasksPage() {
 
   const projects = useProjectsStore((state) => state.projects);
   const isProjectsLoading = useProjectsStore((state) => state.isLoading);
-  const openNewProject = useProjectsStore((state) => state.openCreateForm);
 
   const taskList = useTasksStore((state) => state.taskList);
   const loadError = useTasksStore((state) => state.loadError);
@@ -196,7 +197,10 @@ function TasksPage() {
       <div className="empty-state">
         <p className="eyebrow">BRAK PROJEKTÓW</p>
         <h1>Utwórz pierwsze miejsce pracy</h1>
-        <button className="primary-button" onClick={openNewProject}>
+        <button
+          className="primary-button"
+          onClick={() => ShowModal(ProjectEditorModal)}
+        >
           Nowy projekt
         </button>
       </div>

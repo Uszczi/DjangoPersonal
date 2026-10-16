@@ -1,5 +1,7 @@
 import { Link } from "@tanstack/react-router";
 
+import { ProjectEditorModal } from "./ProjectEditorModal";
+import { ShowModal } from "../stores/modal";
 import { useProjectsStore } from "../stores/projects";
 
 type ProjectsSidebarProps = {
@@ -15,7 +17,6 @@ export function ProjectsSidebar({
 }: ProjectsSidebarProps) {
   const projects = useProjectsStore((state) => state.projects);
   const isLoading = useProjectsStore((state) => state.isLoading);
-  const onNewProject = useProjectsStore((state) => state.openCreateForm);
 
   return (
     <aside className="sidebar" aria-label="Nawigacja projektów">
@@ -44,7 +45,7 @@ export function ProjectsSidebar({
             </div>
             <button
               className="icon-button add-project"
-              onClick={onNewProject}
+              onClick={() => ShowModal(ProjectEditorModal)}
               aria-label="Nowy projekt"
               title="Nowy projekt"
             >
