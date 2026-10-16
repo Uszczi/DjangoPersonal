@@ -1,7 +1,18 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from "@tanstack/react-router";
 
-import MainPage from '../MainPage'
-
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute("/")({
   component: MainPage,
-})
+});
+
+function MainPage() {
+  return (
+    <>
+      <div className="project-heading">
+        <div>
+          <p className="project-kicker">STRONA GŁÓWNA</p>
+          <h1>Start</h1>
+        </div>
+      </div>
+    </>
+  );
+}
