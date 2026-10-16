@@ -37,7 +37,6 @@ export function ProjectsSidebar({
               <span aria-hidden="true">«</span>
             </button>
             <div>
-              <p className="eyebrow">TWOJE MIEJSCA</p>
               <h2>Projekty</h2>
             </div>
             <button
@@ -64,7 +63,9 @@ export function ProjectsSidebar({
                   key={item.id}
                   to="/tasks"
                   search={{ project: item.id }}
-                  aria-current={item.id === selectedProjectId ? "page" : undefined}
+                  aria-current={
+                    item.id === selectedProjectId ? "page" : undefined
+                  }
                   aria-label={item.name}
                 >
                   <span
@@ -74,16 +75,10 @@ export function ProjectsSidebar({
                     {item.isInbox ? "↳" : "·"}
                   </span>
                   <span className="project-link-name">{item.name}</span>
-                  {item.isInbox && <span className="project-tag">DOMYŚLNY</span>}
                 </Link>
               ))
             )}
           </nav>
-
-          <div className="sidebar-footer">
-            <span className="footer-rule" />
-            <p>Porządek zaczyna się od miejsca.</p>
-          </div>
         </>
       )}
     </aside>
