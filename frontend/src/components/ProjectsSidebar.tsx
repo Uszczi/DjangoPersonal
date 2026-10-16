@@ -1,18 +1,21 @@
 import { Link } from "@tanstack/react-router";
 
-import { useLayoutContext } from "../layoutContext";
+import { useProjectsStore } from "../stores/projects";
 
 type ProjectsSidebarProps = {
+  selectedProjectId: number | null;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
 };
 
 export function ProjectsSidebar({
+  selectedProjectId,
   isCollapsed = false,
   onToggleCollapse,
 }: ProjectsSidebarProps) {
-  const { projects, selectedProjectId, isLoading, onNewProject } =
-    useLayoutContext();
+  const projects = useProjectsStore((state) => state.projects);
+  const isLoading = useProjectsStore((state) => state.isLoading);
+  const onNewProject = useProjectsStore((state) => state.openCreateForm);
 
   return (
     <aside className="sidebar" aria-label="Nawigacja projektów">

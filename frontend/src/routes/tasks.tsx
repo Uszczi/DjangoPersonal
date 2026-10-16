@@ -1,153 +1,107 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { useNavigate } from "@tanstack/react-router";
 
 import { apiErrorMessage } from "../apiErrorMessage";
 import { ProjectsSidebar } from "../components/ProjectsSidebar";
-import { useLayoutContext } from "../layoutContext";
-import { Configuration, TasksApi, TimerApi, type Task } from "../generated/api";
+import { useLayoutStore } from "../stores/layout";
+import { useProjectsStore } from "../stores/projects";
+import {
+  useTasksStore,
+  type TaskEditInput,
+  type TaskInput,
+} from "../stores/tasks";
+import type { Task } from "../generated/api";
 
 export const Route = createFileRoute("/tasks")({
   component: TasksPage,
 });
 
-const tasksApi = new TasksApi(new Configuration({ basePath: "" }));
-const timerApi = new TimerApi(new Configuration({ basePath: "" }));
-
-type TaskInput = { title: string; description: string; project?: number };
-type TaskEditInput = { title: string; description: string; projectId: string };
-
-function orderTasks(tasks: Task[]) {
-  return [...tasks].sort((left, right) => {
-    if (left.isCompleted !== right.isCompleted)
-      return left.isCompleted ? 1 : -1;
-    return left.id - right.id;
-  });
-}
-
 function TasksPage() {
-  const { projects, selectedProjectId, isLoading, onNewProject } =
-    useLayoutContext();
+  const { project } = useSearch({ from: "__root__" });
   const navigate = useNavigate();
-  const [loadedTaskList, setLoadedTaskList] = useState<{
-    projectId: number;
-    tasks: Task[];
-  } | null>(null);
-  const [taskLoadError, setTaskLoadError] = useState<{
-    projectId: number;
-    message: string;
-  } | null>(null);
-  const [isTaskEditorOpen, setIsTaskEditorOpen] = useState(false);
+
+  const projects = useProjectsStore((state) => state.projects);
+  const isProjectsLoading = useProjectsStore((state) => state.isLoading);
+  const openNewProject = useProjectsStore((state) => state.openCreateForm);
+
+  const taskList = useTasksStore((state) => state.taskList);
+  const loadError = useTasksStore((state) => state.loadError);
+  const isEditorOpen = useTasksStore((state) => state.isEditorOpen);
+  const editingTask = useTasksStore((state) => state.editingTask);
+  const pendingDelete = useTasksStore((state) => state.pendingDelete);
+  const actionError = useTasksStore((state) => state.actionError);
+  const deleteError = useTasksStore((state) => state.deleteError);
+  const loadTasks = useTasksStore((state) => state.loadTasks);
+  const openCreateForm = useTasksStore((state) => state.openCreateForm);
+  const closeEditor = useTasksStore((state) => state.closeEditor);
+  const openEditForm = useTasksStore((state) => state.openEditForm);
+  const closeEditForm = useTasksStore((state) => state.closeEditForm);
+  const createTask = useTasksStore((state) => state.createTask);
+  const toggleTaskCompletion = useTasksStore(
+    (state) => state.toggleTaskCompletion,
+  );
+  const startTaskTimer = useTasksStore((state) => state.startTaskTimer);
+  const openDeleteDialog = useTasksStore((state) => state.openDeleteDialog);
+  const closeDeleteDialog = useTasksStore((state) => state.closeDeleteDialog);
+  const confirmDelete = useTasksStore((state) => state.confirmDelete);
+  const updateTask = useTasksStore((state) => state.updateTask);
+
+  const isSidebarCollapsed = useLayoutStore((state) => state.isSidebarCollapsed);
+  const toggleSidebar = useLayoutStore((state) => state.toggleSidebar);
+
   const [taskForm, setTaskForm] = useState({ title: "", description: "" });
   const [taskFormError, setTaskFormError] = useState("");
   const [isCreatingTask, setIsCreatingTask] = useState(false);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [taskEditForm, setTaskEditForm] = useState<TaskEditInput>({
     title: "",
     description: "",
-    projectId: "",
+    projectId: 0,
   });
   const [taskEditError, setTaskEditError] = useState("");
   const [isSavingTaskEdit, setIsSavingTaskEdit] = useState(false);
-  const [taskActionError, setTaskActionError] = useState("");
-  const [taskPendingDelete, setTaskPendingDelete] = useState<Task | null>(null);
   const [isDeletingTask, setIsDeletingTask] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [taskDeleteError, setTaskDeleteError] = useState("");
 
+  const selectedProjectId = project ?? null;
   const selectedProject =
     projects.find((item) => item.id === selectedProjectId) ?? null;
 
   useEffect(() => {
     if (selectedProjectId === null) return;
-
-    let isCurrent = true;
-
-    tasksApi
-      .tasksList({ project: selectedProjectId })
-      .then((loadedTasks) => {
-        if (!isCurrent) return;
-        setLoadedTaskList({
-          projectId: selectedProjectId,
-          tasks: orderTasks(loadedTasks),
-        });
-        setTaskLoadError(null);
-      })
-      .catch(() => {
-        if (isCurrent) {
-          setTaskLoadError({
-            projectId: selectedProjectId,
-            message: "Nie udało się wczytać zadań. Spróbuj ponownie.",
-          });
-        }
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [selectedProjectId]);
+    void loadTasks(selectedProjectId);
+  }, [loadTasks, selectedProjectId]);
 
   const tasks =
-    loadedTaskList?.projectId === selectedProjectId ? loadedTaskList.tasks : [];
+    taskList?.projectId === selectedProjectId ? taskList.tasks : [];
   const tasksError =
-    taskLoadError?.projectId === selectedProjectId ? taskLoadError.message : "";
+    loadError?.projectId === selectedProjectId ? loadError.message : "";
   const isTasksLoading =
     selectedProjectId !== null &&
-    loadedTaskList?.projectId !== selectedProjectId &&
-    taskLoadError?.projectId !== selectedProjectId;
+    taskList?.projectId !== selectedProjectId &&
+    loadError?.projectId !== selectedProjectId;
 
   function openTaskForm() {
     setTaskForm({ title: "", description: "" });
     setTaskFormError("");
-    setIsTaskEditorOpen(true);
+    openCreateForm();
   }
 
   function closeTaskForm() {
-    if (!isCreatingTask) setIsTaskEditorOpen(false);
+    if (!isCreatingTask) closeEditor();
   }
 
   function openTaskEditForm(task: Task) {
     setTaskEditForm({
       title: task.title,
       description: task.description ?? "",
-      projectId: String(task.project),
+      projectId: task.project,
     });
     setTaskEditError("");
-    setEditingTask(task);
+    openEditForm(task);
   }
 
   function closeTaskEditForm() {
-    if (!isSavingTaskEdit) setEditingTask(null);
-  }
-
-  function updateTaskList(previousTask: Task, updatedTask: Task) {
-    setLoadedTaskList((current) => {
-      if (!current) return current;
-
-      const currentTasks = current.tasks;
-      const taskWasVisible = currentTasks.some(
-        (task) => task.id === previousTask.id,
-      );
-      const taskBelongsInList = updatedTask.project === current.projectId;
-      if (!taskWasVisible && !taskBelongsInList) return current;
-
-      const visibleTasks = taskBelongsInList
-        ? [
-            ...currentTasks.filter((task) => task.id !== updatedTask.id),
-            updatedTask,
-          ]
-        : currentTasks.filter((task) => task.id !== updatedTask.id);
-
-      return { projectId: current.projectId, tasks: orderTasks(visibleTasks) };
-    });
-    setTaskLoadError((current) =>
-      current &&
-      (current.projectId === previousTask.project ||
-        current.projectId === updatedTask.project)
-        ? null
-        : current,
-    );
+    if (!isSavingTaskEdit) closeEditForm();
   }
 
   async function saveTask(event: FormEvent<HTMLFormElement>) {
@@ -169,20 +123,7 @@ function TasksPage() {
     setTaskFormError("");
 
     try {
-      const createdTask = await tasksApi.tasksCreate({
-        taskCreateRequest: input,
-      });
-      if (selectedProjectId !== null) {
-        setLoadedTaskList((current) => ({
-          projectId: selectedProjectId,
-          tasks: orderTasks([
-            ...(current?.projectId === selectedProjectId ? current.tasks : []),
-            createdTask,
-          ]),
-        }));
-      }
-      setTaskLoadError(null);
-      setIsTaskEditorOpen(false);
+      await createTask(input, selectedProjectId);
     } catch (error) {
       setTaskFormError(await apiErrorMessage(error));
     } finally {
@@ -190,60 +131,21 @@ function TasksPage() {
     }
   }
 
-  async function toggleTaskCompletion(task: Task) {
-    setTaskActionError("");
-
-    try {
-      const updatedTask = await tasksApi.tasksPartialUpdate({
-        id: task.id,
-        patchedTaskUpdateRequest: { isCompleted: !task.isCompleted },
-      });
-      updateTaskList(task, updatedTask);
-    } catch (error) {
-      setTaskActionError(await apiErrorMessage(error));
-    }
-  }
-
-  async function startTaskTimer(task: Task) {
-    setTaskActionError("");
-
-    try {
-      await timerApi.timerStart({ timerStartRequest: { task: task.id } });
+  async function startTimer(task: Task) {
+    if (await startTaskTimer(task)) {
       navigate({ to: "/timer" });
-    } catch (error) {
-      setTaskActionError(await apiErrorMessage(error));
     }
-  }
-
-  function openTaskDeleteDialog(task: Task) {
-    setTaskDeleteError("");
-    setTaskPendingDelete(task);
   }
 
   function closeTaskDeleteDialog() {
-    if (!isDeletingTask) setTaskPendingDelete(null);
+    if (!isDeletingTask) closeDeleteDialog();
   }
 
-  async function confirmTaskDelete() {
-    if (!taskPendingDelete) return;
-
+  async function handleTaskDelete() {
     setIsDeletingTask(true);
-    setTaskDeleteError("");
 
     try {
-      const deletedTask = taskPendingDelete;
-      await tasksApi.tasksDestroy({ id: deletedTask.id });
-      setLoadedTaskList((current) =>
-        current
-          ? {
-              projectId: current.projectId,
-              tasks: current.tasks.filter((task) => task.id !== deletedTask.id),
-            }
-          : current,
-      );
-      setTaskPendingDelete(null);
-    } catch (error) {
-      setTaskDeleteError(await apiErrorMessage(error));
+      await confirmDelete();
     } finally {
       setIsDeletingTask(false);
     }
@@ -252,7 +154,7 @@ function TasksPage() {
   async function saveTaskEdit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const title = taskEditForm.title.trim();
-    const projectId = Number(taskEditForm.projectId);
+    const projectId = taskEditForm.projectId;
 
     if (!title) {
       setTaskEditError("Podaj tytuł zadania.");
@@ -269,16 +171,11 @@ function TasksPage() {
     setTaskEditError("");
 
     try {
-      const updatedTask = await tasksApi.tasksPartialUpdate({
-        id: editingTask.id,
-        patchedTaskUpdateRequest: {
-          title,
-          description: taskEditForm.description.trim(),
-          project: projectId,
-        },
+      await updateTask(editingTask, {
+        title,
+        description: taskEditForm.description.trim(),
+        projectId,
       });
-      updateTaskList(editingTask, updatedTask);
-      setEditingTask(null);
     } catch (error) {
       setTaskEditError(await apiErrorMessage(error));
     } finally {
@@ -286,7 +183,7 @@ function TasksPage() {
     }
   }
 
-  if (isLoading) {
+  if (isProjectsLoading) {
     return (
       <div className="loading-state" role="status">
         Wczytywanie projektów…
@@ -299,7 +196,7 @@ function TasksPage() {
       <div className="empty-state">
         <p className="eyebrow">BRAK PROJEKTÓW</p>
         <h1>Utwórz pierwsze miejsce pracy</h1>
-        <button className="primary-button" onClick={onNewProject}>
+        <button className="primary-button" onClick={openNewProject}>
           Nowy projekt
         </button>
       </div>
@@ -312,17 +209,16 @@ function TasksPage() {
         className={`tasks-layout${isSidebarCollapsed ? " is-sidebar-collapsed" : ""}`}
       >
         <ProjectsSidebar
+          selectedProjectId={selectedProjectId}
           isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={() =>
-            setIsSidebarCollapsed((collapsed) => !collapsed)
-          }
+          onToggleCollapse={toggleSidebar}
         />
         <section className="tasks-section" aria-labelledby="tasks-heading">
           <div className="task-section-heading">
             <div>
               <button
                 className="sidebar-open-button"
-                onClick={() => setIsSidebarCollapsed((collapsed) => !collapsed)}
+                onClick={toggleSidebar}
               >
                 <span aria-hidden="true">{isSidebarCollapsed ? "»" : "«"}</span>
               </button>
@@ -377,7 +273,7 @@ function TasksPage() {
                       type="button"
                       aria-label={`Uruchom timer: ${task.title}`}
                       title="Uruchom timer"
-                      onClick={() => void startTaskTimer(task)}
+                      onClick={() => void startTimer(task)}
                     >
                       <span aria-hidden="true">▶</span>
                     </button>
@@ -396,7 +292,7 @@ function TasksPage() {
                       className="task-delete-button"
                       type="button"
                       aria-label={`Usuń zadanie: ${task.title}`}
-                      onClick={() => openTaskDeleteDialog(task)}
+                      onClick={() => openDeleteDialog(task)}
                     >
                       Usuń
                     </button>
@@ -405,9 +301,9 @@ function TasksPage() {
               ))}
             </ul>
           )}
-          {taskActionError && (
+          {actionError && (
             <p className="task-error" role="alert">
-              {taskActionError}
+              {actionError}
             </p>
           )}
         </section>
@@ -419,7 +315,7 @@ function TasksPage() {
         </p>
       )}
 
-      {isTaskEditorOpen && (
+      {isEditorOpen && (
         <div
           className="dialog-backdrop"
           onMouseDown={(event) => {
@@ -567,7 +463,7 @@ function TasksPage() {
                   onChange={(event) =>
                     setTaskEditForm((current) => ({
                       ...current,
-                      projectId: event.target.value,
+                      projectId: Number(event.target.value),
                     }))
                   }
                   required
@@ -606,7 +502,7 @@ function TasksPage() {
         </div>
       )}
 
-      {taskPendingDelete && (
+      {pendingDelete && (
         <div
           className="dialog-backdrop"
           onMouseDown={(event) => {
@@ -634,12 +530,12 @@ function TasksPage() {
             </div>
 
             <p className="confirm-message">
-              Zadanie „{taskPendingDelete.title}" zostanie trwale usunięte. Tej
+              Zadanie „{pendingDelete.title}" zostanie trwale usunięte. Tej
               operacji nie można cofnąć.
             </p>
-            {taskDeleteError && (
+            {deleteError && (
               <p className="form-error" role="alert">
-                {taskDeleteError}
+                {deleteError}
               </p>
             )}
             <div className="dialog-actions">
@@ -654,7 +550,7 @@ function TasksPage() {
               <button
                 className="danger-button"
                 type="button"
-                onClick={() => void confirmTaskDelete()}
+                onClick={() => void handleTaskDelete()}
                 disabled={isDeletingTask}
               >
                 {isDeletingTask ? "Usuwanie…" : "Usuń zadanie"}

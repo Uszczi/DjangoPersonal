@@ -4,8 +4,8 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link, Outlet, useNavigate, useSearch } from "@tanstack/react-router";
 
 import { apiErrorMessage } from "../apiErrorMessage";
-import { LayoutContextValue } from "../layoutContext";
-import { Configuration, ProjectsApi, type Project } from "../generated/api";
+import { NotFoundPage } from "../components/NotFoundPage";
+import { useProjectsStore } from "../stores/projects";
 import "../App.css";
 
 export const Route = createRootRoute({
@@ -18,26 +18,7 @@ export const Route = createRootRoute({
   component: App,
 });
 
-type ProjectEditorState =
-  { kind: "create" } | { kind: "edit"; project: Project } | null;
-
 type ProjectInput = { name: string; description: string };
-
-const projectsApi = new ProjectsApi(new Configuration({ basePath: "" }));
-
-function orderProjects(projects: Project[]) {
-  return [...projects].sort((left, right) => {
-    if (left.isInbox !== right.isInbox) return left.isInbox ? -1 : 1;
-    return left.name.localeCompare(right.name, undefined, {
-      sensitivity: "base",
-    });
-  });
-}
-
-/** The Project a task falls back to: Inbox when present, otherwise the first Project. */
-function defaultProject(projects: Project[]) {
-  return projects.find((item) => item.isInbox) ?? projects[0] ?? null;
-}
 
 type TopTabPath = "/" | "/tasks" | "/timer";
 
@@ -60,44 +41,34 @@ function TopTabLink({ to, children }: { to: TopTabPath; children: string }) {
 function App() {
   const { project } = useSearch({ from: "__root__" });
   const navigate = useNavigate();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [pageError, setPageError] = useState("");
-  const [editor, setEditor] = useState<ProjectEditorState>(null);
+
+  const projects = useProjectsStore((state) => state.projects);
+  const isLoading = useProjectsStore((state) => state.isLoading);
+  const pageError = useProjectsStore((state) => state.pageError);
+  const editor = useProjectsStore((state) => state.editor);
+  const pendingDelete = useProjectsStore((state) => state.pendingDelete);
+  const projectDeleteError = useProjectsStore(
+    (state) => state.projectDeleteError,
+  );
+  const loadProjects = useProjectsStore((state) => state.loadProjects);
+  const closeEditor = useProjectsStore((state) => state.closeEditor);
+  const saveProjectAction = useProjectsStore((state) => state.saveProject);
+  const closeProjectDeleteDialog = useProjectsStore(
+    (state) => state.closeProjectDeleteDialog,
+  );
+  const confirmProjectDelete = useProjectsStore(
+    (state) => state.confirmProjectDelete,
+  );
+
   const [form, setForm] = useState<ProjectInput>({ name: "", description: "" });
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [projectPendingDelete, setProjectPendingDelete] =
-    useState<Project | null>(null);
   const [isDeletingProject, setIsDeletingProject] = useState(false);
-  const [projectDeleteError, setProjectDeleteError] = useState("");
 
   useEffect(() => {
-    let isCurrent = true;
+    void loadProjects();
+  }, [loadProjects]);
 
-    projectsApi
-      .projectsList()
-      .then((loadedProjects) => {
-        if (!isCurrent) return;
-        setProjects(orderProjects(loadedProjects));
-      })
-      .catch(() => {
-        if (isCurrent) {
-          setPageError(
-            "Nie udało się wczytać projektów. Odśwież stronę, aby spróbować ponownie.",
-          );
-        }
-      })
-      .finally(() => {
-        if (isCurrent) setIsLoading(false);
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, []);
-
-  const selectedProjectId = project ?? defaultProject(projects)?.id ?? null;
   const projectNotFound =
     !isLoading &&
     !pageError &&
@@ -105,29 +76,16 @@ function App() {
     !projects.some((item) => item.id === project);
   const editingProject = editor?.kind === "edit" ? editor.project : null;
 
-  function openCreateForm() {
+  function resetForm() {
     setForm({ name: "", description: "" });
     setFormError("");
-    setEditor({ kind: "create" });
-  }
-
-  function openEditForm(project: Project) {
-    setForm({ name: project.name, description: project.description ?? "" });
-    setFormError("");
-    setEditor({ kind: "edit", project });
   }
 
   function closeForm() {
-    if (!isSaving) setEditor(null);
-  }
-
-  function openProjectDeleteDialog(project: Project) {
-    setProjectDeleteError("");
-    setProjectPendingDelete(project);
-  }
-
-  function closeProjectDeleteDialog() {
-    if (!isDeletingProject) setProjectPendingDelete(null);
+    if (!isSaving) {
+      resetForm();
+      closeEditor();
+    }
   }
 
   async function saveProject(event: FormEvent<HTMLFormElement>) {
@@ -146,27 +104,9 @@ function App() {
     setFormError("");
 
     try {
-      if (editor?.kind === "edit") {
-        const updatedProject = await projectsApi.projectsPartialUpdate({
-          id: editor.project.id,
-          patchedProjectRequest: input,
-        });
-        setProjects((current) =>
-          orderProjects(
-            current.map((item) =>
-              item.id === updatedProject.id ? updatedProject : item,
-            ),
-          ),
-        );
-        navigate({ to: "/tasks", search: { project: updatedProject.id } });
-      } else {
-        const createdProject = await projectsApi.projectsCreate({
-          projectRequest: input,
-        });
-        setProjects((current) => orderProjects([...current, createdProject]));
-        navigate({ to: "/tasks", search: { project: createdProject.id } });
-      }
-      setEditor(null);
+      const savedProject = await saveProjectAction(input);
+      resetForm();
+      navigate({ to: "/tasks", search: { project: savedProject.id } });
     } catch (error) {
       setFormError(await apiErrorMessage(error));
     } finally {
@@ -174,27 +114,18 @@ function App() {
     }
   }
 
-  async function confirmProjectDelete() {
-    if (!projectPendingDelete) return;
-
+  async function handleProjectDelete() {
     setIsDeletingProject(true);
-    setProjectDeleteError("");
 
     try {
-      const deletedProject = projectPendingDelete;
-      await projectsApi.projectsDestroy({ id: deletedProject.id });
-      setProjects((current) =>
-        current.filter((item) => item.id !== deletedProject.id),
-      );
-      setProjectPendingDelete(null);
-      const fallbackProject = defaultProject(projects);
+      const fallbackProject = await confirmProjectDelete();
       if (fallbackProject) {
         navigate({ to: "/tasks", search: { project: fallbackProject.id } });
       } else {
         navigate({ to: "/tasks" });
       }
-    } catch (error) {
-      setProjectDeleteError(await apiErrorMessage(error));
+    } catch {
+      // The error is surfaced through the store-backed dialog.
     } finally {
       setIsDeletingProject(false);
     }
@@ -225,18 +156,7 @@ function App() {
           {projectNotFound ? (
             <NotFoundPage />
           ) : (
-            <LayoutContextValue.Provider
-              value={{
-                projects,
-                selectedProjectId,
-                isLoading,
-                onNewProject: openCreateForm,
-                onEditProject: openEditForm,
-                onDeleteProject: openProjectDeleteDialog,
-              }}
-            >
-              <Outlet />
-            </LayoutContextValue.Provider>
+            <Outlet />
           )}
         </main>
       </div>
@@ -336,11 +256,11 @@ function App() {
         </div>
       )}
 
-      {projectPendingDelete && (
+      {pendingDelete && (
         <div
           className="dialog-backdrop"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget)
+            if (event.target === event.currentTarget && !isDeletingProject)
               closeProjectDeleteDialog();
           }}
         >
@@ -357,7 +277,9 @@ function App() {
               </div>
               <button
                 className="icon-button close-button"
-                onClick={closeProjectDeleteDialog}
+                onClick={() => {
+                  if (!isDeletingProject) closeProjectDeleteDialog();
+                }}
                 aria-label="Zamknij"
               >
                 <span aria-hidden="true">×</span>
@@ -365,8 +287,8 @@ function App() {
             </div>
 
             <p className="confirm-message">
-              Projekt „{projectPendingDelete.name}" zostanie trwale usunięty, a
-              jego zadania trafią do Inbox.
+              Projekt „{pendingDelete.name}" zostanie trwale usunięty, a jego
+              zadania trafią do Inbox.
             </p>
             {projectDeleteError && (
               <p className="form-error" role="alert">
@@ -377,7 +299,9 @@ function App() {
               <button
                 className="quiet-button"
                 type="button"
-                onClick={closeProjectDeleteDialog}
+                onClick={() => {
+                  if (!isDeletingProject) closeProjectDeleteDialog();
+                }}
                 disabled={isDeletingProject}
               >
                 Anuluj
@@ -385,7 +309,7 @@ function App() {
               <button
                 className="danger-button"
                 type="button"
-                onClick={() => void confirmProjectDelete()}
+                onClick={() => void handleProjectDelete()}
                 disabled={isDeletingProject}
               >
                 {isDeletingProject ? "Usuwanie…" : "Usuń projekt"}

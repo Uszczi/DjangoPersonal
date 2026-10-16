@@ -3,23 +3,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "../apiErrorMessage";
-import {
-  Configuration,
-  TasksApi,
-  TimeEntriesApi,
-  TimerApi,
-  type Task,
-  type TimeEntry,
-  type TimerState,
-} from "../generated/api";
+import { useTimerStore } from "../stores/timer";
+import type { TimeEntry } from "../generated/api";
 
 export const Route = createFileRoute("/timer")({
   component: TimerPage,
 });
-
-const timeEntriesApi = new TimeEntriesApi(new Configuration({ basePath: "" }));
-const tasksApi = new TasksApi(new Configuration({ basePath: "" }));
-const timerApi = new TimerApi(new Configuration({ basePath: "" }));
 
 function dateKey(date: Date) {
   const year = date.getFullYear();
@@ -61,12 +50,25 @@ function entryMinutes(entry: TimeEntry) {
 }
 
 function TimerPage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [pageError, setPageError] = useState("");
-  const [runningEntryRaw, setRunningEntry] = useState<TimeEntry | null>(null);
-  const [serverOffset, setServerOffset] = useState(0);
-  const [entries, setEntries] = useState<TimeEntry[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const isLoading = useTimerStore((state) => state.isLoading);
+  const pageError = useTimerStore((state) => state.pageError);
+  const runningEntryRaw = useTimerStore((state) => state.runningEntry);
+  const serverOffset = useTimerStore((state) => state.serverOffset);
+  const entries = useTimerStore((state) => state.entries);
+  const tasks = useTimerStore((state) => state.tasks);
+  const editingEntry = useTimerStore((state) => state.editingEntry);
+  const actionError = useTimerStore((state) => state.actionError);
+  const loadData = useTimerStore((state) => state.loadData);
+  const stopTimer = useTimerStore((state) => state.stopTimer);
+  const discardTimer = useTimerStore((state) => state.discardTimer);
+  const addManualEntryAction = useTimerStore(
+    (state) => state.addManualEntry,
+  );
+  const updateEntryAction = useTimerStore((state) => state.updateEntry);
+  const deleteEntryAction = useTimerStore((state) => state.deleteEntry);
+  const openEntryEditor = useTimerStore((state) => state.openEntryEditor);
+  const closeEntryEditor = useTimerStore((state) => state.closeEntryEditor);
+
   const [nowTick, setNowTick] = useState(() => Date.now());
   const [manualForm, setManualForm] = useState({
     date: todayKey(),
@@ -74,49 +76,16 @@ function TimerPage() {
     minutes: "",
   });
   const [manualError, setManualError] = useState("");
-  const [editingEntry, setEditingEntry] = useState<TimeEntry | null>(null);
   const [editForm, setEditForm] = useState({
     date: "",
     taskId: "",
     minutes: "",
   });
   const [editError, setEditError] = useState("");
-  const [actionError, setActionError] = useState("");
-
-  function applyTimerState(timer: TimerState) {
-    setRunningEntry(timer.entry ?? null);
-    setServerOffset(timer.serverNow.getTime() - Date.now());
-  }
 
   useEffect(() => {
-    let isCurrent = true;
-
-    Promise.all([
-      timerApi.timerRetrieve(),
-      timeEntriesApi.timeEntriesList({}),
-      tasksApi.tasksList({ all: true }),
-    ])
-      .then(([timer, loadedEntries, loadedTasks]) => {
-        if (!isCurrent) return;
-        applyTimerState(timer);
-        setEntries(loadedEntries);
-        setTasks(loadedTasks);
-      })
-      .catch(() => {
-        if (isCurrent) {
-          setPageError(
-            "Nie udało się wczytać danych czasu. Odśwież stronę, aby spróbować ponownie.",
-          );
-        }
-      })
-      .finally(() => {
-        if (isCurrent) setIsLoading(false);
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, []);
+    void loadData();
+  }, [loadData]);
 
   useEffect(() => {
     const interval = setInterval(() => setNowTick(Date.now()), 1000);
@@ -161,32 +130,6 @@ function TimerPage() {
 
   const correctedNow = nowTick + serverOffset;
 
-  async function refreshEntries() {
-    setEntries(await timeEntriesApi.timeEntriesList({}));
-  }
-
-  async function stopTimer() {
-    setActionError("");
-    try {
-      applyTimerState(await timerApi.timerStop());
-      await refreshEntries();
-    } catch (error) {
-      setActionError(await apiErrorMessage(error));
-    }
-  }
-
-  async function discardTimer() {
-    if (!runningEntry) return;
-    setActionError("");
-    try {
-      await timeEntriesApi.timeEntriesDestroy({ id: runningEntry.id });
-      await refreshEntries();
-      setRunningEntry(null);
-    } catch (error) {
-      setActionError(await apiErrorMessage(error));
-    }
-  }
-
   async function addManualEntry(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const taskId = Number(manualForm.taskId);
@@ -206,23 +149,21 @@ function TimerPage() {
     }
 
     setManualError("");
+
     try {
-      await timeEntriesApi.timeEntriesCreate({
-        timeEntryCreateRequest: {
-          task: taskId,
-          date: new Date(`${manualForm.date}T00:00:00`),
-          durationMinutes: minutes,
-        },
+      await addManualEntryAction({
+        date: manualForm.date,
+        taskId,
+        minutes,
       });
       setManualForm({ date: todayKey(), taskId: "", minutes: "" });
-      await refreshEntries();
     } catch (error) {
       setManualError(await apiErrorMessage(error));
     }
   }
 
-  function openEntryEditor(entry: TimeEntry) {
-    setEditingEntry(entry);
+  function openEntryEditForm(entry: TimeEntry) {
+    openEntryEditor(entry);
     setEditForm({
       date: dateKey(entry.start),
       taskId: String(entry.task),
@@ -251,29 +192,15 @@ function TimerPage() {
     }
 
     setEditError("");
+
     try {
-      await timeEntriesApi.timeEntriesPartialUpdate({
-        id: editingEntry.id,
-        patchedTimeEntryRequest: {
-          task: taskId,
-          date: new Date(`${editForm.date}T00:00:00`),
-          durationMinutes: minutes,
-        },
+      await updateEntryAction(editingEntry, {
+        date: editForm.date,
+        taskId,
+        minutes,
       });
-      setEditingEntry(null);
-      await refreshEntries();
     } catch (error) {
       setEditError(await apiErrorMessage(error));
-    }
-  }
-
-  async function deleteEntry(entry: TimeEntry) {
-    setActionError("");
-    try {
-      await timeEntriesApi.timeEntriesDestroy({ id: entry.id });
-      await refreshEntries();
-    } catch (error) {
-      setActionError(await apiErrorMessage(error));
     }
   }
 
@@ -447,7 +374,7 @@ function TimerPage() {
                     className="task-edit-button"
                     type="button"
                     aria-label={`Edytuj wpis: ${taskTitle(entry)}`}
-                    onClick={() => openEntryEditor(entry)}
+                    onClick={() => openEntryEditForm(entry)}
                   >
                     Edytuj
                   </button>
@@ -455,7 +382,7 @@ function TimerPage() {
                     className="task-edit-button"
                     type="button"
                     aria-label={`Usuń wpis: ${taskTitle(entry)}`}
-                    onClick={() => void deleteEntry(entry)}
+                    onClick={() => void deleteEntryAction(entry)}
                   >
                     Usuń
                   </button>
@@ -518,7 +445,7 @@ function TimerPage() {
         <div
           className="dialog-backdrop"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setEditingEntry(null);
+            if (event.target === event.currentTarget) closeEntryEditor();
           }}
         >
           <section
@@ -534,7 +461,7 @@ function TimerPage() {
               </div>
               <button
                 className="icon-button close-button"
-                onClick={() => setEditingEntry(null)}
+                onClick={closeEntryEditor}
                 aria-label="Zamknij"
               >
                 <span aria-hidden="true">×</span>
@@ -600,7 +527,7 @@ function TimerPage() {
                 <button
                   className="quiet-button"
                   type="button"
-                  onClick={() => setEditingEntry(null)}
+                  onClick={closeEntryEditor}
                 >
                   Anuluj
                 </button>
