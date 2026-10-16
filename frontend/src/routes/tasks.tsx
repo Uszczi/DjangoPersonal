@@ -31,8 +31,6 @@ function TasksPage() {
     selectedProjectId,
     isLoading,
     onNewProject,
-    onEditProject,
-    onDeleteProject,
   } = useLayoutContext();
   const navigate = useNavigate();
   const [loadedTaskList, setLoadedTaskList] = useState<{
@@ -312,64 +310,9 @@ function TasksPage() {
 
   return (
     <>
-      <div className="breadcrumb">
-        <span>PRZESTRZEŃ</span>
-        <span className="breadcrumb-slash">/</span>
-        <span>{selectedProject.isInbox ? "START" : "PROJEKT"}</span>
-      </div>
-
-      <div className="project-heading">
-        <div>
-          <p className="project-kicker">
-            {selectedProject.isInbox ? "ZAWSZE POD RĘKĄ" : "TWOJA PRZESTRZEŃ"}
-          </p>
-          <h1>{selectedProject.name}</h1>
-        </div>
-        <div className="project-heading-actions">
-          {!selectedProject.isInbox && (
-            <button
-              className="quiet-button"
-              onClick={() => onDeleteProject(selectedProject)}
-            >
-              Usuń projekt
-            </button>
-          )}
-          <button
-            className="quiet-button"
-            onClick={() => onEditProject(selectedProject)}
-          >
-            Edytuj projekt
-            <span aria-hidden="true">↗</span>
-          </button>
-        </div>
-      </div>
-
-      <section className="project-card" aria-label="Szczegóły projektu">
-        <div className="card-edge" aria-hidden="true" />
-        <div className="card-topline">
-          <span>
-            {selectedProject.isInbox ? "SKRZYNKA DOMYŚLNA" : "PROJEKT"}
-          </span>
-          <span className="card-mark" aria-hidden="true">
-            ✳
-          </span>
-        </div>
-        <p className="project-description">
-          {selectedProject.description ||
-            (selectedProject.isInbox
-              ? "Zadania bez wybranego projektu trafiają właśnie tutaj."
-              : "Dodaj opis, aby zapisać kontekst tego projektu.")}
-        </p>
-        <div className="card-bottomline">
-          <span className="status-light" aria-hidden="true" />
-          <span>GOTOWE NA TWOJE ZADANIA</span>
-        </div>
-      </section>
-
       <section className="tasks-section" aria-labelledby="tasks-heading">
         <div className="task-section-heading">
           <div>
-            <p className="eyebrow">W TYM PROJEKCIE</p>
             <h2 id="tasks-heading">Zadania</h2>
           </div>
           <div className="task-heading-actions">

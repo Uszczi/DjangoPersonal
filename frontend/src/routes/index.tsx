@@ -9,7 +9,6 @@ function MainPage() {
     <>
       <div className="project-heading">
         <div>
-          <p className="project-kicker">STRONA GŁÓWNA</p>
           <h1>Start</h1>
         </div>
       </div>

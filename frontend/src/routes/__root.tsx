@@ -1,13 +1,7 @@
 import { createRootRoute, retainSearchParams } from "@tanstack/react-router";
 
 import { useEffect, useState, type FormEvent } from "react";
-import {
-  Link,
-  Outlet,
-  useLocation,
-  useNavigate,
-  useSearch,
-} from "@tanstack/react-router";
+import { Link, Outlet, useNavigate, useSearch } from "@tanstack/react-router";
 
 import { apiErrorMessage } from "../apiErrorMessage";
 import { LayoutContextValue } from "../layoutContext";
@@ -65,7 +59,6 @@ function TopTabLink({ to, children }: { to: TopTabPath; children: string }) {
 
 function App() {
   const { project } = useSearch({ from: "__root__" });
-  const { pathname } = useLocation();
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -207,13 +200,6 @@ function App() {
     }
   }
 
-  const indexLabel =
-    pathname === "/timer"
-      ? "02 / CZAS"
-      : pathname === "/tasks"
-        ? "01 / PROJEKTY"
-        : "00 / START";
-
   return (
     <div className="app-shell">
       <header className="topbar">
@@ -235,64 +221,6 @@ function App() {
       </header>
 
       <div className="workspace">
-        <aside className="sidebar" aria-label="Nawigacja projektów">
-          <div className="sidebar-heading">
-            <div>
-              <p className="eyebrow">TWOJE MIEJSCA</p>
-              <h2>Projekty</h2>
-            </div>
-            <button
-              className="icon-button add-project"
-              onClick={openCreateForm}
-              aria-label="Nowy projekt"
-              title="Nowy projekt"
-            >
-              <span aria-hidden="true">+</span>
-            </button>
-          </div>
-
-          <nav className="project-navigation" aria-label="Projekty">
-            {isLoading ? (
-              <p className="sidebar-message">Wczytywanie…</p>
-            ) : (
-              projects.map((item) => (
-                <Link
-                  className={`project-link${item.id === selectedProjectId ? " is-selected" : ""}`}
-                  key={item.id}
-                  to="/tasks"
-                  search={{ project: item.id }}
-                  aria-current={
-                    item.id === selectedProjectId ? "page" : undefined
-                  }
-                  aria-label={item.name}
-                >
-                  <span
-                    className={`project-symbol${item.isInbox ? " is-inbox" : ""}`}
-                    aria-hidden="true"
-                  >
-                    {item.isInbox ? "↳" : "·"}
-                  </span>
-                  <span className="project-link-name">{item.name}</span>
-                  {item.isInbox && (
-                    <span className="project-tag">DOMYŚLNY</span>
-                  )}
-                </Link>
-              ))
-            )}
-          </nav>
-
-          {pageError && (
-            <p className="sidebar-error" role="alert">
-              {pageError}
-            </p>
-          )}
-
-          <div className="sidebar-footer">
-            <span className="footer-rule" />
-            <p>Porządek zaczyna się od miejsca.</p>
-          </div>
-        </aside>
-
         <main className="main-panel">
           {projectNotFound ? (
             <NotFoundPage />

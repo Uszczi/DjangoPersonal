@@ -295,15 +295,8 @@ function TimerPage() {
 
   return (
     <>
-      <div className="breadcrumb">
-        <span>PRZESTRZEŃ</span>
-        <span className="breadcrumb-slash">/</span>
-        <span>CZAS</span>
-      </div>
-
       <div className="project-heading">
         <div>
-          <p className="project-kicker">MONITORING CZASU</p>
           <h1>Timer</h1>
         </div>
       </div>
@@ -622,5 +615,3 @@ function TimerPage() {
     </>
   );
 }
-
-export default TimerPage;
