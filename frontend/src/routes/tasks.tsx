@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
 import { apiErrorMessage } from "../apiErrorMessage";
+import { ProjectsSidebar } from "../components/ProjectsSidebar";
 import { useLayoutContext } from "../layoutContext";
 import { Configuration, TasksApi, TimerApi, type Task } from "../generated/api";
 
@@ -26,12 +27,8 @@ function orderTasks(tasks: Task[]) {
 }
 
 function TasksPage() {
-  const {
-    projects,
-    selectedProjectId,
-    isLoading,
-    onNewProject,
-  } = useLayoutContext();
+  const { projects, selectedProjectId, isLoading, onNewProject } =
+    useLayoutContext();
   const navigate = useNavigate();
   const [loadedTaskList, setLoadedTaskList] = useState<{
     projectId: number;
@@ -56,6 +53,7 @@ function TasksPage() {
   const [taskActionError, setTaskActionError] = useState("");
   const [taskPendingDelete, setTaskPendingDelete] = useState<Task | null>(null);
   const [isDeletingTask, setIsDeletingTask] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [taskDeleteError, setTaskDeleteError] = useState("");
 
   const selectedProject =
@@ -310,94 +308,110 @@ function TasksPage() {
 
   return (
     <>
-      <section className="tasks-section" aria-labelledby="tasks-heading">
-        <div className="task-section-heading">
-          <div>
-            <h2 id="tasks-heading">Zadania</h2>
-          </div>
-          <div className="task-heading-actions">
-            <span className="task-count">
-              {tasks.length} {tasks.length === 1 ? "ZADANIE" : "ZADAŃ"}
-            </span>
-            <button
-              className="primary-button new-task-button"
-              onClick={openTaskForm}
-            >
-              <span aria-hidden="true">+</span>
-              Nowe zadanie
-            </button>
-          </div>
-        </div>
-
-        {isTasksLoading ? (
-          <p className="task-message" role="status">
-            Wczytywanie zadań…
-          </p>
-        ) : tasksError ? (
-          <p className="task-error" role="alert">
-            {tasksError}
-          </p>
-        ) : tasks.length === 0 ? (
-          <p className="task-empty-state">Nie ma tu jeszcze zadań.</p>
-        ) : (
-          <ul className="task-list" aria-label="Zadania">
-            {tasks.map((task) => (
-              <li
-                className={`task-row${task.isCompleted ? " is-completed" : ""}`}
-                key={task.id}
+      <div
+        className={`tasks-layout${isSidebarCollapsed ? " is-sidebar-collapsed" : ""}`}
+      >
+        <ProjectsSidebar
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() =>
+            setIsSidebarCollapsed((collapsed) => !collapsed)
+          }
+        />
+        <section className="tasks-section" aria-labelledby="tasks-heading">
+          <div className="task-section-heading">
+            <div>
+              <button
+                className="sidebar-open-button"
+                onClick={() => setIsSidebarCollapsed((collapsed) => !collapsed)}
               >
-                <button
-                  className={`task-status-toggle${task.isCompleted ? " is-completed" : ""}`}
-                  type="button"
-                  aria-label={`${task.isCompleted ? "Otwórz zadanie" : "Oznacz jako ukończone"}: ${task.title}`}
-                  onClick={() => void toggleTaskCompletion(task)}
+                <span aria-hidden="true">{isSidebarCollapsed ? "»" : "«"}</span>
+              </button>
+              <h2 id="tasks-heading">Zadania</h2>
+            </div>
+            <div className="task-heading-actions">
+              <span className="task-count">
+                {tasks.length} {tasks.length === 1 ? "ZADANIE" : "ZADAŃ"}
+              </span>
+              <button
+                className="primary-button new-task-button"
+                onClick={openTaskForm}
+              >
+                <span aria-hidden="true">+</span>
+                Nowe zadanie
+              </button>
+            </div>
+          </div>
+
+          {isTasksLoading ? (
+            <p className="task-message" role="status">
+              Wczytywanie zadań…
+            </p>
+          ) : tasksError ? (
+            <p className="task-error" role="alert">
+              {tasksError}
+            </p>
+          ) : tasks.length === 0 ? (
+            <p className="task-empty-state">Nie ma tu jeszcze zadań.</p>
+          ) : (
+            <ul className="task-list" aria-label="Zadania">
+              {tasks.map((task) => (
+                <li
+                  className={`task-row${task.isCompleted ? " is-completed" : ""}`}
+                  key={task.id}
                 >
-                  {task.isCompleted ? "✓" : ""}
-                </button>
-                <div className="task-copy">
-                  <p>{task.title}</p>
-                  {task.description && <small>{task.description}</small>}
-                </div>
-                <div className="task-row-actions">
                   <button
-                    className="task-timer-button"
+                    className={`task-status-toggle${task.isCompleted ? " is-completed" : ""}`}
                     type="button"
-                    aria-label={`Uruchom timer: ${task.title}`}
-                    title="Uruchom timer"
-                    onClick={() => void startTaskTimer(task)}
+                    aria-label={`${task.isCompleted ? "Otwórz zadanie" : "Oznacz jako ukończone"}: ${task.title}`}
+                    onClick={() => void toggleTaskCompletion(task)}
                   >
-                    <span aria-hidden="true">▶</span>
+                    {task.isCompleted ? "✓" : ""}
                   </button>
-                  <span className="task-status-label">
-                    {task.isCompleted ? "UKOŃCZONE" : "OTWARTE"}
-                  </span>
-                  <button
-                    className="task-edit-button"
-                    type="button"
-                    aria-label={`Edytuj zadanie: ${task.title}`}
-                    onClick={() => openTaskEditForm(task)}
-                  >
-                    Edytuj
-                  </button>
-                  <button
-                    className="task-delete-button"
-                    type="button"
-                    aria-label={`Usuń zadanie: ${task.title}`}
-                    onClick={() => openTaskDeleteDialog(task)}
-                  >
-                    Usuń
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-        {taskActionError && (
-          <p className="task-error" role="alert">
-            {taskActionError}
-          </p>
-        )}
-      </section>
+                  <div className="task-copy">
+                    <p>{task.title}</p>
+                    {task.description && <small>{task.description}</small>}
+                  </div>
+                  <div className="task-row-actions">
+                    <button
+                      className="task-timer-button"
+                      type="button"
+                      aria-label={`Uruchom timer: ${task.title}`}
+                      title="Uruchom timer"
+                      onClick={() => void startTaskTimer(task)}
+                    >
+                      <span aria-hidden="true">▶</span>
+                    </button>
+                    <span className="task-status-label">
+                      {task.isCompleted ? "UKOŃCZONE" : "OTWARTE"}
+                    </span>
+                    <button
+                      className="task-edit-button"
+                      type="button"
+                      aria-label={`Edytuj zadanie: ${task.title}`}
+                      onClick={() => openTaskEditForm(task)}
+                    >
+                      Edytuj
+                    </button>
+                    <button
+                      className="task-delete-button"
+                      type="button"
+                      aria-label={`Usuń zadanie: ${task.title}`}
+                      onClick={() => openTaskDeleteDialog(task)}
+                    >
+                      Usuń
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          {taskActionError && (
+            <p className="task-error" role="alert">
+              {taskActionError}
+            </p>
+          )}
+        </section>
+      </div>
 
       {projects.length === 1 && (
         <p className="first-project-note">

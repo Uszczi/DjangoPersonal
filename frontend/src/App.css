@@ -12,7 +12,6 @@
   height: 68px;
   justify-content: space-between;
   padding: 0 38px;
-  border: 1px solid red;
 }
 
 .brand {
@@ -44,6 +43,36 @@
   min-height: calc(100vh - 68px);
 }
 
+.sidebar {
+  background: var(--deep-ink);
+  color: #edf3f0;
+  display: flex;
+  flex-direction: column;
+  padding: 42px 20px 25px;
+}
+
+.sidebar-heading {
+  align-items: end;
+  display: flex;
+  justify-content: space-between;
+  margin: 0 5px 27px;
+}
+
+.sidebar .eyebrow {
+  color: #9aaead;
+  font-size: 9px;
+  margin-bottom: 7px;
+}
+
+.sidebar-heading h2 {
+  color: #f5f7f4;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  margin: 0;
+}
+
 .eyebrow {
   color: var(--signal);
   font-family: var(--utility);
@@ -68,6 +97,119 @@
 
 .icon-button:hover {
   transform: translateY(-1px);
+}
+
+.add-project {
+  border-color: #456066;
+  color: #f3f7f3;
+  font-size: 23px;
+  height: 33px;
+  line-height: 1;
+  width: 33px;
+}
+
+.add-project:hover {
+  background: #29474d;
+  border-color: #6e8b8d;
+}
+
+.project-navigation {
+  display: grid;
+  gap: 5px;
+}
+
+.project-link {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: #c2d0ce;
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  gap: 12px;
+  min-height: 43px;
+  padding: 0 10px;
+  position: relative;
+  text-align: left;
+  transition: background 140ms ease, color 140ms ease;
+  width: 100%;
+}
+
+.project-link:hover {
+  background: #203f45;
+  color: white;
+}
+
+.project-link.is-selected {
+  background: #28474c;
+  color: #fff;
+}
+
+.project-link.is-selected::before {
+  background: var(--signal);
+  border-radius: 0 2px 2px 0;
+  content: '';
+  height: 22px;
+  left: -20px;
+  position: absolute;
+  width: 3px;
+}
+
+.project-symbol {
+  color: #809b9b;
+  font-family: var(--utility);
+  font-size: 20px;
+  line-height: 1;
+  text-align: center;
+  width: 16px;
+}
+
+.project-symbol.is-inbox {
+  color: #e58a69;
+  font-size: 17px;
+}
+
+.project-link-name {
+  flex: 1;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-tag {
+  color: #97aaa8;
+  font-family: var(--utility);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+.sidebar-message,
+.sidebar-error {
+  color: #b5c6c6;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0 7px;
+}
+
+.sidebar-footer {
+  color: #849a9c;
+  font-size: 11px;
+  line-height: 1.5;
+  margin: auto 5px 0;
+  padding-top: 32px;
+}
+
+.sidebar-footer p {
+  margin: 12px 0 0;
+}
+
+.footer-rule {
+  background: #496368;
+  display: block;
+  height: 1px;
+  width: 36px;
 }
 
 .main-panel {
@@ -229,6 +371,38 @@
   font-size: 12px;
   line-height: 1.6;
   margin-top: 22px;
+}
+
+.tasks-layout {
+  align-items: stretch;
+  display: flex;
+  gap: 36px;
+  margin-left: calc(50% - 50vw);
+  width: 100vw;
+}
+
+.tasks-layout .sidebar {
+  flex: 0 0 250px;
+}
+
+.tasks-layout .tasks-section {
+  flex: 1;
+  margin-top: 0;
+  padding: 0 clamp(28px, 8vw, 110px);
+}
+
+.tasks-layout.is-sidebar-collapsed .sidebar {
+  flex: 0 0 56px;
+  padding: 12px 11px;
+}
+
+.tasks-layout.is-sidebar-collapsed .sidebar-heading {
+  justify-content: center;
+  margin-bottom: 0;
+}
+
+.sidebar-open-button {
+  display: none;
 }
 
 .tasks-section {
@@ -552,6 +726,74 @@ a:focus-visible {
   .workspace {
     grid-template-columns: 1fr;
     min-height: calc(100vh - 60px);
+  }
+
+  .tasks-layout {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .tasks-layout .sidebar {
+    flex-basis: auto;
+  }
+
+  .tasks-layout.is-sidebar-collapsed .sidebar {
+    display: none;
+  }
+
+  .tasks-layout .tasks-section {
+    padding: 0 22px;
+  }
+
+  .task-section-heading > div:first-child {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+  }
+
+  .sidebar-open-button {
+    align-items: center;
+    background: transparent;
+    border: 1px solid #c9d5d2;
+    border-radius: 5px;
+    color: #344d52;
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    font-size: 10px;
+    font-weight: 700;
+    gap: 6px;
+    letter-spacing: 0.1em;
+    padding: 5px 8px;
+    text-transform: uppercase;
+  }
+
+  .sidebar-open-button:hover {
+    background: #f8faf8;
+    border-color: #9db0ad;
+  }
+
+  .sidebar {
+    padding: 22px 18px 16px;
+  }
+
+  .sidebar-heading {
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .project-navigation {
+    display: grid;
+    gap: 5px;
+  }
+
+  .project-link {
+    min-height: 43px;
+    width: 100%;
+  }
+
+  .sidebar-footer {
+    display: none;
   }
 
   .main-panel {
