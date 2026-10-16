@@ -1,9 +1,10 @@
 import { createRootRoute, retainSearchParams } from "@tanstack/react-router";
 
 import { useEffect } from "react";
-import { Link, Outlet, useSearch } from "@tanstack/react-router";
+import { Outlet, useSearch } from "@tanstack/react-router";
 
 import { ModalHost } from "@/components/ModalHost";
+import { Navbar } from "@/components/Navbar";
 import { NotFoundPage } from "@/components/NotFoundPage";
 import { useProjectsStore } from "@/stores/projects";
 import "@/App.css";
@@ -17,24 +18,6 @@ export const Route = createRootRoute({
   },
   component: App,
 });
-
-type TopTabPath = "/" | "/tasks" | "/timer";
-
-function TopTabLink({ to, children }: { to: TopTabPath; children: string }) {
-  return (
-    <Link
-      className="topbar-tab"
-      to={to}
-      activeOptions={{ exact: true }}
-      activeProps={{
-        className: "topbar-tab is-selected",
-        "aria-current": "page",
-      }}
-    >
-      {children}
-    </Link>
-  );
-}
 
 function App() {
   const { project } = useSearch({ from: "__root__" });
@@ -56,23 +39,7 @@ function App() {
 
   return (
     <div className="app-shell">
-      <header className="topbar">
-        <Link
-          className="brand"
-          to="/"
-          aria-label="DjangoPersonal — strona główna"
-        >
-          <span className="brand-mark" aria-hidden="true">
-            D
-          </span>
-          <span>DjangoPersonal</span>
-        </Link>
-        <nav className="topbar-tabs" aria-label="Nawigacja widoków">
-          <TopTabLink to="/">Start</TopTabLink>
-          <TopTabLink to="/tasks">Zadania</TopTabLink>
-          <TopTabLink to="/timer">Czas</TopTabLink>
-        </nav>
-      </header>
+      <Navbar />
 
       <div className="workspace">
         <main className="main-panel">
