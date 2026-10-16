@@ -77,7 +77,8 @@ describe('Time tracking', () => {
     const user = userEvent.setup()
 
     renderApp('/tasks')
-    await screen.findByRole('heading', { name: 'Inbox' })
+    await screen.findByRole('link', { name: 'Inbox' })
+    await screen.findByText('Nie ma tu jeszcze zadań.')
 
     await user.click(screen.getByRole('link', { name: 'Czas' }))
 
@@ -94,8 +95,8 @@ describe('Time tracking', () => {
   })
 
   test('user can start a timer from a task row and stop it on the timer page', async () => {
-    const runningEntry = { id: 5, task: task.id, start: '2026-10-15T12:00:00Z', end: null }
-    const stoppedEntry = { ...runningEntry, end: '2026-10-15T12:30:00Z' }
+    const runningEntry = { id: 5, task: task.id, start: `${daysAgoKey(0)}T12:00:00Z`, end: null }
+    const stoppedEntry = { ...runningEntry, end: `${daysAgoKey(0)}T12:30:00Z` }
     fetchMock
       .mockResolvedValueOnce(jsonResponse([inbox]))
       .mockResolvedValueOnce(jsonResponse([task]))
@@ -147,7 +148,7 @@ describe('Time tracking', () => {
         .mockResolvedValueOnce(jsonResponse([task]))
       renderApp('/tasks')
       await vi.waitFor(() =>
-        expect(screen.getByRole('heading', { name: 'Inbox' })).toBeInTheDocument(),
+        expect(screen.getByText('Prepare outline')).toBeInTheDocument(),
       )
       fireEvent.click(screen.getByRole('link', { name: 'Czas' }))
 
@@ -176,7 +177,7 @@ describe('Time tracking', () => {
     const user = userEvent.setup()
 
     renderApp('/tasks')
-    await screen.findByRole('heading', { name: 'Inbox' })
+    await screen.findByText('Prepare outline')
     await user.click(screen.getByRole('link', { name: 'Czas' }))
     await screen.findByRole('heading', { name: 'Dodaj wpis ręcznie' })
 
@@ -221,7 +222,7 @@ describe('Time tracking', () => {
     const user = userEvent.setup()
 
     renderApp('/tasks')
-    await screen.findByRole('heading', { name: 'Inbox' })
+    await screen.findByText('Prepare outline')
     await user.click(screen.getByRole('link', { name: 'Czas' }))
     await screen.findByText('45 MIN')
 
@@ -268,7 +269,7 @@ describe('Time tracking', () => {
     const user = userEvent.setup()
 
     renderApp('/tasks')
-    await screen.findByRole('heading', { name: 'Inbox' })
+    await screen.findByText('Prepare outline')
     await user.click(screen.getByRole('link', { name: 'Czas' }))
     await screen.findByText('TIMER AKTYWNY')
 
@@ -304,7 +305,7 @@ describe('Time tracking', () => {
     const user = userEvent.setup()
 
     renderApp('/tasks')
-    await screen.findByRole('heading', { name: 'Inbox' })
+    await screen.findByText('Prepare outline')
     await user.click(screen.getByRole('link', { name: 'Czas' }))
 
     const summary = await screen.findByRole('heading', { name: 'Suma czasu' })

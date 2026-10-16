@@ -7,7 +7,7 @@ import { ProjectEditorModal } from "../components/ProjectEditorModal";
 import { ProjectsSidebar } from "../components/ProjectsSidebar";
 import { useLayoutStore } from "../stores/layout";
 import { ShowModal } from "../stores/modal";
-import { useProjectsStore } from "../stores/projects";
+import { defaultProject, useProjectsStore } from "../stores/projects";
 import {
   useTasksStore,
   type TaskEditInput,
@@ -63,7 +63,7 @@ function TasksPage() {
   const [isSavingTaskEdit, setIsSavingTaskEdit] = useState(false);
   const [isDeletingTask, setIsDeletingTask] = useState(false);
 
-  const selectedProjectId = project ?? null;
+  const selectedProjectId = project ?? defaultProject(projects)?.id ?? null;
   const selectedProject =
     projects.find((item) => item.id === selectedProjectId) ?? null;
 

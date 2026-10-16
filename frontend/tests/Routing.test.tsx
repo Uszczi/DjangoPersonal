@@ -81,17 +81,24 @@ describe('Routing', () => {
 
     renderApp('/tasks?project=2')
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Nie udało się wczytać projektów')
+    expect(
+      await screen.findByRole('heading', { name: 'Utwórz pierwsze miejsce pracy' }),
+    ).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Tej strony nie ma' })).not.toBeInTheDocument()
   })
 
   test('the selected Project is kept in the URL after a refresh', async () => {
     const user = userEvent.setup()
     const { router } = renderApp('/tasks')
-    await screen.findByRole('heading', { name: 'Inbox' })
+    await screen.findByRole('link', { name: 'Inbox' })
 
     await user.click(screen.getByRole('link', { name: 'Planning' }))
-    await screen.findByRole('heading', { name: 'Planning' })
+    await waitFor(() =>
+      expect(screen.getByRole('link', { name: 'Planning' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      ),
+    )
     expect(router.state.location.pathname).toBe('/tasks')
     expect(router.state.location.search).toMatchObject({ project: 2 })
 
@@ -99,33 +106,37 @@ describe('Routing', () => {
     cleanup()
     renderApp('/tasks?project=2')
 
-    expect(await screen.findByRole('heading', { name: 'Planning' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Planning' })).toHaveAttribute('aria-current', 'page')
+    expect(await screen.findByRole('link', { name: 'Planning' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
   })
 
   test('the selected Project survives switching to the timer page and back', async () => {
     const user = userEvent.setup()
     const { router } = renderApp('/tasks?project=2')
-    await screen.findByRole('heading', { name: 'Planning' })
+    await screen.findByRole('link', { name: 'Planning' })
 
     await user.click(screen.getByRole('link', { name: 'Czas' }))
     expect(await screen.findByRole('heading', { name: 'Timer' })).toBeInTheDocument()
     expect(router.state.location.search).toMatchObject({ project: 2 })
 
     await user.click(screen.getByRole('link', { name: 'Zadania' }))
-    expect(await screen.findByRole('heading', { name: 'Planning' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Planning' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
     expect(router.state.location.search).toMatchObject({ project: 2 })
   })
 
   test('sidebar Project links and topbar tabs change the URL', async () => {
     const user = userEvent.setup()
     const { router } = renderApp('/tasks')
-    await screen.findByRole('heading', { name: 'Inbox' })
+    await screen.findByRole('link', { name: 'Inbox' })
 
     await user.click(screen.getByRole('link', { name: 'Planning' }))
-    await screen.findByRole('heading', { name: 'Planning' })
+    await waitFor(() => expect(router.state.location.search).toMatchObject({ project: 2 }))
     expect(router.state.location.pathname).toBe('/tasks')
-    expect(router.state.location.search).toMatchObject({ project: 2 })
 
     await user.click(screen.getByRole('link', { name: 'Czas' }))
     await screen.findByRole('heading', { name: 'Timer' })
@@ -135,7 +146,7 @@ describe('Routing', () => {
   test('the brand returns to the main page without a full page reload', async () => {
     const user = userEvent.setup()
     const { router } = renderApp('/tasks')
-    await screen.findByRole('heading', { name: 'Inbox' })
+    await screen.findByRole('link', { name: 'Inbox' })
 
     await user.click(screen.getByRole('link', { name: 'DjangoPersonal — strona główna' }))
 
@@ -146,10 +157,10 @@ describe('Routing', () => {
   test('browser back and forward move between views and Projects', async () => {
     const user = userEvent.setup()
     const { router } = renderApp('/tasks')
-    await screen.findByRole('heading', { name: 'Inbox' })
+    await screen.findByRole('link', { name: 'Inbox' })
 
     await user.click(screen.getByRole('link', { name: 'Planning' }))
-    await screen.findByRole('heading', { name: 'Planning' })
+    await waitFor(() => expect(router.state.location.search).toMatchObject({ project: 2 }))
     await user.click(screen.getByRole('link', { name: 'Czas' }))
     await screen.findByRole('heading', { name: 'Timer' })
     expect(router.state.location.pathname).toBe('/timer')
@@ -158,18 +169,27 @@ describe('Routing', () => {
       router.history.back()
     })
     await waitFor(() => expect(router.state.location.pathname).toBe('/tasks'))
-    expect(await screen.findByRole('heading', { name: 'Planning' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Planning' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
 
     await act(async () => {
       router.history.back()
     })
     await waitFor(() => expect(router.state.location.search).not.toMatchObject({ project: 2 }))
-    expect(await screen.findByRole('heading', { name: 'Inbox' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Inbox' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
 
     await act(async () => {
       router.history.forward()
     })
     await waitFor(() => expect(router.state.location.search).toMatchObject({ project: 2 }))
-    expect(await screen.findByRole('heading', { name: 'Planning' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Planning' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
   })
 })

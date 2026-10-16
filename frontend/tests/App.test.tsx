@@ -4,6 +4,10 @@ import { act, cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
+import { DeleteProjectModal } from '../src/components/DeleteProjectModal'
+import { ProjectEditorModal } from '../src/components/ProjectEditorModal'
+import type { Project } from '../src/generated/api'
+import { ShowModal } from '../src/stores/modal'
 import { renderApp } from './renderApp'
 
 const inbox = {
@@ -26,6 +30,29 @@ const task = {
   description: '',
   project: 2,
   is_completed: false,
+}
+
+// The project editor and delete dialog have no trigger in the current UI, so
+// tests open them the same way the app does, through the modal store.
+const inboxProject: Project = {
+  id: 1,
+  name: 'Inbox',
+  description: '',
+  isInbox: true,
+}
+
+const planningProject: Project = {
+  id: 2,
+  name: 'Planning',
+  description: '',
+  isInbox: false,
+}
+
+const readingProject: Project = {
+  id: 2,
+  name: 'Reading',
+  description: 'Books to explore',
+  isInbox: false,
 }
 
 function jsonResponse(data: unknown, status = 200) {
@@ -70,8 +97,7 @@ describe('Projects', () => {
 
     renderApp('/tasks')
 
-    expect(await screen.findByRole('heading', { name: 'Inbox' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Inbox' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Inbox' })).toBeInTheDocument()
     await screen.findByText('Nie ma tu jeszcze zadań.')
 
     await user.click(screen.getByRole('button', { name: 'Nowy projekt' }))
@@ -79,7 +105,7 @@ describe('Projects', () => {
     await user.type(screen.getByLabelText('Opis (opcjonalnie)'), 'Quarterly plans')
     await user.click(screen.getByRole('button', { name: 'Utwórz projekt' }))
 
-    expect(await screen.findByRole('heading', { name: 'Planning' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Planning' })).toBeInTheDocument()
     expect(fetchMock).toHaveBeenNthCalledWith(
       3,
       '/api/v1/projects/',
@@ -109,17 +135,21 @@ describe('Projects', () => {
     const user = userEvent.setup()
 
     renderApp('/tasks')
-    await user.click(await screen.findByRole('link', { name: 'Reading' }))
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
     await screen.findByText('Nie ma tu jeszcze zadań.')
-    await user.click(screen.getByRole('button', { name: 'Edytuj projekt' }))
-    await user.clear(screen.getByLabelText('Nazwa projektu'))
+    await user.click(screen.getByRole('link', { name: 'Reading' }))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
+
+    act(() => {
+      ShowModal(ProjectEditorModal, { project: readingProject })
+    })
+
+    await user.clear(await screen.findByLabelText('Nazwa projektu'))
     await user.type(screen.getByLabelText('Nazwa projektu'), 'Research')
     await user.clear(screen.getByLabelText('Opis (opcjonalnie)'))
     await user.type(screen.getByLabelText('Opis (opcjonalnie)'), 'Sources and notes')
     await user.click(screen.getByRole('button', { name: 'Zapisz zmiany' }))
 
-    expect(await screen.findByRole('heading', { name: 'Research' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Research' })).toBeInTheDocument()
     expect(fetchMock).toHaveBeenNthCalledWith(
       4,
       '/api/v1/projects/2/',
@@ -141,7 +171,7 @@ describe('Projects', () => {
 
     renderApp('/tasks')
 
-    await screen.findByRole('heading', { name: 'Inbox' })
+    await screen.findByRole('link', { name: 'Inbox' })
     const projectNavigation = screen.getByRole('navigation', { name: 'Projekty' })
 
     expect(
@@ -155,13 +185,15 @@ describe('Projects', () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([inbox]))
       .mockResolvedValueOnce(jsonResponse([]))
-    const user = userEvent.setup()
 
     renderApp('/tasks')
-    await screen.findByRole('heading', { name: 'Inbox' })
-    await user.click(screen.getByRole('button', { name: 'Edytuj projekt' }))
+    await screen.findByRole('link', { name: 'Inbox' })
 
-    const inboxName = screen.getByDisplayValue('Inbox')
+    act(() => {
+      ShowModal(ProjectEditorModal, { project: inboxProject })
+    })
+
+    const inboxName = await screen.findByDisplayValue('Inbox')
     expect(inboxName).toHaveAttribute('readonly')
     expect(inboxName).toHaveValue('Inbox')
   })
@@ -215,10 +247,9 @@ describe('Projects', () => {
     const user = userEvent.setup()
 
     renderApp('/tasks')
-    await user.click(await screen.findByRole('link', { name: 'Planning' }))
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
-    await screen.findByRole('heading', { name: 'Planning' })
     await screen.findByText('Nie ma tu jeszcze zadań.')
+    await user.click(screen.getByRole('link', { name: 'Planning' }))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
     await user.click(screen.getByRole('button', { name: 'Nowe zadanie' }))
     await user.type(screen.getByLabelText('Tytuł zadania'), 'Capture requirements')
     await user.type(screen.getByLabelText('Opis (opcjonalnie)'), 'Talk to the team')
@@ -267,7 +298,8 @@ describe('Projects', () => {
     const user = userEvent.setup()
 
     renderApp('/tasks')
-    await user.click(await screen.findByRole('link', { name: 'Planning' }))
+    await screen.findByText('Nie ma tu jeszcze zadań.')
+    await user.click(screen.getByRole('link', { name: 'Planning' }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
     await screen.findByText('Prepare outline')
     const taskList = screen.getByRole('list', { name: 'Zadania' })
@@ -330,7 +362,8 @@ describe('Projects', () => {
     const user = userEvent.setup()
 
     renderApp('/tasks')
-    await user.click(await screen.findByRole('link', { name: 'Planning' }))
+    await screen.findByText('Nie ma tu jeszcze zadań.')
+    await user.click(screen.getByRole('link', { name: 'Planning' }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
     await screen.findByText('Capture scope')
     await user.click(screen.getByRole('button', { name: 'Edytuj zadanie: Capture scope' }))
@@ -378,7 +411,8 @@ describe('Projects', () => {
     const user = userEvent.setup()
 
     renderApp('/tasks')
-    await user.click(await screen.findByRole('link', { name: 'Planning' }))
+    await screen.findByText('Nie ma tu jeszcze zadań.')
+    await user.click(screen.getByRole('link', { name: 'Planning' }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
     await screen.findByText('First title')
     await user.click(screen.getByRole('button', { name: 'Edytuj zadanie: First title' }))
@@ -423,7 +457,8 @@ describe('Projects', () => {
     const user = userEvent.setup()
 
     renderApp('/tasks')
-    await user.click(await screen.findByRole('link', { name: 'Planning' }))
+    await screen.findByText('Nie ma tu jeszcze zadań.')
+    await user.click(screen.getByRole('link', { name: 'Planning' }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
     await screen.findByText('Planning task')
     await user.click(screen.getByRole('button', { name: 'Oznacz jako ukończone: Planning task' }))
@@ -443,7 +478,10 @@ describe('Projects', () => {
       await pendingUpdate.promise
     })
 
-    expect(screen.getByRole('heading', { name: 'Archive' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Archive' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
     expect(screen.getByText('Archive task')).toBeInTheDocument()
     expect(screen.queryByText('Wczytywanie zadań…')).not.toBeInTheDocument()
   })
@@ -532,10 +570,14 @@ describe('Deleting tasks and projects', () => {
     const user = userEvent.setup()
 
     renderApp('/tasks')
-    await user.click(await screen.findByRole('link', { name: 'Planning' }))
+    await screen.findByText('Nie ma tu jeszcze zadań.')
+    await user.click(screen.getByRole('link', { name: 'Planning' }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
     await screen.findByText('Prepare outline')
-    await user.click(screen.getByRole('button', { name: 'Usuń projekt' }))
+
+    act(() => {
+      ShowModal(DeleteProjectModal, { project: planningProject })
+    })
 
     expect(screen.getByRole('heading', { name: 'Usunąć projekt?' })).toBeInTheDocument()
     expect(
@@ -553,7 +595,10 @@ describe('Deleting tasks and projects', () => {
     )
     expect(screen.queryByRole('link', { name: 'Planning' })).not.toBeInTheDocument()
     expect(await screen.findByText('Prepare outline')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Inbox' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Inbox' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
   })
 
   test('cancelling project deletion keeps the project and its tasks', async () => {
@@ -564,9 +609,13 @@ describe('Deleting tasks and projects', () => {
     const user = userEvent.setup()
 
     renderApp('/tasks')
-    await user.click(await screen.findByRole('link', { name: 'Planning' }))
+    await screen.findByText('Nie ma tu jeszcze zadań.')
+    await user.click(screen.getByRole('link', { name: 'Planning' }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
-    await user.click(screen.getByRole('button', { name: 'Usuń projekt' }))
+
+    act(() => {
+      ShowModal(DeleteProjectModal, { project: planningProject })
+    })
     await user.click(screen.getByRole('button', { name: 'Anuluj' }))
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -581,9 +630,8 @@ describe('Deleting tasks and projects', () => {
       .mockResolvedValueOnce(jsonResponse([]))
 
     renderApp('/tasks')
-    await screen.findByRole('heading', { name: 'Inbox' })
+    await screen.findByRole('link', { name: 'Inbox' })
 
     expect(screen.queryByRole('button', { name: 'Usuń projekt' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Edytuj projekt' })).toBeInTheDocument()
   })
 })
