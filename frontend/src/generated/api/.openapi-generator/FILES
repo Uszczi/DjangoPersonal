@@ -1,7 +1,4 @@
-apis/ProjectsApi.ts
-apis/TasksApi.ts
-apis/TimeEntriesApi.ts
-apis/TimerApi.ts
+apis/PersonalApi.ts
 apis/index.ts
 index.ts
 models/PatchedProjectRequest.ts

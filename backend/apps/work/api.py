@@ -18,7 +18,7 @@ from .models import (
 
 MAX_ENTRY_DURATION_MINUTES = 24 * 60
 
-router = Router()
+router = Router(tags=['personal'])
 
 
 def now():
@@ -148,7 +148,6 @@ def save_project(name, description, current=None):
 @router.get(
     '/projects/',
     response=list[Project],
-    tags=['projects'],
     operation_id='projects_list',
 )
 def list_projects(request):
@@ -158,7 +157,6 @@ def list_projects(request):
 @router.post(
     '/projects/',
     response={201: Project},
-    tags=['projects'],
     operation_id='projects_create',
 )
 def create_project(request, payload: ProjectRequest):
@@ -169,7 +167,6 @@ def create_project(request, payload: ProjectRequest):
 @router.get(
     '/projects/{id}/',
     response=Project,
-    tags=['projects'],
     operation_id='projects_retrieve',
 )
 def get_project(request, id: int):
@@ -179,7 +176,6 @@ def get_project(request, id: int):
 @router.put(
     '/projects/{id}/',
     response=Project,
-    tags=['projects'],
     operation_id='projects_update',
 )
 def replace_project(request, id: int, payload: ProjectRequest):
@@ -191,7 +187,6 @@ def replace_project(request, id: int, payload: ProjectRequest):
 @router.patch(
     '/projects/{id}/',
     response=Project,
-    tags=['projects'],
     operation_id='projects_partial_update',
 )
 def update_project(request, id: int, payload: PatchedProjectRequest):
@@ -205,7 +200,6 @@ def update_project(request, id: int, payload: PatchedProjectRequest):
 @router.delete(
     '/projects/{id}/',
     response={204: None},
-    tags=['projects'],
     operation_id='projects_destroy',
 )
 def delete_project(request, id: int):
@@ -223,7 +217,6 @@ def delete_project(request, id: int):
 @router.get(
     '/tasks/',
     response=list[Task],
-    tags=['tasks'],
     operation_id='tasks_list',
 )
 def list_tasks(request, project: int = None, all: bool = False):
@@ -237,7 +230,6 @@ def list_tasks(request, project: int = None, all: bool = False):
 @router.post(
     '/tasks/',
     response={201: Task},
-    tags=['tasks'],
     operation_id='tasks_create',
 )
 def create_task(request, payload: TaskCreateRequest):
@@ -258,7 +250,6 @@ def create_task(request, payload: TaskCreateRequest):
 @router.patch(
     '/tasks/{id}/',
     response=Task,
-    tags=['tasks'],
     operation_id='tasks_partial_update',
 )
 def update_task(request, id: int, payload: PatchedTaskUpdateRequest):
@@ -278,7 +269,6 @@ def update_task(request, id: int, payload: PatchedTaskUpdateRequest):
 @router.delete(
     '/tasks/{id}/',
     response={204: None},
-    tags=['tasks'],
     operation_id='tasks_destroy',
 )
 def delete_task(request, id: int):
@@ -295,7 +285,6 @@ def delete_task(request, id: int):
 @router.get(
     '/time-entries/',
     response=list[TimeEntry],
-    tags=['time-entries'],
     operation_id='time_entries_list',
 )
 def list_time_entries(request, task: int = None, date: datetime_date = None):
@@ -313,7 +302,6 @@ def list_time_entries(request, task: int = None, date: datetime_date = None):
 @router.post(
     '/time-entries/',
     response={201: TimeEntry},
-    tags=['time-entries'],
     operation_id='time_entries_create',
 )
 def create_time_entry(request, payload: TimeEntryCreateRequest):
@@ -344,7 +332,6 @@ class TimerState(Schema):
 @router.post(
     '/timer/start/',
     response=TimerState,
-    tags=['timer'],
     operation_id='timer_start',
 )
 def start_timer(request, payload: TimerStartRequest):
@@ -370,7 +357,6 @@ def get_running_entry():
 @router.get(
     '/timer/',
     response=TimerState,
-    tags=['timer'],
     operation_id='timer_retrieve',
 )
 def get_timer(request):
@@ -380,7 +366,6 @@ def get_timer(request):
 @router.post(
     '/timer/stop/',
     response=TimerState,
-    tags=['timer'],
     operation_id='timer_stop',
 )
 def stop_timer(request):
@@ -395,7 +380,6 @@ def stop_timer(request):
 @router.patch(
     '/time-entries/{id}/',
     response=TimeEntry,
-    tags=['time-entries'],
     operation_id='time_entries_partial_update',
 )
 def update_time_entry(request, id: int, payload: PatchedTimeEntryRequest):
@@ -425,7 +409,6 @@ def update_time_entry(request, id: int, payload: PatchedTimeEntryRequest):
 @router.delete(
     '/time-entries/{id}/',
     response={204: None},
-    tags=['time-entries'],
     operation_id='time_entries_destroy',
 )
 def delete_time_entry(request, id: int):

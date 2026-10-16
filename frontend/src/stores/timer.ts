@@ -1,19 +1,8 @@
 import { create } from "zustand";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
-import {
-  Configuration,
-  TasksApi,
-  TimeEntriesApi,
-  TimerApi,
-  type Task,
-  type TimeEntry,
-  type TimerState,
-} from "@/generated/api";
-
-const timeEntriesApi = new TimeEntriesApi(new Configuration({ basePath: "" }));
-const tasksApi = new TasksApi(new Configuration({ basePath: "" }));
-const timerApi = new TimerApi(new Configuration({ basePath: "" }));
+import { api } from "@/api";
+import { type Task, type TimeEntry, type TimerState } from "@/generated/api";
 
 export type ManualEntryInput = {
   date: string;
@@ -76,9 +65,9 @@ export const useTimerStore = create<TimerStoreState>((set, get) => ({
 
     try {
       const [timer, loadedEntries, loadedTasks] = await Promise.all([
-        timerApi.timerRetrieve(),
-        timeEntriesApi.timeEntriesList({}),
-        tasksApi.tasksList({ all: true }),
+        api.timerRetrieve(),
+        api.timeEntriesList({}),
+        api.tasksList({ all: true }),
       ]);
       if (requestId !== loadRequestId) return;
       applyTimerState(set, timer);
@@ -99,8 +88,8 @@ export const useTimerStore = create<TimerStoreState>((set, get) => ({
     set({ actionError: "" });
 
     try {
-      applyTimerState(set, await timerApi.timerStop());
-      set({ entries: await timeEntriesApi.timeEntriesList({}) });
+      applyTimerState(set, await api.timerStop());
+      set({ entries: await api.timeEntriesList({}) });
     } catch (error) {
       set({ actionError: await apiErrorMessage(error) });
     }
@@ -113,10 +102,10 @@ export const useTimerStore = create<TimerStoreState>((set, get) => ({
     set({ actionError: "" });
 
     try {
-      await timeEntriesApi.timeEntriesDestroy({ id: running.id });
+      await api.timeEntriesDestroy({ id: running.id });
       set({
         runningEntry: null,
-        entries: await timeEntriesApi.timeEntriesList({}),
+        entries: await api.timeEntriesList({}),
       });
     } catch (error) {
       set({ actionError: await apiErrorMessage(error) });
@@ -124,18 +113,18 @@ export const useTimerStore = create<TimerStoreState>((set, get) => ({
   },
 
   addManualEntry: async (input) => {
-    await timeEntriesApi.timeEntriesCreate({
+    await api.timeEntriesCreate({
       timeEntryCreateRequest: {
         task: input.taskId,
         date: new Date(`${input.date}T00:00:00`),
         durationMinutes: input.minutes,
       },
     });
-    set({ entries: await timeEntriesApi.timeEntriesList({}) });
+    set({ entries: await api.timeEntriesList({}) });
   },
 
   updateEntry: async (entry, input) => {
-    await timeEntriesApi.timeEntriesPartialUpdate({
+    await api.timeEntriesPartialUpdate({
       id: entry.id,
       patchedTimeEntryRequest: {
         task: input.taskId,
@@ -145,7 +134,7 @@ export const useTimerStore = create<TimerStoreState>((set, get) => ({
     });
     set({
       editingEntry: null,
-      entries: await timeEntriesApi.timeEntriesList({}),
+      entries: await api.timeEntriesList({}),
     });
   },
 
@@ -153,8 +142,8 @@ export const useTimerStore = create<TimerStoreState>((set, get) => ({
     set({ actionError: "" });
 
     try {
-      await timeEntriesApi.timeEntriesDestroy({ id: entry.id });
-      set({ entries: await timeEntriesApi.timeEntriesList({}) });
+      await api.timeEntriesDestroy({ id: entry.id });
+      set({ entries: await api.timeEntriesList({}) });
     } catch (error) {
       set({ actionError: await apiErrorMessage(error) });
     }

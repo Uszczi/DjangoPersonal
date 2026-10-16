@@ -1,8 +1,7 @@
 import { create } from "zustand";
 
-import { Configuration, ProjectsApi, type Project } from "@/generated/api";
-
-const projectsApi = new ProjectsApi(new Configuration({ basePath: "" }));
+import { api } from "@/api";
+import { type Project } from "@/generated/api";
 
 export type ProjectInput = { name: string; description: string };
 
@@ -43,7 +42,7 @@ export const useProjectsStore = create<ProjectsState>((set, get) => ({
     const requestId = ++loadRequestId;
 
     try {
-      const loadedProjects = await projectsApi.projectsList();
+      const loadedProjects = await api.projectsList();
       if (requestId !== loadRequestId) return;
       set({ projects: orderProjects(loadedProjects), pageError: "" });
     } catch {
@@ -60,7 +59,7 @@ export const useProjectsStore = create<ProjectsState>((set, get) => ({
 
   saveProject: async (input, project) => {
     if (project) {
-      const updatedProject = await projectsApi.projectsPartialUpdate({
+      const updatedProject = await api.projectsPartialUpdate({
         id: project.id,
         patchedProjectRequest: input,
       });
@@ -74,7 +73,7 @@ export const useProjectsStore = create<ProjectsState>((set, get) => ({
       return updatedProject;
     }
 
-    const createdProject = await projectsApi.projectsCreate({
+    const createdProject = await api.projectsCreate({
       projectRequest: input,
     });
     set((state) => ({
@@ -84,7 +83,7 @@ export const useProjectsStore = create<ProjectsState>((set, get) => ({
   },
 
   confirmProjectDelete: async (project) => {
-    await projectsApi.projectsDestroy({ id: project.id });
+    await api.projectsDestroy({ id: project.id });
 
     const remainingProjects = get().projects.filter(
       (item) => item.id !== project.id,

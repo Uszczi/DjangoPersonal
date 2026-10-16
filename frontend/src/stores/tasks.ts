@@ -1,10 +1,8 @@
 import { create } from "zustand";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
-import { Configuration, TasksApi, TimerApi, type Task } from "@/generated/api";
-
-const tasksApi = new TasksApi(new Configuration({ basePath: "" }));
-const timerApi = new TimerApi(new Configuration({ basePath: "" }));
+import { api } from "@/api";
+import { type Task } from "@/generated/api";
 
 export type TaskInput = {
   title: string;
@@ -45,7 +43,7 @@ export const useTasksStore = create<TasksState>((set) => ({
     const requestId = ++loadRequestId;
 
     try {
-      const loadedTasks = await tasksApi.tasksList({ project: projectId });
+      const loadedTasks = await api.tasksList({ project: projectId });
       if (requestId !== loadRequestId) return;
       set({
         taskList: { projectId, tasks: orderTasks(loadedTasks) },
@@ -65,7 +63,7 @@ export const useTasksStore = create<TasksState>((set) => ({
 
   saveTask: async (input, task) => {
     if (task) {
-      const updatedTask = await tasksApi.tasksPartialUpdate({
+      const updatedTask = await api.tasksPartialUpdate({
         id: task.id,
         patchedTaskUpdateRequest: input,
       });
@@ -73,7 +71,7 @@ export const useTasksStore = create<TasksState>((set) => ({
       return updatedTask;
     }
 
-    const createdTask = await tasksApi.tasksCreate({
+    const createdTask = await api.tasksCreate({
       taskCreateRequest: input,
     });
     set((state) => {
@@ -96,7 +94,7 @@ export const useTasksStore = create<TasksState>((set) => ({
     set({ actionError: "" });
 
     try {
-      const updatedTask = await tasksApi.tasksPartialUpdate({
+      const updatedTask = await api.tasksPartialUpdate({
         id: task.id,
         patchedTaskUpdateRequest: { isCompleted: !task.isCompleted },
       });
@@ -110,7 +108,7 @@ export const useTasksStore = create<TasksState>((set) => ({
     set({ actionError: "" });
 
     try {
-      await timerApi.timerStart({ timerStartRequest: { task: task.id } });
+      await api.timerStart({ timerStartRequest: { task: task.id } });
       return true;
     } catch (error) {
       set({ actionError: await apiErrorMessage(error) });
@@ -119,7 +117,7 @@ export const useTasksStore = create<TasksState>((set) => ({
   },
 
   confirmDelete: async (task) => {
-    await tasksApi.tasksDestroy({ id: task.id });
+    await api.tasksDestroy({ id: task.id });
 
     set((state) => ({
       taskList: state.taskList
