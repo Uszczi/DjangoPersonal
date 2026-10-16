@@ -4,7 +4,7 @@ export const Route = createFileRoute("/")({
   component: MainPage,
 });
 
-function MainPage() {
+export function MainPage() {
   return (
     <>
       <div className="project-heading">

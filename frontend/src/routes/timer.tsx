@@ -49,7 +49,7 @@ function entryMinutes(entry: TimeEntry) {
   return Math.round((entry.end.getTime() - entry.start.getTime()) / 60000);
 }
 
-function TimerPage() {
+export function TimerPage() {
   const isLoading = useTimerStore((state) => state.isLoading);
   const pageError = useTimerStore((state) => state.pageError);
   const runningEntryRaw = useTimerStore((state) => state.runningEntry);
@@ -61,9 +61,7 @@ function TimerPage() {
   const loadData = useTimerStore((state) => state.loadData);
   const stopTimer = useTimerStore((state) => state.stopTimer);
   const discardTimer = useTimerStore((state) => state.discardTimer);
-  const addManualEntryAction = useTimerStore(
-    (state) => state.addManualEntry,
-  );
+  const addManualEntryAction = useTimerStore((state) => state.addManualEntry);
   const updateEntryAction = useTimerStore((state) => state.updateEntry);
   const deleteEntryAction = useTimerStore((state) => state.deleteEntry);
   const openEntryEditor = useTimerStore((state) => state.openEntryEditor);

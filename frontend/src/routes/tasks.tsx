@@ -19,7 +19,7 @@ export const Route = createFileRoute("/tasks")({
   component: TasksPage,
 });
 
-function TasksPage() {
+export function TasksPage() {
   const { project } = useSearch({ from: "__root__" });
   const navigate = useNavigate();
 
