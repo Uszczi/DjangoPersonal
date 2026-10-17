@@ -1,7 +1,8 @@
 """HTTP layer for the ``work`` app.
 
-The routes are grouped per resource; the domain rules they call live in
-``services`` and the payload/response shapes in ``schemas``.
+Routers only validate input, call one handler from ``apps.work.handlers``, and
+shape the response; the domain rules live in that shared handler layer, which a
+future MCP server can call too.
 """
 
 from ninja import Router

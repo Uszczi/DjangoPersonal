@@ -3,7 +3,7 @@ from http import HTTPStatus
 
 import pytest
 
-from apps.work.api import clock
+from apps.work import clock
 
 
 FIXED_NOW = datetime(2026, 10, 14, 12, 0, 0, tzinfo=timezone.utc)

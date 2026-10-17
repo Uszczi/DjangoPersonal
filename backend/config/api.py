@@ -1,6 +1,7 @@
 from ninja import NinjaAPI
 
 from apps.work.api import router
+from apps.work.api.errors import register_error_handlers
 
 api = NinjaAPI(
     title='DjangoPersonal API',
@@ -11,3 +12,4 @@ api = NinjaAPI(
     docs_url=None,
 )
 api.add_router('/', router)
+register_error_handlers(api)

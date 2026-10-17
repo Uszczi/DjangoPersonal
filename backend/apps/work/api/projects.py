@@ -1,10 +1,7 @@
-from django.shortcuts import get_object_or_404
 from ninja import Router, Status
 
-from apps.infra.models import Project as ProjectModel
-
-from . import services
-from .schemas import PatchedProjectRequest, Project, ProjectRequest
+from apps.work import handlers
+from apps.work.contracts import PatchedProjectRequest, Project, ProjectRequest
 
 router = Router(tags=['personal'])
 
@@ -15,7 +12,7 @@ router = Router(tags=['personal'])
     operation_id='projects_list',
 )
 def list_projects(request):
-    return services.list_projects()
+    return handlers.list_projects()
 
 
 @router.post(
@@ -24,8 +21,7 @@ def list_projects(request):
     operation_id='projects_create',
 )
 def create_project(request, payload: ProjectRequest):
-    project = services.save_project(payload.name, payload.description)
-    return Status(201, project)
+    return Status(201, handlers.create_project(payload))
 
 
 @router.get(
@@ -34,7 +30,7 @@ def create_project(request, payload: ProjectRequest):
     operation_id='projects_retrieve',
 )
 def get_project(request, id: int):
-    return get_object_or_404(ProjectModel, pk=id)
+    return handlers.get_project(id)
 
 
 @router.put(
@@ -43,11 +39,7 @@ def get_project(request, id: int):
     operation_id='projects_update',
 )
 def replace_project(request, id: int, payload: ProjectRequest):
-    project = get_object_or_404(ProjectModel, pk=id)
-    changes = payload.model_dump(exclude_unset=True)
-    return services.save_project(
-        changes['name'], changes.get('description'), current=project
-    )
+    return handlers.replace_project(id, payload)
 
 
 @router.patch(
@@ -56,11 +48,7 @@ def replace_project(request, id: int, payload: ProjectRequest):
     operation_id='projects_partial_update',
 )
 def update_project(request, id: int, payload: PatchedProjectRequest):
-    project = get_object_or_404(ProjectModel, pk=id)
-    changes = payload.model_dump(exclude_unset=True)
-    return services.save_project(
-        changes.get('name', project.name), changes.get('description'), current=project
-    )
+    return handlers.update_project(id, payload)
 
 
 @router.delete(
@@ -69,6 +57,5 @@ def update_project(request, id: int, payload: PatchedProjectRequest):
     operation_id='projects_destroy',
 )
 def delete_project(request, id: int):
-    project = get_object_or_404(ProjectModel, pk=id)
-    services.delete_project(project)
+    handlers.delete_project(id)
     return Status(204, None)

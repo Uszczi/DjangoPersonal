@@ -1,7 +1,7 @@
 from ninja import Router
 
-from . import clock, services
-from .schemas import TimerStartRequest, TimerState
+from apps.work import clock, handlers
+from apps.work.contracts import TimerStartRequest, TimerState
 
 router = Router(tags=['personal'])
 
@@ -12,7 +12,7 @@ router = Router(tags=['personal'])
     operation_id='timer_start',
 )
 def start_timer(request, payload: TimerStartRequest):
-    entry = services.start_timer(payload.task)
+    entry = handlers.start_timer(payload)
     return TimerState(entry=entry, server_now=clock.now())
 
 
@@ -22,7 +22,7 @@ def start_timer(request, payload: TimerStartRequest):
     operation_id='timer_retrieve',
 )
 def get_timer(request):
-    return TimerState(entry=services.get_running_entry(), server_now=clock.now())
+    return TimerState(entry=handlers.get_running_entry(), server_now=clock.now())
 
 
 @router.post(
@@ -31,5 +31,5 @@ def get_timer(request):
     operation_id='timer_stop',
 )
 def stop_timer(request):
-    entry = services.stop_timer()
+    entry = handlers.stop_timer()
     return TimerState(entry=entry, server_now=clock.now())
