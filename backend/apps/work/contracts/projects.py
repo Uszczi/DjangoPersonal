@@ -6,11 +6,13 @@ from pydantic import BaseModel, Field, field_validator
 from apps.infra.models import normalize_project_name
 
 
-class ProjectRequest(BaseModel):
-    name: str = Field(min_length=1, max_length=100)
-    description: str = ''
+class _ProjectPayload(BaseModel):
+    """Name trimming shared by the create and the partial payloads.
 
-    @field_validator('name', mode='before')
+    ``check_fields=False`` because this base declares no fields itself.
+    """
+
+    @field_validator('name', mode='before', check_fields=False)
     @classmethod
     def trim_name(cls, value):
         if isinstance(value, str):
@@ -20,9 +22,14 @@ class ProjectRequest(BaseModel):
         return value
 
 
-class PatchedProjectRequest(ProjectRequest):
-    name: str = Field(default=None, min_length=1, max_length=100)
-    description: str = None
+class ProjectRequest(_ProjectPayload):
+    name: str = Field(min_length=1, max_length=100)
+    description: str = ''
+
+
+class PatchedProjectRequest(_ProjectPayload):
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    description: str | None = None
 
 
 class Project(Schema):

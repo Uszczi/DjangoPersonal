@@ -1,77 +1,95 @@
 """Time entry use cases."""
 
-from datetime import date as datetime_date, datetime, time, timedelta
-from datetime import timezone as datetime_timezone
+from datetime import date as datetime_date, timedelta
 
 from apps.infra.models import TimeEntry as TimeEntryModel
+from apps.infra.repo import TaskRepository, TimeEntryRepository, day_start
 from apps.work import clock
 from apps.work.contracts import PatchedTimeEntryRequest, TimeEntryCreateRequest
 from apps.work.errors import NotFound, WorkError
 
-from .tasks import resolve_task
+from .tasks import _resolve_task
 
 
-def day_start(value: datetime_date) -> datetime:
-    """Midnight UTC on the given calendar day."""
-    return datetime.combine(value, time.min, tzinfo=datetime_timezone.utc)
-
-
-def ensure_not_future(value: datetime_date) -> None:
+def _ensure_not_future(value: datetime_date) -> None:
     if value > clock.now().date():
         raise WorkError('Date cannot be in the future.')
 
 
-def list_time_entries(task_id=None, day: datetime_date = None):
-    entries = TimeEntryModel.objects.all()
-    if task_id is not None:
-        entries = entries.filter(task_id=task_id)
-    if day is not None:
-        start = day_start(day)
-        entries = entries.filter(
-            start__gte=start, start__lt=start + timedelta(days=1)
-        )
-    return entries
-
-
-def get_time_entry(entry_id) -> TimeEntryModel:
+def _get_time_entry(repository, entry_id) -> TimeEntryModel:
     """Fetch a time entry addressed by id, or raise ``NotFound``."""
-    entry = TimeEntryModel.objects.filter(pk=entry_id).first()
+    entry = repository.find(entry_id)
     if entry is None:
         raise NotFound('Time entry not found.')
     return entry
 
 
-def create_time_entry(data: TimeEntryCreateRequest) -> TimeEntryModel:
-    task = resolve_task(data.task)
-    ensure_not_future(data.date)
+class ListTimeEntries:
+    """List time entries, optionally for one task and/or one calendar day."""
 
-    start = day_start(data.date)
-    return TimeEntryModel.objects.create(
-        task=task,
-        start=start,
-        end=start + timedelta(minutes=data.duration_minutes),
-    )
+    def __init__(self, time_entries: TimeEntryRepository):
+        self.time_entries = time_entries
+
+    def execute(self, task_id=None, day: datetime_date | None = None):
+        return self.time_entries.list(task_id=task_id, day=day)
 
 
-def update_time_entry(entry_id, data: PatchedTimeEntryRequest) -> TimeEntryModel:
-    entry = get_time_entry(entry_id)
-    if entry.end is None:
-        raise WorkError('The running timer cannot be edited.')
+class CreateTimeEntry:
+    """Log a manual time entry for a task."""
 
-    changes = data.model_dump(exclude_unset=True)
-    if 'task' in changes:
-        entry.task = resolve_task(changes['task'])
-    if 'date' in changes or 'duration_minutes' in changes:
-        new_date = changes.get('date', entry.start.date())
-        ensure_not_future(new_date)
-        current_duration = (entry.end - entry.start).total_seconds() // 60
-        duration = changes.get('duration_minutes', current_duration)
-        start = day_start(new_date)
-        entry.start = start
-        entry.end = start + timedelta(minutes=duration)
-    entry.save()
-    return entry
+    def __init__(self, tasks: TaskRepository, time_entries: TimeEntryRepository):
+        self.tasks = tasks
+        self.time_entries = time_entries
+
+    def execute(self, data: TimeEntryCreateRequest) -> TimeEntryModel:
+        task = _resolve_task(self.tasks, data.task)
+        _ensure_not_future(data.date)
+
+        start = day_start(data.date)
+        return self.time_entries.create(
+            task=task,
+            start=start,
+            end=start + timedelta(minutes=data.duration_minutes),
+        )
 
 
-def delete_time_entry(entry_id) -> None:
-    get_time_entry(entry_id).delete()
+class UpdateTimeEntry:
+    """Apply the supplied fields to an existing time entry (PATCH)."""
+
+    def __init__(self, tasks: TaskRepository, time_entries: TimeEntryRepository):
+        self.tasks = tasks
+        self.time_entries = time_entries
+
+    def execute(self, entry_id, data: PatchedTimeEntryRequest) -> TimeEntryModel:
+        entry = _get_time_entry(self.time_entries, entry_id)
+        if entry.end is None:
+            raise WorkError('The running timer cannot be edited.')
+
+        provided = data.model_fields_set
+        if 'task' in provided and data.task is not None:
+            entry.task = _resolve_task(self.tasks, data.task)
+        if provided & {'date', 'duration_minutes'} and (
+            data.date is not None or data.duration_minutes is not None
+        ):
+            day = data.date if data.date is not None else entry.start.date()
+            _ensure_not_future(day)
+            current_duration = (entry.end - entry.start).total_seconds() // 60
+            duration = (
+                data.duration_minutes
+                if data.duration_minutes is not None
+                else current_duration
+            )
+            start = day_start(day)
+            entry.start = start
+            entry.end = start + timedelta(minutes=duration)
+        return self.time_entries.save(entry)
+
+
+class DeleteTimeEntry:
+    """Delete a time entry addressed by id."""
+
+    def __init__(self, time_entries: TimeEntryRepository):
+        self.time_entries = time_entries
+
+    def execute(self, entry_id) -> None:
+        self.time_entries.delete(_get_time_entry(self.time_entries, entry_id))

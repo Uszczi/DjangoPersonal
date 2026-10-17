@@ -1,99 +1,138 @@
 """Projects use cases."""
 
-from django.db import IntegrityError, transaction
+from functools import partial
 
 from apps.infra.models import Project as ProjectModel
 from apps.infra.models import normalize_project_name, project_name_key
+from apps.infra.repo import DuplicateProjectName, ProjectRepository
 from apps.work.contracts import PatchedProjectRequest, ProjectRequest
 from apps.work.errors import NotFound, WorkError
 
-
-def list_projects():
-    return ProjectModel.objects.order_by('-is_inbox', 'normalized_name')
+from ._patch import apply_provided
 
 
-def get_inbox() -> ProjectModel:
-    return ProjectModel.objects.get(is_inbox=True)
-
-
-def get_project(project_id) -> ProjectModel:
+def _get_project(repository, project_id) -> ProjectModel:
     """Fetch a project addressed by id, or raise ``NotFound``."""
-    project = ProjectModel.objects.filter(pk=project_id).first()
+    project = repository.find(project_id)
     if project is None:
         raise NotFound('Project not found.')
     return project
 
 
-def resolve_project(project_id) -> ProjectModel:
+def _resolve_project(repository, project_id) -> ProjectModel:
     """Resolve a project referenced by another payload, or fail as invalid."""
-    project = ProjectModel.objects.filter(pk=project_id).first()
+    project = repository.find(project_id)
     if project is None:
         raise WorkError('Invalid project ID.')
     return project
 
 
-def validate_project_name(name, current=None):
+def _validate_name(repository, name, current=None) -> str:
+    """Return the trimmed project name, or raise when it breaks a naming rule."""
     name = normalize_project_name(name)
-    normalized_name = project_name_key(name)
+    name_key = project_name_key(name)
 
     if current and current.is_inbox:
         if name != current.name:
             raise WorkError('Inbox cannot be renamed.')
         return name
 
-    if normalized_name == 'inbox':
+    if name_key == 'inbox':
         raise WorkError('Inbox is a reserved project name.')
 
-    duplicates = ProjectModel.objects.filter(normalized_name=normalized_name)
-    if current:
-        duplicates = duplicates.exclude(pk=current.pk)
-    if duplicates.exists():
+    if repository.name_taken(name_key, exclude=current):
         raise WorkError('A project with this name already exists.')
 
     return name
 
 
-def save_project(name, description, current=None):
-    normalized_name = validate_project_name(name, current)
-    project = current or ProjectModel()
-    project.name = normalized_name
-    if description is not None:
-        project.description = description
-
+def _save(repository, project) -> ProjectModel:
+    """Persist a project, presenting a name clash as a domain error."""
     try:
-        with transaction.atomic():
-            project.save()
-    except IntegrityError as error:
+        return repository.save(project)
+    except DuplicateProjectName as error:
         raise WorkError('A project with this name already exists.') from error
-    return project
 
 
-def create_project(data: ProjectRequest) -> ProjectModel:
-    return save_project(data.name, data.description)
+class ListProjects:
+    """List every project, inbox first."""
+
+    def __init__(self, projects: ProjectRepository):
+        self.projects = projects
+
+    def execute(self):
+        return self.projects.list_all()
 
 
-def replace_project(project_id, data: ProjectRequest) -> ProjectModel:
-    project = get_project(project_id)
-    changes = data.model_dump(exclude_unset=True)
-    return save_project(changes['name'], changes.get('description'), current=project)
+class GetProject:
+    """Fetch a single project addressed by id."""
+
+    def __init__(self, projects: ProjectRepository):
+        self.projects = projects
+
+    def execute(self, project_id) -> ProjectModel:
+        return _get_project(self.projects, project_id)
 
 
-def update_project(project_id, data: PatchedProjectRequest) -> ProjectModel:
-    project = get_project(project_id)
-    changes = data.model_dump(exclude_unset=True)
-    return save_project(
-        changes.get('name', project.name),
-        changes.get('description'),
-        current=project,
-    )
+class CreateProject:
+    """Create a project from a validated payload."""
+
+    def __init__(self, projects: ProjectRepository):
+        self.projects = projects
+
+    def execute(self, data: ProjectRequest) -> ProjectModel:
+        project = ProjectModel(
+            name=_validate_name(self.projects, data.name),
+            description=data.description,
+        )
+        return _save(self.projects, project)
 
 
-def delete_project(project_id) -> None:
-    project = get_project(project_id)
-    if project.is_inbox:
-        raise WorkError('Inbox cannot be deleted.')
+class ReplaceProject:
+    """Replace a project wholesale with the supplied payload (PUT)."""
 
-    inbox = get_inbox()
-    with transaction.atomic():
-        project.tasks.update(project=inbox)
-        project.delete()
+    def __init__(self, projects: ProjectRepository):
+        self.projects = projects
+
+    def execute(self, project_id, data: ProjectRequest) -> ProjectModel:
+        project = _get_project(self.projects, project_id)
+        apply_provided(
+            data,
+            project,
+            resolve={
+                'name': partial(_validate_name, self.projects, current=project)
+            },
+        )
+        return _save(self.projects, project)
+
+
+class UpdateProject:
+    """Apply the supplied fields to an existing project (PATCH)."""
+
+    def __init__(self, projects: ProjectRepository):
+        self.projects = projects
+
+    def execute(self, project_id, data: PatchedProjectRequest) -> ProjectModel:
+        project = _get_project(self.projects, project_id)
+        apply_provided(
+            data,
+            project,
+            resolve={
+                'name': partial(_validate_name, self.projects, current=project)
+            },
+        )
+        return _save(self.projects, project)
+
+
+class DeleteProject:
+    """Delete a project, moving its tasks to the inbox."""
+
+    def __init__(self, projects: ProjectRepository):
+        self.projects = projects
+
+    def execute(self, project_id) -> None:
+        project = _get_project(self.projects, project_id)
+        if project.is_inbox:
+            raise WorkError('Inbox cannot be deleted.')
+
+        self.projects.delete(project, move_tasks_to=self.projects.get_inbox())

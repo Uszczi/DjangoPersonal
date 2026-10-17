@@ -13,6 +13,8 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "django-stubs>=6.1.2",
+    "mypy>=2.4.0",
     "pytest>=9.1.1",
     "pytest-django>=4.14.0",
     "pyyaml>=6.0.3",
@@ -22,3 +24,22 @@ dev = [
 DJANGO_SETTINGS_MODULE = "config.settings"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+python_version = "3.14"
+mypy_path = "."
+exclude = ["staticfiles/", "apps/.*/migrations/"]
+check_untyped_defs = true
+no_implicit_reexport = true
+strict_equality = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = ["whitenoise.*"]
+ignore_missing_imports = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings"

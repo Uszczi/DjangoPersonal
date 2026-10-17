@@ -23,11 +23,11 @@ export interface PatchedProjectRequest {
     /**
      *
      */
-    name?: string;
+    name?: string | null;
     /**
      *
      */
-    description?: string;
+    description?: string | null;
 }
 
 /**
@@ -47,8 +47,8 @@ export function PatchedProjectRequestFromJSONTyped(json: any, ignoreDiscriminato
     }
     return {
 
-        'name': json['name'] == null ? undefined : json['name'],
-        'description': json['description'] == null ? undefined : json['description'],
+        'name': json['name'] === undefined ? undefined : json['name'] === null ? null : json['name'],
+        'description': json['description'] === undefined ? undefined : json['description'] === null ? null : json['description'],
     };
 }
 

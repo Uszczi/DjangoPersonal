@@ -1,64 +1,54 @@
 """Application layer for the ``work`` app.
 
-Every use case is a plain function that takes validated input (one of the
-pydantic models in :mod:`apps.work.contracts`), talks to the ORM, and signals
-rule violations with :mod:`apps.work.errors`. Neither the HTTP routers
-(``apps.work.api``) nor the future MCP server own any of these rules; they only
-validate input, call a handler, and shape the result.
+Every use case is a class named after the action it performs, with a single
+public ``execute`` method. It receives the repositories it needs through its
+constructor (``apps.work.deps`` is the composition root that supplies them),
+takes validated input (one of the pydantic models in
+:mod:`apps.work.contracts`), and signals rule violations with
+:mod:`apps.work.errors`. Anything that only supports those classes — id
+lookups, validation, name normalisation — is a module-private helper, so the
+handler surface stays unambiguous. Neither the HTTP routers (``apps.work.api``)
+nor a future MCP server own any of these rules; they only validate input,
+assemble a use case, and shape the result.
 """
 
 from apps.work.errors import NotFound, WorkError
 
 from .projects import (
-    create_project,
-    delete_project,
-    get_inbox,
-    get_project,
-    list_projects,
-    replace_project,
-    resolve_project,
-    update_project,
+    CreateProject,
+    DeleteProject,
+    GetProject,
+    ListProjects,
+    ReplaceProject,
+    UpdateProject,
 )
-from .tasks import (
-    create_task,
-    delete_task,
-    get_task,
-    list_tasks,
-    resolve_task,
-    update_task,
-)
+from .tasks import CreateTask, DeleteTask, ListTasks, UpdateTask
 from .time_entries import (
-    create_time_entry,
-    delete_time_entry,
-    get_time_entry,
-    list_time_entries,
-    update_time_entry,
+    CreateTimeEntry,
+    DeleteTimeEntry,
+    ListTimeEntries,
+    UpdateTimeEntry,
 )
-from .timer import get_running_entry, start_timer, stop_timer
+from .timer import GetRunningEntry, StartTimer, StopTimer
 
 __all__ = [
+    'CreateProject',
+    'CreateTask',
+    'CreateTimeEntry',
+    'DeleteProject',
+    'DeleteTask',
+    'DeleteTimeEntry',
+    'GetProject',
+    'GetRunningEntry',
+    'ListProjects',
+    'ListTasks',
+    'ListTimeEntries',
     'NotFound',
+    'ReplaceProject',
+    'StartTimer',
+    'StopTimer',
+    'UpdateProject',
+    'UpdateTask',
+    'UpdateTimeEntry',
     'WorkError',
-    'create_project',
-    'create_task',
-    'create_time_entry',
-    'delete_project',
-    'delete_task',
-    'delete_time_entry',
-    'get_inbox',
-    'get_project',
-    'get_running_entry',
-    'get_task',
-    'get_time_entry',
-    'list_projects',
-    'list_tasks',
-    'list_time_entries',
-    'replace_project',
-    'resolve_project',
-    'resolve_task',
-    'start_timer',
-    'stop_timer',
-    'update_project',
-    'update_task',
-    'update_time_entry',
 ]

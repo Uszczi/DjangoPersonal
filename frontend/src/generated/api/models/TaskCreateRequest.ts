@@ -31,7 +31,7 @@ export interface TaskCreateRequest {
     /**
      *
      */
-    project?: number;
+    project?: number | null;
 }
 
 /**
@@ -54,7 +54,7 @@ export function TaskCreateRequestFromJSONTyped(json: any, ignoreDiscriminator: b
 
         'title': json['title'],
         'description': json['description'] == null ? undefined : json['description'],
-        'project': json['project'] == null ? undefined : json['project'],
+        'project': json['project'] === undefined ? undefined : json['project'] === null ? null : json['project'],
     };
 }
 

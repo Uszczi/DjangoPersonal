@@ -15,9 +15,9 @@ class TimeEntryCreateRequest(BaseModel):
 
 
 class PatchedTimeEntryRequest(BaseModel):
-    task: int = None
-    date: datetime_date = None
-    duration_minutes: int = Field(
+    task: int | None = None
+    date: datetime_date | None = None
+    duration_minutes: int | None = Field(
         default=None, ge=1, le=MAX_ENTRY_DURATION_MINUTES
     )
 

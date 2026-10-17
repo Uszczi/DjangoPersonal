@@ -4,12 +4,13 @@ from ninja import Schema
 from pydantic import BaseModel, Field, field_validator
 
 
-class TaskCreateRequest(BaseModel):
-    title: str = Field(min_length=1, max_length=200)
-    description: str = ''
-    project: int = None
+class _TaskPayload(BaseModel):
+    """Title trimming shared by the create and the partial payloads.
 
-    @field_validator('title', mode='before')
+    ``check_fields=False`` because this base declares no fields itself.
+    """
+
+    @field_validator('title', mode='before', check_fields=False)
     @classmethod
     def trim_title(cls, value):
         if isinstance(value, str):
@@ -19,10 +20,17 @@ class TaskCreateRequest(BaseModel):
         return value
 
 
-class PatchedTaskUpdateRequest(TaskCreateRequest):
-    title: str = Field(default=None, min_length=1, max_length=200)
-    project: int = None
-    is_completed: bool = None
+class TaskCreateRequest(_TaskPayload):
+    title: str = Field(min_length=1, max_length=200)
+    description: str = ''
+    project: int | None = None
+
+
+class PatchedTaskUpdateRequest(_TaskPayload):
+    title: str | None = Field(default=None, min_length=1, max_length=200)
+    description: str | None = None
+    project: int | None = None
+    is_completed: bool | None = None
 
 
 class Task(Schema):

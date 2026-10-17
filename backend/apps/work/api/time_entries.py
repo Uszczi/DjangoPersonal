@@ -2,7 +2,7 @@ from datetime import date as datetime_date
 
 from ninja import Router, Status
 
-from apps.work import handlers
+from apps.work import deps, handlers
 from apps.work.contracts import (
     PatchedTimeEntryRequest,
     TimeEntry,
@@ -17,8 +17,9 @@ router = Router(tags=['personal'])
     response=list[TimeEntry],
     operation_id='time_entries_list',
 )
-def list_time_entries(request, task: int = None, date: datetime_date = None):
-    return handlers.list_time_entries(task_id=task, day=date)
+def list_time_entries(request, task: int | None = None, date: datetime_date | None = None):
+    handler = handlers.ListTimeEntries(deps.time_entry_repository())
+    return handler.execute(task_id=task, day=date)
 
 
 @router.post(
@@ -27,7 +28,11 @@ def list_time_entries(request, task: int = None, date: datetime_date = None):
     operation_id='time_entries_create',
 )
 def create_time_entry(request, payload: TimeEntryCreateRequest):
-    return Status(201, handlers.create_time_entry(payload))
+    handler = handlers.CreateTimeEntry(
+        tasks=deps.task_repository(),
+        time_entries=deps.time_entry_repository(),
+    )
+    return Status(201, handler.execute(payload))
 
 
 @router.patch(
@@ -36,7 +41,11 @@ def create_time_entry(request, payload: TimeEntryCreateRequest):
     operation_id='time_entries_partial_update',
 )
 def update_time_entry(request, id: int, payload: PatchedTimeEntryRequest):
-    return handlers.update_time_entry(id, payload)
+    handler = handlers.UpdateTimeEntry(
+        tasks=deps.task_repository(),
+        time_entries=deps.time_entry_repository(),
+    )
+    return handler.execute(id, payload)
 
 
 @router.delete(
@@ -45,5 +54,5 @@ def update_time_entry(request, id: int, payload: PatchedTimeEntryRequest):
     operation_id='time_entries_destroy',
 )
 def delete_time_entry(request, id: int):
-    handlers.delete_time_entry(id)
+    handlers.DeleteTimeEntry(deps.time_entry_repository()).execute(id)
     return Status(204, None)

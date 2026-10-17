@@ -23,15 +23,15 @@ export interface PatchedTimeEntryRequest {
     /**
      *
      */
-    task?: number;
+    task?: number | null;
     /**
      *
      */
-    date?: Date;
+    date?: Date | null;
     /**
      *
      */
-    durationMinutes?: number;
+    durationMinutes?: number | null;
 }
 
 /**
@@ -51,9 +51,9 @@ export function PatchedTimeEntryRequestFromJSONTyped(json: any, ignoreDiscrimina
     }
     return {
 
-        'task': json['task'] == null ? undefined : json['task'],
-        'date': json['date'] == null ? undefined : (parseDate(json['date'])),
-        'durationMinutes': json['duration_minutes'] == null ? undefined : json['duration_minutes'],
+        'task': json['task'] === undefined ? undefined : json['task'] === null ? null : json['task'],
+        'date': json['date'] === undefined ? undefined : json['date'] === null ? null : (parseDate(json['date'])),
+        'durationMinutes': json['duration_minutes'] === undefined ? undefined : json['duration_minutes'] === null ? null : json['duration_minutes'],
     };
 }
 

@@ -402,13 +402,17 @@ components:
     PatchedProjectRequest:
       properties:
         name:
-          maxLength: 100
-          minLength: 1
+          anyOf:
+          - maxLength: 100
+            minLength: 1
+            type: string
+          - type: 'null'
           title: Name
-          type: string
         description:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Description
-          type: string
       title: PatchedProjectRequest
       type: object
     Task:
@@ -451,8 +455,10 @@ components:
           title: Description
           type: string
         project:
+          anyOf:
+          - type: integer
+          - type: 'null'
           title: Project
-          type: integer
       required:
       - title
       title: TaskCreateRequest
@@ -460,20 +466,27 @@ components:
     PatchedTaskUpdateRequest:
       properties:
         title:
-          maxLength: 200
-          minLength: 1
+          anyOf:
+          - maxLength: 200
+            minLength: 1
+            type: string
+          - type: 'null'
           title: Title
-          type: string
         description:
-          default: ''
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Description
-          type: string
         project:
+          anyOf:
+          - type: integer
+          - type: 'null'
           title: Project
-          type: integer
         is_completed:
+          anyOf:
+          - type: boolean
+          - type: 'null'
           title: Is Completed
-          type: boolean
       title: PatchedTaskUpdateRequest
       type: object
     TimeEntry:
@@ -525,17 +538,23 @@ components:
     PatchedTimeEntryRequest:
       properties:
         task:
+          anyOf:
+          - type: integer
+          - type: 'null'
           title: Task
-          type: integer
         date:
-          format: date
+          anyOf:
+          - format: date
+            type: string
+          - type: 'null'
           title: Date
-          type: string
         duration_minutes:
-          maximum: 1440
-          minimum: 1
+          anyOf:
+          - maximum: 1440
+            minimum: 1
+            type: integer
+          - type: 'null'
           title: Duration Minutes
-          type: integer
       title: PatchedTimeEntryRequest
       type: object
     TimerState:

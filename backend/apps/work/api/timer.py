@@ -1,9 +1,15 @@
 from ninja import Router
 
-from apps.work import clock, handlers
+from apps.infra.models import TimeEntry as TimeEntryModel
+from apps.work import clock, deps, handlers
 from apps.work.contracts import TimerStartRequest, TimerState
 
 router = Router(tags=['personal'])
+
+
+def _state(entry: TimeEntryModel | None) -> TimerState:
+    """The timer response; ninja validates the ORM entry through ``TimeEntry``."""
+    return TimerState(entry=entry, server_now=clock.now())  # type: ignore[arg-type]
 
 
 @router.post(
@@ -12,8 +18,11 @@ router = Router(tags=['personal'])
     operation_id='timer_start',
 )
 def start_timer(request, payload: TimerStartRequest):
-    entry = handlers.start_timer(payload)
-    return TimerState(entry=entry, server_now=clock.now())
+    handler = handlers.StartTimer(
+        tasks=deps.task_repository(),
+        time_entries=deps.time_entry_repository(),
+    )
+    return _state(handler.execute(payload))
 
 
 @router.get(
@@ -22,7 +31,7 @@ def start_timer(request, payload: TimerStartRequest):
     operation_id='timer_retrieve',
 )
 def get_timer(request):
-    return TimerState(entry=handlers.get_running_entry(), server_now=clock.now())
+    return _state(handlers.GetRunningEntry(deps.time_entry_repository()).execute())
 
 
 @router.post(
@@ -31,5 +40,5 @@ def get_timer(request):
     operation_id='timer_stop',
 )
 def stop_timer(request):
-    entry = handlers.stop_timer()
-    return TimerState(entry=entry, server_now=clock.now())
+    handler = handlers.StopTimer(deps.time_entry_repository())
+    return _state(handler.execute())

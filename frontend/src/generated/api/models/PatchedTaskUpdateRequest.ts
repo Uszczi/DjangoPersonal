@@ -23,19 +23,19 @@ export interface PatchedTaskUpdateRequest {
     /**
      *
      */
-    title?: string;
+    title?: string | null;
     /**
      *
      */
-    description?: string;
+    description?: string | null;
     /**
      *
      */
-    project?: number;
+    project?: number | null;
     /**
      *
      */
-    isCompleted?: boolean;
+    isCompleted?: boolean | null;
 }
 
 /**
@@ -55,10 +55,10 @@ export function PatchedTaskUpdateRequestFromJSONTyped(json: any, ignoreDiscrimin
     }
     return {
 
-        'title': json['title'] == null ? undefined : json['title'],
-        'description': json['description'] == null ? undefined : json['description'],
-        'project': json['project'] == null ? undefined : json['project'],
-        'isCompleted': json['is_completed'] == null ? undefined : json['is_completed'],
+        'title': json['title'] === undefined ? undefined : json['title'] === null ? null : json['title'],
+        'description': json['description'] === undefined ? undefined : json['description'] === null ? null : json['description'],
+        'project': json['project'] === undefined ? undefined : json['project'] === null ? null : json['project'],
+        'isCompleted': json['is_completed'] === undefined ? undefined : json['is_completed'] === null ? null : json['is_completed'],
     };
 }
 

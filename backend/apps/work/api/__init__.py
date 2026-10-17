@@ -1,7 +1,7 @@
 """HTTP layer for the ``work`` app.
 
-Routers only validate input, call one handler from ``apps.work.handlers``, and
-shape the response; the domain rules live in that shared handler layer, which a
+Routers only validate input, call one use case from ``apps.work.handlers``, and
+shape the response; the domain rules live in that shared use-case layer, which a
 future MCP server can call too.
 """
 

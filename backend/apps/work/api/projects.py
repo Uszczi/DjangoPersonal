@@ -1,6 +1,6 @@
 from ninja import Router, Status
 
-from apps.work import handlers
+from apps.work import deps, handlers
 from apps.work.contracts import PatchedProjectRequest, Project, ProjectRequest
 
 router = Router(tags=['personal'])
@@ -12,7 +12,7 @@ router = Router(tags=['personal'])
     operation_id='projects_list',
 )
 def list_projects(request):
-    return handlers.list_projects()
+    return handlers.ListProjects(deps.project_repository()).execute()
 
 
 @router.post(
@@ -21,7 +21,8 @@ def list_projects(request):
     operation_id='projects_create',
 )
 def create_project(request, payload: ProjectRequest):
-    return Status(201, handlers.create_project(payload))
+    handler = handlers.CreateProject(deps.project_repository())
+    return Status(201, handler.execute(payload))
 
 
 @router.get(
@@ -30,7 +31,7 @@ def create_project(request, payload: ProjectRequest):
     operation_id='projects_retrieve',
 )
 def get_project(request, id: int):
-    return handlers.get_project(id)
+    return handlers.GetProject(deps.project_repository()).execute(id)
 
 
 @router.put(
@@ -39,7 +40,8 @@ def get_project(request, id: int):
     operation_id='projects_update',
 )
 def replace_project(request, id: int, payload: ProjectRequest):
-    return handlers.replace_project(id, payload)
+    handler = handlers.ReplaceProject(deps.project_repository())
+    return handler.execute(id, payload)
 
 
 @router.patch(
@@ -48,7 +50,8 @@ def replace_project(request, id: int, payload: ProjectRequest):
     operation_id='projects_partial_update',
 )
 def update_project(request, id: int, payload: PatchedProjectRequest):
-    return handlers.update_project(id, payload)
+    handler = handlers.UpdateProject(deps.project_repository())
+    return handler.execute(id, payload)
 
 
 @router.delete(
@@ -57,5 +60,5 @@ def update_project(request, id: int, payload: PatchedProjectRequest):
     operation_id='projects_destroy',
 )
 def delete_project(request, id: int):
-    handlers.delete_project(id)
+    handlers.DeleteProject(deps.project_repository()).execute(id)
     return Status(204, None)

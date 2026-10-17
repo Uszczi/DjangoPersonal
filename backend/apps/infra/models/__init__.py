@@ -11,4 +11,10 @@ def project_name_key(name):
     return normalize_project_name(name).casefold()
 
 
-__all__ = [Task, Project, TimeEntry, normalize_project_name, project_name_key]
+__all__ = [
+    'Task',
+    'Project',
+    'TimeEntry',
+    'normalize_project_name',
+    'project_name_key',
+]

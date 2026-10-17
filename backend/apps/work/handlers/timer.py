@@ -1,36 +1,44 @@
 """Timer use cases: the single running time entry."""
 
-from django.db import transaction
-
 from apps.infra.models import TimeEntry as TimeEntryModel
+from apps.infra.repo import TaskRepository, TimeEntryRepository
 from apps.work import clock
 from apps.work.contracts import TimerStartRequest
 from apps.work.errors import WorkError
 
-from .tasks import resolve_task
+from .tasks import _resolve_task
 
 
-def get_running_entry():
-    return TimeEntryModel.objects.filter(end__isnull=True).first()
+class GetRunningEntry:
+    """The time entry with a start but no end, or ``None`` if idle."""
+
+    def __init__(self, time_entries: TimeEntryRepository):
+        self.time_entries = time_entries
+
+    def execute(self):
+        return self.time_entries.running()
 
 
-def start_timer(data: TimerStartRequest) -> TimeEntryModel:
-    task = resolve_task(data.task)
+class StartTimer:
+    """Start a timer on a task, ending any timer already running."""
 
-    with transaction.atomic():
-        running = (
-            TimeEntryModel.objects.select_for_update().filter(end__isnull=True).first()
-        )
-        if running is not None:
-            running.end = clock.now()
-            running.save(update_fields=['end'])
-        return TimeEntryModel.objects.create(task=task, start=clock.now())
+    def __init__(self, tasks: TaskRepository, time_entries: TimeEntryRepository):
+        self.tasks = tasks
+        self.time_entries = time_entries
+
+    def execute(self, data: TimerStartRequest) -> TimeEntryModel:
+        task = _resolve_task(self.tasks, data.task)
+        return self.time_entries.switch(task=task, at=clock.now())
 
 
-def stop_timer() -> TimeEntryModel:
-    running = get_running_entry()
-    if running is None:
-        raise WorkError('No timer is running.')
-    running.end = clock.now()
-    running.save(update_fields=['end'])
-    return running
+class StopTimer:
+    """Stop the running timer, or fail when none is running."""
+
+    def __init__(self, time_entries: TimeEntryRepository):
+        self.time_entries = time_entries
+
+    def execute(self) -> TimeEntryModel:
+        running = self.time_entries.running()
+        if running is None:
+            raise WorkError('No timer is running.')
+        return self.time_entries.close(running, at=clock.now())

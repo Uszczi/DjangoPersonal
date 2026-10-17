@@ -1,7 +1,7 @@
-"""Translate handler-layer errors into HTTP responses.
+"""Translate use-case errors into HTTP responses.
 
 This is the only place that knows a :class:`WorkError` becomes a status code,
-so the handlers stay transport-agnostic.
+so the use cases stay transport-agnostic.
 """
 
 from ninja import NinjaAPI

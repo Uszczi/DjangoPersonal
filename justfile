@@ -22,8 +22,13 @@ generate-api:
 frontend:
     cd frontend && npm run dev
 
+# Type-check the backend with mypy (django-stubs plugin).
+typecheck:
+    cd backend && uv run mypy .
+
 # Check the Django project and validate the frontend.
 check:
+    just typecheck
     cd backend && uv run pytest
     cd backend && uv run python manage.py check
     cd frontend && npm test
