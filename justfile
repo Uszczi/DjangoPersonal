@@ -29,3 +29,63 @@ check:
     cd frontend && npm test
     cd frontend && npm run lint
     cd frontend && npm run build
+
+# --- Deployment -------------------------------------------------------------
+
+compose := "docker compose -f deployment/docker-compose.yml"
+
+# Build the deployment Docker images.
+deploy-build:
+    {{compose}} build
+
+# Start the deployment stack in the background.
+deploy-up:
+    {{compose}} up --detach
+
+# Stop and remove the deployment stack.
+deploy-down:
+    {{compose}} down
+
+# Restart the app and frontend containers.
+deploy-restart:
+    {{compose}} restart app frontend
+
+# Follow logs from the deployment stack (optionally for one service).
+deploy-logs service="":
+    {{compose}} logs --follow {{service}}
+
+# Apply Django migrations inside the app container.
+deploy-migrate:
+    {{compose}} run --rm app python manage.py migrate
+
+# Run the full VPS deploy flow (build, migrate, nginx, up).
+deploy:
+    ./deployment/deploy.sh
+
+# --- Local stack (app + frontend + db + monitoring + local nginx) ------------
+
+compose-local := compose + " -f deployment/docker-compose.local.yml"
+
+# Build images and start the whole stack locally, reverse proxy on :80.
+local-up:
+    {{compose-local}} up --detach --build
+
+# Stop the local stack (keeps named volumes).
+local-down:
+    {{compose-local}} down
+
+# Show local stack container status.
+local-status:
+    {{compose-local}} ps
+
+# Follow local stack logs (optionally for one service).
+local-logs service="":
+    {{compose-local}} logs --follow {{service}}
+
+# Apply Django migrations against the local stack.
+local-migrate:
+    {{compose-local}} run --rm --no-deps app python manage.py migrate
+
+# Wipe the local stack including volumes (destroys the database).
+local-reset:
+    {{compose-local}} down --volumes

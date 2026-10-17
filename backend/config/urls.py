@@ -18,8 +18,13 @@ from django.contrib import admin
 from django.urls import path
 
 from config.api import api
+from config.health import health_view, readiness_view
+from config.metrics import metrics_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', api.urls),
+    path('metrics', metrics_view, name='metrics'),
+    path('health', health_view, name='health'),
+    path('health/ready', readiness_view, name='health-ready'),
 ]

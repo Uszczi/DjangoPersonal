@@ -1,0 +1,173 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: ./deployment/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      # `app` lets Prometheus scrape app:8000/metrics inside the compose network.
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1},app
+      UVICORN_WORKERS: ${UVICORN_WORKERS:-2}
+    env_file:
+      - path: .env
+        required: false
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health').status == 200 else 1)"
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: ./deployment/frontend.Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - app
+
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning", "--appendonly", "yes"]
+
+  db:
+    image: postgres:17
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-app_db}
+      POSTGRES_USER: ${POSTGRES_USER:-app_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-supersecret}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    command:
+      - --path.rootfs=/host
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --web.enable-lifecycle
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - node-exporter
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD:-grafanapassword12!}
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../prometheus/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+      - alloy
+
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/config.yml
+    volumes:
+      - ../loki-config.yml:/etc/loki/config.yml:ro
+      - loki-data:/loki
+    ports: ["3100:3100"]
+
+  tempo:
+    image: grafana/tempo:2.6.0
+    container_name: tempo
+    restart: unless-stopped
+    command: ["-config.file=/etc/tempo/config.yml"]
+    ports:
+      - "3200:3200"   # HTTP (querier/query-frontend API, metrics)
+      - "9095:9095"   # gRPC (query-frontend <-> querier)
+    volumes:
+      - ../tempo-config.yml:/etc/tempo/config.yml:ro
+      - tempo-data:/var/tempo
+
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    restart: unless-stopped
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - /etc/alloy/config.river
+    ports:
+      - "4317:4317" # OTLP gRPC (aplikacje → Alloy)
+      - "4318:4318" # OTLP HTTP (aplikacje → Alloy)
+      - "12345:12345" # Alloy UI (opcjonalnie)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro # autodiscovery kontenerów
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ../alloy-config.river:/etc/alloy/config.river:ro
+    depends_on:
+      - loki
+      - tempo
+
+
+volumes:
+  redis-data:
+  pgdata:
+  grafana-storage:
+  loki-data:
+  tempo-data:
