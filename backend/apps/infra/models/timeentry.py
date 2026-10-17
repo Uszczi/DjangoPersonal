@@ -17,5 +17,5 @@ class TimeEntry(models.Model):
     class Meta:
         ordering = ["-start", "-id"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.task.title} ({self.start} – {self.end})"

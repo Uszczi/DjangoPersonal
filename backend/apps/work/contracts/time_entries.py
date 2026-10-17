@@ -1,6 +1,7 @@
 """Time entry contracts: request payloads and the response shape."""
 
 from datetime import date as datetime_date, datetime
+from typing import Any
 
 from ninja import Schema
 from pydantic import BaseModel, Field
@@ -29,5 +30,5 @@ class TimeEntry(Schema):
     end: datetime | None = None
 
     @staticmethod
-    def resolve_task(obj):
-        return obj.task_id
+    def resolve_task(obj: Any) -> int:
+        return int(obj.task_id)

@@ -1,3 +1,4 @@
+from typing import Any
 import json
 
 import pytest
@@ -5,13 +6,13 @@ from django.test import Client
 
 
 @pytest.fixture
-def api_client(db):
+def api_client(db: Any) -> Any:
     return Client()
 
 
 @pytest.fixture
-def post_json(api_client):
-    def send(path, payload):
+def post_json(api_client: Any) -> Any:
+    def send(path: Any, payload: Any) -> Any:
         return api_client.post(
             path,
             data=json.dumps(payload),
@@ -22,8 +23,8 @@ def post_json(api_client):
 
 
 @pytest.fixture
-def patch_json(api_client):
-    def send(path, payload):
+def patch_json(api_client: Any) -> Any:
+    def send(path: Any, payload: Any) -> Any:
         return api_client.patch(
             path,
             data=json.dumps(payload),

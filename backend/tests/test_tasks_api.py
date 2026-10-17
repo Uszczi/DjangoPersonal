@@ -1,9 +1,10 @@
+from typing import Any
 from http import HTTPStatus
 
 from apps.infra.models import Task
 
 
-def test_user_can_create_and_browse_tasks_in_a_project(post_json, api_client):
+def test_user_can_create_and_browse_tasks_in_a_project(post_json: Any, api_client: Any) -> None:
     project_response = post_json('/api/v1/projects/', {'name': 'Planning'})
     project_id = project_response.json()['id']
 
@@ -28,7 +29,7 @@ def test_user_can_create_and_browse_tasks_in_a_project(post_json, api_client):
     assert [task['id'] for task in list_response.json()] == [create_response.json()['id']]
 
 
-def test_task_without_a_project_is_assigned_to_inbox(api_client, post_json):
+def test_task_without_a_project_is_assigned_to_inbox(api_client: Any, post_json: Any) -> None:
     inbox_id = api_client.get('/api/v1/projects/').json()[0]['id']
 
     create_response = post_json('/api/v1/tasks/', {'title': 'Capture an idea'})
@@ -41,7 +42,7 @@ def test_task_without_a_project_is_assigned_to_inbox(api_client, post_json):
     assert [task['id'] for task in inbox_tasks.json()] == [create_response.json()['id']]
 
 
-def test_task_title_is_required_and_cannot_be_blank(post_json):
+def test_task_title_is_required_and_cannot_be_blank(post_json: Any) -> None:
     missing = post_json('/api/v1/tasks/', {})
     blank = post_json('/api/v1/tasks/', {'title': '   '})
 
@@ -51,7 +52,7 @@ def test_task_title_is_required_and_cannot_be_blank(post_json):
     assert blank.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_task_list_is_scoped_to_a_project_and_shows_open_tasks_first(api_client, post_json):
+def test_task_list_is_scoped_to_a_project_and_shows_open_tasks_first(api_client: Any, post_json: Any) -> None:
     project_id = post_json('/api/v1/projects/', {'name': 'Writing'}).json()['id']
     other_project_id = post_json('/api/v1/projects/', {'name': 'Research'}).json()['id']
     post_json(
@@ -78,7 +79,7 @@ def test_task_list_is_scoped_to_a_project_and_shows_open_tasks_first(api_client,
     assert [task['is_completed'] for task in response.json()] == [False, True]
 
 
-def test_openapi_contract_requires_project_in_task_responses_but_not_requests(api_client):
+def test_openapi_contract_requires_project_in_task_responses_but_not_requests(api_client: Any) -> None:
     response = api_client.get('/api/v1/schema/')
     schema = response.json()
     task_response = schema['components']['schemas']['Task']
@@ -88,7 +89,7 @@ def test_openapi_contract_requires_project_in_task_responses_but_not_requests(ap
     assert 'project' not in task_request.get('required', [])
 
 
-def test_user_can_edit_a_task_and_move_it_to_another_project(api_client, post_json, patch_json):
+def test_user_can_edit_a_task_and_move_it_to_another_project(api_client: Any, post_json: Any, patch_json: Any) -> None:
     source_id = post_json('/api/v1/projects/', {'name': 'Drafting'}).json()['id']
     destination_id = post_json('/api/v1/projects/', {'name': 'Review'}).json()['id']
     task = post_json(
@@ -116,7 +117,7 @@ def test_user_can_edit_a_task_and_move_it_to_another_project(api_client, post_js
     ).json()] == [task['id']]
 
 
-def test_user_can_complete_and_reopen_a_task(api_client, post_json, patch_json):
+def test_user_can_complete_and_reopen_a_task(api_client: Any, post_json: Any, patch_json: Any) -> None:
     project_id = post_json('/api/v1/projects/', {'name': 'Reading'}).json()['id']
     task = post_json(
         '/api/v1/tasks/', {'title': 'Read chapter', 'project': project_id}
@@ -141,7 +142,7 @@ def test_user_can_complete_and_reopen_a_task(api_client, post_json, patch_json):
     assert reopened_list.json()[0]['is_completed'] is False
 
 
-def test_user_can_permanently_delete_a_task(api_client, post_json):
+def test_user_can_permanently_delete_a_task(api_client: Any, post_json: Any) -> None:
     project_id = post_json('/api/v1/projects/', {'name': 'Reading'}).json()['id']
     task = post_json(
         '/api/v1/tasks/', {'title': 'Read chapter', 'project': project_id}
@@ -154,7 +155,7 @@ def test_user_can_permanently_delete_a_task(api_client, post_json):
     assert api_client.get('/api/v1/tasks/').json() == []
 
 
-def test_task_with_time_entries_cannot_be_deleted(api_client, post_json):
+def test_task_with_time_entries_cannot_be_deleted(api_client: Any, post_json: Any) -> None:
     project_id = post_json('/api/v1/projects/', {'name': 'Reading'}).json()['id']
     task = post_json(
         '/api/v1/tasks/', {'title': 'Read chapter', 'project': project_id}

@@ -1,3 +1,4 @@
+from typing import Any
 from datetime import date, datetime, timedelta, timezone
 from http import HTTPStatus
 
@@ -10,18 +11,18 @@ FIXED_NOW = datetime(2026, 10, 14, 12, 0, 0, tzinfo=timezone.utc)
 
 
 @pytest.fixture
-def fixed_clock(monkeypatch):
+def fixed_clock(monkeypatch: Any) -> Any:
     monkeypatch.setattr(clock, 'now', lambda: FIXED_NOW)
 
 
-def create_task(post_json, title='Outline the release', project_name='Planning'):
+def create_task(post_json: Any, title: Any='Outline the release', project_name: Any='Planning') -> Any:
     project_id = post_json('/api/v1/projects/', {'name': project_name}).json()['id']
     return post_json(
         '/api/v1/tasks/', {'title': title, 'project': project_id}
     ).json()
 
 
-def test_user_can_log_time_manually(post_json, fixed_clock):
+def test_user_can_log_time_manually(post_json: Any, fixed_clock: Any) -> None:
     task = create_task(post_json)
 
     response = post_json(
@@ -40,7 +41,7 @@ def test_user_can_log_time_manually(post_json, fixed_clock):
     )
 
 
-def test_manual_entry_rejects_future_dates(post_json, fixed_clock):
+def test_manual_entry_rejects_future_dates(post_json: Any, fixed_clock: Any) -> None:
     task = create_task(post_json)
 
     response = post_json(
@@ -51,7 +52,7 @@ def test_manual_entry_rejects_future_dates(post_json, fixed_clock):
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
-def test_time_entry_list_filters_by_date_and_task(api_client, post_json):
+def test_time_entry_list_filters_by_date_and_task(api_client: Any, post_json: Any) -> None:
     task = create_task(post_json)
     other = create_task(post_json, title='Other task', project_name='Other')
 
@@ -82,7 +83,7 @@ def test_time_entry_list_filters_by_date_and_task(api_client, post_json):
     assert by_both.json()[0]['task'] == other['id']
 
 
-def test_starting_a_timer_creates_a_running_entry(post_json, fixed_clock):
+def test_starting_a_timer_creates_a_running_entry(post_json: Any, fixed_clock: Any) -> None:
     task = create_task(post_json)
 
     response = post_json('/api/v1/timer/start/', {'task': task['id']})
@@ -96,8 +97,8 @@ def test_starting_a_timer_creates_a_running_entry(post_json, fixed_clock):
 
 
 def test_starting_a_timer_on_another_task_ends_the_previous_one(
-    api_client, post_json, fixed_clock
-):
+    api_client: Any, post_json: Any, fixed_clock: Any
+) -> None:
     first = create_task(post_json, title='First task')
     second = create_task(post_json, title='Second task', project_name='Other')
 
@@ -115,8 +116,8 @@ def test_starting_a_timer_on_another_task_ends_the_previous_one(
 
 
 def test_timer_state_reports_the_running_entry_and_server_now(
-    api_client, post_json, fixed_clock
-):
+    api_client: Any, post_json: Any, fixed_clock: Any
+) -> None:
     task = create_task(post_json)
     post_json('/api/v1/timer/start/', {'task': task['id']})
 
@@ -129,14 +130,14 @@ def test_timer_state_reports_the_running_entry_and_server_now(
     assert datetime.fromisoformat(body['server_now']) == FIXED_NOW
 
 
-def test_timer_state_is_empty_when_nothing_runs(api_client, fixed_clock):
+def test_timer_state_is_empty_when_nothing_runs(api_client: Any, fixed_clock: Any) -> None:
     response = api_client.get('/api/v1/timer/')
 
     assert response.status_code == HTTPStatus.OK
     assert response.json()['entry'] is None
 
 
-def test_stopping_a_timer_closes_the_running_entry(api_client, post_json, fixed_clock):
+def test_stopping_a_timer_closes_the_running_entry(api_client: Any, post_json: Any, fixed_clock: Any) -> None:
     task = create_task(post_json)
     post_json('/api/v1/timer/start/', {'task': task['id']})
 
@@ -149,13 +150,13 @@ def test_stopping_a_timer_closes_the_running_entry(api_client, post_json, fixed_
     assert api_client.get('/api/v1/timer/').json()['entry'] is None
 
 
-def test_stopping_without_a_running_timer_is_an_error(api_client, fixed_clock):
+def test_stopping_without_a_running_timer_is_an_error(api_client: Any, fixed_clock: Any) -> None:
     response = api_client.post('/api/v1/timer/stop/')
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
-def test_user_can_delete_a_stopped_entry(api_client, post_json, fixed_clock):
+def test_user_can_delete_a_stopped_entry(api_client: Any, post_json: Any, fixed_clock: Any) -> None:
     task = create_task(post_json)
     entry = post_json(
         '/api/v1/time-entries/',
@@ -168,7 +169,7 @@ def test_user_can_delete_a_stopped_entry(api_client, post_json, fixed_clock):
     assert api_client.get('/api/v1/time-entries/').json() == []
 
 
-def test_user_can_discard_the_running_timer(api_client, post_json, fixed_clock):
+def test_user_can_discard_the_running_timer(api_client: Any, post_json: Any, fixed_clock: Any) -> None:
     task = create_task(post_json)
     post_json('/api/v1/timer/start/', {'task': task['id']})
     entry_id = api_client.get('/api/v1/timer/').json()['entry']['id']
@@ -180,7 +181,7 @@ def test_user_can_discard_the_running_timer(api_client, post_json, fixed_clock):
     assert api_client.get('/api/v1/time-entries/').json() == []
 
 
-def test_user_can_edit_a_stopped_entry(api_client, post_json, patch_json, fixed_clock):
+def test_user_can_edit_a_stopped_entry(api_client: Any, post_json: Any, patch_json: Any, fixed_clock: Any) -> None:
     task = create_task(post_json)
     other = create_task(post_json, title='Other task', project_name='Other')
     entry = post_json(
@@ -202,7 +203,7 @@ def test_user_can_edit_a_stopped_entry(api_client, post_json, patch_json, fixed_
     assert end - start == timedelta(minutes=30)
 
 
-def test_running_timer_cannot_be_edited(api_client, post_json, patch_json, fixed_clock):
+def test_running_timer_cannot_be_edited(api_client: Any, post_json: Any, patch_json: Any, fixed_clock: Any) -> None:
     task = create_task(post_json)
     post_json('/api/v1/timer/start/', {'task': task['id']})
     entry_id = api_client.get('/api/v1/timer/').json()['entry']['id']
@@ -215,8 +216,8 @@ def test_running_timer_cannot_be_edited(api_client, post_json, patch_json, fixed
 
 
 def test_completing_a_task_does_not_stop_its_running_timer(
-    api_client, post_json, patch_json, fixed_clock
-):
+    api_client: Any, post_json: Any, patch_json: Any, fixed_clock: Any
+) -> None:
     task = create_task(post_json)
     post_json('/api/v1/timer/start/', {'task': task['id']})
 
@@ -229,8 +230,8 @@ def test_completing_a_task_does_not_stop_its_running_timer(
 
 
 def test_timer_can_run_on_a_completed_task_without_reopening_it(
-    api_client, post_json, patch_json, fixed_clock
-):
+    api_client: Any, post_json: Any, patch_json: Any, fixed_clock: Any
+) -> None:
     task = create_task(post_json)
     patch_json(f"/api/v1/tasks/{task['id']}/", {'is_completed': True})
 
@@ -241,7 +242,7 @@ def test_timer_can_run_on_a_completed_task_without_reopening_it(
     assert tasks[0]['is_completed'] is True
 
 
-def test_manual_entry_rejects_out_of_range_duration(post_json, fixed_clock):
+def test_manual_entry_rejects_out_of_range_duration(post_json: Any, fixed_clock: Any) -> None:
     task = create_task(post_json)
 
     too_long = post_json(
@@ -257,7 +258,7 @@ def test_manual_entry_rejects_out_of_range_duration(post_json, fixed_clock):
     assert zero.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_time_entry_endpoints_reject_unknown_tasks(post_json, fixed_clock):
+def test_time_entry_endpoints_reject_unknown_tasks(post_json: Any, fixed_clock: Any) -> None:
     task = create_task(post_json)
 
     manual = post_json(
@@ -270,7 +271,7 @@ def test_time_entry_endpoints_reject_unknown_tasks(post_json, fixed_clock):
     assert start.status_code == HTTPStatus.BAD_REQUEST
 
 
-def test_openapi_contract_covers_time_tracking(api_client):
+def test_openapi_contract_covers_time_tracking(api_client: Any) -> None:
     schema = api_client.get('/api/v1/schema/').json()
 
     assert '/api/v1/timer/' in schema['paths']
@@ -282,7 +283,7 @@ def test_openapi_contract_covers_time_tracking(api_client):
     assert 'end' not in time_entry['required']
 
 
-def test_task_list_can_span_all_projects(api_client, post_json):
+def test_task_list_can_span_all_projects(api_client: Any, post_json: Any) -> None:
     first_project = post_json('/api/v1/projects/', {'name': 'First'}).json()
     second_project = post_json('/api/v1/projects/', {'name': 'Second'}).json()
     first_task = post_json(

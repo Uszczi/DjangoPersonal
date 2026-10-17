@@ -2,6 +2,8 @@
 
 from datetime import date as datetime_date, timedelta
 
+from django.db.models import QuerySet
+
 from apps.infra.models import TimeEntry as TimeEntryModel
 from apps.infra.repo import TaskRepository, TimeEntryRepository, day_start
 from apps.work import clock
@@ -16,7 +18,7 @@ def _ensure_not_future(value: datetime_date) -> None:
         raise WorkError('Date cannot be in the future.')
 
 
-def _get_time_entry(repository, entry_id) -> TimeEntryModel:
+def _get_time_entry(repository: TimeEntryRepository, entry_id: int) -> TimeEntryModel:
     """Fetch a time entry addressed by id, or raise ``NotFound``."""
     entry = repository.find(entry_id)
     if entry is None:
@@ -30,7 +32,9 @@ class ListTimeEntries:
     def __init__(self, time_entries: TimeEntryRepository):
         self.time_entries = time_entries
 
-    def execute(self, task_id=None, day: datetime_date | None = None):
+    def execute(
+        self, task_id: int | None = None, day: datetime_date | None = None
+    ) -> QuerySet[TimeEntryModel]:
         return self.time_entries.list(task_id=task_id, day=day)
 
 
@@ -60,7 +64,7 @@ class UpdateTimeEntry:
         self.tasks = tasks
         self.time_entries = time_entries
 
-    def execute(self, entry_id, data: PatchedTimeEntryRequest) -> TimeEntryModel:
+    def execute(self, entry_id: int, data: PatchedTimeEntryRequest) -> TimeEntryModel:
         entry = _get_time_entry(self.time_entries, entry_id)
         if entry.end is None:
             raise WorkError('The running timer cannot be edited.')
@@ -91,5 +95,5 @@ class DeleteTimeEntry:
     def __init__(self, time_entries: TimeEntryRepository):
         self.time_entries = time_entries
 
-    def execute(self, entry_id) -> None:
+    def execute(self, entry_id: int) -> None:
         self.time_entries.delete(_get_time_entry(self.time_entries, entry_id))

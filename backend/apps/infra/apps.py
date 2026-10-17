@@ -2,7 +2,10 @@ from django.apps import AppConfig
 from django.db.models.signals import post_migrate
 
 
-def create_inbox(sender, using, **kwargs):
+from typing import Any
+
+
+def create_inbox(sender: Any, using: str, **kwargs: Any) -> None:
     from apps.infra.models import Project
 
     Project.objects.using(using).get_or_create(
@@ -14,5 +17,5 @@ def create_inbox(sender, using, **kwargs):
 class InfraConfig(AppConfig):
     name = 'apps.infra'
 
-    def ready(self):
+    def ready(self) -> None:
         post_migrate.connect(create_inbox, sender=self)

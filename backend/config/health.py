@@ -7,16 +7,16 @@
 import logging
 
 from django.db import connection
-from django.http import JsonResponse
+from django.http import HttpRequest, JsonResponse
 
 logger = logging.getLogger(__name__)
 
 
-def health_view(request):
+def health_view(request: HttpRequest) -> JsonResponse:
     return JsonResponse({'status': 'ok'})
 
 
-def readiness_view(request):
+def readiness_view(request: HttpRequest) -> JsonResponse:
     try:
         with connection.cursor() as cursor:
             cursor.execute('SELECT 1')

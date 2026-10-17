@@ -1,6 +1,9 @@
 """Tasks use cases."""
 
 from functools import partial
+from typing import Any
+
+from django.db.models import QuerySet
 
 from apps.infra.models import Task as TaskModel
 from apps.infra.repo import (
@@ -15,7 +18,7 @@ from ._patch import apply_provided
 from .projects import _resolve_project
 
 
-def _get_task(repository, task_id) -> TaskModel:
+def _get_task(repository: TaskRepository, task_id: int) -> TaskModel:
     """Fetch a task addressed by id, or raise ``NotFound``."""
     task = repository.find(task_id)
     if task is None:
@@ -23,7 +26,7 @@ def _get_task(repository, task_id) -> TaskModel:
     return task
 
 
-def _resolve_task(repository, task_id) -> TaskModel:
+def _resolve_task(repository: TaskRepository, task_id: int) -> TaskModel:
     """Resolve a task referenced by another payload, or fail as invalid."""
     task = repository.find(task_id)
     if task is None:
@@ -37,7 +40,9 @@ class ListTasks:
     def __init__(self, tasks: TaskRepository):
         self.tasks = tasks
 
-    def execute(self, project_id=None, all_projects=False):
+    def execute(
+        self, project_id: int | None = None, all_projects: bool = False
+    ) -> QuerySet[TaskModel]:
         if all_projects:
             return self.tasks.list_all()
         if project_id is None:
@@ -72,7 +77,7 @@ class UpdateTask:
         self.projects = projects
         self.tasks = tasks
 
-    def execute(self, task_id, data: PatchedTaskUpdateRequest) -> TaskModel:
+    def execute(self, task_id: int, data: PatchedTaskUpdateRequest) -> TaskModel:
         task = _get_task(self.tasks, task_id)
         apply_provided(
             data,
@@ -88,7 +93,7 @@ class DeleteTask:
     def __init__(self, tasks: TaskRepository):
         self.tasks = tasks
 
-    def execute(self, task_id) -> None:
+    def execute(self, task_id: int) -> None:
         task = _get_task(self.tasks, task_id)
         try:
             self.tasks.delete(task)

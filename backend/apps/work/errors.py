@@ -10,9 +10,9 @@ status code; a future MCP server can map the same codes onto tool errors.
 class WorkError(Exception):
     """The request was understood but breaks a domain rule."""
 
-    code = 'invalid'
+    code: str = 'invalid'
 
-    def __init__(self, message):
+    def __init__(self, message: str) -> None:
         super().__init__(message)
         self.message = message
 

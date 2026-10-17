@@ -1,5 +1,7 @@
 """Task contracts: request payloads and the response shape."""
 
+from typing import Any
+
 from ninja import Schema
 from pydantic import BaseModel, Field, field_validator
 
@@ -12,7 +14,7 @@ class _TaskPayload(BaseModel):
 
     @field_validator('title', mode='before', check_fields=False)
     @classmethod
-    def trim_title(cls, value):
+    def trim_title(cls, value: Any) -> Any:
         if isinstance(value, str):
             value = value.strip()
             if not value:
@@ -41,5 +43,5 @@ class Task(Schema):
     is_completed: bool = Field(..., json_schema_extra={'readOnly': True})
 
     @staticmethod
-    def resolve_project(obj):
-        return obj.project_id
+    def resolve_project(obj: Any) -> int:
+        return int(obj.project_id)

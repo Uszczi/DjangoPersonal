@@ -30,11 +30,7 @@ plugins = ["mypy_django_plugin.main"]
 python_version = "3.14"
 mypy_path = "."
 exclude = ["staticfiles/", "apps/.*/migrations/"]
-check_untyped_defs = true
-no_implicit_reexport = true
-strict_equality = true
-warn_redundant_casts = true
-warn_unused_ignores = true
+strict = true
 show_error_codes = true
 
 [[tool.mypy.overrides]]

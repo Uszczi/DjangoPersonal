@@ -1,3 +1,6 @@
+from typing import Any
+
+from django.http import HttpRequest
 from ninja import Router
 
 from apps.infra.models import TimeEntry as TimeEntryModel
@@ -17,7 +20,7 @@ def _state(entry: TimeEntryModel | None) -> TimerState:
     response=TimerState,
     operation_id='timer_start',
 )
-def start_timer(request, payload: TimerStartRequest):
+def start_timer(request: HttpRequest, payload: TimerStartRequest) -> Any:
     handler = handlers.StartTimer(
         tasks=deps.task_repository(),
         time_entries=deps.time_entry_repository(),
@@ -30,7 +33,7 @@ def start_timer(request, payload: TimerStartRequest):
     response=TimerState,
     operation_id='timer_retrieve',
 )
-def get_timer(request):
+def get_timer(request: HttpRequest) -> Any:
     return _state(handlers.GetRunningEntry(deps.time_entry_repository()).execute())
 
 
@@ -39,6 +42,6 @@ def get_timer(request):
     response=TimerState,
     operation_id='timer_stop',
 )
-def stop_timer(request):
+def stop_timer(request: HttpRequest) -> Any:
     handler = handlers.StopTimer(deps.time_entry_repository())
     return _state(handler.execute())

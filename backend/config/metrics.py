@@ -10,8 +10,9 @@ uvicorn workers as needed without losing or duplicating metrics.
 
 import os
 import time
+from collections.abc import Callable
 
-from django.http import HttpResponse
+from django.http import HttpRequest, HttpResponse
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
     CollectorRegistry,
@@ -41,20 +42,20 @@ REQUEST_LATENCY = Histogram(
 )
 
 
-def _route_label(request):
+def _route_label(request: HttpRequest) -> str:
     """Prefer the resolved route pattern so labels stay low-cardinality."""
     match = getattr(request, 'resolver_match', None)
     route = getattr(match, 'route', None)
-    if route:
+    if isinstance(route, str) and route:
         return '/' + route.lstrip('/')
     return request.path
 
 
 class MetricsMiddleware:
-    def __init__(self, get_response):
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
         self.get_response = get_response
 
-    def __call__(self, request):
+    def __call__(self, request: HttpRequest) -> HttpResponse:
         if request.path in UNMETERED_PATHS:
             return self.get_response(request)
 
@@ -68,14 +69,14 @@ class MetricsMiddleware:
         return response
 
 
-def _render_metrics():
+def _render_metrics() -> bytes:
     if not MULTIPROCESS_MODE:
         return generate_latest()
 
     registry = CollectorRegistry()
-    multiprocess.MultiProcessCollector(registry)
+    multiprocess.MultiProcessCollector(registry)  # type: ignore[no-untyped-call]
     return generate_latest(registry)
 
 
-def metrics_view(request):
+def metrics_view(request: HttpRequest) -> HttpResponse:
     return HttpResponse(_render_metrics(), content_type=CONTENT_TYPE_LATEST)

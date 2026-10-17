@@ -10,7 +10,12 @@ it.
 """
 
 
-def apply_provided(payload, target, *, resolve=None) -> None:
+from typing import Any, Callable
+
+
+def apply_provided(
+    payload: Any, target: Any, *, resolve: dict[str, Callable[[Any], Any]] | None = None
+) -> None:
     """Set the fields the payload carried on ``target``.
 
     ``resolve`` maps a payload field to a callable that turns its value into

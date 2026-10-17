@@ -1,6 +1,9 @@
 """Projects use cases."""
 
 from functools import partial
+from typing import Any
+
+from django.db.models import QuerySet
 
 from apps.infra.models import Project as ProjectModel
 from apps.infra.models import normalize_project_name, project_name_key
@@ -11,7 +14,7 @@ from apps.work.errors import NotFound, WorkError
 from ._patch import apply_provided
 
 
-def _get_project(repository, project_id) -> ProjectModel:
+def _get_project(repository: ProjectRepository, project_id: int) -> ProjectModel:
     """Fetch a project addressed by id, or raise ``NotFound``."""
     project = repository.find(project_id)
     if project is None:
@@ -19,7 +22,7 @@ def _get_project(repository, project_id) -> ProjectModel:
     return project
 
 
-def _resolve_project(repository, project_id) -> ProjectModel:
+def _resolve_project(repository: ProjectRepository, project_id: int) -> ProjectModel:
     """Resolve a project referenced by another payload, or fail as invalid."""
     project = repository.find(project_id)
     if project is None:
@@ -27,7 +30,9 @@ def _resolve_project(repository, project_id) -> ProjectModel:
     return project
 
 
-def _validate_name(repository, name, current=None) -> str:
+def _validate_name(
+    repository: ProjectRepository, name: str, current: ProjectModel | None = None
+) -> str:
     """Return the trimmed project name, or raise when it breaks a naming rule."""
     name = normalize_project_name(name)
     name_key = project_name_key(name)
@@ -46,7 +51,7 @@ def _validate_name(repository, name, current=None) -> str:
     return name
 
 
-def _save(repository, project) -> ProjectModel:
+def _save(repository: ProjectRepository, project: ProjectModel) -> ProjectModel:
     """Persist a project, presenting a name clash as a domain error."""
     try:
         return repository.save(project)
@@ -60,7 +65,7 @@ class ListProjects:
     def __init__(self, projects: ProjectRepository):
         self.projects = projects
 
-    def execute(self):
+    def execute(self) -> QuerySet[ProjectModel]:
         return self.projects.list_all()
 
 
@@ -70,7 +75,7 @@ class GetProject:
     def __init__(self, projects: ProjectRepository):
         self.projects = projects
 
-    def execute(self, project_id) -> ProjectModel:
+    def execute(self, project_id: int) -> ProjectModel:
         return _get_project(self.projects, project_id)
 
 
@@ -94,7 +99,7 @@ class ReplaceProject:
     def __init__(self, projects: ProjectRepository):
         self.projects = projects
 
-    def execute(self, project_id, data: ProjectRequest) -> ProjectModel:
+    def execute(self, project_id: int, data: ProjectRequest) -> ProjectModel:
         project = _get_project(self.projects, project_id)
         apply_provided(
             data,
@@ -112,7 +117,7 @@ class UpdateProject:
     def __init__(self, projects: ProjectRepository):
         self.projects = projects
 
-    def execute(self, project_id, data: PatchedProjectRequest) -> ProjectModel:
+    def execute(self, project_id: int, data: PatchedProjectRequest) -> ProjectModel:
         project = _get_project(self.projects, project_id)
         apply_provided(
             data,
@@ -130,7 +135,7 @@ class DeleteProject:
     def __init__(self, projects: ProjectRepository):
         self.projects = projects
 
-    def execute(self, project_id) -> None:
+    def execute(self, project_id: int) -> None:
         project = _get_project(self.projects, project_id)
         if project.is_inbox:
             raise WorkError('Inbox cannot be deleted.')

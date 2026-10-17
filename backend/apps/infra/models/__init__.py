@@ -3,11 +3,11 @@ from .project import Project
 from .timeentry import TimeEntry
 
 
-def normalize_project_name(name):
+def normalize_project_name(name: str) -> str:
     return name.strip()
 
 
-def project_name_key(name):
+def project_name_key(name: str) -> str:
     return normalize_project_name(name).casefold()
 
 

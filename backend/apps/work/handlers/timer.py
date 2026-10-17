@@ -15,7 +15,7 @@ class GetRunningEntry:
     def __init__(self, time_entries: TimeEntryRepository):
         self.time_entries = time_entries
 
-    def execute(self):
+    def execute(self) -> TimeEntryModel | None:
         return self.time_entries.running()
 
 

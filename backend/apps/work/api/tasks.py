@@ -1,3 +1,6 @@
+from typing import Any
+
+from django.http import HttpRequest
 from ninja import Router, Status
 
 from apps.work import deps, handlers
@@ -11,7 +14,9 @@ router = Router(tags=['personal'])
     response=list[Task],
     operation_id='tasks_list',
 )
-def list_tasks(request, project: int | None = None, all: bool = False):
+def list_tasks(
+    request: HttpRequest, project: int | None = None, all: bool = False
+) -> Any:
     handler = handlers.ListTasks(deps.task_repository())
     return handler.execute(project_id=project, all_projects=all)
 
@@ -21,7 +26,7 @@ def list_tasks(request, project: int | None = None, all: bool = False):
     response={201: Task},
     operation_id='tasks_create',
 )
-def create_task(request, payload: TaskCreateRequest):
+def create_task(request: HttpRequest, payload: TaskCreateRequest) -> Any:
     handler = handlers.CreateTask(
         projects=deps.project_repository(),
         tasks=deps.task_repository(),
@@ -34,7 +39,7 @@ def create_task(request, payload: TaskCreateRequest):
     response=Task,
     operation_id='tasks_partial_update',
 )
-def update_task(request, id: int, payload: PatchedTaskUpdateRequest):
+def update_task(request: HttpRequest, id: int, payload: PatchedTaskUpdateRequest) -> Any:
     handler = handlers.UpdateTask(
         projects=deps.project_repository(),
         tasks=deps.task_repository(),
@@ -47,6 +52,6 @@ def update_task(request, id: int, payload: PatchedTaskUpdateRequest):
     response={204: None},
     operation_id='tasks_destroy',
 )
-def delete_task(request, id: int):
+def delete_task(request: HttpRequest, id: int) -> Any:
     handlers.DeleteTask(deps.task_repository()).execute(id)
     return Status(204, None)

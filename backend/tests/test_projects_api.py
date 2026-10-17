@@ -1,9 +1,10 @@
+from typing import Any
 """API behavior tests for the Project boundary."""
 
 from http import HTTPStatus
 
 
-def test_projects_include_the_default_inbox(api_client):
+def test_projects_include_the_default_inbox(api_client: Any) -> None:
     response = api_client.get('/api/v1/projects/')
 
     assert response.status_code == HTTPStatus.OK
@@ -12,7 +13,7 @@ def test_projects_include_the_default_inbox(api_client):
     assert response.json()[0]['is_inbox'] is True
 
 
-def test_projects_can_be_created_and_are_listed_in_required_order(post_json, api_client):
+def test_projects_can_be_created_and_are_listed_in_required_order(post_json: Any, api_client: Any) -> None:
     create_zulu = post_json('/api/v1/projects/', {'name': 'Zulu', 'description': 'Later'})
     create_alpha = post_json('/api/v1/projects/', {'name': ' Alpha ', 'description': 'First'})
 
@@ -26,7 +27,7 @@ def test_projects_can_be_created_and_are_listed_in_required_order(post_json, api
     assert [project['name'] for project in response.json()] == ['Inbox', 'Alpha', 'Zulu']
 
 
-def test_project_names_are_trimmed_and_unique_without_case_sensitivity(post_json):
+def test_project_names_are_trimmed_and_unique_without_case_sensitivity(post_json: Any) -> None:
     first = post_json('/api/v1/projects/', {'name': ' Work '})
     duplicate = post_json('/api/v1/projects/', {'name': 'work'})
     reserved = post_json('/api/v1/projects/', {'name': 'INBOX'})
@@ -37,7 +38,7 @@ def test_project_names_are_trimmed_and_unique_without_case_sensitivity(post_json
     assert reserved.status_code == HTTPStatus.BAD_REQUEST
 
 
-def test_project_name_is_required_and_cannot_be_blank(post_json):
+def test_project_name_is_required_and_cannot_be_blank(post_json: Any) -> None:
     missing = post_json('/api/v1/projects/', {})
     blank = post_json('/api/v1/projects/', {'name': '   '})
 
@@ -47,7 +48,7 @@ def test_project_name_is_required_and_cannot_be_blank(post_json):
     assert blank.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-def test_project_details_can_be_edited(post_json, patch_json):
+def test_project_details_can_be_edited(post_json: Any, patch_json: Any) -> None:
     created = post_json('/api/v1/projects/', {'name': 'Reading', 'description': 'Books'})
 
     response = patch_json(
@@ -60,7 +61,7 @@ def test_project_details_can_be_edited(post_json, patch_json):
     assert response.json()['description'] == 'Sources'
 
 
-def test_inbox_cannot_be_renamed_or_deleted(api_client, patch_json):
+def test_inbox_cannot_be_renamed_or_deleted(api_client: Any, patch_json: Any) -> None:
     inbox = api_client.get('/api/v1/projects/').json()[0]
 
     rename = patch_json(
@@ -73,7 +74,7 @@ def test_inbox_cannot_be_renamed_or_deleted(api_client, patch_json):
     assert api_client.get('/api/v1/projects/').json()[0]['name'] == 'Inbox'
 
 
-def test_openapi_schema_describes_versioned_project_endpoints(api_client):
+def test_openapi_schema_describes_versioned_project_endpoints(api_client: Any) -> None:
     response = api_client.get('/api/v1/schema/')
     schema = response.json()
 
@@ -83,7 +84,7 @@ def test_openapi_schema_describes_versioned_project_endpoints(api_client):
     assert '/api/projects/' not in schema['paths']
 
 
-def test_user_can_delete_an_empty_project(api_client, post_json):
+def test_user_can_delete_an_empty_project(api_client: Any, post_json: Any) -> None:
     project_id = post_json('/api/v1/projects/', {'name': 'Reading'}).json()['id']
 
     response = api_client.delete(f'/api/v1/projects/{project_id}/')
@@ -94,7 +95,7 @@ def test_user_can_delete_an_empty_project(api_client, post_json):
     ] != [project_id]
 
 
-def test_deleting_a_project_moves_its_tasks_to_inbox(api_client, post_json):
+def test_deleting_a_project_moves_its_tasks_to_inbox(api_client: Any, post_json: Any) -> None:
     inbox_id = api_client.get('/api/v1/projects/').json()[0]['id']
     project_id = post_json('/api/v1/projects/', {'name': 'Planning'}).json()['id']
     task = post_json(

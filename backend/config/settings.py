@@ -17,14 +17,14 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-def env_bool(name, default=False):
+def env_bool(name: str, default: bool = False) -> bool:
     value = os.environ.get(name)
     if value is None:
         return default
     return value.strip().lower() in {'1', 'true', 'yes', 'on'}
 
 
-def env_list(name, default=''):
+def env_list(name: str, default: str = '') -> list[str]:
     return [item.strip() for item in os.environ.get(name, default).split(',') if item.strip()]
 
 

@@ -1,5 +1,7 @@
 """Project contracts: request payloads and the response shape."""
 
+from typing import Any
+
 from ninja import Schema
 from pydantic import BaseModel, Field, field_validator
 
@@ -14,7 +16,7 @@ class _ProjectPayload(BaseModel):
 
     @field_validator('name', mode='before', check_fields=False)
     @classmethod
-    def trim_name(cls, value):
+    def trim_name(cls, value: Any) -> Any:
         if isinstance(value, str):
             value = normalize_project_name(value)
             if not value:

@@ -3,11 +3,11 @@ from django.db import models
 from apps.infra.models.project import Project
 
 
-def normalize_project_name(name):
+def normalize_project_name(name: str) -> str:
     return name.strip()
 
 
-def project_name_key(name):
+def project_name_key(name: str) -> str:
     return normalize_project_name(name).casefold()
 
 
@@ -24,5 +24,5 @@ class Task(models.Model):
     class Meta:
         ordering = ["is_completed", "id"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.title

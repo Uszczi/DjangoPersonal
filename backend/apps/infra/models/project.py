@@ -1,13 +1,15 @@
+from typing import Any
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 
 
-def normalize_project_name(name):
+def normalize_project_name(name: str) -> str:
     return name.strip()
 
 
-def project_name_key(name):
+def project_name_key(name: str) -> str:
     return normalize_project_name(name).casefold()
 
 
@@ -33,7 +35,7 @@ class Project(models.Model):
             ),
         ]
 
-    def save(self, *args, **kwargs):
+    def save(self, *args: Any, **kwargs: Any) -> None:
         self.name = normalize_project_name(self.name)
         self.normalized_name = project_name_key(self.name)
 
@@ -46,10 +48,11 @@ class Project(models.Model):
 
         super().save(*args, **kwargs)
 
-    def delete(self, *args, **kwargs):
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
         if self.is_inbox:
             raise ValidationError("Inbox cannot be deleted.")
-        return super().delete(*args, **kwargs)
+        result = super().delete(*args, **kwargs)
+        return result
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
