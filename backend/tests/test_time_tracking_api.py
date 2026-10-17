@@ -3,7 +3,7 @@ from http import HTTPStatus
 
 import pytest
 
-from apps.work import api as work_api
+from apps.work.api import clock
 
 
 FIXED_NOW = datetime(2026, 10, 14, 12, 0, 0, tzinfo=timezone.utc)
@@ -11,7 +11,7 @@ FIXED_NOW = datetime(2026, 10, 14, 12, 0, 0, tzinfo=timezone.utc)
 
 @pytest.fixture
 def fixed_clock(monkeypatch):
-    monkeypatch.setattr(work_api, 'now', lambda: FIXED_NOW)
+    monkeypatch.setattr(clock, 'now', lambda: FIXED_NOW)
 
 
 def create_task(post_json, title='Outline the release', project_name='Planning'):

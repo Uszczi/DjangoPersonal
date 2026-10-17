@@ -270,6 +270,47 @@ paths:
             schema:
               $ref: '#/components/schemas/TimeEntryCreateRequest'
         required: true
+  /api/v1/time-entries/{id}/:
+    patch:
+      operationId: time_entries_partial_update
+      summary: Update Time Entry
+      parameters:
+      - in: path
+        name: id
+        schema:
+          title: Id
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntry'
+      tags:
+      - personal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTimeEntryRequest'
+        required: true
+    delete:
+      operationId: time_entries_destroy
+      summary: Delete Time Entry
+      parameters:
+      - in: path
+        name: id
+        schema:
+          title: Id
+          type: integer
+        required: true
+      responses:
+        '204':
+          description: No Content
+      tags:
+      - personal
   /api/v1/timer/start/:
     post:
       operationId: timer_start
@@ -316,47 +357,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TimerState'
-      tags:
-      - personal
-  /api/v1/time-entries/{id}/:
-    patch:
-      operationId: time_entries_partial_update
-      summary: Update Time Entry
-      parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
-        required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TimeEntry'
-      tags:
-      - personal
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedTimeEntryRequest'
-        required: true
-    delete:
-      operationId: time_entries_destroy
-      summary: Delete Time Entry
-      parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
-        required: true
-      responses:
-        '204':
-          description: No Content
       tags:
       - personal
 components:
@@ -522,6 +522,22 @@ components:
       - duration_minutes
       title: TimeEntryCreateRequest
       type: object
+    PatchedTimeEntryRequest:
+      properties:
+        task:
+          title: Task
+          type: integer
+        date:
+          format: date
+          title: Date
+          type: string
+        duration_minutes:
+          maximum: 1440
+          minimum: 1
+          title: Duration Minutes
+          type: integer
+      title: PatchedTimeEntryRequest
+      type: object
     TimerState:
       properties:
         entry:
@@ -544,21 +560,5 @@ components:
       required:
       - task
       title: TimerStartRequest
-      type: object
-    PatchedTimeEntryRequest:
-      properties:
-        task:
-          title: Task
-          type: integer
-        date:
-          format: date
-          title: Date
-          type: string
-        duration_minutes:
-          maximum: 1440
-          minimum: 1
-          title: Duration Minutes
-          type: integer
-      title: PatchedTimeEntryRequest
       type: object
 servers: []
