@@ -1,8 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
 
 import { useEffect, useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
+import { defaultProject, useProjectsStore } from "@/stores/projects";
 import { useTimerStore } from "@/stores/timer";
 import type { TimeEntry } from "@/generated/api";
 
@@ -50,6 +51,8 @@ function entryMinutes(entry: TimeEntry) {
 }
 
 export function TimerPage() {
+  const { project } = useSearch({ from: "__root__" });
+  const projects = useProjectsStore((state) => state.projects);
   const isLoading = useTimerStore((state) => state.isLoading);
   const pageError = useTimerStore((state) => state.pageError);
   const runningEntryRaw = useTimerStore((state) => state.runningEntry);
@@ -59,6 +62,7 @@ export function TimerPage() {
   const editingEntry = useTimerStore((state) => state.editingEntry);
   const actionError = useTimerStore((state) => state.actionError);
   const loadData = useTimerStore((state) => state.loadData);
+  const startTimerAction = useTimerStore((state) => state.startTimer);
   const stopTimer = useTimerStore((state) => state.stopTimer);
   const discardTimer = useTimerStore((state) => state.discardTimer);
   const addManualEntryAction = useTimerStore((state) => state.addManualEntry);
@@ -68,8 +72,11 @@ export function TimerPage() {
   const closeEntryEditor = useTimerStore((state) => state.closeEntryEditor);
 
   const [nowTick, setNowTick] = useState(() => Date.now());
+  const [startForm, setStartForm] = useState({ projectId: "", taskId: "" });
+  const [startError, setStartError] = useState("");
   const [manualForm, setManualForm] = useState({
     date: todayKey(),
+    projectId: "",
     taskId: "",
     minutes: "",
   });
@@ -127,9 +134,46 @@ export function TimerPage() {
   }
 
   const correctedNow = nowTick + serverOffset;
+  const preselectedProjectId =
+    project ?? defaultProject(projects)?.id ?? null;
+  const startProjectId =
+    startForm.projectId || String(preselectedProjectId ?? "");
+  const manualProjectId =
+    manualForm.projectId || String(preselectedProjectId ?? "");
+  const startTasks = tasks.filter(
+    (task) => task.project === Number(startProjectId),
+  );
+  const manualTasks = tasks.filter(
+    (task) => task.project === Number(manualProjectId),
+  );
+
+  async function startTimer(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const projectId = Number(startProjectId);
+    const taskId = Number(startForm.taskId);
+
+    if (!Number.isInteger(projectId) || projectId < 1) {
+      setStartError("Wybierz projekt.");
+      return;
+    }
+    if (!Number.isInteger(taskId) || taskId < 1) {
+      setStartError("Wybierz zadanie.");
+      return;
+    }
+
+    setStartError("");
+
+    try {
+      await startTimerAction(taskId);
+      setStartForm((current) => ({ ...current, taskId: "" }));
+    } catch (error) {
+      setStartError(await apiErrorMessage(error));
+    }
+  }
 
   async function addManualEntry(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const projectId = Number(manualProjectId);
     const taskId = Number(manualForm.taskId);
     const minutes = Number(manualForm.minutes);
 
@@ -137,7 +181,11 @@ export function TimerPage() {
       setManualError("Podaj datę wpisu.");
       return;
     }
-    if (!Number.isInteger(taskId)) {
+    if (!Number.isInteger(projectId) || projectId < 1) {
+      setManualError("Wybierz projekt.");
+      return;
+    }
+    if (!Number.isInteger(taskId) || taskId < 1) {
       setManualError("Wybierz zadanie.");
       return;
     }
@@ -154,7 +202,12 @@ export function TimerPage() {
         taskId,
         minutes,
       });
-      setManualForm({ date: todayKey(), taskId: "", minutes: "" });
+      setManualForm((current) => ({
+        date: todayKey(),
+        projectId: current.projectId,
+        taskId: "",
+        minutes: "",
+      }));
     } catch (error) {
       setManualError(await apiErrorMessage(error));
     }
@@ -260,9 +313,65 @@ export function TimerPage() {
             </div>
           </>
         ) : (
-          <p className="project-description">
-            Brak aktywnego timera. Uruchom go obok zadania na liście zadań.
-          </p>
+          <>
+            <p className="project-description">
+              Brak aktywnego timera. Wybierz projekt i zadanie, aby go uruchomić.
+            </p>
+            <form className="timer-start-form" onSubmit={startTimer}>
+              <label className="form-field">
+                <span>Projekt</span>
+                <select
+                  value={startProjectId}
+                  onChange={(event) =>
+                    setStartForm({
+                      projectId: event.target.value,
+                      taskId: "",
+                    })
+                  }
+                  required
+                >
+                  <option value="" disabled>
+                    Wybierz projekt
+                  </option>
+                  {projects.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="form-field">
+                <span>Zadanie</span>
+                <select
+                  value={startForm.taskId}
+                  onChange={(event) =>
+                    setStartForm((current) => ({
+                      ...current,
+                      taskId: event.target.value,
+                    }))
+                  }
+                  required
+                >
+                  <option value="" disabled>
+                    Wybierz zadanie
+                  </option>
+                  {startTasks.map((task) => (
+                    <option key={task.id} value={task.id}>
+                      {task.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button className="primary-button" type="submit">
+                Rozpocznij timer
+              </button>
+            </form>
+            {startError && (
+              <p className="form-error" role="alert">
+                {startError}
+              </p>
+            )}
+          </>
         )}
       </section>
 
@@ -289,6 +398,29 @@ export function TimerPage() {
             />
           </label>
           <label className="form-field">
+            <span>Projekt</span>
+            <select
+              value={manualProjectId}
+              onChange={(event) =>
+                setManualForm((current) => ({
+                  ...current,
+                  projectId: event.target.value,
+                  taskId: "",
+                }))
+              }
+              required
+            >
+              <option value="" disabled>
+                Wybierz projekt
+              </option>
+              {projects.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="form-field">
             <span>Zadanie</span>
             <select
               value={manualForm.taskId}
@@ -303,7 +435,7 @@ export function TimerPage() {
               <option value="" disabled>
                 Wybierz zadanie
               </option>
-              {tasks.map((task) => (
+              {manualTasks.map((task) => (
                 <option key={task.id} value={task.id}>
                   {task.title}
                 </option>

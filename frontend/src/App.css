@@ -940,6 +940,7 @@ a:focus-visible {
   color: #fff;
 }
 
+.timer-start-form,
 .manual-entry-form {
   align-items: end;
   display: grid;
@@ -948,10 +949,12 @@ a:focus-visible {
   margin-top: 20px;
 }
 
+.timer-start-form .form-field,
 .manual-entry-form .form-field {
   margin-bottom: 0;
 }
 
+.timer-start-form .primary-button,
 .manual-entry-form .primary-button {
   min-height: 40px;
 }

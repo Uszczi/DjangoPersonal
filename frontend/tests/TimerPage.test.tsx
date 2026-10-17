@@ -83,7 +83,7 @@ describe('Time tracking', () => {
     await user.click(screen.getByRole('link', { name: 'Czas' }))
 
     expect(await screen.findByRole('heading', { name: 'Timer' })).toBeInTheDocument()
-    expect(screen.getByText('Brak aktywnego timera. Uruchom go obok zadania na liście zadań.')).toBeInTheDocument()
+    expect(screen.getByText('Brak aktywnego timera. Wybierz projekt i zadanie, aby go uruchomić.')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Dodaj wpis ręcznie' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Wpisy z dziś' })).toBeInTheDocument()
     expect(screen.getByText('Brak wpisów na dziś.')).toBeInTheDocument()
@@ -92,6 +92,50 @@ describe('Time tracking', () => {
     expect(fetchMock).toHaveBeenNthCalledWith(3, '/api/v1/timer/', expect.objectContaining({ method: 'GET' }))
     expect(fetchMock).toHaveBeenNthCalledWith(4, '/api/v1/time-entries/', expect.objectContaining({ method: 'GET' }))
     expect(fetchMock).toHaveBeenNthCalledWith(5, '/api/v1/tasks/?all=true', expect.objectContaining({ method: 'GET' }))
+  })
+
+  test('the URL project preselects both forms and starts one of its tasks', async () => {
+    const planning = { id: 2, name: 'Planning', description: '', is_inbox: false }
+    const planningTask = { ...task, id: 8, title: 'Plan release', project: planning.id }
+    const runningEntry = {
+      id: 5,
+      task: planningTask.id,
+      start: `${daysAgoKey(0)}T12:00:00Z`,
+      end: null,
+    }
+    fetchMock.mockImplementation((input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url
+      if (url === '/api/v1/projects/') return Promise.resolve(jsonResponse([inbox, planning]))
+      if (url === '/api/v1/timer/') return Promise.resolve(timerResponse(null))
+      if (url === '/api/v1/time-entries/') return Promise.resolve(jsonResponse([]))
+      if (url === '/api/v1/tasks/?all=true') {
+        return Promise.resolve(jsonResponse([task, planningTask]))
+      }
+      if (url === '/api/v1/timer/start/') return Promise.resolve(timerResponse(runningEntry))
+      return Promise.reject(new Error(`Unexpected request: ${url}`))
+    })
+    const user = userEvent.setup()
+
+    renderApp('/timer?project=2')
+    const timerSection = await screen.findByRole('region', { name: 'Bieżący timer' })
+    const manualEntrySection = await screen.findByRole('region', { name: 'Dodaj wpis ręcznie' })
+
+    expect(within(timerSection).getByLabelText('Projekt')).toHaveValue('2')
+    expect(within(manualEntrySection).getByLabelText('Projekt')).toHaveValue('2')
+    expect(within(timerSection).queryByRole('option', { name: 'Prepare outline' })).not.toBeInTheDocument()
+    expect(within(manualEntrySection).queryByRole('option', { name: 'Prepare outline' })).not.toBeInTheDocument()
+
+    await user.selectOptions(within(timerSection).getByLabelText('Zadanie'), String(planningTask.id))
+    await user.click(within(timerSection).getByRole('button', { name: 'Rozpocznij timer' }))
+
+    expect(await screen.findByText('TIMER AKTYWNY')).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      '/api/v1/timer/start/',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ task: planningTask.id }),
+      }),
+    )
   })
 
   test('user can start a timer from a task row and stop it on the timer page', async () => {
@@ -127,7 +171,7 @@ describe('Time tracking', () => {
     await user.click(screen.getByRole('button', { name: 'Zatrzymaj timer' }))
 
     expect(
-      await screen.findByText('Brak aktywnego timera. Uruchom go obok zadania na liście zadań.'),
+      await screen.findByText('Brak aktywnego timera. Wybierz projekt i zadanie, aby go uruchomić.'),
     ).toBeInTheDocument()
     expect(screen.getByText('30 MIN')).toBeInTheDocument()
     expect(fetchMock).toHaveBeenLastCalledWith(
@@ -181,8 +225,12 @@ describe('Time tracking', () => {
     await user.click(screen.getByRole('link', { name: 'Czas' }))
     await screen.findByRole('heading', { name: 'Dodaj wpis ręcznie' })
 
-    await user.selectOptions(screen.getByLabelText('Zadanie'), String(task.id))
-    await user.type(screen.getByLabelText('Czas (minuty)'), '45')
+    const manualEntrySection = screen.getByRole('region', { name: 'Dodaj wpis ręcznie' })
+    await user.selectOptions(
+      within(manualEntrySection).getByLabelText('Zadanie'),
+      String(task.id),
+    )
+    await user.type(within(manualEntrySection).getByLabelText('Czas (minuty)'), '45')
     await user.click(screen.getByRole('button', { name: 'Dodaj wpis' }))
 
     expect(await screen.findByText('45 MIN')).toBeInTheDocument()
@@ -281,7 +329,7 @@ describe('Time tracking', () => {
 
     expect(
       await screen.findByText(
-        'Brak aktywnego timera. Uruchom go obok zadania na liście zadań.',
+        'Brak aktywnego timera. Wybierz projekt i zadanie, aby go uruchomić.',
       ),
     ).toBeInTheDocument()
     expect(screen.getByText('Brak wpisów na dziś.')).toBeInTheDocument()

@@ -26,6 +26,7 @@ type TimerStoreState = {
   editingEntry: TimeEntry | null;
   actionError: string;
   loadData: () => Promise<void>;
+  startTimer: (taskId: number) => Promise<void>;
   stopTimer: () => Promise<void>;
   discardTimer: () => Promise<void>;
   addManualEntry: (input: ManualEntryInput) => Promise<void>;
@@ -82,6 +83,13 @@ export const useTimerStore = create<TimerStoreState>((set, get) => ({
     } finally {
       if (requestId === loadRequestId) set({ isLoading: false });
     }
+  },
+
+  startTimer: async (taskId) => {
+    applyTimerState(
+      set,
+      await api.timerStart({ timerStartRequest: { task: taskId } }),
+    );
   },
 
   stopTimer: async () => {
