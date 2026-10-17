@@ -3,7 +3,7 @@
 set -e
 
 DIRNAME=$(basename "$PWD")
-cp /root/pp/.env.$DIRNAME ./deployment/.env
+cp "$HOME/pp/.env.$DIRNAME" ./deployment/.env
 
 COMPOSE_FILE=./deployment/docker-compose.yml
 
