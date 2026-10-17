@@ -97,6 +97,8 @@ paths:
                 type: array
       tags:
       - personal
+      security:
+      - JWTAuth: []
     post:
       operationId: projects_create
       summary: Create Project
@@ -116,6 +118,8 @@ paths:
             schema:
               $ref: '#/components/schemas/ProjectRequest'
         required: true
+      security:
+      - JWTAuth: []
   /api/v1/projects/{id}/:
     get:
       operationId: projects_retrieve
@@ -136,6 +140,8 @@ paths:
                 $ref: '#/components/schemas/ProjectResponse'
       tags:
       - personal
+      security:
+      - JWTAuth: []
     put:
       operationId: projects_update
       summary: Replace Project
@@ -161,6 +167,8 @@ paths:
             schema:
               $ref: '#/components/schemas/ProjectRequest'
         required: true
+      security:
+      - JWTAuth: []
     patch:
       operationId: projects_partial_update
       summary: Update Project
@@ -186,6 +194,8 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedProjectRequest'
         required: true
+      security:
+      - JWTAuth: []
     delete:
       operationId: projects_destroy
       summary: Delete Project
@@ -201,6 +211,8 @@ paths:
           description: No Content
       tags:
       - personal
+      security:
+      - JWTAuth: []
   /api/v1/tasks/:
     get:
       operationId: tasks_list
@@ -233,6 +245,8 @@ paths:
                 type: array
       tags:
       - personal
+      security:
+      - JWTAuth: []
     post:
       operationId: tasks_create
       summary: Create Task
@@ -252,6 +266,8 @@ paths:
             schema:
               $ref: '#/components/schemas/TaskCreateRequest'
         required: true
+      security:
+      - JWTAuth: []
   /api/v1/tasks/{id}/:
     patch:
       operationId: tasks_partial_update
@@ -278,6 +294,8 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedTaskUpdateRequest'
         required: true
+      security:
+      - JWTAuth: []
     delete:
       operationId: tasks_destroy
       summary: Delete Task
@@ -293,6 +311,8 @@ paths:
           description: No Content
       tags:
       - personal
+      security:
+      - JWTAuth: []
   /api/v1/time-entries/:
     get:
       operationId: time_entries_list
@@ -327,6 +347,8 @@ paths:
                 type: array
       tags:
       - personal
+      security:
+      - JWTAuth: []
     post:
       operationId: time_entries_create
       summary: Create Time Entry
@@ -346,6 +368,8 @@ paths:
             schema:
               $ref: '#/components/schemas/TimeEntryCreateRequest'
         required: true
+      security:
+      - JWTAuth: []
   /api/v1/time-entries/{id}/:
     patch:
       operationId: time_entries_partial_update
@@ -372,6 +396,8 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedTimeEntryRequest'
         required: true
+      security:
+      - JWTAuth: []
     delete:
       operationId: time_entries_destroy
       summary: Delete Time Entry
@@ -387,6 +413,8 @@ paths:
           description: No Content
       tags:
       - personal
+      security:
+      - JWTAuth: []
   /api/v1/timer/start/:
     post:
       operationId: timer_start
@@ -407,6 +435,8 @@ paths:
             schema:
               $ref: '#/components/schemas/TimerStartRequest'
         required: true
+      security:
+      - JWTAuth: []
   /api/v1/timer/:
     get:
       operationId: timer_retrieve
@@ -421,6 +451,8 @@ paths:
                 $ref: '#/components/schemas/TimerResponse'
       tags:
       - personal
+      security:
+      - JWTAuth: []
   /api/v1/timer/stop/:
     post:
       operationId: timer_stop
@@ -435,6 +467,8 @@ paths:
                 $ref: '#/components/schemas/TimerResponse'
       tags:
       - personal
+      security:
+      - JWTAuth: []
 components:
   schemas:
     AuthResponse:

@@ -10,7 +10,14 @@ from ninja_jwt.tokens import RefreshToken
 
 @pytest.fixture
 def api_client(db: Any) -> Any:
-    return Client()
+    from apps.infra.models import User
+    from ninja_jwt.tokens import RefreshToken
+
+    user = User.objects.create_user(
+        username='__default_test_user__', password='StrongPass123!'
+    )
+    refresh = cast(Any, RefreshToken).for_user(user)
+    return Client(headers={'Authorization': f'Bearer {refresh.access_token}'})
 
 
 @pytest.fixture

@@ -1,10 +1,12 @@
 """Time entry use cases."""
 
 from datetime import date as datetime_date, timedelta
+from typing import Any
 
 from django.db.models import QuerySet
 
 from apps.infra.models import TimeEntry as TimeEntryModel
+from apps.infra.models import User
 from apps.infra.repo import TaskRepository, TimeEntryRepository, day_start
 from apps.work import clock
 from apps.work.contracts import PatchedTimeEntryRequest, TimeEntryCreateRequest
@@ -18,9 +20,11 @@ def _ensure_not_future(value: datetime_date) -> None:
         raise WorkError('Date cannot be in the future.')
 
 
-def _get_time_entry(repository: TimeEntryRepository, entry_id: int) -> TimeEntryModel:
+def _get_time_entry(
+    repository: TimeEntryRepository, entry_id: int, *, user: User
+) -> TimeEntryModel:
     """Fetch a time entry addressed by id, or raise ``NotFound``."""
-    entry = repository.find(entry_id)
+    entry = repository.find(entry_id, user=user)
     if entry is None:
         raise NotFound('Time entry not found.')
     return entry
@@ -29,24 +33,31 @@ def _get_time_entry(repository: TimeEntryRepository, entry_id: int) -> TimeEntry
 class ListTimeEntries:
     """List time entries, optionally for one task and/or one calendar day."""
 
-    def __init__(self, time_entries: TimeEntryRepository):
+    def __init__(self, time_entries: TimeEntryRepository, user: User):
         self.time_entries = time_entries
+        self.user = user
 
     def execute(
         self, task_id: int | None = None, day: datetime_date | None = None
     ) -> QuerySet[TimeEntryModel]:
-        return self.time_entries.list(task_id=task_id, day=day)
+        return self.time_entries.list(task_id=task_id, day=day, user=self.user)
 
 
 class CreateTimeEntry:
     """Log a manual time entry for a task."""
 
-    def __init__(self, tasks: TaskRepository, time_entries: TimeEntryRepository):
+    def __init__(
+        self,
+        tasks: TaskRepository,
+        time_entries: TimeEntryRepository,
+        user: User,
+    ):
         self.tasks = tasks
         self.time_entries = time_entries
+        self.user = user
 
     def execute(self, data: TimeEntryCreateRequest) -> TimeEntryModel:
-        task = _resolve_task(self.tasks, data.task)
+        task = _resolve_task(self.tasks, data.task, user=self.user)
         _ensure_not_future(data.date)
 
         start = day_start(data.date)
@@ -60,18 +71,24 @@ class CreateTimeEntry:
 class UpdateTimeEntry:
     """Apply the supplied fields to an existing time entry (PATCH)."""
 
-    def __init__(self, tasks: TaskRepository, time_entries: TimeEntryRepository):
+    def __init__(
+        self,
+        tasks: TaskRepository,
+        time_entries: TimeEntryRepository,
+        user: User,
+    ):
         self.tasks = tasks
         self.time_entries = time_entries
+        self.user = user
 
     def execute(self, entry_id: int, data: PatchedTimeEntryRequest) -> TimeEntryModel:
-        entry = _get_time_entry(self.time_entries, entry_id)
+        entry = _get_time_entry(self.time_entries, entry_id, user=self.user)
         if entry.end is None:
             raise WorkError('The running timer cannot be edited.')
 
         provided = data.model_fields_set
         if 'task' in provided and data.task is not None:
-            entry.task = _resolve_task(self.tasks, data.task)
+            entry.task = _resolve_task(self.tasks, data.task, user=self.user)
         if provided & {'date', 'duration_minutes'} and (
             data.date is not None or data.duration_minutes is not None
         ):
@@ -92,8 +109,9 @@ class UpdateTimeEntry:
 class DeleteTimeEntry:
     """Delete a time entry addressed by id."""
 
-    def __init__(self, time_entries: TimeEntryRepository):
+    def __init__(self, time_entries: TimeEntryRepository, user: User):
         self.time_entries = time_entries
+        self.user = user
 
     def execute(self, entry_id: int) -> None:
-        self.time_entries.delete(_get_time_entry(self.time_entries, entry_id))
+        self.time_entries.delete(_get_time_entry(self.time_entries, entry_id, user=self.user))

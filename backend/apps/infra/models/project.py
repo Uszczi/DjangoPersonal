@@ -1,6 +1,7 @@
 
 from typing import Any
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
@@ -15,17 +16,26 @@ def project_name_key(name: str) -> str:
 
 
 class Project(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='projects',
+    )
     name = models.CharField(max_length=100)
-    normalized_name = models.CharField(max_length=100, unique=True, editable=False)
+    normalized_name = models.CharField(max_length=100, editable=False)
     description = models.TextField(blank=True)
     is_inbox = models.BooleanField(default=False, editable=False)
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["is_inbox"],
+                fields=["user", "normalized_name"],
+                name="project_name_unique_per_user",
+            ),
+            models.UniqueConstraint(
+                fields=["user", "is_inbox"],
                 condition=Q(is_inbox=True),
-                name="one_inbox_project",
+                name="one_inbox_project_per_user",
             ),
             models.CheckConstraint(
                 condition=(
