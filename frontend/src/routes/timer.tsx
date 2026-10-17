@@ -5,7 +5,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { apiErrorMessage } from "@/apiErrorMessage";
 import { defaultProject, useProjectsStore } from "@/stores/projects";
 import { useTimerStore } from "@/stores/timer";
-import type { TimeEntry } from "@/generated/api";
+import type { TimeEntryResponse } from "@/generated/api";
 
 export const Route = createFileRoute("/timer")({
   component: TimerPage,
@@ -45,7 +45,7 @@ function formatDuration(minutes: number) {
   return `${hours} h ${rest} min`;
 }
 
-function entryMinutes(entry: TimeEntry) {
+function entryMinutes(entry: TimeEntryResponse) {
   if (!entry.end) return 0;
   return Math.round((entry.end.getTime() - entry.start.getTime()) / 60000);
 }
@@ -109,14 +109,14 @@ export function TimerPage() {
     0,
   );
   const taskTitles = new Map(tasks.map((task) => [task.id, task.title]));
-  const taskTitle = (entry: TimeEntry) =>
-    taskTitles.get(entry.task) ?? `Zadanie #${entry.task}`;
+  const taskTitle = (entry: TimeEntryResponse) =>
+    taskTitles.get(entry.taskId) ?? `Zadanie #${entry.taskId}`;
 
   const perTaskMinutes = new Map<number, number>();
   for (const entry of todaysEntries) {
     perTaskMinutes.set(
-      entry.task,
-      (perTaskMinutes.get(entry.task) ?? 0) + entryMinutes(entry),
+      entry.taskId,
+      (perTaskMinutes.get(entry.taskId) ?? 0) + entryMinutes(entry),
     );
   }
 
@@ -141,10 +141,10 @@ export function TimerPage() {
   const manualProjectId =
     manualForm.projectId || String(preselectedProjectId ?? "");
   const startTasks = tasks.filter(
-    (task) => task.project === Number(startProjectId),
+    (task) => task.projectId === Number(startProjectId),
   );
   const manualTasks = tasks.filter(
-    (task) => task.project === Number(manualProjectId),
+    (task) => task.projectId === Number(manualProjectId),
   );
 
   async function startTimer(event: FormEvent<HTMLFormElement>) {
@@ -213,11 +213,11 @@ export function TimerPage() {
     }
   }
 
-  function openEntryEditForm(entry: TimeEntry) {
+  function openEntryEditForm(entry: TimeEntryResponse) {
     openEntryEditor(entry);
     setEditForm({
       date: dateKey(entry.start),
-      taskId: String(entry.task),
+      taskId: String(entry.taskId),
       minutes: String(entryMinutes(entry)),
     });
     setEditError("");

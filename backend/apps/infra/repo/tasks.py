@@ -1,9 +1,9 @@
 """Persistence for tasks."""
 
-from typing import Any
 
 from django.db.models import ProtectedError, QuerySet
 
+from apps.infra.models import Project as ProjectModel
 from apps.infra.models import Task as TaskModel
 
 from .errors import TaskHasTimeEntries
@@ -26,7 +26,7 @@ class TaskRepository:
         """The task with this id, or ``None``."""
         return TaskModel.objects.filter(pk=task_id).first()
 
-    def create(self, *, title: str, description: str, project: Any) -> TaskModel:
+    def create(self, *, title: str, description: str, project: ProjectModel) -> TaskModel:
         return TaskModel.objects.create(
             title=title,
             description=description,

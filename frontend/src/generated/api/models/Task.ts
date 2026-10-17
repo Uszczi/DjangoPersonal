@@ -35,7 +35,7 @@ export interface Task {
     /**
      *
      */
-    readonly project: number;
+    readonly projectId: number;
     /**
      *
      */
@@ -49,7 +49,7 @@ export function instanceOfTask(value: object): value is Task {
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('title' in value) || value['title'] === undefined) return false;
     if (!('description' in value) || value['description'] === undefined) return false;
-    if (!('project' in value) || value['project'] === undefined) return false;
+    if ((!('projectId' in (value as Record<string, any>)) && !('project_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['projectId'] === undefined && (value as Record<string, any>)['project_id'] === undefined)) return false;
     if ((!('isCompleted' in (value as Record<string, any>)) && !('is_completed' in (value as Record<string, any>))) || ((value as Record<string, any>)['isCompleted'] === undefined && (value as Record<string, any>)['is_completed'] === undefined)) return false;
     return true;
 }
@@ -67,7 +67,7 @@ export function TaskFromJSONTyped(json: any, ignoreDiscriminator: boolean): Task
         'id': json['id'],
         'title': json['title'],
         'description': json['description'],
-        'project': json['project'],
+        'projectId': json['project_id'],
         'isCompleted': json['is_completed'],
     };
 }
@@ -76,7 +76,7 @@ export function TaskToJSON(json: any): Task {
     return TaskToJSONTyped(json, false);
 }
 
-export function TaskToJSONTyped(value?: Omit<Task, 'id'|'project'|'isCompleted'> | null, ignoreDiscriminator: boolean = false): any {
+export function TaskToJSONTyped(value?: Omit<Task, 'id'|'projectId'|'isCompleted'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

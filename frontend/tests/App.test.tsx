@@ -1,4 +1,4 @@
-/** User-visible Project flow tests, with HTTP mocked at the network boundary. */
+/** User-visible ProjectResponse flow tests, with HTTP mocked at the network boundary. */
 
 import { act, cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { DeleteProjectModal } from '@/components/DeleteProjectModal'
 import { ProjectEditorModal } from '@/components/ProjectEditorModal'
-import type { Project } from '@/generated/api'
+import type { ProjectResponse } from '@/generated/api'
 import { ShowModal } from '@/stores/modal'
 import { renderApp } from './renderApp'
 
@@ -28,27 +28,27 @@ const task = {
   id: 7,
   title: 'Prepare outline',
   description: '',
-  project: 2,
+  project_id: 2,
   is_completed: false,
 }
 
 // The project editor and delete dialog have no trigger in the current UI, so
 // tests open them the same way the app does, through the modal store.
-const inboxProject: Project = {
+const inboxProject: ProjectResponse = {
   id: 1,
   name: 'Inbox',
   description: '',
   isInbox: true,
 }
 
-const planningProject: Project = {
+const planningProject: ProjectResponse = {
   id: 2,
   name: 'Planning',
   description: '',
   isInbox: false,
 }
 
-const readingProject: Project = {
+const readingProject: ProjectResponse = {
   id: 2,
   name: 'Reading',
   description: 'Books to explore',
@@ -83,7 +83,7 @@ describe('Projects', () => {
     vi.unstubAllGlobals()
   })
 
-  test('user can see Inbox and create a Project', async () => {
+  test('user can see Inbox and create a ProjectResponse', async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([inbox]))
       .mockResolvedValueOnce(jsonResponse([]))
@@ -116,7 +116,7 @@ describe('Projects', () => {
     )
   })
 
-  test('user can edit a Project description and name', async () => {
+  test('user can edit a ProjectResponse description and name', async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([
         inbox,
@@ -202,8 +202,8 @@ describe('Projects', () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([inbox]))
       .mockResolvedValueOnce(jsonResponse([
-        { id: 2, title: 'Completed note', description: '', project: 1, is_completed: true },
-        { id: 1, title: 'Open note', description: '', project: 1, is_completed: false },
+        { id: 2, title: 'Completed note', description: '', project_id: 1, is_completed: true },
+        { id: 1, title: 'Open note', description: '', project_id: 1, is_completed: false },
       ]))
 
     renderApp('/tasks')
@@ -238,7 +238,7 @@ describe('Projects', () => {
             id: 4,
             title: 'Capture requirements',
             description: 'Talk to the team',
-            project: 2,
+            project_id: 2,
             is_completed: false,
           },
           201,
@@ -278,21 +278,21 @@ describe('Projects', () => {
       ]))
       .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(jsonResponse([
-        { id: 7, title: 'Prepare outline', description: '', project: 2, is_completed: false },
-        { id: 6, title: 'Completed note', description: '', project: 2, is_completed: true },
+        { id: 7, title: 'Prepare outline', description: '', project_id: 2, is_completed: false },
+        { id: 6, title: 'Completed note', description: '', project_id: 2, is_completed: true },
       ]))
       .mockResolvedValueOnce(jsonResponse({
         id: 7,
         title: 'Prepare outline',
         description: '',
-        project: 2,
+        project_id: 2,
         is_completed: true,
       }))
       .mockResolvedValueOnce(jsonResponse({
         id: 7,
         title: 'Prepare outline',
         description: '',
-        project: 2,
+        project_id: 2,
         is_completed: false,
       }))
     const user = userEvent.setup()
@@ -341,13 +341,13 @@ describe('Projects', () => {
       ]))
       .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(jsonResponse([
-        { id: 8, title: 'Capture scope', description: '', project: 2, is_completed: false },
+        { id: 8, title: 'Capture scope', description: '', project_id: 2, is_completed: false },
       ]))
       .mockResolvedValueOnce(jsonResponse({
         id: 8,
         title: 'Capture requirements',
         description: 'Confirm with the team',
-        project: 3,
+        project_id: 3,
         is_completed: false,
       }))
       .mockResolvedValueOnce(jsonResponse([
@@ -355,7 +355,7 @@ describe('Projects', () => {
           id: 8,
           title: 'Capture requirements',
           description: 'Confirm with the team',
-          project: 3,
+          project_id: 3,
           is_completed: false,
         },
       ]))
@@ -399,13 +399,13 @@ describe('Projects', () => {
       ]))
       .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(jsonResponse([
-        { id: 9, title: 'First title', description: 'Old note', project: 2, is_completed: false },
+        { id: 9, title: 'First title', description: 'Old note', project_id: 2, is_completed: false },
       ]))
       .mockResolvedValueOnce(jsonResponse({
         id: 9,
         title: 'Updated title',
         description: 'New note',
-        project: 2,
+        project_id: 2,
         is_completed: false,
       }))
     const user = userEvent.setup()
@@ -438,7 +438,7 @@ describe('Projects', () => {
     )
   })
 
-  test('late task updates do not replace the newly selected Project task list', async () => {
+  test('late task updates do not replace the newly selected ProjectResponse task list', async () => {
     const pendingUpdate = deferred<Response>()
     fetchMock
       .mockResolvedValueOnce(jsonResponse([
@@ -448,11 +448,11 @@ describe('Projects', () => {
       ]))
       .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(jsonResponse([
-        { id: 7, title: 'Planning task', description: '', project: 2, is_completed: false },
+        { id: 7, title: 'Planning task', description: '', project_id: 2, is_completed: false },
       ]))
       .mockReturnValueOnce(pendingUpdate.promise)
       .mockResolvedValueOnce(jsonResponse([
-        { id: 9, title: 'Archive task', description: '', project: 3, is_completed: false },
+        { id: 9, title: 'Archive task', description: '', project_id: 3, is_completed: false },
       ]))
     const user = userEvent.setup()
 
@@ -472,7 +472,7 @@ describe('Projects', () => {
         id: 7,
         title: 'Planning task',
         description: '',
-        project: 2,
+        project_id: 2,
         is_completed: true,
       }))
       await pendingUpdate.promise
@@ -503,7 +503,7 @@ describe('Deleting tasks and projects', () => {
   test('user must confirm before a task is permanently deleted', async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([inbox]))
-      .mockResolvedValueOnce(jsonResponse([{ ...task, project: 1 }]))
+      .mockResolvedValueOnce(jsonResponse([{ ...task, project_id: 1 }]))
       .mockResolvedValueOnce(new Response(null, { status: 204 }))
     const user = userEvent.setup()
 
@@ -543,7 +543,7 @@ describe('Deleting tasks and projects', () => {
   test('a task with recorded time cannot be deleted and the dialog explains why', async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([inbox]))
-      .mockResolvedValueOnce(jsonResponse([{ ...task, project: 1 }]))
+      .mockResolvedValueOnce(jsonResponse([{ ...task, project_id: 1 }]))
       .mockResolvedValueOnce(
         jsonResponse({ detail: 'A task with recorded time entries cannot be deleted.' }, 400),
       )

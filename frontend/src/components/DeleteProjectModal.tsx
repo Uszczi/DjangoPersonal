@@ -2,11 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
-import type { Project } from "@/generated/api";
+import type { ProjectResponse } from "@/generated/api";
 import { useProjectsStore } from "@/stores/projects";
 
 type DeleteProjectModalProps = {
-  project: Project;
+  project: ProjectResponse;
   onClose: () => void;
 };
 

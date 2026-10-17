@@ -2,16 +2,16 @@
 
 from datetime import datetime
 
-from ninja import Schema
-from pydantic import BaseModel
+from apps.shared.base import BaseModel
 
-from .time_entries import TimeEntry
+from .time_entries import TimeEntryResponse
 
 
 class TimerStartRequest(BaseModel):
     task: int
 
 
-class TimerState(Schema):
-    entry: TimeEntry | None = None
+class TimerResponse(BaseModel):
+    entry: TimeEntryResponse | None = None
     server_now: datetime
+

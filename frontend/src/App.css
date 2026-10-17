@@ -219,6 +219,14 @@
   width: 100%;
 }
 
+.auth-page {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  min-height: calc(100vh - 180px);
+  width: 100%;
+}
+
 .project-heading {
   align-items: end;
   border-bottom: 1px solid var(--line);

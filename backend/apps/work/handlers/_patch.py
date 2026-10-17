@@ -10,11 +10,13 @@ it.
 """
 
 
-from typing import Any, Callable
+from typing import Callable
+
+from pydantic import BaseModel
 
 
 def apply_provided(
-    payload: Any, target: Any, *, resolve: dict[str, Callable[[Any], Any]] | None = None
+    payload: BaseModel, target: object, *, resolve: dict[str, Callable[[object], object]] | None = None
 ) -> None:
     """Set the fields the payload carried on ``target``.
 

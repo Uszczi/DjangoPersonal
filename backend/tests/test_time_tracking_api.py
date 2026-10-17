@@ -32,7 +32,7 @@ def test_user_can_log_time_manually(post_json: Any, fixed_clock: Any) -> None:
 
     assert response.status_code == HTTPStatus.CREATED
     entry = response.json()
-    assert entry['task'] == task['id']
+    assert entry['task_id'] == task['id']
     assert datetime.fromisoformat(entry['start']) == datetime(
         2026, 10, 13, 0, 0, 0, tzinfo=timezone.utc
     )
@@ -74,13 +74,13 @@ def test_time_entry_list_filters_by_date_and_task(api_client: Any, post_json: An
     assert len(by_date.json()) == 2
 
     by_task = api_client.get(f"/api/v1/time-entries/?task={task['id']}")
-    assert [entry['task'] for entry in by_task.json()] == [task['id'], task['id']]
+    assert [entry['task_id'] for entry in by_task.json()] == [task['id'], task['id']]
 
     by_both = api_client.get(
         f"/api/v1/time-entries/?task={other['id']}&date=2026-10-13"
     )
     assert len(by_both.json()) == 1
-    assert by_both.json()[0]['task'] == other['id']
+    assert by_both.json()[0]['task_id'] == other['id']
 
 
 def test_starting_a_timer_creates_a_running_entry(post_json: Any, fixed_clock: Any) -> None:
@@ -90,7 +90,7 @@ def test_starting_a_timer_creates_a_running_entry(post_json: Any, fixed_clock: A
 
     assert response.status_code == HTTPStatus.OK
     entry = response.json()['entry']
-    assert entry['task'] == task['id']
+    assert entry['task_id'] == task['id']
     assert datetime.fromisoformat(entry['start']) == FIXED_NOW
     assert entry['end'] is None
     assert datetime.fromisoformat(response.json()['server_now']) == FIXED_NOW
@@ -109,9 +109,9 @@ def test_starting_a_timer_on_another_task_ends_the_previous_one(
     running = [entry for entry in entries if entry['end'] is None]
     ended = [entry for entry in entries if entry['end'] is not None]
     assert len(running) == 1
-    assert running[0]['task'] == second['id']
+    assert running[0]['task_id'] == second['id']
     assert len(ended) == 1
-    assert ended[0]['task'] == first['id']
+    assert ended[0]['task_id'] == first['id']
     assert datetime.fromisoformat(ended[0]['end']) == FIXED_NOW
 
 
@@ -125,7 +125,7 @@ def test_timer_state_reports_the_running_entry_and_server_now(
 
     assert response.status_code == HTTPStatus.OK
     body = response.json()
-    assert body['entry']['task'] == task['id']
+    assert body['entry']['task_id'] == task['id']
     assert body['entry']['end'] is None
     assert datetime.fromisoformat(body['server_now']) == FIXED_NOW
 
@@ -145,7 +145,7 @@ def test_stopping_a_timer_closes_the_running_entry(api_client: Any, post_json: A
 
     assert response.status_code == HTTPStatus.OK
     body = response.json()
-    assert body['entry']['task'] == task['id']
+    assert body['entry']['task_id'] == task['id']
     assert datetime.fromisoformat(body['entry']['end']) == FIXED_NOW
     assert api_client.get('/api/v1/timer/').json()['entry'] is None
 
@@ -196,7 +196,7 @@ def test_user_can_edit_a_stopped_entry(api_client: Any, post_json: Any, patch_js
 
     assert response.status_code == HTTPStatus.OK
     updated = response.json()
-    assert updated['task'] == other['id']
+    assert updated['task_id'] == other['id']
     start = datetime.fromisoformat(updated['start'])
     end = datetime.fromisoformat(updated['end'])
     assert start.date() == date(2026, 10, 13)
@@ -226,7 +226,7 @@ def test_completing_a_task_does_not_stop_its_running_timer(
     assert completed.status_code == HTTPStatus.OK
     state = api_client.get('/api/v1/timer/').json()
     assert state['entry'] is not None
-    assert state['entry']['task'] == task['id']
+    assert state['entry']['task_id'] == task['id']
 
 
 def test_timer_can_run_on_a_completed_task_without_reopening_it(
@@ -238,7 +238,7 @@ def test_timer_can_run_on_a_completed_task_without_reopening_it(
     started = post_json('/api/v1/timer/start/', {'task': task['id']})
 
     assert started.status_code == HTTPStatus.OK
-    tasks = api_client.get(f"/api/v1/tasks/?project={task['project']}").json()
+    tasks = api_client.get(f"/api/v1/tasks/?project={task['project_id']}").json()
     assert tasks[0]['is_completed'] is True
 
 
@@ -278,8 +278,8 @@ def test_openapi_contract_covers_time_tracking(api_client: Any) -> None:
     assert '/api/v1/timer/start/' in schema['paths']
     assert '/api/v1/timer/stop/' in schema['paths']
     assert '/api/v1/time-entries/' in schema['paths']
-    time_entry = schema['components']['schemas']['TimeEntry']
-    assert 'task' in time_entry['required']
+    time_entry = schema['components']['schemas']['TimeEntryResponse']
+    assert 'task_id' in time_entry['required']
     assert 'end' not in time_entry['required']
 
 
@@ -300,5 +300,5 @@ def test_task_list_can_span_all_projects(api_client: Any, post_json: Any) -> Non
 
     inbox_only = api_client.get('/api/v1/tasks/')
     assert all(
-        task['project'] != second_project['id'] for task in inbox_only.json()
+        task['project_id'] != second_project['id'] for task in inbox_only.json()
     )

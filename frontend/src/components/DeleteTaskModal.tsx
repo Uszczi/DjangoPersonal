@@ -1,11 +1,11 @@
 import { useState } from "react";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
-import type { Task } from "@/generated/api";
+import type { TaskResponse } from "@/generated/api";
 import { useTasksStore } from "@/stores/tasks";
 
 type DeleteTaskModalProps = {
-  task: Task;
+  task: TaskResponse;
   onClose: () => void;
 };
 

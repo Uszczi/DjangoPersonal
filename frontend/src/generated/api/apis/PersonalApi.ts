@@ -15,6 +15,21 @@
 
 import * as runtime from '../runtime';
 import {
+    type AuthResponse,
+    AuthResponseFromJSON,
+    AuthResponseToJSON,
+} from '../models/AuthResponse';
+import {
+    type LoginRequest,
+    LoginRequestFromJSON,
+    LoginRequestToJSON,
+} from '../models/LoginRequest';
+import {
+    type LoginResponse,
+    LoginResponseFromJSON,
+    LoginResponseToJSON,
+} from '../models/LoginResponse';
+import {
     type PatchedProjectRequest,
     PatchedProjectRequestFromJSON,
     PatchedProjectRequestToJSON,
@@ -30,45 +45,86 @@ import {
     PatchedTimeEntryRequestToJSON,
 } from '../models/PatchedTimeEntryRequest';
 import {
-    type Project,
-    ProjectFromJSON,
-    ProjectToJSON,
-} from '../models/Project';
-import {
     type ProjectRequest,
     ProjectRequestFromJSON,
     ProjectRequestToJSON,
 } from '../models/ProjectRequest';
 import {
-    type Task,
-    TaskFromJSON,
-    TaskToJSON,
-} from '../models/Task';
+    type ProjectResponse,
+    ProjectResponseFromJSON,
+    ProjectResponseToJSON,
+} from '../models/ProjectResponse';
+import {
+    type RefreshRequest,
+    RefreshRequestFromJSON,
+    RefreshRequestToJSON,
+} from '../models/RefreshRequest';
+import {
+    type RefreshResponse,
+    RefreshResponseFromJSON,
+    RefreshResponseToJSON,
+} from '../models/RefreshResponse';
+import {
+    type RegisterRequest,
+    RegisterRequestFromJSON,
+    RegisterRequestToJSON,
+} from '../models/RegisterRequest';
 import {
     type TaskCreateRequest,
     TaskCreateRequestFromJSON,
     TaskCreateRequestToJSON,
 } from '../models/TaskCreateRequest';
 import {
-    type TimeEntry,
-    TimeEntryFromJSON,
-    TimeEntryToJSON,
-} from '../models/TimeEntry';
+    type TaskResponse,
+    TaskResponseFromJSON,
+    TaskResponseToJSON,
+} from '../models/TaskResponse';
 import {
     type TimeEntryCreateRequest,
     TimeEntryCreateRequestFromJSON,
     TimeEntryCreateRequestToJSON,
 } from '../models/TimeEntryCreateRequest';
 import {
+    type TimeEntryResponse,
+    TimeEntryResponseFromJSON,
+    TimeEntryResponseToJSON,
+} from '../models/TimeEntryResponse';
+import {
+    type TimerResponse,
+    TimerResponseFromJSON,
+    TimerResponseToJSON,
+} from '../models/TimerResponse';
+import {
     type TimerStartRequest,
     TimerStartRequestFromJSON,
     TimerStartRequestToJSON,
 } from '../models/TimerStartRequest';
 import {
-    type TimerState,
-    TimerStateFromJSON,
-    TimerStateToJSON,
-} from '../models/TimerState';
+    type UserResponse,
+    UserResponseFromJSON,
+    UserResponseToJSON,
+} from '../models/UserResponse';
+
+export interface AuthLoginRequest {
+    /**
+     *
+     */
+    loginRequest: LoginRequest;
+}
+
+export interface AuthRefreshRequest {
+    /**
+     *
+     */
+    refreshRequest: RefreshRequest;
+}
+
+export interface AuthRegisterRequest {
+    /**
+     *
+     */
+    registerRequest: RegisterRequest;
+}
 
 export interface ProjectsCreateRequest {
     /**
@@ -198,6 +254,192 @@ export interface TimerStartOperationRequest {
 export class PersonalApi extends runtime.BaseAPI {
 
     /**
+     * Creates request options for authLogin without sending the request
+     */
+    async authLoginRequestOpts(requestParameters: AuthLoginRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['loginRequest'] == null) {
+            throw new runtime.RequiredError(
+                'loginRequest',
+                'Required parameter "loginRequest" was null or undefined when calling authLogin().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+
+        let urlPath = `/api/v1/auth/login/`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: LoginRequestToJSON(requestParameters['loginRequest']),
+        };
+    }
+
+    /**
+     * Login
+     */
+    async authLoginRaw(requestParameters: AuthLoginRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<LoginResponse>> {
+        const requestOptions = await this.authLoginRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => LoginResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Login
+     */
+    async authLogin(requestParameters: AuthLoginRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<LoginResponse> {
+        const response = await this.authLoginRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for authMe without sending the request
+     */
+    async authMeRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/auth/me/`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Me
+     */
+    async authMeRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserResponse>> {
+        const requestOptions = await this.authMeRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => UserResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Me
+     */
+    async authMe(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserResponse> {
+        const response = await this.authMeRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for authRefresh without sending the request
+     */
+    async authRefreshRequestOpts(requestParameters: AuthRefreshRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['refreshRequest'] == null) {
+            throw new runtime.RequiredError(
+                'refreshRequest',
+                'Required parameter "refreshRequest" was null or undefined when calling authRefresh().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+
+        let urlPath = `/api/v1/auth/refresh/`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: RefreshRequestToJSON(requestParameters['refreshRequest']),
+        };
+    }
+
+    /**
+     * Refresh
+     */
+    async authRefreshRaw(requestParameters: AuthRefreshRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<RefreshResponse>> {
+        const requestOptions = await this.authRefreshRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => RefreshResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Refresh
+     */
+    async authRefresh(requestParameters: AuthRefreshRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<RefreshResponse> {
+        const response = await this.authRefreshRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for authRegister without sending the request
+     */
+    async authRegisterRequestOpts(requestParameters: AuthRegisterRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['registerRequest'] == null) {
+            throw new runtime.RequiredError(
+                'registerRequest',
+                'Required parameter "registerRequest" was null or undefined when calling authRegister().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+
+        let urlPath = `/api/v1/auth/register/`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: RegisterRequestToJSON(requestParameters['registerRequest']),
+        };
+    }
+
+    /**
+     * Register
+     */
+    async authRegisterRaw(requestParameters: AuthRegisterRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AuthResponse>> {
+        const requestOptions = await this.authRegisterRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => AuthResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Register
+     */
+    async authRegister(requestParameters: AuthRegisterRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AuthResponse> {
+        const response = await this.authRegisterRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Creates request options for projectsCreate without sending the request
      */
     async projectsCreateRequestOpts(requestParameters: ProjectsCreateRequest): Promise<runtime.RequestOpts> {
@@ -229,17 +471,17 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * Create Project
      */
-    async projectsCreateRaw(requestParameters: ProjectsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Project>> {
+    async projectsCreateRaw(requestParameters: ProjectsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ProjectResponse>> {
         const requestOptions = await this.projectsCreateRequestOpts(requestParameters);
         const response = await this.request(requestOptions, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => ProjectFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => ProjectResponseFromJSON(jsonValue));
     }
 
     /**
      * Create Project
      */
-    async projectsCreate(requestParameters: ProjectsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Project> {
+    async projectsCreate(requestParameters: ProjectsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ProjectResponse> {
         const response = await this.projectsCreateRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -310,17 +552,17 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * List Projects
      */
-    async projectsListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Project>>> {
+    async projectsListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<ProjectResponse>>> {
         const requestOptions = await this.projectsListRequestOpts();
         const response = await this.request(requestOptions, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ProjectFromJSON));
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(ProjectResponseFromJSON));
     }
 
     /**
      * List Projects
      */
-    async projectsList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Project>> {
+    async projectsList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<ProjectResponse>> {
         const response = await this.projectsListRaw(initOverrides);
         return await response.value();
     }
@@ -365,17 +607,17 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * Update Project
      */
-    async projectsPartialUpdateRaw(requestParameters: ProjectsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Project>> {
+    async projectsPartialUpdateRaw(requestParameters: ProjectsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ProjectResponse>> {
         const requestOptions = await this.projectsPartialUpdateRequestOpts(requestParameters);
         const response = await this.request(requestOptions, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => ProjectFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => ProjectResponseFromJSON(jsonValue));
     }
 
     /**
      * Update Project
      */
-    async projectsPartialUpdate(requestParameters: ProjectsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Project> {
+    async projectsPartialUpdate(requestParameters: ProjectsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ProjectResponse> {
         const response = await this.projectsPartialUpdateRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -410,17 +652,17 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * Get Project
      */
-    async projectsRetrieveRaw(requestParameters: ProjectsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Project>> {
+    async projectsRetrieveRaw(requestParameters: ProjectsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ProjectResponse>> {
         const requestOptions = await this.projectsRetrieveRequestOpts(requestParameters);
         const response = await this.request(requestOptions, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => ProjectFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => ProjectResponseFromJSON(jsonValue));
     }
 
     /**
      * Get Project
      */
-    async projectsRetrieve(requestParameters: ProjectsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Project> {
+    async projectsRetrieve(requestParameters: ProjectsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ProjectResponse> {
         const response = await this.projectsRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -465,17 +707,17 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * Replace Project
      */
-    async projectsUpdateRaw(requestParameters: ProjectsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Project>> {
+    async projectsUpdateRaw(requestParameters: ProjectsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ProjectResponse>> {
         const requestOptions = await this.projectsUpdateRequestOpts(requestParameters);
         const response = await this.request(requestOptions, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => ProjectFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => ProjectResponseFromJSON(jsonValue));
     }
 
     /**
      * Replace Project
      */
-    async projectsUpdate(requestParameters: ProjectsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Project> {
+    async projectsUpdate(requestParameters: ProjectsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ProjectResponse> {
         const response = await this.projectsUpdateRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -512,17 +754,17 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * Create Task
      */
-    async tasksCreateRaw(requestParameters: TasksCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Task>> {
+    async tasksCreateRaw(requestParameters: TasksCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TaskResponse>> {
         const requestOptions = await this.tasksCreateRequestOpts(requestParameters);
         const response = await this.request(requestOptions, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => TaskFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => TaskResponseFromJSON(jsonValue));
     }
 
     /**
      * Create Task
      */
-    async tasksCreate(requestParameters: TasksCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Task> {
+    async tasksCreate(requestParameters: TasksCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TaskResponse> {
         const response = await this.tasksCreateRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -601,17 +843,17 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * List Tasks
      */
-    async tasksListRaw(requestParameters: TasksListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Task>>> {
+    async tasksListRaw(requestParameters: TasksListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<TaskResponse>>> {
         const requestOptions = await this.tasksListRequestOpts(requestParameters);
         const response = await this.request(requestOptions, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(TaskFromJSON));
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(TaskResponseFromJSON));
     }
 
     /**
      * List Tasks
      */
-    async tasksList(requestParameters: TasksListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Task>> {
+    async tasksList(requestParameters: TasksListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<TaskResponse>> {
         const response = await this.tasksListRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -656,17 +898,17 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * Update Task
      */
-    async tasksPartialUpdateRaw(requestParameters: TasksPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Task>> {
+    async tasksPartialUpdateRaw(requestParameters: TasksPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TaskResponse>> {
         const requestOptions = await this.tasksPartialUpdateRequestOpts(requestParameters);
         const response = await this.request(requestOptions, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => TaskFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => TaskResponseFromJSON(jsonValue));
     }
 
     /**
      * Update Task
      */
-    async tasksPartialUpdate(requestParameters: TasksPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Task> {
+    async tasksPartialUpdate(requestParameters: TasksPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TaskResponse> {
         const response = await this.tasksPartialUpdateRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -703,17 +945,17 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * Create Time Entry
      */
-    async timeEntriesCreateRaw(requestParameters: TimeEntriesCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TimeEntry>> {
+    async timeEntriesCreateRaw(requestParameters: TimeEntriesCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TimeEntryResponse>> {
         const requestOptions = await this.timeEntriesCreateRequestOpts(requestParameters);
         const response = await this.request(requestOptions, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => TimeEntryFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => TimeEntryResponseFromJSON(jsonValue));
     }
 
     /**
      * Create Time Entry
      */
-    async timeEntriesCreate(requestParameters: TimeEntriesCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TimeEntry> {
+    async timeEntriesCreate(requestParameters: TimeEntriesCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TimeEntryResponse> {
         const response = await this.timeEntriesCreateRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -792,17 +1034,17 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * List Time Entries
      */
-    async timeEntriesListRaw(requestParameters: TimeEntriesListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<TimeEntry>>> {
+    async timeEntriesListRaw(requestParameters: TimeEntriesListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<TimeEntryResponse>>> {
         const requestOptions = await this.timeEntriesListRequestOpts(requestParameters);
         const response = await this.request(requestOptions, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(TimeEntryFromJSON));
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(TimeEntryResponseFromJSON));
     }
 
     /**
      * List Time Entries
      */
-    async timeEntriesList(requestParameters: TimeEntriesListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<TimeEntry>> {
+    async timeEntriesList(requestParameters: TimeEntriesListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<TimeEntryResponse>> {
         const response = await this.timeEntriesListRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -847,17 +1089,17 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * Update Time Entry
      */
-    async timeEntriesPartialUpdateRaw(requestParameters: TimeEntriesPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TimeEntry>> {
+    async timeEntriesPartialUpdateRaw(requestParameters: TimeEntriesPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TimeEntryResponse>> {
         const requestOptions = await this.timeEntriesPartialUpdateRequestOpts(requestParameters);
         const response = await this.request(requestOptions, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => TimeEntryFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => TimeEntryResponseFromJSON(jsonValue));
     }
 
     /**
      * Update Time Entry
      */
-    async timeEntriesPartialUpdate(requestParameters: TimeEntriesPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TimeEntry> {
+    async timeEntriesPartialUpdate(requestParameters: TimeEntriesPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TimeEntryResponse> {
         const response = await this.timeEntriesPartialUpdateRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -884,17 +1126,17 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * Get Timer
      */
-    async timerRetrieveRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TimerState>> {
+    async timerRetrieveRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TimerResponse>> {
         const requestOptions = await this.timerRetrieveRequestOpts();
         const response = await this.request(requestOptions, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => TimerStateFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => TimerResponseFromJSON(jsonValue));
     }
 
     /**
      * Get Timer
      */
-    async timerRetrieve(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TimerState> {
+    async timerRetrieve(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TimerResponse> {
         const response = await this.timerRetrieveRaw(initOverrides);
         return await response.value();
     }
@@ -931,17 +1173,17 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * Start Timer
      */
-    async timerStartRaw(requestParameters: TimerStartOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TimerState>> {
+    async timerStartRaw(requestParameters: TimerStartOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TimerResponse>> {
         const requestOptions = await this.timerStartRequestOpts(requestParameters);
         const response = await this.request(requestOptions, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => TimerStateFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => TimerResponseFromJSON(jsonValue));
     }
 
     /**
      * Start Timer
      */
-    async timerStart(requestParameters: TimerStartOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TimerState> {
+    async timerStart(requestParameters: TimerStartOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TimerResponse> {
         const response = await this.timerStartRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -968,17 +1210,17 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * Stop Timer
      */
-    async timerStopRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TimerState>> {
+    async timerStopRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TimerResponse>> {
         const requestOptions = await this.timerStopRequestOpts();
         const response = await this.request(requestOptions, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => TimerStateFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => TimerResponseFromJSON(jsonValue));
     }
 
     /**
      * Stop Timer
      */
-    async timerStop(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TimerState> {
+    async timerStop(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TimerResponse> {
         const response = await this.timerStopRaw(initOverrides);
         return await response.value();
     }

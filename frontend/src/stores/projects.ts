@@ -1,11 +1,11 @@
 import { create } from "zustand";
 
 import { api } from "@/api";
-import { type Project } from "@/generated/api";
+import { type ProjectResponse } from "@/generated/api";
 
 export type ProjectInput = { name: string; description: string };
 
-export function orderProjects(projects: Project[]) {
+export function orderProjects(projects: ProjectResponse[]) {
   return [...projects].sort((left, right) => {
     if (left.isInbox !== right.isInbox) return left.isInbox ? -1 : 1;
     return left.name.localeCompare(right.name, undefined, {
@@ -14,21 +14,21 @@ export function orderProjects(projects: Project[]) {
   });
 }
 
-/** The Project a task falls back to: Inbox when present, otherwise the first Project. */
-export function defaultProject(projects: Project[]) {
+/** The ProjectResponse a task falls back to: Inbox when present, otherwise the first ProjectResponse. */
+export function defaultProject(projects: ProjectResponse[]) {
   return projects.find((item) => item.isInbox) ?? projects[0] ?? null;
 }
 
 type ProjectsState = {
-  projects: Project[];
+  projects: ProjectResponse[];
   isLoading: boolean;
   pageError: string;
   loadProjects: () => Promise<void>;
   saveProject: (
     input: ProjectInput,
-    project?: Project | null,
-  ) => Promise<Project>;
-  confirmProjectDelete: (project: Project) => Promise<Project | null>;
+    project?: ProjectResponse | null,
+  ) => Promise<ProjectResponse>;
+  confirmProjectDelete: (project: ProjectResponse) => Promise<ProjectResponse | null>;
 };
 
 let loadRequestId = 0;

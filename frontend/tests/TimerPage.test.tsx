@@ -17,7 +17,7 @@ const task = {
   id: 7,
   title: 'Prepare outline',
   description: '',
-  project: 1,
+  project_id: 1,
   is_completed: false,
 }
 
@@ -48,7 +48,7 @@ function timerResponse(entry: unknown) {
 function entryPayload(id: number, dateKey: string, startTime: string, endTime: string) {
   return {
     id,
-    task: task.id,
+    task_id: task.id,
     start: `${dateKey}T${startTime}Z`,
     end: `${dateKey}T${endTime}Z`,
   }
@@ -96,7 +96,7 @@ describe('Time tracking', () => {
 
   test('the URL project preselects both forms and starts one of its tasks', async () => {
     const planning = { id: 2, name: 'Planning', description: '', is_inbox: false }
-    const planningTask = { ...task, id: 8, title: 'Plan release', project: planning.id }
+    const planningTask = { ...task, id: 8, title: 'Plan release', project_id: planning.id }
     const runningEntry = {
       id: 5,
       task: planningTask.id,
@@ -139,7 +139,7 @@ describe('Time tracking', () => {
   })
 
   test('user can start a timer from a task row and stop it on the timer page', async () => {
-    const runningEntry = { id: 5, task: task.id, start: `${daysAgoKey(0)}T12:00:00Z`, end: null }
+    const runningEntry = { id: 5, task_id: task.id, start: `${daysAgoKey(0)}T12:00:00Z`, end: null }
     const stoppedEntry = { ...runningEntry, end: `${daysAgoKey(0)}T12:30:00Z` }
     fetchMock
       .mockResolvedValueOnce(jsonResponse([inbox]))
@@ -183,7 +183,7 @@ describe('Time tracking', () => {
   test('the running timer ticks every second', async () => {
     vi.useFakeTimers()
     try {
-      const runningEntry = { id: 5, task: task.id, start: '2026-10-15T12:00:00Z', end: null }
+      const runningEntry = { id: 5, task_id: task.id, start: '2026-10-15T12:00:00Z', end: null }
       fetchMock
         .mockResolvedValueOnce(jsonResponse([inbox]))
         .mockResolvedValueOnce(jsonResponse([task]))
@@ -305,7 +305,7 @@ describe('Time tracking', () => {
   })
 
   test('user can discard the running timer so nothing is saved', async () => {
-    const runningEntry = { id: 5, task: task.id, start: '2026-10-15T12:00:00Z', end: null }
+    const runningEntry = { id: 5, task_id: task.id, start: '2026-10-15T12:00:00Z', end: null }
     fetchMock
       .mockResolvedValueOnce(jsonResponse([inbox]))
       .mockResolvedValueOnce(jsonResponse([task]))

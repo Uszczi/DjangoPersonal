@@ -20,7 +20,7 @@ def test_user_can_create_and_browse_tasks_in_a_project(post_json: Any, api_clien
     assert create_response.status_code == HTTPStatus.CREATED
     assert create_response.json()['title'] == 'Outline the release'
     assert create_response.json()['description'] == 'List the main milestones'
-    assert create_response.json()['project'] == project_id
+    assert create_response.json()['project_id'] == project_id
     assert create_response.json()['is_completed'] is False
 
     list_response = api_client.get(f'/api/v1/tasks/?project={project_id}')
@@ -35,7 +35,7 @@ def test_task_without_a_project_is_assigned_to_inbox(api_client: Any, post_json:
     create_response = post_json('/api/v1/tasks/', {'title': 'Capture an idea'})
 
     assert create_response.status_code == HTTPStatus.CREATED
-    assert create_response.json()['project'] == inbox_id
+    assert create_response.json()['project_id'] == inbox_id
 
     inbox_tasks = api_client.get('/api/v1/tasks/')
 
@@ -82,10 +82,10 @@ def test_task_list_is_scoped_to_a_project_and_shows_open_tasks_first(api_client:
 def test_openapi_contract_requires_project_in_task_responses_but_not_requests(api_client: Any) -> None:
     response = api_client.get('/api/v1/schema/')
     schema = response.json()
-    task_response = schema['components']['schemas']['Task']
+    task_response = schema['components']['schemas']['TaskResponse']
     task_request = schema['components']['schemas']['TaskCreateRequest']
 
-    assert 'project' in task_response['required']
+    assert 'project_id' in task_response['required']
     assert 'project' not in task_request.get('required', [])
 
 
@@ -109,7 +109,7 @@ def test_user_can_edit_a_task_and_move_it_to_another_project(api_client: Any, po
     assert response.status_code == HTTPStatus.OK
     assert response.json()['title'] == 'Review section'
     assert response.json()['description'] == 'Ask for feedback'
-    assert response.json()['project'] == destination_id
+    assert response.json()['project_id'] == destination_id
 
     assert api_client.get(f'/api/v1/tasks/?project={source_id}').json() == []
     assert [task['id'] for task in api_client.get(

@@ -1,6 +1,7 @@
 from .task import Task
 from .project import Project
 from .timeentry import TimeEntry
+from .user import User
 
 
 def normalize_project_name(name: str) -> str:
@@ -15,6 +16,7 @@ __all__ = [
     'Task',
     'Project',
     'TimeEntry',
+    'User',
     'normalize_project_name',
     'project_name_key',
 ]

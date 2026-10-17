@@ -3,6 +3,7 @@ import { render } from '@testing-library/react'
 import { RouterProvider, createMemoryHistory, createRouter } from '@tanstack/react-router'
 
 import { routeTree } from '@/routeTree.gen'
+import { useAuthStore } from '@/stores/auth'
 import { useLayoutStore } from '@/stores/layout'
 import { useModalStore } from '@/stores/modal'
 import { useProjectsStore } from '@/stores/projects'
@@ -12,6 +13,7 @@ import { useTimerStore } from '@/stores/timer'
 /** Reset every Zustand store so each render starts from a clean slate. */
 export function resetStores() {
   window.localStorage.clear()
+  useAuthStore.setState(useAuthStore.getInitialState())
   useLayoutStore.setState(useLayoutStore.getInitialState())
   useModalStore.setState(useModalStore.getInitialState())
   useProjectsStore.setState(useProjectsStore.getInitialState())
@@ -19,8 +21,16 @@ export function resetStores() {
   useTimerStore.setState(useTimerStore.getInitialState())
 }
 
-export function renderApp(path = '/') {
+export function renderApp(path = '/', options?: { authenticated?: boolean }) {
   resetStores()
+
+  if (options?.authenticated !== false) {
+    useAuthStore.setState({
+      user: { id: 1, username: 'testuser' },
+      access: 'test-access-token',
+      refresh: 'test-refresh-token',
+    })
+  }
 
   const router = createRouter({
     routeTree,

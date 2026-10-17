@@ -2,10 +2,7 @@ from django.apps import AppConfig
 from django.db.models.signals import post_migrate
 
 
-from typing import Any
-
-
-def create_inbox(sender: Any, using: str, **kwargs: Any) -> None:
+def create_inbox(sender: object, using: str, **kwargs: object) -> None:
     from apps.infra.models import Project
 
     Project.objects.using(using).get_or_create(

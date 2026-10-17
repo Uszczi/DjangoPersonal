@@ -5,7 +5,6 @@ from datetime import timezone as datetime_timezone
 
 from django.db import transaction
 
-from typing import Any
 
 from django.db.models import QuerySet
 
@@ -46,7 +45,7 @@ class TimeEntryRepository:
         """The entry with a start but no end, if a timer is running."""
         return TimeEntryModel.objects.filter(end__isnull=True).first()
 
-    def create(self, *, task: Any, start: datetime, end: datetime | None = None) -> TimeEntryModel:
+    def create(self, *, task: TaskModel, start: datetime, end: datetime | None = None) -> TimeEntryModel:
         return TimeEntryModel.objects.create(task=task, start=start, end=end)
 
     def save(self, entry: TimeEntryModel) -> TimeEntryModel:
@@ -63,7 +62,7 @@ class TimeEntryRepository:
         entry.save(update_fields=['end'])
         return entry
 
-    def switch(self, *, task: Any, at: datetime) -> TimeEntryModel:
+    def switch(self, *, task: TaskModel, at: datetime) -> TimeEntryModel:
         """End any running entry and start a fresh one for ``task``, atomically."""
         with transaction.atomic():
             running = (

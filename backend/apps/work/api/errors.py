@@ -4,7 +4,6 @@ This is the only place that knows a :class:`WorkError` becomes a status code,
 so the use cases stay transport-agnostic.
 """
 
-from typing import Any
 
 from django.http import HttpRequest
 from ninja import NinjaAPI
@@ -23,7 +22,7 @@ def status_for(error: WorkError) -> int:
 
 def register_error_handlers(api: NinjaAPI) -> None:
     @api.exception_handler(WorkError)
-    def _handle_work_error(request: HttpRequest, error: WorkError) -> Any:
+    def _handle_work_error(request: HttpRequest, error: WorkError) -> object:
         return api.create_response(
             request,
             {'detail': error.message},

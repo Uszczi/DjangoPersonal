@@ -1,14 +1,14 @@
 import { useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
-import type { Task } from "@/generated/api";
+import type { TaskResponse } from "@/generated/api";
 import { useProjectsStore } from "@/stores/projects";
 import { useTasksStore, type TaskInput } from "@/stores/tasks";
 
 type TaskEditorModalProps = {
-  /** Omit (or pass `null`) to create a new Task; pass a Task to edit it. */
-  task?: Task | null;
-  /** The Project a new Task is created in. Ignored when editing. */
+  /** Omit (or pass `null`) to create a new TaskResponse; pass a TaskResponse to edit it. */
+  task?: TaskResponse | null;
+  /** The ProjectResponse a new TaskResponse is created in. Ignored when editing. */
   projectId?: number;
   onClose: () => void;
 };
@@ -24,7 +24,7 @@ export function TaskEditorModal({
   const [form, setForm] = useState<TaskInput>({
     title: task?.title ?? "",
     description: task?.description ?? "",
-    project: task?.project ?? projectId ?? 0,
+    project: task?.projectId ?? projectId ?? 0,
   });
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);

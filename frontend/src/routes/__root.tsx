@@ -1,4 +1,4 @@
-import { createRootRoute, retainSearchParams } from "@tanstack/react-router";
+import { createRootRoute, redirect, retainSearchParams } from "@tanstack/react-router";
 
 import { useEffect } from "react";
 import { Outlet, useSearch } from "@tanstack/react-router";
@@ -6,6 +6,7 @@ import { Outlet, useSearch } from "@tanstack/react-router";
 import { ModalHost } from "@/components/ModalHost";
 import { Navbar } from "@/components/Navbar";
 import { NotFoundPage } from "@/components/NotFoundPage";
+import { useAuthStore } from "@/stores/auth";
 import { useProjectsStore } from "@/stores/projects";
 import "@/App.css";
 
@@ -16,20 +17,35 @@ export const Route = createRootRoute({
   search: {
     middlewares: [retainSearchParams(["project"])],
   },
+  beforeLoad: ({ location }) => {
+    const user = useAuthStore.getState().user;
+    const path = location.pathname;
+    const isAuthPage = path === "/login" || path === "/register";
+
+    if (!user && !isAuthPage) {
+      throw redirect({ to: "/login" });
+    }
+    if (user && isAuthPage) {
+      throw redirect({ to: "/" });
+    }
+  },
   component: App,
 });
 
 function App() {
   const { project } = useSearch({ from: "__root__" });
 
+  const user = useAuthStore((state) => state.user);
   const projects = useProjectsStore((state) => state.projects);
   const isLoading = useProjectsStore((state) => state.isLoading);
   const pageError = useProjectsStore((state) => state.pageError);
   const loadProjects = useProjectsStore((state) => state.loadProjects);
 
   useEffect(() => {
-    void loadProjects();
-  }, [loadProjects]);
+    if (user) {
+      void loadProjects();
+    }
+  }, [user, loadProjects]);
 
   const projectNotFound =
     !isLoading &&

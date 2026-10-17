@@ -2,7 +2,7 @@ import { create } from "zustand";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
 import { api } from "@/api";
-import { type Task, type TimeEntry, type TimerState } from "@/generated/api";
+import { type TaskResponse, type TimeEntryResponse, type TimerResponse } from "@/generated/api";
 
 export type ManualEntryInput = {
   date: string;
@@ -19,20 +19,20 @@ export type EntryEditInput = {
 type TimerStoreState = {
   isLoading: boolean;
   pageError: string;
-  runningEntry: TimeEntry | null;
+  runningEntry: TimeEntryResponse | null;
   serverOffset: number;
-  entries: TimeEntry[];
-  tasks: Task[];
-  editingEntry: TimeEntry | null;
+  entries: TimeEntryResponse[];
+  tasks: TaskResponse[];
+  editingEntry: TimeEntryResponse | null;
   actionError: string;
   loadData: () => Promise<void>;
   startTimer: (taskId: number) => Promise<void>;
   stopTimer: () => Promise<void>;
   discardTimer: () => Promise<void>;
   addManualEntry: (input: ManualEntryInput) => Promise<void>;
-  updateEntry: (entry: TimeEntry, input: EntryEditInput) => Promise<void>;
-  deleteEntry: (entry: TimeEntry) => Promise<void>;
-  openEntryEditor: (entry: TimeEntry) => void;
+  updateEntry: (entry: TimeEntryResponse, input: EntryEditInput) => Promise<void>;
+  deleteEntry: (entry: TimeEntryResponse) => Promise<void>;
+  openEntryEditor: (entry: TimeEntryResponse) => void;
   closeEntryEditor: () => void;
 };
 
@@ -42,7 +42,7 @@ type TimerSet = (
     | ((state: TimerStoreState) => Partial<TimerStoreState>),
 ) => void;
 
-function applyTimerState(set: TimerSet, timer: TimerState) {
+function applyTimerState(set: TimerSet, timer: TimerResponse) {
   set({
     runningEntry: timer.entry ?? null,
     serverOffset: timer.serverNow.getTime() - Date.now(),

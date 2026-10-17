@@ -1,10 +1,9 @@
 """Time entry contracts: request payloads and the response shape."""
 
 from datetime import date as datetime_date, datetime
-from typing import Any
 
-from ninja import Schema
-from pydantic import BaseModel, Field
+from apps.shared.base import BaseModel
+from pydantic import Field
 
 MAX_ENTRY_DURATION_MINUTES = 24 * 60
 
@@ -23,12 +22,9 @@ class PatchedTimeEntryRequest(BaseModel):
     )
 
 
-class TimeEntry(Schema):
+class TimeEntryResponse(BaseModel):
     id: int = Field(..., json_schema_extra={'readOnly': True})
-    task: int = Field(..., json_schema_extra={'readOnly': True})
+    task_id: int = Field(..., json_schema_extra={'readOnly': True})
     start: datetime
     end: datetime | None = None
 
-    @staticmethod
-    def resolve_task(obj: Any) -> int:
-        return int(obj.task_id)

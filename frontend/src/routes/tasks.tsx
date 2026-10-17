@@ -13,7 +13,7 @@ import { useLayoutStore } from "@/stores/layout";
 import { ShowModal } from "@/stores/modal";
 import { defaultProject, useProjectsStore } from "@/stores/projects";
 import { useTasksStore } from "@/stores/tasks";
-import type { Task } from "@/generated/api";
+import type { TaskResponse } from "@/generated/api";
 
 export const Route = createFileRoute("/tasks")({
   component: TasksPage,
@@ -61,15 +61,15 @@ export function TasksPage() {
     ShowModal(TaskEditorModal, { projectId: selectedProject?.id });
   }
 
-  function openTaskEditForm(task: Task) {
+  function openTaskEditForm(task: TaskResponse) {
     ShowModal(TaskEditorModal, { task });
   }
 
-  function openTaskDeleteDialog(task: Task) {
+  function openTaskDeleteDialog(task: TaskResponse) {
     ShowModal(DeleteTaskModal, { task });
   }
 
-  async function startTimer(task: Task) {
+  async function startTimer(task: TaskResponse) {
     if (await startTaskTimer(task)) {
       navigate({ to: "/timer" });
     }

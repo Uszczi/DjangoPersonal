@@ -1,14 +1,15 @@
 from datetime import date as datetime_date
-from typing import Any
 
+from django.db.models import QuerySet
 from django.http import HttpRequest
 from ninja import Router, Status
 
+from apps.infra.models import TimeEntry as TimeEntryModel
 from apps.work import deps, handlers
 from apps.work.contracts import (
     PatchedTimeEntryRequest,
-    TimeEntry,
     TimeEntryCreateRequest,
+    TimeEntryResponse,
 )
 
 router = Router(tags=['personal'])
@@ -16,22 +17,22 @@ router = Router(tags=['personal'])
 
 @router.get(
     '/time-entries/',
-    response=list[TimeEntry],
+    response=list[TimeEntryResponse],
     operation_id='time_entries_list',
 )
 def list_time_entries(
     request: HttpRequest, task: int | None = None, date: datetime_date | None = None
-) -> Any:
+) -> QuerySet[TimeEntryModel]:
     handler = handlers.ListTimeEntries(deps.time_entry_repository())
     return handler.execute(task_id=task, day=date)
 
 
 @router.post(
     '/time-entries/',
-    response={201: TimeEntry},
+    response={201: TimeEntryResponse},
     operation_id='time_entries_create',
 )
-def create_time_entry(request: HttpRequest, payload: TimeEntryCreateRequest) -> Any:
+def create_time_entry(request: HttpRequest, payload: TimeEntryCreateRequest) -> Status[TimeEntryModel]:
     handler = handlers.CreateTimeEntry(
         tasks=deps.task_repository(),
         time_entries=deps.time_entry_repository(),
@@ -41,12 +42,12 @@ def create_time_entry(request: HttpRequest, payload: TimeEntryCreateRequest) -> 
 
 @router.patch(
     '/time-entries/{id}/',
-    response=TimeEntry,
+    response=TimeEntryResponse,
     operation_id='time_entries_partial_update',
 )
 def update_time_entry(
     request: HttpRequest, id: int, payload: PatchedTimeEntryRequest
-) -> Any:
+) -> TimeEntryModel:
     handler = handlers.UpdateTimeEntry(
         tasks=deps.task_repository(),
         time_entries=deps.time_entry_repository(),
@@ -59,6 +60,6 @@ def update_time_entry(
     response={204: None},
     operation_id='time_entries_destroy',
 )
-def delete_time_entry(request: HttpRequest, id: int) -> Any:
+def delete_time_entry(request: HttpRequest, id: int) -> Status[None]:
     handlers.DeleteTimeEntry(deps.time_entry_repository()).execute(id)
     return Status(204, None)

@@ -1,4 +1,6 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+
+import { useAuthStore } from "@/stores/auth";
 
 type TopTabPath = "/" | "/tasks" | "/timer";
 
@@ -19,6 +21,10 @@ function TopTabLink({ to, children }: { to: TopTabPath; children: string }) {
 }
 
 export function Navbar() {
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+  const navigate = useNavigate();
+
   return (
     <header className="topbar">
       <Link className="brand" to="/" aria-label="DjangoPersonal — strona główna">
@@ -32,6 +38,21 @@ export function Navbar() {
         <TopTabLink to="/tasks">Zadania</TopTabLink>
         <TopTabLink to="/timer">Czas</TopTabLink>
       </nav>
+      {user && (
+        <div className="topbar-user">
+          <span>{user.username}</span>
+          <button
+            type="button"
+            className="quiet-button"
+            onClick={() => {
+              logout();
+              navigate({ to: "/login" });
+            }}
+          >
+            Wyloguj
+          </button>
+        </div>
+      )}
     </header>
   );
 }

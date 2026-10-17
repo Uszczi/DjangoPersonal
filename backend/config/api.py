@@ -1,5 +1,7 @@
 from ninja import NinjaAPI
 
+from apps.accounts.api import router as accounts_router
+from apps.accounts.api.errors import register_error_handlers as register_accounts_error_handlers
 from apps.work.api import router
 from apps.work.api.errors import register_error_handlers
 
@@ -11,5 +13,7 @@ api = NinjaAPI(
     openapi_url='/schema/',
     docs_url=None,
 )
+api.add_router('/', accounts_router)
 api.add_router('/', router)
 register_error_handlers(api)
+register_accounts_error_handlers(api)

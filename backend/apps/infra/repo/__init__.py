@@ -13,17 +13,20 @@ receive a fresh instance each time from ``apps.work.deps``, which keeps that an
 accident that cannot happen rather than a rule to remember.
 """
 
-from .errors import DuplicateProjectName, RepositoryError, TaskHasTimeEntries
+from .errors import DuplicateProjectName, DuplicateUsername, RepositoryError, TaskHasTimeEntries
 from .projects import ProjectRepository
 from .tasks import TaskRepository
 from .time_entries import TimeEntryRepository, day_start
+from .users import UserRepository
 
 __all__ = [
     'DuplicateProjectName',
+    'DuplicateUsername',
     'ProjectRepository',
     'RepositoryError',
     'TaskHasTimeEntries',
     'TaskRepository',
     'TimeEntryRepository',
+    'UserRepository',
     'day_start',
 ]

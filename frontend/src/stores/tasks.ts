@@ -2,7 +2,7 @@ import { create } from "zustand";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
 import { api } from "@/api";
-import { type Task } from "@/generated/api";
+import { type TaskResponse } from "@/generated/api";
 
 export type TaskInput = {
   title: string;
@@ -10,10 +10,10 @@ export type TaskInput = {
   project: number;
 };
 
-export type TaskListState = { projectId: number; tasks: Task[] } | null;
+export type TaskListState = { projectId: number; tasks: TaskResponse[] } | null;
 export type TaskLoadError = { projectId: number; message: string } | null;
 
-function orderTasks(tasks: Task[]) {
+function orderTasks(tasks: TaskResponse[]) {
   return [...tasks].sort((left, right) => {
     if (left.isCompleted !== right.isCompleted)
       return left.isCompleted ? 1 : -1;
@@ -26,10 +26,10 @@ type TasksState = {
   loadError: TaskLoadError;
   actionError: string;
   loadTasks: (projectId: number) => Promise<void>;
-  saveTask: (input: TaskInput, task?: Task | null) => Promise<Task>;
-  toggleTaskCompletion: (task: Task) => Promise<void>;
-  startTaskTimer: (task: Task) => Promise<boolean>;
-  confirmDelete: (task: Task) => Promise<void>;
+  saveTask: (input: TaskInput, task?: TaskResponse | null) => Promise<TaskResponse>;
+  toggleTaskCompletion: (task: TaskResponse) => Promise<void>;
+  startTaskTimer: (task: TaskResponse) => Promise<boolean>;
+  confirmDelete: (task: TaskResponse) => Promise<void>;
 };
 
 let loadRequestId = 0;
@@ -131,13 +131,13 @@ export const useTasksStore = create<TasksState>((set) => ({
 }));
 
 /**
- * Reflect a Task update in the list without letting a late response clobber a
- * Project that was selected in the meantime.
+ * Reflect a TaskResponse update in the list without letting a late response clobber a
+ * ProjectResponse that was selected in the meantime.
  */
 function upsertTask(
   set: (partial: Partial<TasksState> | ((state: TasksState) => Partial<TasksState>)) => void,
-  previousTask: Task,
-  updatedTask: Task,
+  previousTask: TaskResponse,
+  updatedTask: TaskResponse,
 ) {
   set((state) => {
     const current = state.taskList;
@@ -146,7 +146,7 @@ function upsertTask(
     const taskWasVisible = current.tasks.some(
       (task) => task.id === previousTask.id,
     );
-    const taskBelongsInList = updatedTask.project === current.projectId;
+    const taskBelongsInList = updatedTask.projectId === current.projectId;
     if (!taskWasVisible && !taskBelongsInList) return {};
 
     const visibleTasks = taskBelongsInList
@@ -163,8 +163,8 @@ function upsertTask(
     const current = state.loadError;
     if (
       current &&
-      (current.projectId === previousTask.project ||
-        current.projectId === updatedTask.project)
+      (current.projectId === previousTask.projectId ||
+        current.projectId === updatedTask.projectId)
     ) {
       return { loadError: null };
     }

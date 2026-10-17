@@ -1,9 +1,8 @@
 """Task contracts: request payloads and the response shape."""
 
-from typing import Any
 
-from ninja import Schema
-from pydantic import BaseModel, Field, field_validator
+from apps.shared.base import BaseModel
+from pydantic import Field, field_validator
 
 
 class _TaskPayload(BaseModel):
@@ -14,7 +13,7 @@ class _TaskPayload(BaseModel):
 
     @field_validator('title', mode='before', check_fields=False)
     @classmethod
-    def trim_title(cls, value: Any) -> Any:
+    def trim_title(cls, value: object) -> object:
         if isinstance(value, str):
             value = value.strip()
             if not value:
@@ -35,13 +34,10 @@ class PatchedTaskUpdateRequest(_TaskPayload):
     is_completed: bool | None = None
 
 
-class Task(Schema):
+class TaskResponse(BaseModel):
     id: int = Field(..., json_schema_extra={'readOnly': True})
     title: str
     description: str
-    project: int = Field(..., json_schema_extra={'readOnly': True})
+    project_id: int = Field(..., json_schema_extra={'readOnly': True})
     is_completed: bool = Field(..., json_schema_extra={'readOnly': True})
 
-    @staticmethod
-    def resolve_project(obj: Any) -> int:
-        return int(obj.project_id)

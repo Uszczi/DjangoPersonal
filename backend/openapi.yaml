@@ -4,6 +4,82 @@ info:
   version: 1.0.0
   description: API for DjangoPersonal projects and tasks.
 paths:
+  /api/v1/auth/register/:
+    post:
+      operationId: auth_register
+      summary: Register
+      parameters: []
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+      tags:
+      - personal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+  /api/v1/auth/login/:
+    post:
+      operationId: auth_login
+      summary: Login
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+      tags:
+      - personal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+  /api/v1/auth/refresh/:
+    post:
+      operationId: auth_refresh
+      summary: Refresh
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+      tags:
+      - personal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+        required: true
+  /api/v1/auth/me/:
+    get:
+      operationId: auth_me
+      summary: Me
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+      tags:
+      - personal
+      security:
+      - JWTAuth: []
   /api/v1/projects/:
     get:
       operationId: projects_list
@@ -16,7 +92,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/Project'
+                  $ref: '#/components/schemas/ProjectResponse'
                 title: Response
                 type: array
       tags:
@@ -31,7 +107,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Project'
+                $ref: '#/components/schemas/ProjectResponse'
       tags:
       - personal
       requestBody:
@@ -57,7 +133,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Project'
+                $ref: '#/components/schemas/ProjectResponse'
       tags:
       - personal
     put:
@@ -76,7 +152,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Project'
+                $ref: '#/components/schemas/ProjectResponse'
       tags:
       - personal
       requestBody:
@@ -101,7 +177,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Project'
+                $ref: '#/components/schemas/ProjectResponse'
       tags:
       - personal
       requestBody:
@@ -152,7 +228,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/Task'
+                  $ref: '#/components/schemas/TaskResponse'
                 title: Response
                 type: array
       tags:
@@ -167,7 +243,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Task'
+                $ref: '#/components/schemas/TaskResponse'
       tags:
       - personal
       requestBody:
@@ -193,7 +269,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Task'
+                $ref: '#/components/schemas/TaskResponse'
       tags:
       - personal
       requestBody:
@@ -246,7 +322,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/TimeEntry'
+                  $ref: '#/components/schemas/TimeEntryResponse'
                 title: Response
                 type: array
       tags:
@@ -261,7 +337,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TimeEntry'
+                $ref: '#/components/schemas/TimeEntryResponse'
       tags:
       - personal
       requestBody:
@@ -287,7 +363,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TimeEntry'
+                $ref: '#/components/schemas/TimeEntryResponse'
       tags:
       - personal
       requestBody:
@@ -322,7 +398,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TimerState'
+                $ref: '#/components/schemas/TimerResponse'
       tags:
       - personal
       requestBody:
@@ -342,7 +418,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TimerState'
+                $ref: '#/components/schemas/TimerResponse'
       tags:
       - personal
   /api/v1/timer/stop/:
@@ -356,12 +432,103 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TimerState'
+                $ref: '#/components/schemas/TimerResponse'
       tags:
       - personal
 components:
   schemas:
-    Project:
+    AuthResponse:
+      properties:
+        access:
+          title: Access
+          type: string
+        refresh:
+          title: Refresh
+          type: string
+      required:
+      - access
+      - refresh
+      title: AuthResponse
+      type: object
+    RegisterRequest:
+      properties:
+        username:
+          maxLength: 150
+          minLength: 1
+          title: Username
+          type: string
+        password:
+          minLength: 1
+          title: Password
+          type: string
+        password_confirm:
+          minLength: 1
+          title: Password Confirm
+          type: string
+      required:
+      - username
+      - password
+      - password_confirm
+      title: RegisterRequest
+      type: object
+    LoginResponse:
+      properties:
+        access:
+          title: Access
+          type: string
+        refresh:
+          title: Refresh
+          type: string
+      required:
+      - access
+      - refresh
+      title: LoginResponse
+      type: object
+    LoginRequest:
+      properties:
+        username:
+          title: Username
+          type: string
+        password:
+          title: Password
+          type: string
+      required:
+      - username
+      - password
+      title: LoginRequest
+      type: object
+    RefreshResponse:
+      properties:
+        access:
+          title: Access
+          type: string
+      required:
+      - access
+      title: RefreshResponse
+      type: object
+    RefreshRequest:
+      properties:
+        refresh:
+          title: Refresh
+          type: string
+      required:
+      - refresh
+      title: RefreshRequest
+      type: object
+    UserResponse:
+      properties:
+        id:
+          title: Id
+          type: integer
+        username:
+          title: Username
+          type: string
+      required:
+      - id
+      - username
+      title: UserResponse
+      type: object
+    ProjectResponse:
       properties:
         id:
           readOnly: true
@@ -382,7 +549,7 @@ components:
       - name
       - description
       - is_inbox
-      title: Project
+      title: ProjectResponse
       type: object
     ProjectRequest:
       properties:
@@ -415,7 +582,7 @@ components:
           title: Description
       title: PatchedProjectRequest
       type: object
-    Task:
+    TaskResponse:
       properties:
         id:
           readOnly: true
@@ -427,9 +594,9 @@ components:
         description:
           title: Description
           type: string
-        project:
+        project_id:
           readOnly: true
-          title: Project
+          title: Project Id
           type: integer
         is_completed:
           readOnly: true
@@ -439,9 +606,9 @@ components:
       - id
       - title
       - description
-      - project
+      - project_id
       - is_completed
-      title: Task
+      title: TaskResponse
       type: object
     TaskCreateRequest:
       properties:
@@ -489,15 +656,15 @@ components:
           title: Is Completed
       title: PatchedTaskUpdateRequest
       type: object
-    TimeEntry:
+    TimeEntryResponse:
       properties:
         id:
           readOnly: true
           title: Id
           type: integer
-        task:
+        task_id:
           readOnly: true
-          title: Task
+          title: Task Id
           type: integer
         start:
           format: date-time
@@ -511,9 +678,9 @@ components:
           title: End
       required:
       - id
-      - task
+      - task_id
       - start
-      title: TimeEntry
+      title: TimeEntryResponse
       type: object
     TimeEntryCreateRequest:
       properties:
@@ -557,11 +724,11 @@ components:
           title: Duration Minutes
       title: PatchedTimeEntryRequest
       type: object
-    TimerState:
+    TimerResponse:
       properties:
         entry:
           anyOf:
-          - $ref: '#/components/schemas/TimeEntry'
+          - $ref: '#/components/schemas/TimeEntryResponse'
           - type: 'null'
         server_now:
           format: date-time
@@ -569,7 +736,7 @@ components:
           type: string
       required:
       - server_now
-      title: TimerState
+      title: TimerResponse
       type: object
     TimerStartRequest:
       properties:
@@ -580,4 +747,8 @@ components:
       - task
       title: TimerStartRequest
       type: object
+  securitySchemes:
+    JWTAuth:
+      type: http
+      scheme: bearer
 servers: []

@@ -1,4 +1,4 @@
-/** User-visible routing tests: the URL drives the view and the selected Project. */
+/** User-visible routing tests: the URL drives the view and the selected ProjectResponse. */
 
 import { act, cleanup, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -68,13 +68,13 @@ describe('Routing', () => {
     expect(await screen.findByRole('heading', { name: 'Tej strony nie ma' })).toBeInTheDocument()
   })
 
-  test('a URL naming a Project that does not exist shows a not-found page', async () => {
+  test('a URL naming a ProjectResponse that does not exist shows a not-found page', async () => {
     renderApp('/tasks?project=999')
 
     expect(await screen.findByRole('heading', { name: 'Tej strony nie ma' })).toBeInTheDocument()
   })
 
-  test('a failed projects load does not masquerade as a missing Project', async () => {
+  test('a failed projects load does not masquerade as a missing ProjectResponse', async () => {
     fetchMock.mockImplementation(() =>
       Promise.resolve(jsonResponse({ detail: 'Nie udało się' }, 500)),
     )
@@ -87,7 +87,7 @@ describe('Routing', () => {
     expect(screen.queryByRole('heading', { name: 'Tej strony nie ma' })).not.toBeInTheDocument()
   })
 
-  test('the selected Project is kept in the URL after a refresh', async () => {
+  test('the selected ProjectResponse is kept in the URL after a refresh', async () => {
     const user = userEvent.setup()
     const { router } = renderApp('/tasks')
     await screen.findByRole('link', { name: 'Inbox' })
@@ -112,7 +112,7 @@ describe('Routing', () => {
     )
   })
 
-  test('the selected Project survives switching to the timer page and back', async () => {
+  test('the selected ProjectResponse survives switching to the timer page and back', async () => {
     const user = userEvent.setup()
     const { router } = renderApp('/tasks?project=2')
     await screen.findByRole('link', { name: 'Planning' })
@@ -129,7 +129,7 @@ describe('Routing', () => {
     expect(router.state.location.search).toMatchObject({ project: 2 })
   })
 
-  test('sidebar Project links and topbar tabs change the URL', async () => {
+  test('sidebar ProjectResponse links and topbar tabs change the URL', async () => {
     const user = userEvent.setup()
     const { router } = renderApp('/tasks')
     await screen.findByRole('link', { name: 'Inbox' })
