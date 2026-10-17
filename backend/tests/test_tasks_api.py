@@ -1,6 +1,6 @@
 from http import HTTPStatus
 
-from apps.work.models import Task
+from apps.infra.models import Task
 
 
 def test_user_can_create_and_browse_tasks_in_a_project(post_json, api_client):

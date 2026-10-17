@@ -8,7 +8,7 @@ from ninja import Router, Schema, Status
 from ninja.errors import HttpError
 from pydantic import Field, field_validator
 
-from .models import (
+from apps.infra.models import (
     Project as ProjectModel,
     Task as TaskModel,
     TimeEntry as TimeEntryModel,

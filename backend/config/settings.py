@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'apps.infra.apps.InfraConfig',
     'apps.work.apps.WorkConfig',
 ]
 
