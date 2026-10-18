@@ -37,11 +37,22 @@ function toCanvas(stage: { x(): number; y(): number; scaleX(): number }, px: num
 
 export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
   const stageRef = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const selectedId = selectedIds.length > 0 ? selectedIds[0] : null;
   const [marquee, setMarquee] = useState<{ start: Point; current: Point } | null>(null);
   const [spaceHeld, setSpaceHeld] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    function onWheel(e: WheelEvent) {
+      e.preventDefault();
+    }
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
   const [middleHeld, setMiddleHeld] = useState(false);
   const downOnEmptyRef = useRef(false);
   const downPosRef = useRef<Point | null>(null);
@@ -141,6 +152,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
 
   function handleWheel(e: KonvaEventObject<WheelEvent>) {
     e.evt.preventDefault();
+    e.evt.stopPropagation();
     const stage = stageRef.current;
     if (!stage) return;
     const oldScale = stageScale;
@@ -442,6 +454,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
 
   return (
     <div
+      ref={containerRef}
       className="whiteboard-canvas"
       data-testid="whiteboard-canvas"
       aria-label="Tablica"
@@ -450,6 +463,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
         borderRadius: 8,
         background: "#ffffff",
         overflow: "hidden",
+        touchAction: "none",
         boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
       }}
     >
