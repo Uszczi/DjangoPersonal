@@ -21,21 +21,23 @@ A complete spec for the expenses domain in DjangoPersonal — Wallets, Transacti
 - Currency: per wallet eventually; for now a wallet carries a name only.
 - Categories: per user; the system seeds 10 base categories when the user creates their first wallet; users get full CRUD on categories.
 - Transactions: title, amount (Decimal, positive, 2 decimal places), date, optional description, category (nullable), wallet.
-- Deletion: deleting a wallet cascades to its transactions; deleting a category leaves its transactions with no category.
+- Deletion: deleting a wallet cascades to its transactions; deleting a category also cascades — its transactions are deleted (confirmed change during 03-categories-ui).
 - Independent from `work` — no Project/Task links.
 - UI: a new "Wydatki" tab in the navbar with its own route, following ADR-0001 (client-side routing).
 
 ## Decisions so far
 
-<!-- one line per resolved ticket: gist + link -->
+- [01-api-surface](issues/01-api-surface.md): repo API conventions captured — vertical slice in `backend/apps/expenses/`, `/api/v1/` with Django Ninja, Pydantic contracts, shared `DomainError` adapter, `just generate-api`, Zustand store consuming generated client. Findings on branch `research/expenses-api-surface`.
+- [02-wallets-ui](issues/02-wallets-ui.md): wallet list shows name + count, modal create, header select to switch, cascade confirm delete, same select on mobile.
+- [03-categories-ui](issues/03-categories-ui.md): sidebar panel below wallets, inline create, trim + case-insensitive unique names, 10 seed categories, cascade delete.
+- [04-transactions-ui](issues/04-transactions-ui.md): list grouped by date, create/edit via modal, Decimal amount without currency, responsive same list, no pagination yet.
+- [05-routing-integration](issues/05-routing-integration.md): URL is `/expenses/$walletId` (wallet in main path), deleted wallet redirects to `/expenses`, only wallet in URL, back/forward works.
 
 ## Not yet specified
 
 - API surface: endpoint shapes, filters, payload formats, error codes for wallets, transactions, and categories.
-- UI flows: transaction list/create/edit/delete screens, wallet management, category management, mobile behaviour.
 - The final list of the 10 seed categories.
 - Transaction list filtering, sorting, and pagination.
-- How the expenses route integrates with the existing client-side routing (URL shape, deep-linking, back/forward).
 
 ## Out of scope
 
