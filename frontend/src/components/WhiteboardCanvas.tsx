@@ -38,6 +38,8 @@ function toCanvas(stage: { x(): number; y(): number; scaleX(): number }, px: num
 export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
   const stageRef = useRef<any>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const resizingRef = useRef<{ id: string; startX: number; startY: number; startW: number; startH: number } | null>(null);
   const [drawing, setDrawing] = useState<{
     kind: BoardElement["kind"];
     start: Point;
@@ -48,16 +50,50 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
   const [stageScale, setStageScale] = useState(board.viewport.zoom);
 
   useEffect(() => {
+    function onMove(e: PointerEvent) {
+      const r = resizingRef.current;
+      if (!r) return;
+      const scale = stageScale;
+      const newW = Math.max(40, r.startW + (e.clientX - r.startX) / scale);
+      const newH = Math.max(30, r.startH + (e.clientY - r.startY) / scale);
+      onChange(
+        // update width/height of the note
+        {
+          ...board,
+          elements: board.elements.map((x) =>
+            x.id === r.id && x.kind === "note" ? { ...x, width: newW, height: newH } : x,
+          ),
+        },
+      );
+    }
+    function onUp() {
+      resizingRef.current = null;
+    }
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, [board, onChange, stageScale]);
+
+  useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if ((e.key === "Delete" || e.key === "Backspace") && selectedId) {
-        e.preventDefault();
-        onChange(removeElement(board, selectedId));
-        setSelectedId(null);
+      if (e.key === "Delete" || e.key === "Backspace") {
+        if (selectedId) {
+          e.preventDefault();
+          onChange(removeElement(board, selectedId));
+          setSelectedId(null);
+        } else if (selectedNoteId) {
+          e.preventDefault();
+          onChange(removeElement(board, selectedNoteId));
+          setSelectedNoteId(null);
+        }
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [selectedId, board, onChange]);
+  }, [selectedId, selectedNoteId, board, onChange]);
 
   const elements = board.elements;
 
@@ -120,10 +156,17 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
   }
 
   function handleMouseMove() {
-    if (!drawing) return;
     const stage = stageRef.current;
     if (!stage) return;
     const pos = stage.getPointerPosition();
+    if (!pos) return;
+    if (tool === "eraser") {
+      const shape = stage.getIntersection(pos);
+      const id = shape?.id?.();
+      if (id) onChange(removeElement(board, id));
+      return;
+    }
+    if (!drawing) return;
     const canvasPos = toCanvas(stage, pos.x, pos.y);
     setDrawing((d) => {
       if (!d) return d;
@@ -229,12 +272,10 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
         scaleY={stageScale}
         draggable={tool === "select"}
         onWheel={handleWheel}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onTouchStart={handleMouseDown as any}
-        onTouchMove={handleMouseMove as any}
-        onTouchEnd={handleMouseUp as any}
+        onPointerDown={handleMouseDown as any}
+        onPointerMove={handleMouseMove as any}
+        onPointerUp={handleMouseUp as any}
+        onPointerCancel={handleMouseUp as any}
         onDragEnd={(e) => {
           if (e.target === stageRef.current) {
             const stage = stageRef.current;
@@ -397,6 +438,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
               return (
                 <div
                   key={el.id}
+                  onClick={() => setSelectedNoteId(el.id)}
                   style={{
                     position: "absolute",
                     left,
@@ -404,7 +446,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
                     width: el.width * sx,
                     height: el.height * sx,
                     background: "#fef3c7",
-                    border: "1px solid #f59e0b",
+                    border: selectedNoteId === el.id ? "2px solid #2563eb" : "1px solid #f59e0b",
                     padding: 4,
                     pointerEvents: "auto",
                     fontSize: 12 * sx,
@@ -415,7 +457,6 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
                     value={el.text}
                     onChange={(e) => {
                       onChange(
-                        // update text
                         {
                           ...board,
                           elements: board.elements.map((x) =>
@@ -425,6 +466,30 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
                       );
                     }}
                   />
+                  {selectedNoteId === el.id && (
+                    <div
+                      onPointerDown={(e) => {
+                        e.stopPropagation();
+                        resizingRef.current = {
+                          id: el.id,
+                          startX: e.clientX,
+                          startY: e.clientY,
+                          startW: el.width,
+                          startH: el.height,
+                        };
+                      }}
+                      style={{
+                        position: "absolute",
+                        right: 0,
+                        bottom: 0,
+                        width: 12,
+                        height: 12,
+                        background: "#2563eb",
+                        cursor: "nwse-resize",
+                        pointerEvents: "auto",
+                      }}
+                    />
+                  )}
                 </div>
               );
             }

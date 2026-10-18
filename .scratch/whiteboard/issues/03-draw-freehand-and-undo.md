@@ -4,13 +4,13 @@
 
 **Blocked by:** 02 (Open a Whiteboard and save it automatically).
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] A pen tool draws freehand strokes on the canvas using a mouse, a finger, or a stylus (Pointer Events).
-- [ ] An eraser removes drawn strokes.
-- [ ] The user can select an element and move it or delete it.
-- [ ] Undo and redo work for the changes made in the session.
-- [ ] Strokes and element changes are saved by autosave and restored when the Whiteboard is reopened.
-- [ ] All drawing semantics (add, move, delete, undo, redo) live in a pure board-document module, separate from rendering.
-- [ ] Frontend unit tests cover the board-document operations with no DOM and no canvas.
-- [ ] Frontend tests cover drawing and its persistence through the app seam, with the canvas layer replaced by a test double at its single component boundary.
+- [x] A pen tool draws freehand strokes on the canvas using a mouse, a finger, or a stylus (Pointer Events).
+- [x] An eraser removes drawn strokes.
+- [x] The user can select an element and move it or delete it.
+- [x] Undo and redo work for the changes made in the session.
+- [x] Strokes and element changes are saved by autosave and restored when the Whiteboard is reopened.
+- [x] All drawing semantics (add, move, delete, undo, redo) live in a pure board-document module, separate from rendering.
+- [x] Frontend unit tests cover the board-document operations with no DOM and no canvas.
+- [x] Frontend tests cover drawing and its persistence through the app seam, with the canvas layer replaced by a test double at its single component boundary.

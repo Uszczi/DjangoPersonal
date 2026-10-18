@@ -118,4 +118,25 @@ describe('boardDocument', () => {
     const next = updateElement(doc, 'a', { text: 'bye' } as any)
     expect((next.elements[0] as { text: string }).text).toBe('bye')
   })
+
+  test('note can be added, moved and resized', () => {
+    let doc = createEmptyBoard()
+    doc = addElement(doc, { id: 'n', kind: 'note', x: 10, y: 20, width: 100, height: 80, text: 'hi', color: '#fef3c7' })
+    expect(doc.elements).toHaveLength(1)
+    const moved = moveElement(doc, 'n', 5, 5)
+    const ne = moved.elements[0] as { x: number; y: number }
+    expect(ne.x).toBe(15)
+    expect(ne.y).toBe(25)
+    const resized = resizeElement(doc, 'n', 200, 160)
+    const re = resized.elements[0] as { width: number; height: number }
+    expect(re.width).toBe(200)
+    expect(re.height).toBe(160)
+  })
+
+  test('label text can be updated', () => {
+    let doc = createEmptyBoard()
+    doc = addElement(doc, { id: 't', kind: 'text', x: 1, y: 2, text: 'hi', color: '#000' })
+    const next = updateElement(doc, 't', { text: 'hello world' } as any)
+    expect((next.elements[0] as { text: string }).text).toBe('hello world')
+  })
 })

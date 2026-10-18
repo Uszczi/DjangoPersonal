@@ -4,15 +4,15 @@
 
 **Blocked by:** 01 (Manage Whiteboards).
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `/whiteboard/$boardId` opens the Whiteboard; the URL is bookmarkable and survives a reload.
-- [ ] The editor shows an infinite canvas that can be panned and zoomed.
-- [ ] The view (pan and zoom) is part of the Whiteboard document and is restored when the Whiteboard is reopened.
-- [ ] Changes save automatically on a short debounce, and `Ctrl+S`/`Cmd+S` forces an immediate save.
-- [ ] A save-state indicator shows whether the Whiteboard is saved, saving, or failed to save.
-- [ ] A URL naming a Whiteboard that does not exist shows the not-found page.
-- [ ] A failed load or save is reported to the user rather than failing silently.
-- [ ] Backend tests cover the content round-trip (saving a document then retrieving it returns the same document) and per-user isolation of content.
-- [ ] Frontend tests cover opening a Whiteboard, the autosave request, the save-state indicator, and the not-found page.
-- [ ] New frontend unit tests cover the pure board-document module used to load and serialise a Whiteboard.
+- [x] `/whiteboard/$boardId` opens the Whiteboard; the URL is bookmarkable and survives a reload.
+- [x] The editor shows an infinite canvas that can be panned and zoomed.
+- [x] The view (pan and zoom) is part of the Whiteboard document and is restored when the Whiteboard is reopened.
+- [x] Changes save automatically on a short debounce, and `Ctrl+S`/`Cmd+S` forces an immediate save.
+- [x] A save-state indicator shows whether the Whiteboard is saved, saving, or failed to save.
+- [x] A URL naming a Whiteboard that does not exist shows the not-found page.
+- [x] A failed load or save is reported to the user rather than failing silently.
+- [x] Backend tests cover the content round-trip (saving a document then retrieving it returns the same document) and per-user isolation of content.
+- [x] Frontend tests cover opening a Whiteboard, the autosave request, the save-state indicator, and the not-found page.
+- [x] New frontend unit tests cover the pure board-document module used to load and serialise a Whiteboard.
