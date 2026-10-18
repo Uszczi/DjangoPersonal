@@ -1,7 +1,7 @@
 import { createRootRoute, retainSearchParams } from "@tanstack/react-router";
 
 import { useEffect } from "react";
-import { Outlet, useSearch } from "@tanstack/react-router";
+import { Outlet, useLocation, useSearch } from "@tanstack/react-router";
 
 import { ModalHost } from "@/components/ModalHost";
 import { Navbar } from "@/components/Navbar";
@@ -24,6 +24,7 @@ export const Route = createRootRoute({
 
 function App() {
   const { project } = useSearch({ from: "__root__" });
+  const location = useLocation();
 
   const user = useAuthStore((state) => state.user);
   const projects = useProjectsStore((state) => state.projects);
@@ -48,7 +49,7 @@ function App() {
       <Navbar />
 
       <div className="workspace">
-        <main className="main-panel">
+        <main className={location.pathname.startsWith("/whiteboard") ? "main-panel whiteboard-main" : "main-panel"}>
           {projectNotFound ? <NotFoundPage /> : <Outlet />}
         </main>
       </div>

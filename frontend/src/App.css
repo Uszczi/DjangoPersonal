@@ -232,6 +232,11 @@
   width: 100%;
 }
 
+.main-panel.whiteboard-main {
+  max-width: 100%;
+  padding: clamp(16px, 2vw, 32px) clamp(16px, 2vw, 32px);
+}
+
 .auth-page {
   align-items: center;
   display: flex;
