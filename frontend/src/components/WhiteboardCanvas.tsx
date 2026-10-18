@@ -270,9 +270,10 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
         boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
       }}
     >
-      <div style={{ marginBottom: 8, fontSize: 12, color: "#6b7280" }}>
+      <div style={{ marginBottom: 8, fontSize: 12, color: "#6b7280", padding: "4px 8px" }}>
         Narzędzie: {tool} · {elements.length} elementów
       </div>
+      <div style={{ position: "relative" }}>
       <Stage
         ref={stageRef}
         width={window.innerWidth - 400}
@@ -287,9 +288,16 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
         onPointerMove={handleMouseMove as any}
         onPointerUp={handleMouseUp as any}
         onPointerCancel={handleMouseUp as any}
+        onDragMove={(e) => {
+          if (e.target === stageRef.current) {
+            const stage = stageRef.current;
+            setStagePos({ x: stage.x(), y: stage.y() });
+          }
+        }}
         onDragEnd={(e) => {
           if (e.target === stageRef.current) {
             const stage = stageRef.current;
+            setStagePos({ x: stage.x(), y: stage.y() });
             onChange(setViewport(board, { x: stage.x(), y: stage.y(), zoom: stageScale }));
           }
         }}
@@ -593,6 +601,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
               </div>
             );
           })}
+      </div>
       </div>
     </div>
   );
