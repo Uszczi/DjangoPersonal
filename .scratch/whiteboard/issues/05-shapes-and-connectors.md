@@ -4,11 +4,11 @@
 
 **Blocked by:** 03 (Draw freehand with the pen, erase, and undo/redo).
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] The user can draw rectangles and ellipses on the canvas.
-- [ ] The user can draw lines and arrows.
-- [ ] Shapes can be selected, moved, resized, and deleted like other elements.
-- [ ] Shapes persist through autosave and reappear on reopen.
-- [ ] Frontend unit tests cover shape operations in the pure board-document module.
-- [ ] Frontend tests cover drawing a shape through the app seam.
+- [x] The user can draw rectangles and ellipses on the canvas.
+- [x] The user can draw lines and arrows.
+- [x] Shapes can be selected, moved, resized, and deleted like other elements.
+- [x] Shapes persist through autosave and reappear on reopen.
+- [x] Frontend unit tests cover shape operations in the pure board-document module.
+- [x] Frontend tests cover drawing a shape through the app seam.

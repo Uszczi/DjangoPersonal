@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Stage, Layer, Line, Rect, Ellipse, Arrow } from "react-konva";
+import { Stage, Layer, Line, Rect, Ellipse, Arrow, Circle } from "react-konva";
 type KonvaEventObject<T> = { evt: T; target: any; currentTarget: any };
 
 import type { BoardDocument, BoardElement, Point } from "@/whiteboard/boardDocument";
@@ -414,6 +414,68 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
               />
             )
           )}
+          {selectedId && (() => {
+            const el = elements.find((e) => e.id === selectedId);
+            if (!el) return null;
+            if (el.kind === "rectangle" || el.kind === "ellipse") {
+              return (
+                <Rect
+                  x={el.x + el.width}
+                  y={el.y + el.height}
+                  width={10}
+                  height={10}
+                  fill="#2563eb"
+                  offsetX={5}
+                  offsetY={5}
+                  draggable
+                  onDragEnd={(e: any) => {
+                    const node = e.target;
+                    const newW = Math.max(10, node.x() - el.x + 5);
+                    const newH = Math.max(10, node.y() - el.y + 5);
+                    node.position({ x: el.x + el.width, y: el.y + el.height });
+                    onChange(updateElement(board, el.id, { width: newW, height: newH } as any));
+                  }}
+                />
+              );
+            }
+            if (el.kind === "line" || el.kind === "arrow") {
+              return (
+                <>
+                  <Circle
+                    x={el.from[0]}
+                    y={el.from[1]}
+                    radius={6}
+                    fill="#2563eb"
+                    draggable
+                    onDragEnd={(e: any) => {
+                      const node = e.target;
+                      const newFrom: Point = [node.x(), node.y()];
+                      node.position({ x: newFrom[0], y: newFrom[1] });
+                      onChange(
+                        updateElement(board, el.id, { from: newFrom } as any),
+                      );
+                    }}
+                  />
+                  <Circle
+                    x={el.to[0]}
+                    y={el.to[1]}
+                    radius={6}
+                    fill="#2563eb"
+                    draggable
+                    onDragEnd={(e: any) => {
+                      const node = e.target;
+                      const newTo: Point = [node.x(), node.y()];
+                      node.position({ x: newTo[0], y: newTo[1] });
+                      onChange(
+                        updateElement(board, el.id, { to: newTo } as any),
+                      );
+                    }}
+                  />
+                </>
+              );
+            }
+            return null;
+          })()}
         </Layer>
       </Stage>
 

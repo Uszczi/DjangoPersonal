@@ -139,4 +139,31 @@ describe('boardDocument', () => {
     const next = updateElement(doc, 't', { text: 'hello world' } as any)
     expect((next.elements[0] as { text: string }).text).toBe('hello world')
   })
+
+  test('line and arrow can be moved', () => {
+    let doc = createEmptyBoard()
+    doc = addElement(doc, { id: 'l', kind: 'line', from: [0, 0], to: [10, 10], color: '#000' })
+    doc = addElement(doc, { id: 'a', kind: 'arrow', from: [5, 5], to: [15, 15], color: '#000' })
+    const moved = moveElement(doc, 'l', 3, 4)
+    const le = moved.elements[0] as { from: [number, number]; to: [number, number] }
+    expect(le.from).toEqual([3, 4])
+    expect(le.to).toEqual([13, 14])
+    const moved2 = moveElement(doc, 'a', 1, 1)
+    const ae = moved2.elements[1] as { from: [number, number]; to: [number, number] }
+    expect(ae.from).toEqual([6, 6])
+    expect(ae.to).toEqual([16, 16])
+  })
+
+  test('rectangle and ellipse can be resized', () => {
+    let doc = createEmptyBoard()
+    doc = addElement(doc, { id: 'r', kind: 'rectangle', x: 0, y: 0, width: 10, height: 10, color: '#000' })
+    doc = addElement(doc, { id: 'e', kind: 'ellipse', x: 0, y: 0, width: 10, height: 10, color: '#000' })
+    const resized = resizeElement(resizeElement(doc, 'r', 20, 30), 'e', 40, 50)
+    const re = resized.elements[0] as { width: number; height: number }
+    const ee = resized.elements[1] as { width: number; height: number }
+    expect(re.width).toBe(20)
+    expect(re.height).toBe(30)
+    expect(ee.width).toBe(40)
+    expect(ee.height).toBe(50)
+  })
 })
