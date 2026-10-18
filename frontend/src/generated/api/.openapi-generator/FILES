@@ -10,6 +10,7 @@ models/PatchedCategoryRequest.ts
 models/PatchedProjectRequest.ts
 models/PatchedTaskUpdateRequest.ts
 models/PatchedTimeEntryRequest.ts
+models/PatchedTransactionRequest.ts
 models/PatchedWalletRequest.ts
 models/PatchedWhiteboardRequest.ts
 models/ProjectRequest.ts
@@ -23,6 +24,8 @@ models/TimeEntryCreateRequest.ts
 models/TimeEntryResponse.ts
 models/TimerResponse.ts
 models/TimerStartRequest.ts
+models/TransactionRequest.ts
+models/TransactionResponse.ts
 models/UserResponse.ts
 models/WalletRequest.ts
 models/WalletResponse.ts

@@ -1,7 +1,7 @@
 """Persistence for wallets."""
 
 from django.db import IntegrityError, transaction
-from django.db.models import QuerySet
+from django.db.models import Count, QuerySet
 
 from apps.infra.models import Wallet as WalletModel
 from apps.infra.models import User
@@ -17,8 +17,12 @@ class WalletRepository:
     """
 
     def list_all(self, *, user: User) -> QuerySet[WalletModel]:
-        """Every wallet for ``user``, alphabetically."""
-        return WalletModel.objects.filter(user=user).order_by('normalized_name')
+        """Every wallet for ``user``, alphabetically, with its transaction count."""
+        return (
+            WalletModel.objects.filter(user=user)
+            .annotate(transaction_count=Count('transactions'))
+            .order_by('normalized_name')
+        )
 
     def find(self, wallet_id: int, *, user: User) -> WalletModel | None:
         """The wallet with this id for ``user``, or ``None``."""

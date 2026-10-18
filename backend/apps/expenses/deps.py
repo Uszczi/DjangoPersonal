@@ -4,7 +4,7 @@ Same contract as ``apps.work.deps``: the HTTP layer asks this module for the
 repositories it hands to a use case, and every call returns a fresh instance.
 """
 
-from apps.infra.repo import CategoryRepository, WalletRepository
+from apps.infra.repo import CategoryRepository, TransactionRepository, WalletRepository
 
 
 def wallet_repository() -> WalletRepository:
@@ -13,3 +13,7 @@ def wallet_repository() -> WalletRepository:
 
 def category_repository() -> CategoryRepository:
     return CategoryRepository()
+
+
+def transaction_repository() -> TransactionRepository:
+    return TransactionRepository()

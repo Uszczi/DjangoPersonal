@@ -133,8 +133,8 @@ def test_delete_category(post_json: Any, api_client: Any) -> None:
     assert api_client.get('/api/v1/categories/').json() == []
 
 
-# NOTE: cascade delete of transactions when a category is deleted is tested in
-# test_transactions_api.py (ticket 03), where the Transaction model exists.
+# Cascade delete of a category's transactions is covered by
+# test_deleting_category_cascades_to_transactions in test_transactions_api.py.
 
 
 def test_first_wallet_seeds_ten_base_categories(post_json: Any, api_client: Any) -> None:

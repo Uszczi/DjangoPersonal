@@ -60,6 +60,11 @@ import {
     PatchedTimeEntryRequestToJSON,
 } from '../models/PatchedTimeEntryRequest';
 import {
+    type PatchedTransactionRequest,
+    PatchedTransactionRequestFromJSON,
+    PatchedTransactionRequestToJSON,
+} from '../models/PatchedTransactionRequest';
+import {
     type PatchedWalletRequest,
     PatchedWalletRequestFromJSON,
     PatchedWalletRequestToJSON,
@@ -124,6 +129,16 @@ import {
     TimerStartRequestFromJSON,
     TimerStartRequestToJSON,
 } from '../models/TimerStartRequest';
+import {
+    type TransactionRequest,
+    TransactionRequestFromJSON,
+    TransactionRequestToJSON,
+} from '../models/TransactionRequest';
+import {
+    type TransactionResponse,
+    TransactionResponseFromJSON,
+    TransactionResponseToJSON,
+} from '../models/TransactionResponse';
 import {
     type UserResponse,
     UserResponseFromJSON,
@@ -334,6 +349,56 @@ export interface TimerStartOperationRequest {
      *
      */
     timerStartRequest: TimerStartRequest;
+}
+
+export interface TransactionsCreateRequest {
+    /**
+     *
+     */
+    transactionRequest: TransactionRequest;
+}
+
+export interface TransactionsDestroyRequest {
+    /**
+     *
+     */
+    id: number;
+}
+
+export interface TransactionsListRequest {
+    /**
+     *
+     */
+    wallet: number;
+}
+
+export interface TransactionsPartialUpdateRequest {
+    /**
+     *
+     */
+    id: number;
+    /**
+     *
+     */
+    patchedTransactionRequest: PatchedTransactionRequest;
+}
+
+export interface TransactionsRetrieveRequest {
+    /**
+     *
+     */
+    id: number;
+}
+
+export interface TransactionsUpdateRequest {
+    /**
+     *
+     */
+    id: number;
+    /**
+     *
+     */
+    transactionRequest: TransactionRequest;
 }
 
 export interface WalletsCreateRequest {
@@ -1852,6 +1917,348 @@ export class PersonalApi extends runtime.BaseAPI {
      */
     async timerStop(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TimerResponse> {
         const response = await this.timerStopRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for transactionsCreate without sending the request
+     */
+    async transactionsCreateRequestOpts(requestParameters: TransactionsCreateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['transactionRequest'] == null) {
+            throw new runtime.RequiredError(
+                'transactionRequest',
+                'Required parameter "transactionRequest" was null or undefined when calling transactionsCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/transactions/`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: TransactionRequestToJSON(requestParameters['transactionRequest']),
+        };
+    }
+
+    /**
+     * Create Transaction
+     */
+    async transactionsCreateRaw(requestParameters: TransactionsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TransactionResponse>> {
+        const requestOptions = await this.transactionsCreateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => TransactionResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Create Transaction
+     */
+    async transactionsCreate(requestParameters: TransactionsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TransactionResponse> {
+        const response = await this.transactionsCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for transactionsDestroy without sending the request
+     */
+    async transactionsDestroyRequestOpts(requestParameters: TransactionsDestroyRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling transactionsDestroy().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/transactions/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Delete Transaction
+     */
+    async transactionsDestroyRaw(requestParameters: TransactionsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.transactionsDestroyRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Delete Transaction
+     */
+    async transactionsDestroy(requestParameters: TransactionsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.transactionsDestroyRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Creates request options for transactionsList without sending the request
+     */
+    async transactionsListRequestOpts(requestParameters: TransactionsListRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['wallet'] == null) {
+            throw new runtime.RequiredError(
+                'wallet',
+                'Required parameter "wallet" was null or undefined when calling transactionsList().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['wallet'] != null) {
+            queryParameters['wallet'] = requestParameters['wallet'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/transactions/`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * List Transactions
+     */
+    async transactionsListRaw(requestParameters: TransactionsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<TransactionResponse>>> {
+        const requestOptions = await this.transactionsListRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(TransactionResponseFromJSON));
+    }
+
+    /**
+     * List Transactions
+     */
+    async transactionsList(requestParameters: TransactionsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<TransactionResponse>> {
+        const response = await this.transactionsListRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for transactionsPartialUpdate without sending the request
+     */
+    async transactionsPartialUpdateRequestOpts(requestParameters: TransactionsPartialUpdateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling transactionsPartialUpdate().'
+            );
+        }
+
+        if (requestParameters['patchedTransactionRequest'] == null) {
+            throw new runtime.RequiredError(
+                'patchedTransactionRequest',
+                'Required parameter "patchedTransactionRequest" was null or undefined when calling transactionsPartialUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/transactions/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedTransactionRequestToJSON(requestParameters['patchedTransactionRequest']),
+        };
+    }
+
+    /**
+     * Update Transaction
+     */
+    async transactionsPartialUpdateRaw(requestParameters: TransactionsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TransactionResponse>> {
+        const requestOptions = await this.transactionsPartialUpdateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => TransactionResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Update Transaction
+     */
+    async transactionsPartialUpdate(requestParameters: TransactionsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TransactionResponse> {
+        const response = await this.transactionsPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for transactionsRetrieve without sending the request
+     */
+    async transactionsRetrieveRequestOpts(requestParameters: TransactionsRetrieveRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling transactionsRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/transactions/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Get Transaction
+     */
+    async transactionsRetrieveRaw(requestParameters: TransactionsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TransactionResponse>> {
+        const requestOptions = await this.transactionsRetrieveRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => TransactionResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get Transaction
+     */
+    async transactionsRetrieve(requestParameters: TransactionsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TransactionResponse> {
+        const response = await this.transactionsRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for transactionsUpdate without sending the request
+     */
+    async transactionsUpdateRequestOpts(requestParameters: TransactionsUpdateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling transactionsUpdate().'
+            );
+        }
+
+        if (requestParameters['transactionRequest'] == null) {
+            throw new runtime.RequiredError(
+                'transactionRequest',
+                'Required parameter "transactionRequest" was null or undefined when calling transactionsUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/transactions/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'PUT',
+            headers: headerParameters,
+            query: queryParameters,
+            body: TransactionRequestToJSON(requestParameters['transactionRequest']),
+        };
+    }
+
+    /**
+     * Replace Transaction
+     */
+    async transactionsUpdateRaw(requestParameters: TransactionsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TransactionResponse>> {
+        const requestOptions = await this.transactionsUpdateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => TransactionResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Replace Transaction
+     */
+    async transactionsUpdate(requestParameters: TransactionsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TransactionResponse> {
+        const response = await this.transactionsUpdateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

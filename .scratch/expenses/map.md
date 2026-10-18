@@ -44,7 +44,7 @@ Built from `spec.md` as three sequential tickets; each is resolved in place with
 
 - [01-wallets](issues/01-wallets.md): **resolved** — Wallet CRUD + list, header select, per-user name rules. `transaction_count` is `0` until ticket 03.
 - [02-categories](issues/02-categories.md): **resolved** — Category CRUD, sidebar panel (inline create/rename, cascade delete confirm), 10 base categories seeded (merged) on first wallet.
-- [03-transactions](issues/03-transactions.md): pending.
+- [03-transactions](issues/03-transactions.md): **resolved** — Transaction CRUD, grouped-by-date list, create/edit modal, delete confirm, real `transaction_count`, cascade delete (wallet + category).
 
 ## Out of scope
 
