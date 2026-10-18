@@ -38,7 +38,7 @@ export function Navbar() {
         <TopTabLink to="/tasks">Zadania</TopTabLink>
         <TopTabLink to="/projects">Projekty</TopTabLink>
         <TopTabLink to="/timer">Czas</TopTabLink>
-        <TopTabLink to="/whiteboard">Tablice</TopTabLink>
+        <TopTabLink to="/whiteboard">Notatki</TopTabLink>
       </nav>
       {user && (
         <div className="topbar-user">

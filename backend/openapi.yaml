@@ -944,6 +944,10 @@ components:
           readOnly: true
           title: Id
           type: integer
+        kind:
+          readOnly: true
+          title: Kind
+          type: string
         name:
           title: Name
           type: string
@@ -963,6 +967,7 @@ components:
           type: string
       required:
       - id
+      - kind
       - name
       - content
       - created_at
@@ -971,6 +976,11 @@ components:
       type: object
     WhiteboardRequest:
       properties:
+        kind:
+          default: whiteboard
+          pattern: ^(whiteboard|markdown)$
+          title: Kind
+          type: string
         name:
           default: Bez tytułu
           maxLength: 200
@@ -987,6 +997,12 @@ components:
       type: object
     PatchedWhiteboardRequest:
       properties:
+        kind:
+          anyOf:
+          - pattern: ^(whiteboard|markdown)$
+            type: string
+          - type: 'null'
+          title: Kind
         name:
           anyOf:
           - maxLength: 200

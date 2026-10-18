@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
+import { api } from "@/api";
 import { useWhiteboardsStore } from "@/stores/whiteboards";
 
 export const Route = createFileRoute("/whiteboard/")({
@@ -12,7 +13,6 @@ function WhiteboardsPage() {
   const isLoading = useWhiteboardsStore((s) => s.isLoading);
   const pageError = useWhiteboardsStore((s) => s.pageError);
   const load = useWhiteboardsStore((s) => s.loadWhiteboards);
-  const create = useWhiteboardsStore((s) => s.createWhiteboard);
   const rename = useWhiteboardsStore((s) => s.renameWhiteboard);
   const remove = useWhiteboardsStore((s) => s.deleteWhiteboard);
 
@@ -25,10 +25,15 @@ function WhiteboardsPage() {
     void load();
   }, [load]);
 
-  async function handleCreate() {
-    const created = await create();
-    if (created) {
+  async function handleCreate(kind: "whiteboard" | "markdown") {
+    try {
+      const created = await api.whiteboardsCreate({
+        whiteboardRequest: { kind, name: "Bez tytułu" },
+      });
+      useWhiteboardsStore.setState((s) => ({ whiteboards: [created, ...s.whiteboards] }));
       navigate({ to: "/whiteboard/$boardId", params: { boardId: String(created.id) } });
+    } catch {
+      // ignore
     }
   }
 
@@ -63,21 +68,32 @@ function WhiteboardsPage() {
     <>
       <div className="project-heading">
         <div>
-          <h1>Tablice</h1>
+          <h1>Notatki</h1>
         </div>
-        <button className="primary-button" onClick={() => void handleCreate()}>
-          <span aria-hidden="true">+</span>
-          Nowa tablica
-        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="primary-button" onClick={() => void handleCreate("whiteboard")}>
+            <span aria-hidden="true">+</span>
+            Nowa tablica
+          </button>
+          <button className="quiet-button" onClick={() => void handleCreate("markdown")}>
+            <span aria-hidden="true">+</span>
+            Nowa notatka
+          </button>
+        </div>
       </div>
 
       {whiteboards.length === 0 ? (
         <div className="empty-state">
-          <p className="eyebrow">BRAK TABLIC</p>
-          <h2>Utwórz pierwszą tablicę</h2>
-          <button className="primary-button" onClick={() => void handleCreate()}>
-            Nowa tablica
-          </button>
+          <p className="eyebrow">BRAK NOTATEK</p>
+          <h2>Utwórz pierwszą notatkę</h2>
+          <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+            <button className="primary-button" onClick={() => void handleCreate("whiteboard")}>
+              Nowa tablica
+            </button>
+            <button className="quiet-button" onClick={() => void handleCreate("markdown")}>
+              Nowa notatka
+            </button>
+          </div>
         </div>
       ) : (
         <ul className="whiteboard-list" aria-label="Tablice">
@@ -102,6 +118,9 @@ function WhiteboardsPage() {
                     navigate({ to: "/whiteboard/$boardId", params: { boardId: String(wb.id) } })
                   }
                 >
+                  <span className="whiteboard-kind">
+                    {wb.kind === "markdown" ? "📝" : "🎨"}
+                  </span>
                   {wb.name}
                 </button>
               )}

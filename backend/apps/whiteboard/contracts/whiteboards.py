@@ -18,17 +18,20 @@ class _WhiteboardPayload(BaseModel):
 
 
 class WhiteboardRequest(_WhiteboardPayload):
+    kind: str = Field(default='whiteboard', pattern='^(whiteboard|markdown)$')
     name: str = Field(default='Bez tytułu', min_length=1, max_length=200)
     content: dict[str, Any] | None = None
 
 
 class PatchedWhiteboardRequest(_WhiteboardPayload):
+    kind: str | None = Field(default=None, pattern='^(whiteboard|markdown)$')
     name: str | None = Field(default=None, min_length=1, max_length=200)
     content: dict[str, Any] | None = None
 
 
 class WhiteboardResponse(BaseModel):
     id: int = Field(..., json_schema_extra={'readOnly': True})
+    kind: str = Field(..., json_schema_extra={'readOnly': True})
     name: str
     content: dict[str, Any]
     created_at: datetime = Field(..., json_schema_extra={'readOnly': True})

@@ -23,6 +23,10 @@ export interface PatchedWhiteboardRequest {
     /**
      *
      */
+    kind?: string | null;
+    /**
+     *
+     */
     name?: string | null;
     /**
      *
@@ -47,6 +51,7 @@ export function PatchedWhiteboardRequestFromJSONTyped(json: any, ignoreDiscrimin
     }
     return {
 
+        'kind': json['kind'] === undefined ? undefined : json['kind'] === null ? null : json['kind'],
         'name': json['name'] === undefined ? undefined : json['name'] === null ? null : json['name'],
         'content': json['content'] === undefined ? undefined : json['content'] === null ? null : json['content'],
     };
@@ -63,6 +68,7 @@ export function PatchedWhiteboardRequestToJSONTyped(value?: PatchedWhiteboardReq
 
     return {
 
+        'kind': value['kind'],
         'name': value['name'],
         'content': value['content'],
     };

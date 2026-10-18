@@ -48,9 +48,20 @@ class CreateWhiteboard:
 
     def execute(self, data: WhiteboardRequest) -> WhiteboardModel:
         name = (data.name or 'Bez tytułu').strip() or 'Bez tytułu'
-        return self.whiteboards.create(
-            user=self.user, name=name, content=data.content
+        kind = data.kind or 'whiteboard'
+        content = data.content
+        if content is None:
+            if kind == 'markdown':
+                content = {'markdown': ''}
+            else:
+                from apps.infra.models.whiteboard import default_board_content
+
+                content = default_board_content()
+        whiteboard = self.whiteboards.create(
+            user=self.user, name=name, content=content
         )
+        whiteboard.kind = kind
+        return self.whiteboards.save(whiteboard)
 
 
 class UpdateWhiteboard:
@@ -60,6 +71,8 @@ class UpdateWhiteboard:
 
     def execute(self, whiteboard_id: int, data: PatchedWhiteboardRequest) -> WhiteboardModel:
         whiteboard = _get_whiteboard(self.whiteboards, whiteboard_id, user=self.user)
+        if data.kind is not None:
+            whiteboard.kind = data.kind
         if data.name is not None:
             name = data.name.strip()
             if not name:

@@ -639,6 +639,32 @@
   width: 100%;
 }
 
+.markdown-editor {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  min-height: 60vh;
+}
+
+.markdown-textarea {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 14px;
+  padding: 12px;
+  resize: vertical;
+  width: 100%;
+  min-height: 60vh;
+}
+
+.markdown-preview {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 12px;
+  overflow: auto;
+  background: #fafafa;
+}
+
 .task-row {
   align-items: center;
   border-bottom: 1px solid #dce5e1;

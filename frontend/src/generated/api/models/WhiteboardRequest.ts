@@ -23,6 +23,10 @@ export interface WhiteboardRequest {
     /**
      *
      */
+    kind?: string;
+    /**
+     *
+     */
     name?: string;
     /**
      *
@@ -47,6 +51,7 @@ export function WhiteboardRequestFromJSONTyped(json: any, ignoreDiscriminator: b
     }
     return {
 
+        'kind': json['kind'] == null ? undefined : json['kind'],
         'name': json['name'] == null ? undefined : json['name'],
         'content': json['content'] === undefined ? undefined : json['content'] === null ? null : json['content'],
     };
@@ -63,6 +68,7 @@ export function WhiteboardRequestToJSONTyped(value?: WhiteboardRequest | null, i
 
     return {
 
+        'kind': value['kind'],
         'name': value['name'],
         'content': value['content'],
     };

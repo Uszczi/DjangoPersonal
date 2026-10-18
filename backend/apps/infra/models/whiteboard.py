@@ -7,10 +7,20 @@ def default_board_content() -> dict[str, object]:
 
 
 class Whiteboard(models.Model):
+    KIND_WHITEBOARD = 'whiteboard'
+    KIND_MARKDOWN = 'markdown'
+    KIND_CHOICES = [
+        (KIND_WHITEBOARD, 'Whiteboard'),
+        (KIND_MARKDOWN, 'Markdown'),
+    ]
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='whiteboards',
+    )
+    kind = models.CharField(
+        max_length=20, choices=KIND_CHOICES, default=KIND_WHITEBOARD
     )
     name = models.CharField(max_length=200, default='Bez tytułu')
     content = models.JSONField(default=default_board_content)

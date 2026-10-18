@@ -27,6 +27,10 @@ export interface WhiteboardResponse {
     /**
      *
      */
+    readonly kind: string;
+    /**
+     *
+     */
     name: string;
     /**
      *
@@ -47,6 +51,7 @@ export interface WhiteboardResponse {
  */
 export function instanceOfWhiteboardResponse(value: object): value is WhiteboardResponse {
     if (!('id' in value) || value['id'] === undefined) return false;
+    if (!('kind' in value) || value['kind'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('content' in value) || value['content'] === undefined) return false;
     if ((!('createdAt' in (value as Record<string, any>)) && !('created_at' in (value as Record<string, any>))) || ((value as Record<string, any>)['createdAt'] === undefined && (value as Record<string, any>)['created_at'] === undefined)) return false;
@@ -65,6 +70,7 @@ export function WhiteboardResponseFromJSONTyped(json: any, ignoreDiscriminator: 
     return {
 
         'id': json['id'],
+        'kind': json['kind'],
         'name': json['name'],
         'content': json['content'],
         'createdAt': (json['created_at'] == null ? json['created_at'] : parseDateTime(json['created_at'])),
@@ -76,7 +82,7 @@ export function WhiteboardResponseToJSON(json: any): WhiteboardResponse {
     return WhiteboardResponseToJSONTyped(json, false);
 }
 
-export function WhiteboardResponseToJSONTyped(value?: Omit<WhiteboardResponse, 'id'|'createdAt'|'updatedAt'> | null, ignoreDiscriminator: boolean = false): any {
+export function WhiteboardResponseToJSONTyped(value?: Omit<WhiteboardResponse, 'id'|'kind'|'createdAt'|'updatedAt'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
