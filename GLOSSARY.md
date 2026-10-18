@@ -1,6 +1,6 @@
 # DjangoPersonal
 
-DjangoPersonal organizes a person's work into projects and the tasks that belong to them.
+DjangoPersonal organizes a person's work into projects and the tasks that belong to them, and tracks the expenses a person incurs.
 
 ## Language
 
