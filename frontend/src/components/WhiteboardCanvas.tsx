@@ -40,6 +40,8 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [marquee, setMarquee] = useState<{ start: Point; current: Point } | null>(null);
+  const downOnEmptyRef = useRef(false);
+  const downPosRef = useRef<Point | null>(null);
   const resizingRef = useRef<{ id: string; startX: number; startY: number; startW: number; startH: number } | null>(null);
   const [drawing, setDrawing] = useState<{
     kind: BoardElement["kind"];
@@ -128,7 +130,8 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
     // pan when select tool and clicking empty space with middle/right or shift
     if (tool === "select" && e.target === stage) {
       const canvasPos = toCanvas(stage, pos.x, pos.y);
-      setMarquee({ start: canvasPos, current: canvasPos });
+      downOnEmptyRef.current = true;
+      downPosRef.current = canvasPos;
       return;
     }
     if (tool === "pen") {
@@ -162,6 +165,15 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
     if (!stage) return;
     const pos = stage.getPointerPosition();
     if (!pos) return;
+    if (downOnEmptyRef.current && downPosRef.current) {
+      const canvasPos = toCanvas(stage, pos.x, pos.y);
+      const dx = canvasPos[0] - downPosRef.current[0];
+      const dy = canvasPos[1] - downPosRef.current[1];
+      if (Math.hypot(dx, dy) > 4) {
+        setMarquee((m) => (m ? { ...m, current: canvasPos } : { start: downPosRef.current!, current: canvasPos }));
+      }
+      return;
+    }
     if (marquee) {
       const canvasPos = toCanvas(stage, pos.x, pos.y);
       setMarquee((m) => (m ? { ...m, current: canvasPos } : m));
@@ -185,6 +197,53 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
   }
 
   function handleMouseUp() {
+    if (downOnEmptyRef.current) {
+      downOnEmptyRef.current = false;
+      const start = downPosRef.current;
+      downPosRef.current = null;
+      if (marquee) {
+        const { current } = marquee;
+        const rx = Math.min(start![0], current[0]);
+        const ry = Math.min(start![1], current[1]);
+        const rw = Math.abs(current[0] - start![0]);
+        const rh = Math.abs(current[1] - start![1]);
+        if (rw < 4 && rh < 4) {
+          setSelectedId(null);
+          setSelectedNoteId(null);
+        } else {
+          const hits = elements.filter((el) => {
+            let bx = 0, by = 0, bw = 0, bh = 0;
+            if (el.kind === "stroke") {
+              const xs = el.points.map((p) => p[0]);
+              const ys = el.points.map((p) => p[1]);
+              bx = Math.min(...xs); by = Math.min(...ys);
+              bw = Math.max(...xs) - bx; bh = Math.max(...ys) - by;
+            } else if (el.kind === "line" || el.kind === "arrow") {
+              bx = Math.min(el.from[0], el.to[0]); by = Math.min(el.from[1], el.to[1]);
+              bw = Math.abs(el.to[0] - el.from[0]); bh = Math.abs(el.to[1] - el.from[1]);
+            } else if (el.kind === "note" || el.kind === "rectangle" || el.kind === "ellipse") {
+              bx = el.x; by = el.y; bw = el.width; bh = el.height;
+            } else if (el.kind === "text") {
+              bx = el.x; by = el.y; bw = 60; bh = 20;
+            }
+            return bx < rx + rw && bx + bw > rx && by < ry + rh && by + bh > ry;
+          });
+          if (hits.length > 0) {
+            setSelectedId(hits[0].id);
+            if (hits[0].kind === "note" || hits[0].kind === "text") setSelectedNoteId(hits[0].id);
+            else setSelectedNoteId(null);
+          } else {
+            setSelectedId(null);
+            setSelectedNoteId(null);
+          }
+        }
+        setMarquee(null);
+      } else {
+        setSelectedId(null);
+        setSelectedNoteId(null);
+      }
+      return;
+    }
     if (marquee) {
       const { start, current } = marquee;
       const rx = Math.min(start[0], current[0]);
