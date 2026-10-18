@@ -1,4 +1,4 @@
-Status: active
+Status: complete
 
 # Expenses domain — wayfinder map
 
@@ -23,7 +23,8 @@ A complete spec for the expenses domain in DjangoPersonal — Wallets, Transacti
 - Transactions: title, amount (Decimal, positive, 2 decimal places), date, optional description, category (nullable), wallet.
 - Deletion: deleting a wallet cascades to its transactions; deleting a category also cascades — its transactions are deleted (confirmed change during 03-categories-ui).
 - Independent from `work` — no Project/Task links.
-- UI: a new "Wydatki" tab in the navbar with its own route, following ADR-0001 (client-side routing).
+- UI: a new "Wydatki" tab in the navbar with its own route, following ADR-0001 (client-side routing). URL: `/expenses/$walletId`.
+- All five decision tickets resolved; the map is ready to be written into `.scratch/expenses/spec.md`.
 
 ## Decisions so far
 
@@ -35,9 +36,7 @@ A complete spec for the expenses domain in DjangoPersonal — Wallets, Transacti
 
 ## Not yet specified
 
-- API surface: endpoint shapes, filters, payload formats, error codes for wallets, transactions, and categories.
-- The final list of the 10 seed categories.
-- Transaction list filtering, sorting, and pagination.
+- The API surface details (endpoint shapes, payloads) — follows the conventions captured in 01-api-surface; sharp enough to write directly into the spec.
 
 ## Out of scope
 

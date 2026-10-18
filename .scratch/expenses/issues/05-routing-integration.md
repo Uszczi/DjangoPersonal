@@ -1,5 +1,5 @@
 Type: grilling
-Status: claimed
+Status: resolved
 Blocked by: none
 
 ## Question
