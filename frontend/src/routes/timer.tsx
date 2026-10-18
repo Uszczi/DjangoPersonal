@@ -127,7 +127,7 @@ export function TimerPage() {
   const taskTitle = (entry: TimeEntryResponse) =>
     entry.title ||
     (entry.taskId != null
-      ? taskTitles.get(entry.taskId as number) ?? `Zadanie #${entry.taskId}`
+      ? (taskTitles.get(entry.taskId as number) ?? `Zadanie #${entry.taskId}`)
       : "Bez tytułu");
 
   const perTaskMinutes = new Map<number, number>();
@@ -154,8 +154,7 @@ export function TimerPage() {
   }
 
   const correctedNow = nowTick + serverOffset;
-  const preselectedProjectId =
-    project ?? defaultProject(projects)?.id ?? null;
+  const preselectedProjectId = project ?? defaultProject(projects)?.id ?? null;
   const startProjectId =
     startForm.projectId || String(preselectedProjectId ?? "");
   const manualProjectId =
@@ -227,7 +226,9 @@ export function TimerPage() {
     openEntryEditor(entry);
     setEditForm({
       date: dateKey(entry.start),
-      title: entry.title || (entry.taskId != null ? taskTitles.get(entry.taskId) ?? "" : ""),
+      title:
+        entry.title ||
+        (entry.taskId != null ? (taskTitles.get(entry.taskId) ?? "") : ""),
       minutes: String(entryMinutes(entry)),
     });
     setEditError("");
@@ -289,16 +290,8 @@ export function TimerPage() {
         </div>
       </div>
 
-      <section className="project-card timer-card" aria-label="Bieżący timer">
-        <div className="card-edge" aria-hidden="true" />
-        <div className="card-topline">
-          <span>
-            {runningEntry ? "TIMER AKTYWNY" : "BRAK AKTYWNEGO TIMERA"}
-          </span>
-          <span className="card-mark" aria-hidden="true">
-            ✳
-          </span>
-        </div>
+      <section className="" aria-label="Bieżący timer">
+        <div className="card-topline"></div>
         {runningEntry ? (
           <>
             <p className="timer-task-title">{taskTitle(runningEntry)}</p>
@@ -324,9 +317,6 @@ export function TimerPage() {
           </>
         ) : (
           <>
-            <p className="project-description">
-              Brak aktywnego timera. Wybierz projekt i zadanie, aby go uruchomić.
-            </p>
             <form className="timer-start-form" onSubmit={startTimer}>
               <label className="form-field">
                 <span>Projekt</span>
