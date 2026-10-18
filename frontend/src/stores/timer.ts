@@ -6,13 +6,13 @@ import { type TaskResponse, type TimeEntryResponse, type TimerResponse } from "@
 
 export type ManualEntryInput = {
   date: string;
-  taskId: number;
+  title: string;
   minutes: number;
 };
 
 export type EntryEditInput = {
   date: string;
-  taskId: number;
+  title: string;
   minutes: number;
 };
 
@@ -26,7 +26,7 @@ type TimerStoreState = {
   editingEntry: TimeEntryResponse | null;
   actionError: string;
   loadData: () => Promise<void>;
-  startTimer: (taskId: number) => Promise<void>;
+  startTimer: (title: string) => Promise<void>;
   stopTimer: () => Promise<void>;
   discardTimer: () => Promise<void>;
   addManualEntry: (input: ManualEntryInput) => Promise<void>;
@@ -85,10 +85,10 @@ export const useTimerStore = create<TimerStoreState>((set, get) => ({
     }
   },
 
-  startTimer: async (taskId) => {
+  startTimer: async (title) => {
     applyTimerState(
       set,
-      await api.timerStart({ timerStartRequest: { task: taskId } }),
+      await api.timerStart({ timerStartRequest: { title } }),
     );
   },
 
@@ -123,7 +123,7 @@ export const useTimerStore = create<TimerStoreState>((set, get) => ({
   addManualEntry: async (input) => {
     await api.timeEntriesCreate({
       timeEntryCreateRequest: {
-        task: input.taskId,
+        title: input.title,
         date: new Date(`${input.date}T00:00:00`),
         durationMinutes: input.minutes,
       },
@@ -135,7 +135,7 @@ export const useTimerStore = create<TimerStoreState>((set, get) => ({
     await api.timeEntriesPartialUpdate({
       id: entry.id,
       patchedTimeEntryRequest: {
-        task: input.taskId,
+        title: input.title,
         date: new Date(`${input.date}T00:00:00`),
         durationMinutes: input.minutes,
       },

@@ -727,9 +727,15 @@ components:
           title: Id
           type: integer
         task_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
           readOnly: true
           title: Task Id
-          type: integer
+        title:
+          readOnly: true
+          title: Title
+          type: string
         start:
           format: date-time
           title: Start
@@ -743,14 +749,21 @@ components:
       required:
       - id
       - task_id
+      - title
       - start
       title: TimeEntryResponse
       type: object
     TimeEntryCreateRequest:
       properties:
         task:
+          anyOf:
+          - type: integer
+          - type: 'null'
           title: Task
-          type: integer
+        title:
+          default: ''
+          title: Title
+          type: string
         date:
           format: date
           title: Date
@@ -761,7 +774,6 @@ components:
           title: Duration Minutes
           type: integer
       required:
-      - task
       - date
       - duration_minutes
       title: TimeEntryCreateRequest
@@ -773,6 +785,11 @@ components:
           - type: integer
           - type: 'null'
           title: Task
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
         date:
           anyOf:
           - format: date
@@ -805,10 +822,14 @@ components:
     TimerStartRequest:
       properties:
         task:
+          anyOf:
+          - type: integer
+          - type: 'null'
           title: Task
-          type: integer
-      required:
-      - task
+        title:
+          default: ''
+          title: Title
+          type: string
       title: TimerStartRequest
       type: object
   securitySchemes:

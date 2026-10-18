@@ -462,6 +462,31 @@
   letter-spacing: 0.1em;
 }
 
+.task-section-controls {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.range-selector {
+  align-items: center;
+  color: #334d52;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 650;
+  gap: 8px;
+}
+
+.range-selector select {
+  background: #fff;
+  border: 1px solid #cbd7d3;
+  border-radius: 4px;
+  color: var(--ink);
+  font: 400 14px/1.5 var(--sans);
+  padding: 4px 8px;
+  width: auto;
+}
+
 .task-heading-actions {
   align-items: center;
   display: flex;
@@ -571,6 +596,10 @@
   grid-template-columns: 24px 18px minmax(0, 1fr) auto;
   min-height: 62px;
   padding: 10px 3px;
+}
+
+.task-row.entry-row {
+  grid-template-columns: auto minmax(0, 1fr) auto;
 }
 
 .task-drag-handle {

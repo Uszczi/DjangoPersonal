@@ -23,14 +23,17 @@ export interface TimerStartRequest {
     /**
      *
      */
-    task: number;
+    task?: number | null;
+    /**
+     *
+     */
+    title?: string;
 }
 
 /**
  * Check if a given object implements the TimerStartRequest interface.
  */
 export function instanceOfTimerStartRequest(value: object): value is TimerStartRequest {
-    if (!('task' in value) || value['task'] === undefined) return false;
     return true;
 }
 
@@ -44,7 +47,8 @@ export function TimerStartRequestFromJSONTyped(json: any, ignoreDiscriminator: b
     }
     return {
 
-        'task': json['task'],
+        'task': json['task'] === undefined ? undefined : json['task'] === null ? null : json['task'],
+        'title': json['title'] == null ? undefined : json['title'],
     };
 }
 
@@ -60,6 +64,7 @@ export function TimerStartRequestToJSONTyped(value?: TimerStartRequest | null, i
     return {
 
         'task': value['task'],
+        'title': value['title'],
     };
 }
 

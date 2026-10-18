@@ -85,7 +85,7 @@ describe('Time tracking', () => {
     expect(await screen.findByRole('heading', { name: 'Timer' })).toBeInTheDocument()
     expect(screen.getByText('Brak aktywnego timera. Wybierz projekt i zadanie, aby go uruchomić.')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Dodaj wpis ręcznie' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Wpisy z dziś' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Ostatnie wpisy' })).toBeInTheDocument()
     expect(screen.getByText('Brak wpisów na dziś.')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Suma czasu' })).toBeInTheDocument()
     expect(screen.getByText('Dziś łącznie')).toBeInTheDocument()
@@ -125,7 +125,7 @@ describe('Time tracking', () => {
     expect(within(timerSection).queryByRole('option', { name: 'Prepare outline' })).not.toBeInTheDocument()
     expect(within(manualEntrySection).queryByRole('option', { name: 'Prepare outline' })).not.toBeInTheDocument()
 
-    await user.selectOptions(within(timerSection).getByLabelText('Zadanie'), String(planningTask.id))
+    await user.type(within(timerSection).getByLabelText('Zadanie'), planningTask.title)
     await user.click(within(timerSection).getByRole('button', { name: 'Rozpocznij timer' }))
 
     expect(await screen.findByText('TIMER AKTYWNY')).toBeInTheDocument()
@@ -133,7 +133,7 @@ describe('Time tracking', () => {
       '/api/v1/timer/start/',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ task: planningTask.id }),
+        body: JSON.stringify({ title: planningTask.title }),
       }),
     )
   })
@@ -226,9 +226,9 @@ describe('Time tracking', () => {
     await screen.findByRole('heading', { name: 'Dodaj wpis ręcznie' })
 
     const manualEntrySection = screen.getByRole('region', { name: 'Dodaj wpis ręcznie' })
-    await user.selectOptions(
+    await user.type(
       within(manualEntrySection).getByLabelText('Zadanie'),
-      String(task.id),
+      task.title,
     )
     await user.type(within(manualEntrySection).getByLabelText('Czas (minuty)'), '45')
     await user.click(screen.getByRole('button', { name: 'Dodaj wpis' }))
@@ -246,7 +246,7 @@ describe('Time tracking', () => {
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({
-          task: task.id,
+          title: task.title,
           date: daysAgoKey(0),
           duration_minutes: 45,
         }),
@@ -287,7 +287,7 @@ describe('Time tracking', () => {
       expect.objectContaining({
         method: 'PATCH',
         body: JSON.stringify({
-          task: task.id,
+          title: task.title,
           date: daysAgoKey(0),
           duration_minutes: 60,
         }),

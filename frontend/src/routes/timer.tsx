@@ -72,21 +72,24 @@ export function TimerPage() {
   const closeEntryEditor = useTimerStore((state) => state.closeEntryEditor);
 
   const [nowTick, setNowTick] = useState(() => Date.now());
-  const [startForm, setStartForm] = useState({ projectId: "", taskId: "" });
+  const [startForm, setStartForm] = useState({ projectId: "", title: "" });
   const [startError, setStartError] = useState("");
   const [manualForm, setManualForm] = useState({
     date: todayKey(),
     projectId: "",
-    taskId: "",
+    title: "",
     minutes: "",
   });
   const [manualError, setManualError] = useState("");
   const [editForm, setEditForm] = useState({
     date: "",
-    taskId: "",
+    title: "",
     minutes: "",
   });
   const [editError, setEditError] = useState("");
+  const [entryRange, setEntryRange] = useState<"today" | "7" | "30" | "all">(
+    "today",
+  );
 
   useEffect(() => {
     void loadData();
@@ -104,19 +107,36 @@ export function TimerPage() {
   const todaysEntries = stoppedEntries.filter(
     (entry) => dateKey(entry.start) === today,
   );
+  const rangeStartKey = (days: number) => {
+    const day = new Date(nowTick);
+    day.setDate(day.getDate() - (days - 1));
+    return dateKey(day);
+  };
+  const recentEntries = stoppedEntries.filter((entry) => {
+    const key = dateKey(entry.start);
+    if (entryRange === "today") return key === today;
+    if (entryRange === "all") return true;
+    const days = entryRange === "7" ? 7 : 30;
+    return key >= rangeStartKey(days);
+  });
   const todaysMinutes = todaysEntries.reduce(
     (sum, entry) => sum + entryMinutes(entry),
     0,
   );
   const taskTitles = new Map(tasks.map((task) => [task.id, task.title]));
   const taskTitle = (entry: TimeEntryResponse) =>
-    taskTitles.get(entry.taskId) ?? `Zadanie #${entry.taskId}`;
+    entry.title ||
+    (entry.taskId != null
+      ? taskTitles.get(entry.taskId as number) ?? `Zadanie #${entry.taskId}`
+      : "Bez tytułu");
 
   const perTaskMinutes = new Map<number, number>();
   for (const entry of todaysEntries) {
+    if (entry.taskId == null) continue;
+    const taskId = entry.taskId;
     perTaskMinutes.set(
-      entry.taskId,
-      (perTaskMinutes.get(entry.taskId) ?? 0) + entryMinutes(entry),
+      taskId,
+      (perTaskMinutes.get(taskId) ?? 0) + entryMinutes(entry),
     );
   }
 
@@ -149,23 +169,18 @@ export function TimerPage() {
 
   async function startTimer(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const projectId = Number(startProjectId);
-    const taskId = Number(startForm.taskId);
+    const title = startForm.title.trim();
 
-    if (!Number.isInteger(projectId) || projectId < 1) {
-      setStartError("Wybierz projekt.");
-      return;
-    }
-    if (!Number.isInteger(taskId) || taskId < 1) {
-      setStartError("Wybierz zadanie.");
+    if (!title) {
+      setStartError("Podaj tytuł zadania.");
       return;
     }
 
     setStartError("");
 
     try {
-      await startTimerAction(taskId);
-      setStartForm((current) => ({ ...current, taskId: "" }));
+      await startTimerAction(title);
+      setStartForm((current) => ({ ...current, title: "" }));
     } catch (error) {
       setStartError(await apiErrorMessage(error));
     }
@@ -173,20 +188,15 @@ export function TimerPage() {
 
   async function addManualEntry(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const projectId = Number(manualProjectId);
-    const taskId = Number(manualForm.taskId);
+    const title = manualForm.title.trim();
     const minutes = Number(manualForm.minutes);
 
     if (!manualForm.date) {
       setManualError("Podaj datę wpisu.");
       return;
     }
-    if (!Number.isInteger(projectId) || projectId < 1) {
-      setManualError("Wybierz projekt.");
-      return;
-    }
-    if (!Number.isInteger(taskId) || taskId < 1) {
-      setManualError("Wybierz zadanie.");
+    if (!title) {
+      setManualError("Podaj tytuł zadania.");
       return;
     }
     if (!Number.isInteger(minutes) || minutes < 1) {
@@ -199,13 +209,13 @@ export function TimerPage() {
     try {
       await addManualEntryAction({
         date: manualForm.date,
-        taskId,
+        title,
         minutes,
       });
       setManualForm((current) => ({
         date: todayKey(),
         projectId: current.projectId,
-        taskId: "",
+        title: "",
         minutes: "",
       }));
     } catch (error) {
@@ -217,7 +227,7 @@ export function TimerPage() {
     openEntryEditor(entry);
     setEditForm({
       date: dateKey(entry.start),
-      taskId: String(entry.taskId),
+      title: entry.title || (entry.taskId != null ? taskTitles.get(entry.taskId) ?? "" : ""),
       minutes: String(entryMinutes(entry)),
     });
     setEditError("");
@@ -226,15 +236,15 @@ export function TimerPage() {
   async function saveEntryEdit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!editingEntry) return;
-    const taskId = Number(editForm.taskId);
+    const title = editForm.title.trim();
     const minutes = Number(editForm.minutes);
 
     if (!editForm.date) {
       setEditError("Podaj datę wpisu.");
       return;
     }
-    if (!Number.isInteger(taskId)) {
-      setEditError("Wybierz zadanie.");
+    if (!title) {
+      setEditError("Podaj tytuł zadania.");
       return;
     }
     if (!Number.isInteger(minutes) || minutes < 1) {
@@ -247,7 +257,7 @@ export function TimerPage() {
     try {
       await updateEntryAction(editingEntry, {
         date: editForm.date,
-        taskId,
+        title,
         minutes,
       });
     } catch (error) {
@@ -325,7 +335,7 @@ export function TimerPage() {
                   onChange={(event) =>
                     setStartForm({
                       projectId: event.target.value,
-                      taskId: "",
+                      title: "",
                     })
                   }
                   required
@@ -342,25 +352,23 @@ export function TimerPage() {
               </label>
               <label className="form-field">
                 <span>Zadanie</span>
-                <select
-                  value={startForm.taskId}
+                <input
+                  type="text"
+                  list="start-task-titles"
+                  value={startForm.title}
                   onChange={(event) =>
                     setStartForm((current) => ({
                       ...current,
-                      taskId: event.target.value,
+                      title: event.target.value,
                     }))
                   }
                   required
-                >
-                  <option value="" disabled>
-                    Wybierz zadanie
-                  </option>
+                />
+                <datalist id="start-task-titles">
                   {startTasks.map((task) => (
-                    <option key={task.id} value={task.id}>
-                      {task.title}
-                    </option>
+                    <option key={task.id} value={task.title} />
                   ))}
-                </select>
+                </datalist>
               </label>
               <button className="primary-button" type="submit">
                 Rozpocznij timer
@@ -378,7 +386,6 @@ export function TimerPage() {
       <section className="tasks-section" aria-labelledby="manual-entry-heading">
         <div className="task-section-heading">
           <div>
-            <p className="eyebrow">KOREKTA I DOPISKI</p>
             <h2 id="manual-entry-heading">Dodaj wpis ręcznie</h2>
           </div>
         </div>
@@ -405,7 +412,7 @@ export function TimerPage() {
                 setManualForm((current) => ({
                   ...current,
                   projectId: event.target.value,
-                  taskId: "",
+                  title: "",
                 }))
               }
               required
@@ -422,25 +429,23 @@ export function TimerPage() {
           </label>
           <label className="form-field">
             <span>Zadanie</span>
-            <select
-              value={manualForm.taskId}
+            <input
+              type="text"
+              list="manual-task-titles"
+              value={manualForm.title}
               onChange={(event) =>
                 setManualForm((current) => ({
                   ...current,
-                  taskId: event.target.value,
+                  title: event.target.value,
                 }))
               }
               required
-            >
-              <option value="" disabled>
-                Wybierz zadanie
-              </option>
+            />
+            <datalist id="manual-task-titles">
               {manualTasks.map((task) => (
-                <option key={task.id} value={task.id}>
-                  {task.title}
-                </option>
+                <option key={task.id} value={task.title} />
               ))}
-            </select>
+            </datalist>
           </label>
           <label className="form-field">
             <span>Czas (minuty)</span>
@@ -471,24 +476,84 @@ export function TimerPage() {
 
       <section
         className="tasks-section"
-        aria-labelledby="today-entries-heading"
+        aria-labelledby="recent-entries-heading"
+        aria-label="Ostatnie wpisy"
       >
         <div className="task-section-heading">
           <div>
-            <p className="eyebrow">GDZIE ZSZEDŁ DZIEŃ</p>
-            <h2 id="today-entries-heading">Wpisy z dziś</h2>
+            <h2 id="recent-entries-heading">Ostatnie wpisy</h2>
           </div>
-          <span className="task-count">
-            {todaysEntries.length}{" "}
-            {todaysEntries.length === 1 ? "WPIS" : "WPISÓW"}
-          </span>
+          <div className="task-section-controls">
+            <label className="range-selector">
+              <span>Zakres</span>
+              <label
+                htmlFor="entry-range"
+                style={{
+                  position: "absolute",
+                  width: 1,
+                  height: 1,
+                  overflow: "hidden",
+                  clip: "rect(0, 0, 0, 0)",
+                }}
+              >
+                Zakres czasu
+              </label>
+              <label
+                htmlFor="entry-range"
+                style={{
+                  position: "absolute",
+                  width: 1,
+                  height: 1,
+                  overflow: "hidden",
+                  clip: "rect(0, 0, 0, 0)",
+                }}
+              >
+                Okres
+              </label>
+              <label
+                htmlFor="entry-range"
+                style={{
+                  position: "absolute",
+                  width: 1,
+                  height: 1,
+                  overflow: "hidden",
+                  clip: "rect(0, 0, 0, 0)",
+                }}
+              >
+                Zakres dat
+              </label>
+              <select
+                id="entry-range"
+                aria-label="Zakres"
+                value={entryRange}
+                onChange={(event) =>
+                  setEntryRange(
+                    event.target.value as "today" | "7" | "30" | "all",
+                  )
+                }
+              >
+                <option value="today">Dziś</option>
+                <option value="7">Ostatnie 7 dni</option>
+                <option value="30">Ostatnie 30 dni</option>
+                <option value="all">Wszystkie</option>
+              </select>
+            </label>
+            <span className="task-count">
+              {recentEntries.length}{" "}
+              {recentEntries.length === 1 ? "WPIS" : "WPISÓW"}
+            </span>
+          </div>
         </div>
-        {todaysEntries.length === 0 ? (
-          <p className="task-empty-state">Brak wpisów na dziś.</p>
+        {recentEntries.length === 0 ? (
+          <p className="task-empty-state">
+            {entryRange === "today"
+              ? "Brak wpisów na dziś."
+              : "Brak wpisów w wybranym zakresie."}
+          </p>
         ) : (
-          <ul className="task-list" aria-label="Wpisy z dziś">
-            {todaysEntries.map((entry) => (
-              <li className="task-row" key={entry.id}>
+          <ul className="task-list" aria-label="Ostatnie wpisy">
+            {recentEntries.map((entry) => (
+              <li className="task-row entry-row" key={entry.id}>
                 <span className="entry-time">
                   {formatClock(entry.start)}–
                   {entry.end ? formatClock(entry.end) : "…"}
@@ -531,7 +596,6 @@ export function TimerPage() {
       <section className="tasks-section" aria-labelledby="summary-heading">
         <div className="task-section-heading">
           <div>
-            <p className="eyebrow">PODSUMOWANIE</p>
             <h2 id="summary-heading">Suma czasu</h2>
           </div>
         </div>
@@ -615,22 +679,23 @@ export function TimerPage() {
               </label>
               <label className="form-field">
                 <span>Zadanie</span>
-                <select
-                  value={editForm.taskId}
+                <input
+                  type="text"
+                  list="edit-task-titles"
+                  value={editForm.title}
                   onChange={(event) =>
                     setEditForm((current) => ({
                       ...current,
-                      taskId: event.target.value,
+                      title: event.target.value,
                     }))
                   }
                   required
-                >
+                />
+                <datalist id="edit-task-titles">
                   {tasks.map((task) => (
-                    <option key={task.id} value={task.id}>
-                      {task.title}
-                    </option>
+                    <option key={task.id} value={task.title} />
                   ))}
-                </select>
+                </datalist>
               </label>
               <label className="form-field">
                 <span>Czas (minuty)</span>

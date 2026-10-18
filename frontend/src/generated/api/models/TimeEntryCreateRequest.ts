@@ -23,7 +23,11 @@ export interface TimeEntryCreateRequest {
     /**
      *
      */
-    task: number;
+    task?: number | null;
+    /**
+     *
+     */
+    title?: string;
     /**
      *
      */
@@ -38,7 +42,6 @@ export interface TimeEntryCreateRequest {
  * Check if a given object implements the TimeEntryCreateRequest interface.
  */
 export function instanceOfTimeEntryCreateRequest(value: object): value is TimeEntryCreateRequest {
-    if (!('task' in value) || value['task'] === undefined) return false;
     if (!('date' in value) || value['date'] === undefined) return false;
     if ((!('durationMinutes' in (value as Record<string, any>)) && !('duration_minutes' in (value as Record<string, any>))) || ((value as Record<string, any>)['durationMinutes'] === undefined && (value as Record<string, any>)['duration_minutes'] === undefined)) return false;
     return true;
@@ -54,7 +57,8 @@ export function TimeEntryCreateRequestFromJSONTyped(json: any, ignoreDiscriminat
     }
     return {
 
-        'task': json['task'],
+        'task': json['task'] === undefined ? undefined : json['task'] === null ? null : json['task'],
+        'title': json['title'] == null ? undefined : json['title'],
         'date': (json['date'] == null ? json['date'] : parseDate(json['date'])),
         'durationMinutes': json['duration_minutes'],
     };
@@ -72,6 +76,7 @@ export function TimeEntryCreateRequestToJSONTyped(value?: TimeEntryCreateRequest
     return {
 
         'task': value['task'],
+        'title': value['title'],
         'date': value['date'] == null ? value['date'] : serializeDate(value['date']),
         'duration_minutes': value['durationMinutes'],
     };

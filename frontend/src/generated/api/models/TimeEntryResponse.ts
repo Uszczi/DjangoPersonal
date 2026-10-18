@@ -27,7 +27,11 @@ export interface TimeEntryResponse {
     /**
      *
      */
-    readonly taskId: number;
+    readonly taskId: number | null;
+    /**
+     *
+     */
+    readonly title: string;
     /**
      *
      */
@@ -44,6 +48,7 @@ export interface TimeEntryResponse {
 export function instanceOfTimeEntryResponse(value: object): value is TimeEntryResponse {
     if (!('id' in value) || value['id'] === undefined) return false;
     if ((!('taskId' in (value as Record<string, any>)) && !('task_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['taskId'] === undefined && (value as Record<string, any>)['task_id'] === undefined)) return false;
+    if (!('title' in value) || value['title'] === undefined) return false;
     if (!('start' in value) || value['start'] === undefined) return false;
     return true;
 }
@@ -60,6 +65,7 @@ export function TimeEntryResponseFromJSONTyped(json: any, ignoreDiscriminator: b
 
         'id': json['id'],
         'taskId': json['task_id'],
+        'title': json['title'],
         'start': (json['start'] == null ? json['start'] : parseDateTime(json['start'])),
         'end': json['end'] === undefined ? undefined : json['end'] === null ? null : (parseDateTime(json['end'])),
     };
@@ -69,7 +75,7 @@ export function TimeEntryResponseToJSON(json: any): TimeEntryResponse {
     return TimeEntryResponseToJSONTyped(json, false);
 }
 
-export function TimeEntryResponseToJSONTyped(value?: Omit<TimeEntryResponse, 'id'|'taskId'> | null, ignoreDiscriminator: boolean = false): any {
+export function TimeEntryResponseToJSONTyped(value?: Omit<TimeEntryResponse, 'id'|'taskId'|'title'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

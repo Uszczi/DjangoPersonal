@@ -27,8 +27,12 @@ def _get_task(repository: TaskRepository, task_id: int, *, user: User) -> TaskMo
     return task
 
 
-def _resolve_task(repository: TaskRepository, task_id: int, *, user: User) -> TaskModel:
-    """Resolve a task referenced by another payload, or fail as invalid."""
+def _resolve_task(
+    repository: TaskRepository, task_id: int | None, *, user: User
+) -> TaskModel | None:
+    """Resolve a task referenced by another payload, or ``None`` when omitted."""
+    if task_id is None:
+        return None
     task = repository.find(task_id, user=user)
     if task is None:
         raise WorkError('Invalid task ID.')
