@@ -42,6 +42,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
   const selectedId = selectedIds.length > 0 ? selectedIds[0] : null;
   const [marquee, setMarquee] = useState<{ start: Point; current: Point } | null>(null);
   const [spaceHeld, setSpaceHeld] = useState(false);
+  const [middleHeld, setMiddleHeld] = useState(false);
   const downOnEmptyRef = useRef(false);
   const downPosRef = useRef<Point | null>(null);
   const resizingRef = useRef<{ id: string; startX: number; startY: number; startW: number; startH: number } | null>(null);
@@ -98,6 +99,24 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
   }, []);
 
   useEffect(() => {
+    function onPointerDown(e: PointerEvent) {
+      if (e.button === 1) {
+        e.preventDefault();
+        setMiddleHeld(true);
+      }
+    }
+    function onPointerUp(e: PointerEvent) {
+      if (e.button === 1) setMiddleHeld(false);
+    }
+    window.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("pointerup", onPointerUp);
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("pointerup", onPointerUp);
+    };
+  }, []);
+
+  useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Delete" || e.key === "Backspace") {
         if (selectedIds.length > 0) {
@@ -147,7 +166,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
     const pos = stage.getPointerPosition();
     const canvasPos = toCanvas(stage, pos.x, pos.y);
     // pan when select tool and clicking empty space with middle/right or shift
-    if (tool === "select" && e.target === stage && !spaceHeld) {
+    if (tool === "select" && e.target === stage && !spaceHeld && !middleHeld) {
       const canvasPos = toCanvas(stage, pos.x, pos.y);
       downOnEmptyRef.current = true;
       downPosRef.current = canvasPos;
@@ -412,12 +431,13 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
         y={stagePos.y}
         scaleX={stageScale}
         scaleY={stageScale}
-        draggable={tool === "select" && spaceHeld}
+        draggable={tool === "select" && (spaceHeld || middleHeld)}
         onWheel={handleWheel}
         onPointerDown={handleMouseDown as any}
         onPointerMove={handleMouseMove as any}
         onPointerUp={handleMouseUp as any}
         onPointerCancel={handleMouseUp as any}
+        onContextMenu={(e: any) => e.evt.preventDefault()}
         onDragMove={(e) => {
           if (e.target === stageRef.current) {
             const stage = stageRef.current;
