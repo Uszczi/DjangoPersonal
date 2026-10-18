@@ -24,6 +24,8 @@ export const Route = createFileRoute("/whiteboard/$boardId")({
 function WhiteboardEditorPage() {
   const { boardId } = useParams({ from: "/whiteboard/$boardId" });
   const [board, setBoard] = useState<BoardDocument | null>(null);
+  const [name, setName] = useState("");
+  const [editingName, setEditingName] = useState(false);
   const [history, setHistory] = useState<HistoryState | null>(null);
   const [tool, setTool] = useState<Tool>("select");
   const [saveState, setSaveState] = useState<"saved" | "saving" | "failed">("saved");
@@ -46,6 +48,7 @@ function WhiteboardEditorPage() {
         const { parseBoard } = await import("@/whiteboard/boardDocument");
         const parsed = parseBoard(wb.content);
         setBoard(parsed);
+        setName(wb.name);
         setHistory(createHistory(parsed));
         latestBoard.current = parsed;
       } catch (error) {
@@ -85,6 +88,24 @@ function WhiteboardEditorPage() {
     },
     [boardId],
   );
+
+  async function saveName(newName: string) {
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed === name) {
+      setEditingName(false);
+      return;
+    }
+    try {
+      const updated = await api.whiteboardsPartialUpdate({
+        id: Number(boardId),
+        patchedWhiteboardRequest: { name: trimmed },
+      });
+      setName(updated.name);
+    } catch {
+      // keep previous name
+    }
+    setEditingName(false);
+  }
 
   function handleChange(next: BoardDocument) {
     setBoard(next);
@@ -169,7 +190,27 @@ function WhiteboardEditorPage() {
     <>
       <div className="project-heading">
         <div>
-          <h1>Tablica</h1>
+          {editingName ? (
+            <input
+              autoFocus
+              className="whiteboard-name-input"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onBlur={() => void saveName(name)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") void saveName(name);
+                if (e.key === "Escape") setEditingName(false);
+              }}
+            />
+          ) : (
+            <h1
+              onClick={() => setEditingName(true)}
+              style={{ cursor: "pointer" }}
+              title="Kliknij, aby zmienić nazwę"
+            >
+              {name || "Tablica"}
+            </h1>
+          )}
         </div>
         <span className="save-state" role="status" aria-live="polite">
           {saveLabel}
