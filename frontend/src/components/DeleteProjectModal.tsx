@@ -73,8 +73,8 @@ export function DeleteProjectModal({
         </div>
 
         <p className="confirm-message">
-          Projekt „{project.name}" zostanie trwale usunięty, a jego zadania
-          trafią do Inbox.
+          Projekt „{project.name}" zostanie trwale usunięty wraz ze wszystkimi
+          jego zadaniami.
         </p>
         {deleteError && (
           <p className="form-error" role="alert">

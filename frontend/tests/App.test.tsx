@@ -560,13 +560,13 @@ describe('Deleting tasks and projects', () => {
     expect(screen.getByText('Prepare outline')).toBeInTheDocument()
   })
 
-  test('user must confirm before a project is deleted and learns its tasks move to Inbox', async () => {
+  test('user must confirm before a project is deleted and learns its tasks are deleted', async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([inbox, planning]))
       .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(jsonResponse([task]))
       .mockResolvedValueOnce(new Response(null, { status: 204 }))
-      .mockResolvedValueOnce(jsonResponse([task]))
+      .mockResolvedValueOnce(jsonResponse([]))
     const user = userEvent.setup()
 
     renderApp('/tasks')
@@ -581,7 +581,7 @@ describe('Deleting tasks and projects', () => {
 
     expect(screen.getByRole('heading', { name: 'Usunąć projekt?' })).toBeInTheDocument()
     expect(
-      screen.getByText(/Projekt .Planning. zostanie trwale usunięty, a jego zadania trafią do Inbox/),
+      screen.getByText(/Projekt .Planning. zostanie trwale usunięty wraz ze wszystkimi/),
     ).toBeInTheDocument()
 
     const dialog = screen.getByRole('dialog')
@@ -594,7 +594,7 @@ describe('Deleting tasks and projects', () => {
       expect.objectContaining({ method: 'DELETE' }),
     )
     expect(screen.queryByRole('link', { name: 'Planning' })).not.toBeInTheDocument()
-    expect(await screen.findByText('Prepare outline')).toBeInTheDocument()
+    expect(screen.queryByText('Prepare outline')).not.toBeInTheDocument()
     expect(await screen.findByRole('link', { name: 'Inbox' })).toHaveAttribute(
       'aria-current',
       'page',

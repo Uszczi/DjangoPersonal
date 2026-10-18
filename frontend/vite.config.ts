@@ -13,7 +13,15 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': 'http://127.0.0.1:8000',
+      '/api': {
+        target: process.env.VITE_PROXY_TARGET ?? 'http://127.0.0.1:8000',
+        // The C++ backend does not tolerate a trailing slash before a query
+        // string (Django does). Strip it only when proxying to the C++ backend.
+        rewrite:
+          (process.env.VITE_PROXY_TARGET ?? '').includes('8080')
+            ? (path: string) => path.replace(/\/(\?|$)/, '$1')
+            : undefined,
+      },
     },
   },
   test: {

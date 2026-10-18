@@ -30,6 +30,18 @@ generate-api:
 frontend:
     cd frontend && npm run dev
 
+# Build the C++ (Oat++) backend.
+backend-cpp-build:
+    cd cpp_backend && cmake --build build
+
+# Run the C++ (Oat++) backend on port 8080.
+backend-cpp:
+    cd cpp_backend && cmake --build build && ./build/django_personal
+
+# Run the Vite development server pointed at the C++ backend (port 8080).
+frontend-cpp:
+    cd frontend && VITE_PROXY_TARGET=http://127.0.0.1:8080 npm run dev
+
 # Type-check the backend with mypy (django-stubs plugin).
 typecheck:
     cd backend && uv run mypy .

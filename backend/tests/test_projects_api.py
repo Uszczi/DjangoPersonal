@@ -95,8 +95,7 @@ def test_user_can_delete_an_empty_project(api_client: Any, post_json: Any) -> No
     ] != [project_id]
 
 
-def test_deleting_a_project_moves_its_tasks_to_inbox(api_client: Any, post_json: Any) -> None:
-    inbox_id = api_client.get('/api/v1/projects/').json()[0]['id']
+def test_deleting_a_project_deletes_its_tasks(api_client: Any, post_json: Any) -> None:
     project_id = post_json('/api/v1/projects/', {'name': 'Planning'}).json()['id']
     task = post_json(
         '/api/v1/tasks/', {'title': 'Outline the release', 'project': project_id}
@@ -105,7 +104,6 @@ def test_deleting_a_project_moves_its_tasks_to_inbox(api_client: Any, post_json:
     response = api_client.delete(f'/api/v1/projects/{project_id}/')
 
     assert response.status_code == HTTPStatus.NO_CONTENT
-    inbox_tasks = api_client.get(f'/api/v1/tasks/?project={inbox_id}').json()
-    assert [listed['id'] for listed in inbox_tasks] == [task['id']]
     assert api_client.get(f'/api/v1/tasks/?project={project_id}').json() == []
-    assert api_client.get('/api/v1/tasks/').json()[0]['id'] == task['id']
+    # task is gone entirely
+    assert all(t['id'] != task['id'] for t in api_client.get('/api/v1/tasks/').json())

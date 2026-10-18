@@ -34,6 +34,8 @@ export const useAuthStore = create<AuthState>()(
         const response: LoginResponse = await api.authLogin({
           loginRequest: { username, password },
         });
+        // Apply tokens first so the auth middleware can attach them to /auth/me.
+        useAuthStore.getState().applyTokens(response.access, response.refresh);
         const user = await api.authMe();
         set({
           user,
@@ -50,6 +52,8 @@ export const useAuthStore = create<AuthState>()(
             passwordConfirm,
           },
         });
+        // Apply tokens first so the auth middleware can attach them to /auth/me.
+        useAuthStore.getState().applyTokens(response.access, response.refresh);
         const user = await api.authMe();
         set({
           user,

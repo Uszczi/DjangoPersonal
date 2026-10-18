@@ -4,7 +4,8 @@ from functools import partial
 from typing import Any
 
 from django.contrib.auth.models import AbstractUser
-from django.db.models import QuerySet
+from django.db import IntegrityError
+from django.db.models import ProtectedError, QuerySet
 
 from apps.infra.models import Project as ProjectModel
 from apps.infra.models import User
@@ -159,4 +160,9 @@ class DeleteProject:
         if project.is_inbox:
             raise WorkError('Inbox cannot be deleted.')
 
-        self.projects.delete(project, move_tasks_to=self.projects.get_inbox(user=self.user))
+        try:
+            self.projects.delete(project)
+        except ProtectedError as error:
+            raise WorkError(
+                'Project cannot be deleted because some of its tasks have time entries.'
+            ) from error

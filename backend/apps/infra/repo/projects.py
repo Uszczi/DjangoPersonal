@@ -50,8 +50,8 @@ class ProjectRepository:
             raise DuplicateProjectName from error
         return project
 
-    def delete(self, project: ProjectModel, *, move_tasks_to: ProjectModel) -> None:
-        """Delete a project, moving its tasks to ``move_tasks_to`` atomically."""
+    def delete(self, project: ProjectModel) -> None:
+        """Delete a project and all of its tasks atomically."""
         with transaction.atomic():
-            project.tasks.update(project=move_tasks_to)
+            project.tasks.all().delete()
             project.delete()

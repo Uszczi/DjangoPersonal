@@ -22,7 +22,7 @@ Provide project and task management across the React interface and Django Ninja 
 8. As the user, I want `Inbox` to keep its name and remain available, so that default task assignment always has a destination.
 9. As the user, I want to delete a regular project after confirming the action, so that I can remove projects I no longer need.
 10. As the user, I want to be told that a project's tasks will move to `Inbox` before confirming its deletion, so that I understand what will happen to them.
-11. As the user, I want tasks from a deleted project to move to `Inbox`, so that no task is left without a project or deleted accidentally.
+11. As the user, I want tasks from a deleted project to be deleted along with it, so that a removed project leaves no orphaned tasks behind.
 12. As the user, I want to create a task with a required title and optional description, so that I can record work to do.
 13. As the user, I want a task created from a project's view to belong to that project, so that it is grouped with related work.
 14. As the user, I want a task created without a selected project to be assigned to `Inbox`, so that every task has a project.
@@ -45,7 +45,7 @@ Provide project and task management across the React interface and Django Ninja 
 - `Inbox` is a permanent, non-renamable default Project and is available from the first use of the feature.
 - A Task has a required title, optional description, and an open or completed state. Its Project relationship is required.
 - Creating a Task without an explicitly selected Project assigns it to `Inbox`. Tasks can be moved to another Project.
-- Deleting a regular Project moves all its Tasks to `Inbox` before deleting the Project. The operation must not leave unassigned Tasks.
+- Deleting a regular Project deletes all of its Tasks along with it. The operation must not leave orphaned Tasks. (Tasks protected by recorded Time entries cannot be deleted; the request is rejected in that case.)
 - Deleting a Task is permanent. The UI asks for confirmation before deletion.
 - Project deletion also requires confirmation and explains that its Tasks will move to `Inbox`.
 - List Projects with `Inbox` first and remaining Projects alphabetically. Within a Project, list open Tasks before completed Tasks; completed Tasks remain visible and can be reopened.
