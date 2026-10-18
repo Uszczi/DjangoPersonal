@@ -12,8 +12,8 @@ from apps.infra.repo import (
     TaskHasTimeEntries,
     TaskRepository,
 )
+from apps.shared.errors import DomainError, NotFound
 from apps.work.contracts import PatchedTaskUpdateRequest, TaskCreateRequest
-from apps.work.errors import NotFound, WorkError
 
 from ._patch import apply_provided
 from .projects import _resolve_project
@@ -35,7 +35,7 @@ def _resolve_task(
         return None
     task = repository.find(task_id, user=user)
     if task is None:
-        raise WorkError('Invalid task ID.')
+        raise DomainError('Invalid task ID.')
     return task
 
 
@@ -138,6 +138,6 @@ class DeleteTask:
         try:
             self.tasks.delete(task)
         except TaskHasTimeEntries as error:
-            raise WorkError(
+            raise DomainError(
                 'A task with recorded time entries cannot be deleted.'
             ) from error

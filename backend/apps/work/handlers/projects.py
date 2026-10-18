@@ -11,8 +11,8 @@ from apps.infra.models import Project as ProjectModel
 from apps.infra.models import User
 from apps.infra.models import normalize_project_name, project_name_key
 from apps.infra.repo import DuplicateProjectName, ProjectRepository
+from apps.shared.errors import DomainError, NotFound
 from apps.work.contracts import PatchedProjectRequest, ProjectRequest
-from apps.work.errors import NotFound, WorkError
 
 from ._patch import apply_provided
 
@@ -35,7 +35,7 @@ def _resolve_project(
     """Resolve a project referenced by another payload, or fail as invalid."""
     project = repository.find(project_id, user=user)
     if project is None:
-        raise WorkError('Invalid project ID.')
+        raise DomainError('Invalid project ID.')
     return project
 
 
@@ -52,14 +52,14 @@ def _validate_name(
 
     if current and current.is_inbox:
         if name != current.name:
-            raise WorkError('Inbox cannot be renamed.')
+            raise DomainError('Inbox cannot be renamed.')
         return name
 
     if name_key == 'inbox':
-        raise WorkError('Inbox is a reserved project name.')
+        raise DomainError('Inbox is a reserved project name.')
 
     if repository.name_taken(name_key, user=user, exclude=current):
-        raise WorkError('A project with this name already exists.')
+        raise DomainError('A project with this name already exists.')
 
     return name
 
@@ -69,7 +69,7 @@ def _save(repository: ProjectRepository, project: ProjectModel) -> ProjectModel:
     try:
         return repository.save(project)
     except DuplicateProjectName as error:
-        raise WorkError('A project with this name already exists.') from error
+        raise DomainError('A project with this name already exists.') from error
 
 
 class ListProjects:
@@ -165,11 +165,11 @@ class DeleteProject:
     def execute(self, project_id: int) -> None:
         project = _get_project(self.projects, project_id, user=self.user)
         if project.is_inbox:
-            raise WorkError('Inbox cannot be deleted.')
+            raise DomainError('Inbox cannot be deleted.')
 
         try:
             self.projects.delete(project)
         except ProtectedError as error:
-            raise WorkError(
+            raise DomainError(
                 'Project cannot be deleted because some of its tasks have time entries.'
             ) from error

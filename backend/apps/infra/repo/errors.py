@@ -1,8 +1,8 @@
 """Errors the repository layer raises for the application layer to translate.
 
 Repositories never know how the application is reached, so they do not import
-``apps.work.errors``; they raise these storage-level failures instead and a use
-case turns the ones a caller can fix into a :class:`~apps.work.errors.WorkError`.
+``apps.shared.errors``; they raise these storage-level failures instead and a use
+case turns the ones a caller can fix into a :class:`~apps.shared.errors.DomainError`.
 """
 
 

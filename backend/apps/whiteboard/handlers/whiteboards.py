@@ -6,11 +6,11 @@ from django.db.models import QuerySet
 from apps.infra.models import User
 from apps.infra.models import Whiteboard as WhiteboardModel
 from apps.infra.repo import WhiteboardRepository
+from apps.shared.errors import DomainError, NotFound
 from apps.whiteboard.contracts import (
     PatchedWhiteboardRequest,
     WhiteboardRequest,
 )
-from apps.whiteboard.errors import NotFound, WhiteboardError
 
 
 def _get_whiteboard(
@@ -76,7 +76,7 @@ class UpdateWhiteboard:
         if data.name is not None:
             name = data.name.strip()
             if not name:
-                raise WhiteboardError('Name may not be blank.')
+                raise DomainError('Name may not be blank.')
             whiteboard.name = name
         if 'content' in data.model_fields_set and data.content is not None:
             whiteboard.content = data.content

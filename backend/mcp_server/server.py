@@ -26,10 +26,8 @@ from apps.work.contracts import (
     TimeEntryCreateRequest,
     TimerStartRequest,
 )
-from apps.work.errors import NotFound, WorkError
 from apps.accounts import deps as accounts_deps, handlers as accounts_handlers
 from apps.accounts.contracts.auth import LoginRequest, RefreshRequest, RegisterRequest
-from apps.accounts.errors import AccountsError
 
 from .auth import get_current_user
 from .serialization import (

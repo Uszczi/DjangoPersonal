@@ -5,8 +5,8 @@ from apps.infra.models import TimeEntry as TimeEntryModel
 from apps.infra.models import User
 from apps.infra.repo import TaskRepository, TimeEntryRepository
 from apps.work import clock
+from apps.shared.errors import DomainError
 from apps.work.contracts import TimerStartRequest
-from apps.work.errors import WorkError
 
 from .tasks import _resolve_task
 
@@ -37,7 +37,7 @@ class StartTimer:
         task = _resolve_task(self.tasks, data.task, user=self.user)
         title = (data.title or '').strip()
         if task is None and not title:
-            raise WorkError('Provide a task or a title.')
+            raise DomainError('Provide a task or a title.')
         return self.time_entries.switch(
             user=self.user, task=task, title=title, at=clock.now()
         )
@@ -52,5 +52,5 @@ class StopTimer:
     def execute(self) -> TimeEntryModel:
         running = self.time_entries.running(user=self.user)
         if running is None:
-            raise WorkError('No timer is running.')
+            raise DomainError('No timer is running.')
         return self.time_entries.close(running, at=clock.now())

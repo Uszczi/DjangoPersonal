@@ -17,8 +17,8 @@ from apps.accounts.contracts.auth import (
     RefreshResponse,
     RegisterRequest,
 )
-from apps.accounts.errors import AccountsError
 from apps.infra.repo import DuplicateUsername, UserRepository
+from apps.shared.errors import DomainError
 
 
 class RegisterUser:
@@ -29,18 +29,18 @@ class RegisterUser:
 
     def execute(self, data: RegisterRequest) -> AuthResponse:
         if data.password != data.password_confirm:
-            raise AccountsError('Passwords do not match.', status=400)
+            raise DomainError('Passwords do not match.', status=400)
 
         try:
             validate_password(data.password)
         except DjangoValidationError as error:
             message = '; '.join(error.messages) if error.messages else str(error)
-            raise AccountsError(message, status=400) from error
+            raise DomainError(message, status=400) from error
 
         try:
             user = self.users.create(username=data.username, password=data.password)
         except DuplicateUsername as error:
-            raise AccountsError('A user with this username already exists.', status=400) from error
+            raise DomainError('A user with this username already exists.', status=400) from error
 
         refresh = cast(Any, RefreshToken).for_user(user)
         return AuthResponse(
@@ -58,7 +58,7 @@ class LoginUser:
     def execute(self, data: LoginRequest) -> LoginResponse:
         user = authenticate(username=data.username, password=data.password)
         if user is None:
-            raise AccountsError('Invalid username or password.', status=401)
+            raise DomainError('Invalid username or password.', status=401)
 
         refresh = cast(Any, RefreshToken).for_user(user)
         return LoginResponse(
@@ -78,5 +78,5 @@ class RefreshAccessToken:
             refresh = RefreshToken(data.refresh)
             access = refresh.access_token
         except TokenError as error:
-            raise AccountsError('Invalid or expired refresh token.', status=401) from error
+            raise DomainError('Invalid or expired refresh token.', status=401) from error
         return RefreshResponse(access=str(access))

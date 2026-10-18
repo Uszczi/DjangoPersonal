@@ -9,14 +9,14 @@ from apps.infra.models import User
 from apps.infra.repo import TaskRepository, TimeEntryRepository, day_start
 from apps.work import clock
 from apps.work.contracts import PatchedTimeEntryRequest, TimeEntryCreateRequest
-from apps.work.errors import NotFound, WorkError
+from apps.shared.errors import DomainError, NotFound
 
 from .tasks import _resolve_task
 
 
 def _ensure_not_future(value: datetime_date) -> None:
     if value > clock.now().date():
-        raise WorkError('Date cannot be in the future.')
+        raise DomainError('Date cannot be in the future.')
 
 
 def _get_time_entry(
@@ -57,7 +57,7 @@ class CreateTimeEntry:
         task = _resolve_task(self.tasks, data.task, user=self.user)
         title = (data.title or '').strip()
         if task is None and not title:
-            raise WorkError('Provide a task or a title.')
+            raise DomainError('Provide a task or a title.')
         if task is not None and not title:
             title = ''
         _ensure_not_future(data.date)
@@ -87,7 +87,7 @@ class UpdateTimeEntry:
     def execute(self, entry_id: int, data: PatchedTimeEntryRequest) -> TimeEntryModel:
         entry = _get_time_entry(self.time_entries, entry_id, user=self.user)
         if entry.end is None:
-            raise WorkError('The running timer cannot be edited.')
+            raise DomainError('The running timer cannot be edited.')
 
         provided = data.model_fields_set
         if 'task' in provided:

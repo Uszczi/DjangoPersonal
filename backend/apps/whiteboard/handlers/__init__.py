@@ -1,4 +1,4 @@
-from apps.whiteboard.errors import NotFound, WhiteboardError
+from apps.shared.errors import DomainError, NotFound
 
 from .whiteboards import (
     CreateWhiteboard,
@@ -11,9 +11,9 @@ from .whiteboards import (
 __all__ = [
     'CreateWhiteboard',
     'DeleteWhiteboard',
+    'DomainError',
     'GetWhiteboard',
     'ListWhiteboards',
     'NotFound',
     'UpdateWhiteboard',
-    'WhiteboardError',
 ]
