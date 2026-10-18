@@ -14,12 +14,14 @@ accident that cannot happen rather than a rule to remember.
 """
 
 from .errors import (
+    DuplicateCategoryName,
     DuplicateProjectName,
     DuplicateUsername,
     DuplicateWalletName,
     RepositoryError,
     TaskHasTimeEntries,
 )
+from .categories import CategoryRepository
 from .projects import ProjectRepository
 from .tasks import TaskRepository
 from .time_entries import TimeEntryRepository, day_start
@@ -28,6 +30,8 @@ from .wallets import WalletRepository
 from .whiteboards import WhiteboardRepository
 
 __all__ = [
+    'CategoryRepository',
+    'DuplicateCategoryName',
     'DuplicateProjectName',
     'DuplicateUsername',
     'DuplicateWalletName',

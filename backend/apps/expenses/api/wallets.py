@@ -29,7 +29,9 @@ def list_wallets(request: HttpRequest) -> QuerySet[WalletModel]:
     operation_id='wallets_create',
 )
 def create_wallet(request: HttpRequest, payload: WalletRequest) -> Status[WalletModel]:
-    handler = handlers.CreateWallet(deps.wallet_repository(), cast(User, request.user))
+    handler = handlers.CreateWallet(
+        deps.wallet_repository(), deps.category_repository(), cast(User, request.user)
+    )
     return Status(201, handler.execute(payload))
 
 

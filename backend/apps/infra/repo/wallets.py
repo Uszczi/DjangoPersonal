@@ -24,6 +24,10 @@ class WalletRepository:
         """The wallet with this id for ``user``, or ``None``."""
         return WalletModel.objects.filter(pk=wallet_id, user=user).first()
 
+    def count(self, *, user: User) -> int:
+        """How many wallets ``user`` has."""
+        return WalletModel.objects.filter(user=user).count()
+
     def name_taken(
         self, name_key: str, *, user: User, exclude: WalletModel | None = None
     ) -> bool:

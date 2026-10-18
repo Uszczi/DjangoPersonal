@@ -2,8 +2,11 @@ apis/PersonalApi.ts
 apis/index.ts
 index.ts
 models/AuthResponse.ts
+models/CategoryRequest.ts
+models/CategoryResponse.ts
 models/LoginRequest.ts
 models/LoginResponse.ts
+models/PatchedCategoryRequest.ts
 models/PatchedProjectRequest.ts
 models/PatchedTaskUpdateRequest.ts
 models/PatchedTimeEntryRequest.ts

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { WalletEditorModal } from "@/components/WalletEditorModal";
 import { DeleteWalletModal } from "@/components/DeleteWalletModal";
 import { WalletSelect } from "@/components/WalletSelect";
+import { CategoryPanel } from "@/components/CategoryPanel";
 import { ShowModal } from "@/stores/modal";
 import { useWalletsStore } from "@/stores/wallets";
 
@@ -107,6 +108,7 @@ export function ExpensesPage() {
           </div>
         </>
       )}
+      <CategoryPanel />
     </>
   );
 }

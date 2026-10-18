@@ -4,6 +4,7 @@ import { RouterProvider, createMemoryHistory, createRouter } from '@tanstack/rea
 
 import { routeTree } from '@/routeTree.gen'
 import { useAuthStore } from '@/stores/auth'
+import { useCategoriesStore } from '@/stores/categories'
 import { useLayoutStore } from '@/stores/layout'
 import { useModalStore } from '@/stores/modal'
 import { useProjectsStore } from '@/stores/projects'
@@ -16,6 +17,7 @@ import { useWhiteboardsStore } from '@/stores/whiteboards'
 export function resetStores() {
   window.localStorage.clear()
   useAuthStore.setState(useAuthStore.getInitialState())
+  useCategoriesStore.setState(useCategoriesStore.getInitialState())
   useLayoutStore.setState(useLayoutStore.getInitialState())
   useModalStore.setState(useModalStore.getInitialState())
   useProjectsStore.setState(useProjectsStore.getInitialState())

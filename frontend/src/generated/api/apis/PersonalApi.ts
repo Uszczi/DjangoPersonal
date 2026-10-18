@@ -20,6 +20,16 @@ import {
     AuthResponseToJSON,
 } from '../models/AuthResponse';
 import {
+    type CategoryRequest,
+    CategoryRequestFromJSON,
+    CategoryRequestToJSON,
+} from '../models/CategoryRequest';
+import {
+    type CategoryResponse,
+    CategoryResponseFromJSON,
+    CategoryResponseToJSON,
+} from '../models/CategoryResponse';
+import {
     type LoginRequest,
     LoginRequestFromJSON,
     LoginRequestToJSON,
@@ -29,6 +39,11 @@ import {
     LoginResponseFromJSON,
     LoginResponseToJSON,
 } from '../models/LoginResponse';
+import {
+    type PatchedCategoryRequest,
+    PatchedCategoryRequestFromJSON,
+    PatchedCategoryRequestToJSON,
+} from '../models/PatchedCategoryRequest';
 import {
     type PatchedProjectRequest,
     PatchedProjectRequestFromJSON,
@@ -154,6 +169,49 @@ export interface AuthRegisterRequest {
      *
      */
     registerRequest: RegisterRequest;
+}
+
+export interface CategoriesCreateRequest {
+    /**
+     *
+     */
+    categoryRequest: CategoryRequest;
+}
+
+export interface CategoriesDestroyRequest {
+    /**
+     *
+     */
+    id: number;
+}
+
+export interface CategoriesPartialUpdateRequest {
+    /**
+     *
+     */
+    id: number;
+    /**
+     *
+     */
+    patchedCategoryRequest: PatchedCategoryRequest;
+}
+
+export interface CategoriesRetrieveRequest {
+    /**
+     *
+     */
+    id: number;
+}
+
+export interface CategoriesUpdateRequest {
+    /**
+     *
+     */
+    id: number;
+    /**
+     *
+     */
+    categoryRequest: CategoryRequest;
 }
 
 export interface ProjectsCreateRequest {
@@ -541,6 +599,337 @@ export class PersonalApi extends runtime.BaseAPI {
      */
     async authRegister(requestParameters: AuthRegisterRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AuthResponse> {
         const response = await this.authRegisterRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for categoriesCreate without sending the request
+     */
+    async categoriesCreateRequestOpts(requestParameters: CategoriesCreateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['categoryRequest'] == null) {
+            throw new runtime.RequiredError(
+                'categoryRequest',
+                'Required parameter "categoryRequest" was null or undefined when calling categoriesCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/categories/`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: CategoryRequestToJSON(requestParameters['categoryRequest']),
+        };
+    }
+
+    /**
+     * Create Category
+     */
+    async categoriesCreateRaw(requestParameters: CategoriesCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CategoryResponse>> {
+        const requestOptions = await this.categoriesCreateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => CategoryResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Create Category
+     */
+    async categoriesCreate(requestParameters: CategoriesCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CategoryResponse> {
+        const response = await this.categoriesCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for categoriesDestroy without sending the request
+     */
+    async categoriesDestroyRequestOpts(requestParameters: CategoriesDestroyRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling categoriesDestroy().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/categories/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Delete Category
+     */
+    async categoriesDestroyRaw(requestParameters: CategoriesDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.categoriesDestroyRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Delete Category
+     */
+    async categoriesDestroy(requestParameters: CategoriesDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.categoriesDestroyRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Creates request options for categoriesList without sending the request
+     */
+    async categoriesListRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/categories/`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * List Categories
+     */
+    async categoriesListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<CategoryResponse>>> {
+        const requestOptions = await this.categoriesListRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(CategoryResponseFromJSON));
+    }
+
+    /**
+     * List Categories
+     */
+    async categoriesList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<CategoryResponse>> {
+        const response = await this.categoriesListRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for categoriesPartialUpdate without sending the request
+     */
+    async categoriesPartialUpdateRequestOpts(requestParameters: CategoriesPartialUpdateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling categoriesPartialUpdate().'
+            );
+        }
+
+        if (requestParameters['patchedCategoryRequest'] == null) {
+            throw new runtime.RequiredError(
+                'patchedCategoryRequest',
+                'Required parameter "patchedCategoryRequest" was null or undefined when calling categoriesPartialUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/categories/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedCategoryRequestToJSON(requestParameters['patchedCategoryRequest']),
+        };
+    }
+
+    /**
+     * Update Category
+     */
+    async categoriesPartialUpdateRaw(requestParameters: CategoriesPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CategoryResponse>> {
+        const requestOptions = await this.categoriesPartialUpdateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => CategoryResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Update Category
+     */
+    async categoriesPartialUpdate(requestParameters: CategoriesPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CategoryResponse> {
+        const response = await this.categoriesPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for categoriesRetrieve without sending the request
+     */
+    async categoriesRetrieveRequestOpts(requestParameters: CategoriesRetrieveRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling categoriesRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/categories/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Get Category
+     */
+    async categoriesRetrieveRaw(requestParameters: CategoriesRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CategoryResponse>> {
+        const requestOptions = await this.categoriesRetrieveRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => CategoryResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get Category
+     */
+    async categoriesRetrieve(requestParameters: CategoriesRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CategoryResponse> {
+        const response = await this.categoriesRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for categoriesUpdate without sending the request
+     */
+    async categoriesUpdateRequestOpts(requestParameters: CategoriesUpdateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling categoriesUpdate().'
+            );
+        }
+
+        if (requestParameters['categoryRequest'] == null) {
+            throw new runtime.RequiredError(
+                'categoryRequest',
+                'Required parameter "categoryRequest" was null or undefined when calling categoriesUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/categories/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'PUT',
+            headers: headerParameters,
+            query: queryParameters,
+            body: CategoryRequestToJSON(requestParameters['categoryRequest']),
+        };
+    }
+
+    /**
+     * Replace Category
+     */
+    async categoriesUpdateRaw(requestParameters: CategoriesUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CategoryResponse>> {
+        const requestOptions = await this.categoriesUpdateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => CategoryResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Replace Category
+     */
+    async categoriesUpdate(requestParameters: CategoriesUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CategoryResponse> {
+        const response = await this.categoriesUpdateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

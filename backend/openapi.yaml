@@ -708,6 +708,139 @@ paths:
       - personal
       security:
       - JWTAuth: []
+  /api/v1/categories/:
+    get:
+      operationId: categories_list
+      summary: List Categories
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/CategoryResponse'
+                title: Response
+                type: array
+      tags:
+      - personal
+      security:
+      - JWTAuth: []
+    post:
+      operationId: categories_create
+      summary: Create Category
+      parameters: []
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+      tags:
+      - personal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+        required: true
+      security:
+      - JWTAuth: []
+  /api/v1/categories/{id}/:
+    get:
+      operationId: categories_retrieve
+      summary: Get Category
+      parameters:
+      - in: path
+        name: id
+        schema:
+          title: Id
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+      tags:
+      - personal
+      security:
+      - JWTAuth: []
+    put:
+      operationId: categories_update
+      summary: Replace Category
+      parameters:
+      - in: path
+        name: id
+        schema:
+          title: Id
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+      tags:
+      - personal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+        required: true
+      security:
+      - JWTAuth: []
+    patch:
+      operationId: categories_partial_update
+      summary: Update Category
+      parameters:
+      - in: path
+        name: id
+        schema:
+          title: Id
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+      tags:
+      - personal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoryRequest'
+        required: true
+      security:
+      - JWTAuth: []
+    delete:
+      operationId: categories_destroy
+      summary: Delete Category
+      parameters:
+      - in: path
+        name: id
+        schema:
+          title: Id
+          type: integer
+        required: true
+      responses:
+        '204':
+          description: No Content
+      tags:
+      - personal
+      security:
+      - JWTAuth: []
 components:
   schemas:
     AuthResponse:
@@ -1191,6 +1324,42 @@ components:
           - type: 'null'
           title: Name
       title: PatchedWalletRequest
+      type: object
+    CategoryResponse:
+      properties:
+        id:
+          readOnly: true
+          title: Id
+          type: integer
+        name:
+          title: Name
+          type: string
+      required:
+      - id
+      - name
+      title: CategoryResponse
+      type: object
+    CategoryRequest:
+      properties:
+        name:
+          maxLength: 100
+          minLength: 1
+          title: Name
+          type: string
+      required:
+      - name
+      title: CategoryRequest
+      type: object
+    PatchedCategoryRequest:
+      properties:
+        name:
+          anyOf:
+          - maxLength: 100
+            minLength: 1
+            type: string
+          - type: 'null'
+          title: Name
+      title: PatchedCategoryRequest
       type: object
   securitySchemes:
     JWTAuth:

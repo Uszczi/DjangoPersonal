@@ -8,11 +8,12 @@ from django.db.models import QuerySet
 from apps.infra.models import User
 from apps.infra.models import Wallet as WalletModel
 from apps.infra.models import normalize_wallet_name, wallet_name_key
-from apps.infra.repo import DuplicateWalletName, WalletRepository
+from apps.infra.repo import CategoryRepository, DuplicateWalletName, WalletRepository
 from apps.shared.errors import DomainError, NotFound
 
 from ..contracts import PatchedWalletRequest, WalletRequest
 from ._patch import apply_provided
+from .categories import seed_base_categories
 
 UserType = AbstractUser
 
@@ -79,18 +80,32 @@ class GetWallet:
 
 
 class CreateWallet:
-    """Create a wallet from a validated payload."""
+    """Create a wallet from a validated payload.
 
-    def __init__(self, wallets: WalletRepository, user: User):
+    A user's very first wallet also seeds their base categories, so they can
+    categorize spending immediately.
+    """
+
+    def __init__(
+        self,
+        wallets: WalletRepository,
+        categories: CategoryRepository,
+        user: User,
+    ):
         self.wallets = wallets
+        self.categories = categories
         self.user = user
 
     def execute(self, data: WalletRequest) -> WalletModel:
+        is_first_wallet = self.wallets.count(user=self.user) == 0
         wallet = WalletModel(
             user=self.user,
             name=_validate_name(self.wallets, data.name, user=self.user),
         )
-        return _save(self.wallets, wallet)
+        created = _save(self.wallets, wallet)
+        if is_first_wallet:
+            seed_base_categories(self.categories, self.user)
+        return created
 
 
 class ReplaceWallet:

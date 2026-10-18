@@ -1294,6 +1294,60 @@ a:focus-visible {
   width: 100%;
 }
 
+/* Expenses: category panel below the wallets list */
+.category-panel {
+  border-top: 1px solid var(--line);
+  margin-top: 34px;
+  padding-top: 26px;
+}
+
+.category-panel .project-heading {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.category-panel .project-heading h2 {
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  margin: 0;
+}
+
+.category-create {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.category-create input,
+.category-panel .project-row input {
+  background: #fff;
+  border: 1px solid #cbd7d3;
+  border-radius: 4px;
+  color: var(--ink);
+  font: 400 14px/1.5 var(--sans);
+  outline: none;
+  padding: 10px 11px;
+}
+
+.category-create input:focus,
+.category-panel .project-row input:focus {
+  border-color: #477c7c;
+  box-shadow: 0 0 0 3px rgb(71 124 124 / 15%);
+}
+
+.category-create input {
+  flex: 1;
+  min-width: 0;
+}
+
+.category-panel .project-row input {
+  width: 100%;
+}
+
 .sidebar .quiet-button {
   border-color: #46656b;
   color: #d8e4e1;

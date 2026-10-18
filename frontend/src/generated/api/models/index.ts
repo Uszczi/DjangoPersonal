@@ -2,8 +2,11 @@
 /* tslint:disable */
 /* eslint-disable */
 export * from './AuthResponse';
+export * from './CategoryRequest';
+export * from './CategoryResponse';
 export * from './LoginRequest';
 export * from './LoginResponse';
+export * from './PatchedCategoryRequest';
 export * from './PatchedProjectRequest';
 export * from './PatchedTaskUpdateRequest';
 export * from './PatchedTimeEntryRequest';

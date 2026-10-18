@@ -42,10 +42,12 @@ describe('Wallets', () => {
   })
 
   test('user can see the wallet list with transaction counts', async () => {
-    // Child effects (wallets) fire before parent effects (projects) in React.
+    // CategoryPanel mounts only after the wallets finish loading, so the
+    // fetch order is wallets, projects, then categories.
     fetchMock
       .mockResolvedValueOnce(jsonResponse([personalWalletApi, businessWalletApi]))
       .mockResolvedValueOnce(jsonResponse([inbox]))
+      .mockResolvedValueOnce(jsonResponse([])) // categories (CategoryPanel)
 
     renderApp('/expenses')
 
@@ -60,6 +62,7 @@ describe('Wallets', () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([]))       // wallets list
       .mockResolvedValueOnce(jsonResponse([inbox]))  // projects (root layout)
+      .mockResolvedValueOnce(jsonResponse([]))       // categories (CategoryPanel)
       .mockResolvedValueOnce(
         jsonResponse({ id: 1, name: 'Personal', transaction_count: 0 }, 201),
       )
@@ -75,7 +78,7 @@ describe('Wallets', () => {
     const list = await screen.findByRole('list', { name: 'Portfele' })
     expect(within(list).getByText('Personal')).toBeInTheDocument()
     expect(fetchMock).toHaveBeenNthCalledWith(
-      3,
+      4,
       '/api/v1/wallets/',
       expect.objectContaining({
         method: 'POST',
@@ -88,6 +91,7 @@ describe('Wallets', () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([personalWalletApi]))
       .mockResolvedValueOnce(jsonResponse([inbox]))
+      .mockResolvedValueOnce(jsonResponse([])) // categories (CategoryPanel)
       .mockResolvedValueOnce(
         jsonResponse({ id: 1, name: 'Personal renamed', transaction_count: 0 }),
       )
@@ -105,7 +109,7 @@ describe('Wallets', () => {
 
     expect(await within(list).findByText('Personal renamed')).toBeInTheDocument()
     expect(fetchMock).toHaveBeenNthCalledWith(
-      3,
+      4,
       '/api/v1/wallets/1/',
       expect.objectContaining({
         method: 'PATCH',
@@ -118,6 +122,7 @@ describe('Wallets', () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([personalWalletApi]))
       .mockResolvedValueOnce(jsonResponse([inbox]))
+      .mockResolvedValueOnce(jsonResponse([])) // categories (CategoryPanel)
       .mockResolvedValueOnce(jsonResponse([], 204))
     const user = userEvent.setup()
 
@@ -130,7 +135,7 @@ describe('Wallets', () => {
     expect(await screen.findByText(/zostanie trwale usunięty/)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Usuń portfel' }))
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(4))
     expect(await screen.findByText('Brak portfeli. Utwórz pierwszy portfel.')).toBeInTheDocument()
   })
 
@@ -138,6 +143,7 @@ describe('Wallets', () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([personalWalletApi, businessWalletApi]))
       .mockResolvedValueOnce(jsonResponse([inbox]))
+      .mockResolvedValueOnce(jsonResponse([])) // categories (CategoryPanel)
     const user = userEvent.setup()
 
     const { router } = renderApp('/expenses')
@@ -152,6 +158,7 @@ describe('Wallets', () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse({ detail: 'Server error' }, 500))
       .mockResolvedValueOnce(jsonResponse([inbox]))
+      .mockResolvedValueOnce(jsonResponse([])) // categories (CategoryPanel)
 
     renderApp('/expenses')
 
