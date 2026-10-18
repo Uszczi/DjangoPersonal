@@ -17,6 +17,10 @@ makemigrations:
 migrate:
     cd backend && uv run python manage.py migrate
 
+# Seed the dev database with demo data (refuses if the database is not empty).
+seed:
+    cd backend && uv run python manage.py seed_dev
+
 # Generate the OpenAPI schema and the TypeScript API client.
 generate-api:
     cd backend && uv run python -c "import os, json, yaml; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings'); import django; django.setup(); from django.test import Client, override_settings; override = override_settings(ALLOWED_HOSTS=['*']); override.enable(); response = Client().get('/api/v1/schema/'); override.disable(); assert response.status_code == 200, response.status_code; schema = json.loads(response.content); open('openapi.yaml', 'w').write(yaml.safe_dump(schema, allow_unicode=True, sort_keys=False))"

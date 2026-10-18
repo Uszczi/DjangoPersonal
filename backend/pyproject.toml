@@ -16,6 +16,8 @@ dependencies = [
 [dependency-groups]
 dev = [
     "django-stubs>=6.1.2",
+    "factory-boy>=3.3.3",
+    "faker>=40.43.0",
     "mypy>=2.4.0",
     "pytest>=9.1.1",
     "pytest-django>=4.14.0",
@@ -38,6 +40,11 @@ show_error_codes = true
 [[tool.mypy.overrides]]
 module = ["whitenoise.*"]
 ignore_missing_imports = true
+
+# factory_boy ships py.typed but its declaration constructors are untyped.
+[[tool.mypy.overrides]]
+module = ["apps.infra.factories"]
+disallow_untyped_calls = false
 
 [tool.django-stubs]
 django_settings_module = "config.settings"
