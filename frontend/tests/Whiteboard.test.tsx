@@ -3,6 +3,10 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { renderApp } from './renderApp'
 
+vi.mock('@/components/WhiteboardCanvas', () => ({
+  WhiteboardCanvas: () => <div data-testid="whiteboard-canvas" />,
+}))
+
 const wb = {
   id: 5,
   name: 'Bez tytułu',
