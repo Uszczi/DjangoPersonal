@@ -187,6 +187,12 @@
       "skillPath": "skills/engineering/triage/SKILL.md",
       "computedHash": "a683e69163e23630f39c05a50fb9d83a3795a6a6fbd317357669e082cd43a158"
     },
+    "unslop": {
+      "source": "poteto/noodle",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/unslop/SKILL.md",
+      "computedHash": "96ca1f318c41bd0e4adaffc1c881a85555a736b5824d1a9a6ee6139d5851774a"
+    },
     "wait-what": {
       "source": "mattpocock/skills",
       "sourceType": "github",
