@@ -593,6 +593,52 @@
   gap: 13px;
 }
 
+.whiteboard-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.whiteboard-row {
+  align-items: center;
+  border-bottom: 1px solid #dce5e1;
+  display: grid;
+  gap: 13px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  min-height: 56px;
+  padding: 10px 3px;
+}
+
+.whiteboard-name {
+  background: none;
+  border: none;
+  color: #344d52;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0;
+  text-align: left;
+}
+
+.whiteboard-name:hover {
+  color: #1f3b40;
+  text-decoration: underline;
+}
+
+.whiteboard-date {
+  color: #7a8d8f;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.whiteboard-name-input {
+  border: 1px solid #b7c9c3;
+  border-radius: 6px;
+  font-size: 14px;
+  padding: 4px 8px;
+  width: 100%;
+}
+
 .task-row {
   align-items: center;
   border-bottom: 1px solid #dce5e1;
