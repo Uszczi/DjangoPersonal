@@ -15,6 +15,7 @@ class UpdateProjectRequest : public oatpp::DTO {
   DTO_INIT(UpdateProjectRequest, DTO)
   DTO_FIELD(String, name);
   DTO_FIELD(String, description);
+  DTO_FIELD(Int32, position);
 };
 
 #include OATPP_CODEGEN_END(DTO)

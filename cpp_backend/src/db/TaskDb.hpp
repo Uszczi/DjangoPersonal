@@ -13,38 +13,44 @@ public:
     : oatpp::orm::DbClient(executor) {}
 
   QUERY(getAllTasks,
-        "SELECT id, title, description, is_completed, project_id FROM infra_task ORDER BY is_completed ASC, id ASC;");
+        "SELECT id, title, description, is_completed, project_id, position FROM infra_task ORDER BY is_completed ASC, position ASC, id ASC;");
 
   QUERY(getTasksByProject,
-        "SELECT id, title, description, is_completed, project_id FROM infra_task WHERE project_id = :project_id ORDER BY is_completed ASC, id ASC;",
+        "SELECT id, title, description, is_completed, project_id, position FROM infra_task WHERE project_id = :project_id ORDER BY is_completed ASC, position ASC, id ASC;",
         PARAM(oatpp::Int32, project_id));
 
   QUERY(getTasksByUser,
-        "SELECT t.id, t.title, t.description, t.is_completed, t.project_id "
+        "SELECT t.id, t.title, t.description, t.is_completed, t.project_id, t.position "
         "FROM infra_task t JOIN infra_project p ON t.project_id = p.id "
-        "WHERE p.user_id = :user_id ORDER BY t.is_completed ASC, t.id ASC;",
+        "WHERE p.user_id = :user_id ORDER BY t.is_completed ASC, t.position ASC, t.id ASC;",
         PARAM(oatpp::Int32, user_id));
 
   QUERY(getTaskById,
-        "SELECT id, title, description, is_completed, project_id FROM infra_task WHERE id = :id;",
+        "SELECT id, title, description, is_completed, project_id, position FROM infra_task WHERE id = :id;",
         PARAM(oatpp::Int32, id));
 
   QUERY(createTask,
-        "INSERT INTO infra_task (title, description, is_completed, project_id) VALUES (:title, :description, 0, :project_id);",
+        "INSERT INTO infra_task (title, description, is_completed, project_id, position) VALUES (:title, :description, 0, :project_id, 0);",
         PARAM(oatpp::String, title),
         PARAM(oatpp::String, description),
         PARAM(oatpp::Int32, project_id));
 
   QUERY(updateTask,
-        "UPDATE infra_task SET title = :title, description = :description, is_completed = :is_completed, project_id = :project_id WHERE id = :id;",
+        "UPDATE infra_task SET title = :title, description = :description, is_completed = :is_completed, project_id = :project_id, position = :position WHERE id = :id;",
         PARAM(oatpp::String, title),
         PARAM(oatpp::String, description),
         PARAM(oatpp::Boolean, is_completed),
         PARAM(oatpp::Int32, project_id),
+        PARAM(oatpp::Int32, position),
         PARAM(oatpp::Int32, id));
 
   QUERY(deleteTask,
         "DELETE FROM infra_task WHERE id = :id;",
+        PARAM(oatpp::Int32, id));
+
+  QUERY(updateTaskPosition,
+        "UPDATE infra_task SET position = :position WHERE id = :id;",
+        PARAM(oatpp::Int32, position),
         PARAM(oatpp::Int32, id));
 
   QUERY(countTimeEntriesByTask,

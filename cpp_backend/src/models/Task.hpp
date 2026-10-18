@@ -13,6 +13,7 @@ class Task : public oatpp::DTO {
   DTO_FIELD(String, description);
   DTO_FIELD(Boolean, is_completed);
   DTO_FIELD(Int32, project_id);
+  DTO_FIELD(Int32, position);
 };
 
 #include OATPP_CODEGEN_END(DTO)

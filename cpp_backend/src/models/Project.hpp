@@ -14,6 +14,7 @@ class Project : public oatpp::DTO {
   DTO_FIELD(String, description);
   DTO_FIELD(Boolean, is_inbox);
   DTO_FIELD(Int32, user_id);
+  DTO_FIELD(Int32, position);
 };
 
 #include OATPP_CODEGEN_END(DTO)

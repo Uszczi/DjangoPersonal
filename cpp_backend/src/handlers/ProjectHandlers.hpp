@@ -9,6 +9,8 @@
 #include "../validators/ProjectValidators.hpp"
 
 #include <string>
+#include <vector>
+#include <algorithm>
 
 class ListProjectsHandler {
 public:
@@ -95,6 +97,7 @@ public:
     std::string currentName = proj->name ? std::string(*proj->name) : std::string();
     std::string currentNormalized = proj->normalized_name ? std::string(*proj->normalized_name) : std::string();
     std::string currentDescription = proj->description ? std::string(*proj->description) : std::string();
+    int currentPosition = proj->position ? *proj->position : 0;
 
     std::string newName = currentName;
     std::string newNormalized = currentNormalized;
@@ -129,7 +132,41 @@ public:
       newDescription = "";
     }
 
-    auto res = m_db->updateProject(newName, newNormalized, newDescription, id);
+    if (isInbox) {
+      currentPosition = 0;
+      m_db->updateProjectPosition(0, id);
+    } else if (body->position) {
+      int desired = *body->position;
+      auto listRes = m_db->getProjectsByUser(userId);
+      auto listItems = listRes->fetch<oatpp::Vector<oatpp::Object<Project>>>();
+      std::vector<oatpp::Object<Project>> siblings;
+      if (listItems) {
+        for (auto& p : *listItems) {
+          if (p->id && *p->id == id) continue;
+          if (!(p->is_inbox ? *p->is_inbox : false)) siblings.push_back(p);
+        }
+      }
+      std::sort(siblings.begin(), siblings.end(), [](const oatpp::Object<Project>& a, const oatpp::Object<Project>& b) {
+        int pa = a->position ? *a->position : 0;
+        int pb = b->position ? *b->position : 0;
+        if (pa != pb) return pa < pb;
+        std::string na = a->normalized_name ? std::string(*a->normalized_name) : std::string();
+        std::string nb = b->normalized_name ? std::string(*b->normalized_name) : std::string();
+        return na < nb;
+      });
+      int index = desired;
+      if (index < 0) index = 0;
+      if (index > (int)siblings.size()) index = (int)siblings.size();
+      for (size_t i = 0; i < siblings.size(); i++) {
+        int pos = (int)i;
+        if ((int)i >= index) pos = (int)i + 1;
+        if (siblings[i]->id) m_db->updateProjectPosition(pos, *siblings[i]->id);
+      }
+      m_db->updateProjectPosition(index, id);
+      currentPosition = index;
+    }
+
+    auto res = m_db->updateProject(newName, newNormalized, newDescription, currentPosition, id);
     if (!res->isSuccess()) throw HandlerError(500, "Failed to update project.");
 
     auto updated = m_db->getProjectById(id);
