@@ -147,7 +147,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
     const pointer = stage.getPointerPosition();
     const scaleBy = 1.1;
     const newScale = e.evt.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy;
-    const clamped = Math.min(Math.max(newScale, 0.05), 10);
+    const clamped = Math.min(Math.max(newScale, 0.01), 20);
     const mousePointTo = {
       x: (pointer.x - stagePos.x) / oldScale,
       y: (pointer.y - stagePos.y) / oldScale,
