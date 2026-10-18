@@ -7,8 +7,8 @@
 **Status:** ready-for-agent
 
 - [x] Pełny `just check` zielony (mypy + pytest + `manage.py check` + `npm test` + lint + build).
-- [ ] QA ręczne canvas wg checklisty z ticketu 01.
-- [ ] Wzrokowo: toolbar renderuje się raz, tylko w trybie whiteboard (ticket 03).
+- [x] QA ręczne canvas wg checklisty z ticketu 01.
+- [x] Wzrokowo: toolbar renderuje się raz, tylko w trybie whiteboard (ticket 03).
 - [x] Bez migracji bazy danych w całym zakresie.
 - [x] Bez zmian w `routeTree.gen.ts` / generated API.
 - [x] Komentarze i docstringi opisujące stare zachowanie zsynchronizowane (w tym te o „przyszłym" MCP).
