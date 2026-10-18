@@ -16,6 +16,7 @@ from apps.whiteboard.errors import NotFound, WhiteboardError
 def _get_whiteboard(
     repository: WhiteboardRepository, whiteboard_id: int, *, user: User
 ) -> WhiteboardModel:
+    """Fetch a whiteboard addressed by id, or raise ``NotFound``."""
     whiteboard = repository.find(whiteboard_id, user=user)
     if whiteboard is None:
         raise NotFound('Whiteboard not found.')

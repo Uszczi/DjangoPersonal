@@ -25,7 +25,10 @@ class WhiteboardRepository:
         )
 
     def save(self, whiteboard: WhiteboardModel) -> WhiteboardModel:
-        whiteboard.save()
+        from django.db import transaction
+
+        with transaction.atomic():
+            whiteboard.save()
         return whiteboard
 
     def delete(self, whiteboard: WhiteboardModel) -> None:

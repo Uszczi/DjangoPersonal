@@ -37,12 +37,16 @@ function WhiteboardEditorPage() {
         latestBoard.current = parsed;
       } catch (error) {
         if (cancelled) return;
-        const msg = await apiErrorMessage(error);
-        if (msg.toLowerCase().includes("not found") || msg.includes("404")) {
+        const status =
+          error && typeof error === "object" && "response" in error
+            ? (error as { response?: { status?: number } }).response?.status
+            : undefined;
+        if (status === 404) {
           setNotFound(true);
-        } else {
-          setLoadError(msg || "Nie udało się wczytać tablicy.");
+          return;
         }
+        const msg = await apiErrorMessage(error);
+        setLoadError(msg || "Nie udało się wczytać tablicy.");
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -92,6 +96,15 @@ function WhiteboardEditorPage() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [boardId, saveNow]);
+
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) {
+        clearTimeout(saveTimer.current);
+        if (latestBoard.current) void saveNow(latestBoard.current);
+      }
+    };
+  }, [saveNow]);
 
   if (isLoading) {
     return (
