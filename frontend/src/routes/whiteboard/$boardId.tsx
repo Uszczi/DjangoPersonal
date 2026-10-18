@@ -91,18 +91,24 @@ function WhiteboardEditorPage() {
 
   async function saveName(newName: string) {
     const trimmed = newName.trim();
-    if (!trimmed || trimmed === name) {
+    if (!trimmed) {
       setEditingName(false);
       return;
     }
+    if (trimmed === name) {
+      setEditingName(false);
+      return;
+    }
+    setSaveState("saving");
     try {
       const updated = await api.whiteboardsPartialUpdate({
         id: Number(boardId),
         patchedWhiteboardRequest: { name: trimmed },
       });
       setName(updated.name);
+      setSaveState("saved");
     } catch {
-      // keep previous name
+      setSaveState("failed");
     }
     setEditingName(false);
   }
