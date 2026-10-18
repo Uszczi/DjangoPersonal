@@ -1,0 +1,1 @@
+"""MCP server exposing DjangoPersonal handlers over HTTP (streamable HTTP)."""

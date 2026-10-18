@@ -5,6 +5,10 @@ default:
 backend:
     cd backend && uv run python manage.py runserver
 
+# Run the MCP server (streamable HTTP) on port 8001.
+mcp:
+    cd backend && uv run python -m mcp_server
+
 # Create Django migration files from model changes.
 makemigrations:
     cd backend && uv run python manage.py makemigrations

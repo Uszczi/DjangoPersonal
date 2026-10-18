@@ -1,0 +1,9 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "djangopersonal": {
+      "type": "remote",
+      "url": "http://localhost:8001/mcp"
+    }
+  }
+}
