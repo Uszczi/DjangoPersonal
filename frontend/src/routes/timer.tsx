@@ -294,6 +294,7 @@ export function TimerPage() {
         <div className="card-topline"></div>
         {runningEntry ? (
           <>
+            <p className="timer-status">TIMER AKTYWNY</p>
             <p className="timer-task-title">{taskTitle(runningEntry)}</p>
             <p className="timer-display">
               {formatElapsed(correctedNow - runningEntry.start.getTime())}
@@ -317,6 +318,7 @@ export function TimerPage() {
           </>
         ) : (
           <>
+            <p>Brak aktywnego timera. Wybierz projekt i zadanie, aby go uruchomić.</p>
             <form className="timer-start-form" onSubmit={startTimer}>
               <label className="form-field">
                 <span>Projekt</span>

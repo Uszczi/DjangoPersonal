@@ -18,6 +18,7 @@ from .projects import ProjectRepository
 from .tasks import TaskRepository
 from .time_entries import TimeEntryRepository, day_start
 from .users import UserRepository
+from .whiteboards import WhiteboardRepository
 
 __all__ = [
     'DuplicateProjectName',
@@ -28,5 +29,6 @@ __all__ = [
     'TaskRepository',
     'TimeEntryRepository',
     'UserRepository',
+    'WhiteboardRepository',
     'day_start',
 ]

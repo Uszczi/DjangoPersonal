@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'apps.infra.apps.InfraConfig',
     'apps.work.apps.WorkConfig',
     'apps.accounts.apps.AccountsConfig',
+    'apps.whiteboard.apps.WhiteboardConfig',
 ]
 
 MIDDLEWARE = [

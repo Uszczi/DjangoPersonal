@@ -45,6 +45,11 @@ import {
     PatchedTimeEntryRequestToJSON,
 } from '../models/PatchedTimeEntryRequest';
 import {
+    type PatchedWhiteboardRequest,
+    PatchedWhiteboardRequestFromJSON,
+    PatchedWhiteboardRequestToJSON,
+} from '../models/PatchedWhiteboardRequest';
+import {
     type ProjectRequest,
     ProjectRequestFromJSON,
     ProjectRequestToJSON,
@@ -104,6 +109,16 @@ import {
     UserResponseFromJSON,
     UserResponseToJSON,
 } from '../models/UserResponse';
+import {
+    type WhiteboardRequest,
+    WhiteboardRequestFromJSON,
+    WhiteboardRequestToJSON,
+} from '../models/WhiteboardRequest';
+import {
+    type WhiteboardResponse,
+    WhiteboardResponseFromJSON,
+    WhiteboardResponseToJSON,
+} from '../models/WhiteboardResponse';
 
 export interface AuthLoginRequest {
     /**
@@ -246,6 +261,38 @@ export interface TimerStartOperationRequest {
      *
      */
     timerStartRequest: TimerStartRequest;
+}
+
+export interface WhiteboardsCreateRequest {
+    /**
+     *
+     */
+    whiteboardRequest: WhiteboardRequest;
+}
+
+export interface WhiteboardsDestroyRequest {
+    /**
+     *
+     */
+    id: number;
+}
+
+export interface WhiteboardsPartialUpdateRequest {
+    /**
+     *
+     */
+    id: number;
+    /**
+     *
+     */
+    patchedWhiteboardRequest: PatchedWhiteboardRequest;
+}
+
+export interface WhiteboardsRetrieveRequest {
+    /**
+     *
+     */
+    id: number;
 }
 
 /**
@@ -1358,6 +1405,274 @@ export class PersonalApi extends runtime.BaseAPI {
      */
     async timerStop(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TimerResponse> {
         const response = await this.timerStopRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for whiteboardsCreate without sending the request
+     */
+    async whiteboardsCreateRequestOpts(requestParameters: WhiteboardsCreateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['whiteboardRequest'] == null) {
+            throw new runtime.RequiredError(
+                'whiteboardRequest',
+                'Required parameter "whiteboardRequest" was null or undefined when calling whiteboardsCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/whiteboards/`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: WhiteboardRequestToJSON(requestParameters['whiteboardRequest']),
+        };
+    }
+
+    /**
+     * Create Whiteboard
+     */
+    async whiteboardsCreateRaw(requestParameters: WhiteboardsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WhiteboardResponse>> {
+        const requestOptions = await this.whiteboardsCreateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => WhiteboardResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Create Whiteboard
+     */
+    async whiteboardsCreate(requestParameters: WhiteboardsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<WhiteboardResponse> {
+        const response = await this.whiteboardsCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for whiteboardsDestroy without sending the request
+     */
+    async whiteboardsDestroyRequestOpts(requestParameters: WhiteboardsDestroyRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling whiteboardsDestroy().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/whiteboards/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Delete Whiteboard
+     */
+    async whiteboardsDestroyRaw(requestParameters: WhiteboardsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.whiteboardsDestroyRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Delete Whiteboard
+     */
+    async whiteboardsDestroy(requestParameters: WhiteboardsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.whiteboardsDestroyRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Creates request options for whiteboardsList without sending the request
+     */
+    async whiteboardsListRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/whiteboards/`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * List Whiteboards
+     */
+    async whiteboardsListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<WhiteboardResponse>>> {
+        const requestOptions = await this.whiteboardsListRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(WhiteboardResponseFromJSON));
+    }
+
+    /**
+     * List Whiteboards
+     */
+    async whiteboardsList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<WhiteboardResponse>> {
+        const response = await this.whiteboardsListRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for whiteboardsPartialUpdate without sending the request
+     */
+    async whiteboardsPartialUpdateRequestOpts(requestParameters: WhiteboardsPartialUpdateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling whiteboardsPartialUpdate().'
+            );
+        }
+
+        if (requestParameters['patchedWhiteboardRequest'] == null) {
+            throw new runtime.RequiredError(
+                'patchedWhiteboardRequest',
+                'Required parameter "patchedWhiteboardRequest" was null or undefined when calling whiteboardsPartialUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/whiteboards/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedWhiteboardRequestToJSON(requestParameters['patchedWhiteboardRequest']),
+        };
+    }
+
+    /**
+     * Update Whiteboard
+     */
+    async whiteboardsPartialUpdateRaw(requestParameters: WhiteboardsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WhiteboardResponse>> {
+        const requestOptions = await this.whiteboardsPartialUpdateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => WhiteboardResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Update Whiteboard
+     */
+    async whiteboardsPartialUpdate(requestParameters: WhiteboardsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<WhiteboardResponse> {
+        const response = await this.whiteboardsPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for whiteboardsRetrieve without sending the request
+     */
+    async whiteboardsRetrieveRequestOpts(requestParameters: WhiteboardsRetrieveRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling whiteboardsRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/whiteboards/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Get Whiteboard
+     */
+    async whiteboardsRetrieveRaw(requestParameters: WhiteboardsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WhiteboardResponse>> {
+        const requestOptions = await this.whiteboardsRetrieveRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => WhiteboardResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get Whiteboard
+     */
+    async whiteboardsRetrieve(requestParameters: WhiteboardsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<WhiteboardResponse> {
+        const response = await this.whiteboardsRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

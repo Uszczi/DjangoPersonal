@@ -18,3 +18,6 @@ A record of time spent on a Task. Has a start timestamp and an end timestamp; th
 
 **Running timer**:
 The single Time entry that has a start but no end. At most one running timer exists at a time; starting a timer on another task ends the previous entry.
+
+**Whiteboard**:
+A named space that holds one freeform drawing — freehand strokes, shapes, and sticky notes. A user may keep several Whiteboards.

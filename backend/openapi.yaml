@@ -469,6 +469,112 @@ paths:
       - personal
       security:
       - JWTAuth: []
+  /api/v1/whiteboards/:
+    get:
+      operationId: whiteboards_list
+      summary: List Whiteboards
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/WhiteboardResponse'
+                title: Response
+                type: array
+      tags:
+      - personal
+      security:
+      - JWTAuth: []
+    post:
+      operationId: whiteboards_create
+      summary: Create Whiteboard
+      parameters: []
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WhiteboardResponse'
+      tags:
+      - personal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WhiteboardRequest'
+        required: true
+      security:
+      - JWTAuth: []
+  /api/v1/whiteboards/{id}/:
+    get:
+      operationId: whiteboards_retrieve
+      summary: Get Whiteboard
+      parameters:
+      - in: path
+        name: id
+        schema:
+          title: Id
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WhiteboardResponse'
+      tags:
+      - personal
+      security:
+      - JWTAuth: []
+    patch:
+      operationId: whiteboards_partial_update
+      summary: Update Whiteboard
+      parameters:
+      - in: path
+        name: id
+        schema:
+          title: Id
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WhiteboardResponse'
+      tags:
+      - personal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedWhiteboardRequest'
+        required: true
+      security:
+      - JWTAuth: []
+    delete:
+      operationId: whiteboards_destroy
+      summary: Delete Whiteboard
+      parameters:
+      - in: path
+        name: id
+        schema:
+          title: Id
+          type: integer
+        required: true
+      responses:
+        '204':
+          description: No Content
+      tags:
+      - personal
+      security:
+      - JWTAuth: []
 components:
   schemas:
     AuthResponse:
@@ -831,6 +937,70 @@ components:
           title: Title
           type: string
       title: TimerStartRequest
+      type: object
+    WhiteboardResponse:
+      properties:
+        id:
+          readOnly: true
+          title: Id
+          type: integer
+        name:
+          title: Name
+          type: string
+        content:
+          additionalProperties: true
+          title: Content
+          type: object
+        created_at:
+          format: date-time
+          readOnly: true
+          title: Created At
+          type: string
+        updated_at:
+          format: date-time
+          readOnly: true
+          title: Updated At
+          type: string
+      required:
+      - id
+      - name
+      - content
+      - created_at
+      - updated_at
+      title: WhiteboardResponse
+      type: object
+    WhiteboardRequest:
+      properties:
+        name:
+          default: Bez tytułu
+          maxLength: 200
+          minLength: 1
+          title: Name
+          type: string
+        content:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Content
+      title: WhiteboardRequest
+      type: object
+    PatchedWhiteboardRequest:
+      properties:
+        name:
+          anyOf:
+          - maxLength: 200
+            minLength: 1
+            type: string
+          - type: 'null'
+          title: Name
+        content:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Content
+      title: PatchedWhiteboardRequest
       type: object
   securitySchemes:
     JWTAuth:

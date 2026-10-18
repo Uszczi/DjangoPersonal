@@ -16,6 +16,9 @@ import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as TimerRouteImport } from './routes/timer'
+import { Route as WhiteboardRouteImport } from './routes/whiteboard'
+import { Route as WhiteboardIndexRouteImport } from './routes/whiteboard/index'
+import { Route as WhiteboardBoardIdRouteImport } from './routes/whiteboard/$boardId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -52,6 +55,21 @@ const TimerRoute = TimerRouteImport.update({
   path: '/timer',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WhiteboardRoute = WhiteboardRouteImport.update({
+  id: '/whiteboard',
+  path: '/whiteboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WhiteboardIndexRoute = WhiteboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => WhiteboardRoute,
+} as any)
+const WhiteboardBoardIdRoute = WhiteboardBoardIdRouteImport.update({
+  id: '/$boardId',
+  path: '/$boardId',
+  getParentRoute: () => WhiteboardRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -61,6 +79,9 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/tasks': typeof TasksRoute
   '/timer': typeof TimerRoute
+  '/whiteboard': typeof WhiteboardRouteWithChildren
+  '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
+  '/whiteboard/': typeof WhiteboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +91,8 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/tasks': typeof TasksRoute
   '/timer': typeof TimerRoute
+  '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
+  '/whiteboard': typeof WhiteboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,13 +103,34 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/tasks': typeof TasksRoute
   '/timer': typeof TimerRoute
+  '/whiteboard': typeof WhiteboardRouteWithChildren
+  '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
+  '/whiteboard/': typeof WhiteboardIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/$' | '/login' | '/projects' | '/register' | '/tasks' | '/timer'
+    | '/'
+    | '/$'
+    | '/login'
+    | '/projects'
+    | '/register'
+    | '/tasks'
+    | '/timer'
+    | '/whiteboard'
+    | '/whiteboard/$boardId'
+    | '/whiteboard/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$' | '/login' | '/projects' | '/register' | '/tasks' | '/timer'
+  to:
+    | '/'
+    | '/$'
+    | '/login'
+    | '/projects'
+    | '/register'
+    | '/tasks'
+    | '/timer'
+    | '/whiteboard/$boardId'
+    | '/whiteboard'
   id:
     | '__root__'
     | '/'
@@ -96,6 +140,9 @@ export interface FileRouteTypes {
     | '/register'
     | '/tasks'
     | '/timer'
+    | '/whiteboard'
+    | '/whiteboard/$boardId'
+    | '/whiteboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -106,6 +153,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   TasksRoute: typeof TasksRoute
   TimerRoute: typeof TimerRoute
+  WhiteboardRoute: typeof WhiteboardRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -159,8 +207,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TimerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/whiteboard': {
+      id: '/whiteboard'
+      path: '/whiteboard'
+      fullPath: '/whiteboard'
+      preLoaderRoute: typeof WhiteboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/whiteboard/': {
+      id: '/whiteboard/'
+      path: '/'
+      fullPath: '/whiteboard/'
+      preLoaderRoute: typeof WhiteboardIndexRouteImport
+      parentRoute: typeof WhiteboardRoute
+    }
+    '/whiteboard/$boardId': {
+      id: '/whiteboard/$boardId'
+      path: '/$boardId'
+      fullPath: '/whiteboard/$boardId'
+      preLoaderRoute: typeof WhiteboardBoardIdRouteImport
+      parentRoute: typeof WhiteboardRoute
+    }
   }
 }
+
+interface WhiteboardRouteChildren {
+  WhiteboardBoardIdRoute: typeof WhiteboardBoardIdRoute
+  WhiteboardIndexRoute: typeof WhiteboardIndexRoute
+}
+
+const WhiteboardRouteChildren: WhiteboardRouteChildren = {
+  WhiteboardBoardIdRoute: WhiteboardBoardIdRoute,
+  WhiteboardIndexRoute: WhiteboardIndexRoute,
+}
+
+const WhiteboardRouteWithChildren = WhiteboardRoute._addFileChildren(
+  WhiteboardRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -170,6 +253,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   TasksRoute: TasksRoute,
   TimerRoute: TimerRoute,
+  WhiteboardRoute: WhiteboardRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

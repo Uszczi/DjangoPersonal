@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 
 import { useAuthStore } from "@/stores/auth";
 
-type TopTabPath = "/" | "/tasks" | "/projects" | "/timer";
+type TopTabPath = "/" | "/tasks" | "/projects" | "/timer" | "/whiteboard";
 
 function TopTabLink({ to, children }: { to: TopTabPath; children: string }) {
   return (
@@ -38,6 +38,7 @@ export function Navbar() {
         <TopTabLink to="/tasks">Zadania</TopTabLink>
         <TopTabLink to="/projects">Projekty</TopTabLink>
         <TopTabLink to="/timer">Czas</TopTabLink>
+        <TopTabLink to="/whiteboard">Tablice</TopTabLink>
       </nav>
       {user && (
         <div className="topbar-user">
