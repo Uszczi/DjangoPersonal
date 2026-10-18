@@ -4,8 +4,10 @@ import { api } from "@/api";
 import type { WhiteboardResponse } from "@/generated/api";
 import type { BoardDocument } from "@/whiteboard/boardDocument";
 import { parseBoard } from "@/whiteboard/boardDocument";
+import { createLoadGuard } from "@/stores/loadGuard";
+import type { SaveState } from "@/whiteboard/useAutosave";
 
-export type SaveState = "saved" | "saving" | "failed";
+export type { SaveState };
 
 type WhiteboardsState = {
   whiteboards: WhiteboardResponse[];
@@ -17,7 +19,7 @@ type WhiteboardsState = {
   deleteWhiteboard: (id: number) => Promise<void>;
 };
 
-let loadRequestId = 0;
+const loadGuard = createLoadGuard();
 
 export const useWhiteboardsStore = create<WhiteboardsState>((set) => ({
   whiteboards: [],
@@ -25,10 +27,10 @@ export const useWhiteboardsStore = create<WhiteboardsState>((set) => ({
   pageError: "",
 
   loadWhiteboards: async () => {
-    const requestId = ++loadRequestId;
+    const requestId = loadGuard.nextRequestId();
     try {
       const loaded = await api.whiteboardsList();
-      if (requestId !== loadRequestId) return;
+      if (!loadGuard.isLatest(requestId)) return;
       const sorted = [...loaded].sort((a, b) => {
         const ta = new Date(a.updatedAt).getTime();
         const tb = new Date(b.updatedAt).getTime();
@@ -36,14 +38,14 @@ export const useWhiteboardsStore = create<WhiteboardsState>((set) => ({
       });
       set({ whiteboards: sorted, pageError: "" });
     } catch {
-      if (requestId === loadRequestId) {
+      if (loadGuard.isLatest(requestId)) {
         set({
           pageError:
             "Nie udało się wczytać tablic. Odśwież stronę, aby spróbować ponownie.",
         });
       }
     } finally {
-      if (requestId === loadRequestId) set({ isLoading: false });
+      if (loadGuard.isLatest(requestId)) set({ isLoading: false });
     }
   },
 

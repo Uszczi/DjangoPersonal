@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { apiErrorMessage } from "@/apiErrorMessage";
 import { api } from "@/api";
 import { type TaskResponse, type TimeEntryResponse, type TimerResponse } from "@/generated/api";
+import { createLoadGuard } from "@/stores/loadGuard";
 
 export type ManualEntryInput = {
   date: string;
@@ -49,7 +50,7 @@ function applyTimerState(set: TimerSet, timer: TimerResponse) {
   });
 }
 
-let loadRequestId = 0;
+const loadGuard = createLoadGuard();
 
 export const useTimerStore = create<TimerStoreState>((set, get) => ({
   isLoading: true,
@@ -62,7 +63,7 @@ export const useTimerStore = create<TimerStoreState>((set, get) => ({
   actionError: "",
 
   loadData: async () => {
-    const requestId = ++loadRequestId;
+    const requestId = loadGuard.nextRequestId();
 
     try {
       const [timer, loadedEntries, loadedTasks] = await Promise.all([
@@ -70,18 +71,18 @@ export const useTimerStore = create<TimerStoreState>((set, get) => ({
         api.timeEntriesList({}),
         api.tasksList({ all: true }),
       ]);
-      if (requestId !== loadRequestId) return;
+      if (!loadGuard.isLatest(requestId)) return;
       applyTimerState(set, timer);
       set({ entries: loadedEntries, tasks: loadedTasks });
     } catch {
-      if (requestId === loadRequestId) {
+      if (loadGuard.isLatest(requestId)) {
         set({
           pageError:
             "Nie udało się wczytać danych czasu. Odśwież stronę, aby spróbować ponownie.",
         });
       }
     } finally {
-      if (requestId === loadRequestId) set({ isLoading: false });
+      if (loadGuard.isLatest(requestId)) set({ isLoading: false });
     }
   },
 

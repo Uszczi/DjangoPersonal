@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { apiErrorMessage } from "@/apiErrorMessage";
 import { api } from "@/api";
 import { type TaskResponse } from "@/generated/api";
+import { createLoadGuard } from "@/stores/loadGuard";
 
 export type TaskInput = {
   title: string;
@@ -36,7 +37,7 @@ type TasksState = {
   confirmDelete: (task: TaskResponse) => Promise<void>;
 };
 
-let loadRequestId = 0;
+const loadGuard = createLoadGuard();
 
 export const useTasksStore = create<TasksState>((set) => ({
   taskList: null,
@@ -44,17 +45,17 @@ export const useTasksStore = create<TasksState>((set) => ({
   actionError: "",
 
   loadTasks: async (projectId) => {
-    const requestId = ++loadRequestId;
+    const requestId = loadGuard.nextRequestId();
 
     try {
       const loadedTasks = await api.tasksList({ project: projectId });
-      if (requestId !== loadRequestId) return;
+      if (!loadGuard.isLatest(requestId)) return;
       set({
         taskList: { projectId, tasks: orderTasks(loadedTasks) },
         loadError: null,
       });
     } catch {
-      if (requestId === loadRequestId) {
+      if (loadGuard.isLatest(requestId)) {
         set({
           loadError: {
             projectId,

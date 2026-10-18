@@ -7,13 +7,17 @@ import {
   commit,
   createEmptyBoard,
   createHistory,
+  elementBounds,
+  elementsInRect,
   moveElement,
+  NOTE_MIN_SIZE,
   parseBoard,
   redo,
   removeElement,
   resizeElement,
   serializeBoard,
   setViewport,
+  TEXT_LABEL_BOUNDS,
   undo,
   updateElement,
 } from '@/whiteboard/boardDocument'
@@ -165,5 +169,48 @@ describe('boardDocument', () => {
     expect(re.height).toBe(30)
     expect(ee.width).toBe(40)
     expect(ee.height).toBe(50)
+  })
+
+  test('elementBounds returns a bounding box per element kind', () => {
+    let doc = createEmptyBoard()
+    doc = addElement(doc, { id: 's', kind: 'stroke', points: [[1, 2], [5, 8], [3, 0]], color: '#000', width: 2 })
+    doc = addElement(doc, { id: 'l', kind: 'line', from: [10, 20], to: [0, 5], color: '#000' })
+    doc = addElement(doc, { id: 'a', kind: 'arrow', from: [0, 0], to: [4, 4], color: '#000' })
+    doc = addElement(doc, { id: 'r', kind: 'rectangle', x: 2, y: 3, width: 10, height: 5, color: '#000' })
+    doc = addElement(doc, { id: 'e', kind: 'ellipse', x: 7, y: 8, width: 20, height: 10, color: '#000' })
+    doc = addElement(doc, { id: 't', kind: 'text', x: 100, y: 200, text: 'hi', color: '#000' })
+    const bounds = (id: string) => elementBounds(doc.elements.find((e) => e.id === id)!)
+    expect(bounds('s')).toEqual({ x: 1, y: 0, width: 4, height: 8 })
+    expect(bounds('l')).toEqual({ x: 0, y: 5, width: 10, height: 15 })
+    expect(bounds('a')).toEqual({ x: 0, y: 0, width: 4, height: 4 })
+    expect(bounds('r')).toEqual({ x: 2, y: 3, width: 10, height: 5 })
+    expect(bounds('e')).toEqual({ x: 7, y: 8, width: 20, height: 10 })
+    expect(bounds('t')).toEqual({ x: 100, y: 200, width: TEXT_LABEL_BOUNDS.width, height: TEXT_LABEL_BOUNDS.height })
+  })
+
+  test('elementsInRect returns overlapping ids and ignores misses', () => {
+    let doc = createEmptyBoard()
+    doc = addElement(doc, { id: 'r', kind: 'rectangle', x: 0, y: 0, width: 10, height: 10, color: '#000' })
+    doc = addElement(doc, { id: 't', kind: 'text', x: 100, y: 100, text: 'hi', color: '#000' })
+    doc = addElement(doc, { id: 's', kind: 'stroke', points: [[20, 20], [25, 25]], color: '#000', width: 2 })
+    expect(elementsInRect(doc, { x: 5, y: 5, width: 10, height: 10 })).toEqual(['r'])
+    // edges touching only do not count as overlap
+    expect(elementsInRect(doc, { x: 10, y: 10, width: 10, height: 10 })).toEqual([])
+    // text uses its hit box at (100, 100) sized 60x20
+    expect(elementsInRect(doc, { x: 120, y: 105, width: 10, height: 10 })).toEqual(['t'])
+    expect(elementsInRect(doc, { x: 20, y: 20, width: 5, height: 5 })).toEqual(['s'])
+  })
+
+  test('resizeElement clamps a note to the minimum size', () => {
+    let doc = createEmptyBoard()
+    doc = addElement(doc, { id: 'n', kind: 'note', x: 0, y: 0, width: 100, height: 80, text: '', color: '#fef3c7' })
+    const next = resizeElement(doc, 'n', 10, 5)
+    const el = next.elements[0] as { width: number; height: number }
+    expect(el.width).toBe(NOTE_MIN_SIZE.width)
+    expect(el.height).toBe(NOTE_MIN_SIZE.height)
+    const bigger = resizeElement(doc, 'n', 200, 160)
+    const be = bigger.elements[0] as { width: number; height: number }
+    expect(be.width).toBe(200)
+    expect(be.height).toBe(160)
   })
 })

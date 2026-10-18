@@ -3,14 +3,6 @@ from django.db import models
 from apps.infra.models.project import Project
 
 
-def normalize_project_name(name: str) -> str:
-    return name.strip()
-
-
-def project_name_key(name: str) -> str:
-    return normalize_project_name(name).casefold()
-
-
 class Task(models.Model):
     project = models.ForeignKey(
         Project,

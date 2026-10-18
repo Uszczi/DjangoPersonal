@@ -9,6 +9,7 @@ import { useModalStore } from '@/stores/modal'
 import { useProjectsStore } from '@/stores/projects'
 import { useTasksStore } from '@/stores/tasks'
 import { useTimerStore } from '@/stores/timer'
+import { useWhiteboardsStore } from '@/stores/whiteboards'
 
 /** Reset every Zustand store so each render starts from a clean slate. */
 export function resetStores() {
@@ -19,6 +20,7 @@ export function resetStores() {
   useProjectsStore.setState(useProjectsStore.getInitialState())
   useTasksStore.setState(useTasksStore.getInitialState())
   useTimerStore.setState(useTimerStore.getInitialState())
+  useWhiteboardsStore.setState(useWhiteboardsStore.getInitialState())
 }
 
 export function renderApp(path = '/', options?: { authenticated?: boolean }) {

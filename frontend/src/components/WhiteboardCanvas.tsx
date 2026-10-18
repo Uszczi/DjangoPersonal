@@ -2,10 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { Stage, Layer, Line, Rect, Ellipse, Arrow, Circle } from "react-konva";
 type KonvaEventObject<T> = { evt: T; target: any; currentTarget: any };
 
-import type { BoardDocument, BoardElement, Point } from "@/whiteboard/boardDocument";
+import type { Bounds, BoardDocument, BoardElement, Point } from "@/whiteboard/boardDocument";
 import {
   addElement,
+  elementsInRect,
+  moveElement,
   removeElement,
+  resizeElement,
   setViewport,
   updateElement,
 } from "@/whiteboard/boardDocument";
@@ -88,16 +91,10 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
       const r = resizingRef.current;
       if (r) {
         const scale = stageScale;
-        const newW = Math.max(40, r.startW + (e.clientX - r.startX) / scale);
-        const newH = Math.max(30, r.startH + (e.clientY - r.startY) / scale);
-        onChange(
-          {
-            ...board,
-            elements: board.elements.map((x) =>
-              x.id === r.id && x.kind === "note" ? { ...x, width: newW, height: newH } : x,
-            ),
-          },
-        );
+        // resizeElement clamps the note to NOTE_MIN_SIZE.
+        const newW = r.startW + (e.clientX - r.startX) / scale;
+        const newH = r.startH + (e.clientY - r.startY) / scale;
+        onChange(resizeElement(board, r.id, newW, newH));
         return;
       }
       const d = draggingNoteRef.current;
@@ -105,14 +102,12 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
         const scale = stageScale;
         const newX = d.startPos.x + (e.clientX - d.startX) / scale;
         const newY = d.startPos.y + (e.clientY - d.startY) / scale;
-        onChange(
-          {
-            ...board,
-            elements: board.elements.map((x) =>
-              x.id === d.id && x.kind === "note" ? { ...x, x: newX, y: newY } : x,
-            ),
-          },
-        );
+        // moveElement takes a delta from the current position; the note is
+        // re-positioned on every pointer move, so use the step, not the total.
+        const current = board.elements.find((x) => x.id === d.id);
+        if (current && current.kind === "note") {
+          onChange(moveElement(board, d.id, newX - current.x, newY - current.y));
+        }
       }
     }
     function onUp() {
@@ -181,6 +176,31 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
   }, [selectedId, selectedNoteId, board, onChange]);
 
   const elements = board.elements;
+
+  function rectFrom(a: Point, b: Point): Bounds {
+    return {
+      x: Math.min(a[0], b[0]),
+      y: Math.min(a[1], b[1]),
+      width: Math.abs(b[0] - a[0]),
+      height: Math.abs(b[1] - a[1]),
+    };
+  }
+
+  function selectInRect(rect: Bounds) {
+    const byId = new Map(elements.map((el) => [el.id, el]));
+    const hits = elementsInRect(board, rect)
+      .map((id) => byId.get(id))
+      .filter((el): el is BoardElement => el !== undefined);
+    if (hits.length > 0) {
+      setSelectedIds(hits.map((h) => h.id));
+      const primary = hits[0];
+      if (primary.kind === "note" || primary.kind === "text") setSelectedNoteId(primary.id);
+      else setSelectedNoteId(null);
+    } else {
+      setSelectedIds([]);
+      setSelectedNoteId(null);
+    }
+  }
 
   function handleWheel(e: KonvaEventObject<WheelEvent>) {
     e.evt.preventDefault();
@@ -304,41 +324,12 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
       const start = downPosRef.current;
       downPosRef.current = null;
       if (marquee) {
-        const { current } = marquee;
-        const rx = Math.min(start![0], current[0]);
-        const ry = Math.min(start![1], current[1]);
-        const rw = Math.abs(current[0] - start![0]);
-        const rh = Math.abs(current[1] - start![1]);
-        if (rw < 4 && rh < 4) {
+        const rect = rectFrom(start!, marquee.current);
+        if (rect.width < 4 && rect.height < 4) {
           setSelectedIds([]);
           setSelectedNoteId(null);
         } else {
-          const hits = elements.filter((el) => {
-            let bx = 0, by = 0, bw = 0, bh = 0;
-            if (el.kind === "stroke") {
-              const xs = el.points.map((p) => p[0]);
-              const ys = el.points.map((p) => p[1]);
-              bx = Math.min(...xs); by = Math.min(...ys);
-              bw = Math.max(...xs) - bx; bh = Math.max(...ys) - by;
-            } else if (el.kind === "line" || el.kind === "arrow") {
-              bx = Math.min(el.from[0], el.to[0]); by = Math.min(el.from[1], el.to[1]);
-              bw = Math.abs(el.to[0] - el.from[0]); bh = Math.abs(el.to[1] - el.from[1]);
-            } else if (el.kind === "note" || el.kind === "rectangle" || el.kind === "ellipse") {
-              bx = el.x; by = el.y; bw = el.width; bh = el.height;
-            } else if (el.kind === "text") {
-              bx = el.x; by = el.y; bw = 60; bh = 20;
-            }
-            return bx < rx + rw && bx + bw > rx && by < ry + rh && by + bh > ry;
-          });
-          if (hits.length > 0) {
-            setSelectedIds(hits.map((h) => h.id));
-            const primary = hits[0];
-            if (primary.kind === "note" || primary.kind === "text") setSelectedNoteId(primary.id);
-            else setSelectedNoteId(null);
-          } else {
-            setSelectedIds([]);
-            setSelectedNoteId(null);
-          }
+          selectInRect(rect);
         }
         setMarquee(null);
       } else {
@@ -348,42 +339,13 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
       return;
     }
     if (marquee) {
-      const { start, current } = marquee;
-      const rx = Math.min(start[0], current[0]);
-      const ry = Math.min(start[1], current[1]);
-      const rw = Math.abs(current[0] - start[0]);
-      const rh = Math.abs(current[1] - start[1]);
       // small drag = click on empty -> deselect
-      if (rw < 4 && rh < 4) {
+      const rect = rectFrom(marquee.start, marquee.current);
+      if (rect.width < 4 && rect.height < 4) {
         setSelectedIds([]);
         setSelectedNoteId(null);
       } else {
-        const hits = elements.filter((el) => {
-          let bx = 0, by = 0, bw = 0, bh = 0;
-          if (el.kind === "stroke") {
-            const xs = el.points.map((p) => p[0]);
-            const ys = el.points.map((p) => p[1]);
-            bx = Math.min(...xs); by = Math.min(...ys);
-            bw = Math.max(...xs) - bx; bh = Math.max(...ys) - by;
-          } else if (el.kind === "line" || el.kind === "arrow") {
-            bx = Math.min(el.from[0], el.to[0]); by = Math.min(el.from[1], el.to[1]);
-            bw = Math.abs(el.to[0] - el.from[0]); bh = Math.abs(el.to[1] - el.from[1]);
-          } else if (el.kind === "note" || el.kind === "rectangle" || el.kind === "ellipse") {
-            bx = el.x; by = el.y;
-            bw = el.width; bh = el.height;
-          } else if (el.kind === "text") {
-            bx = el.x; by = el.y; bw = 60; bh = 20;
-          }
-          return bx < rx + rw && bx + bw > rx && by < ry + rh && by + bh > ry;
-        });
-        if (hits.length > 0) {
-          setSelectedIds(hits.map((h) => h.id));
-          if (hits[0].kind === "note" || hits[0].kind === "text") setSelectedNoteId(hits[0].id);
-          else setSelectedNoteId(null);
-        } else {
-          setSelectedIds([]);
-          setSelectedNoteId(null);
-        }
+        selectInRect(rect);
       }
       setMarquee(null);
       return;
@@ -428,31 +390,14 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
     const node = e.target;
     const el = elements.find((x) => x.id === id);
     if (!el) return;
-    if (el.kind === "rectangle" || el.kind === "ellipse" || el.kind === "note" || el.kind === "text") {
-      onChange(updateElement(board, id, { x: node.x(), y: node.y() } as any));
-    } else if (el.kind === "stroke") {
-      const dx = node.x();
-      const dy = node.y();
-      onChange({
-        ...board,
-        elements: board.elements.map((x) =>
-          x.id === id && x.kind === "stroke"
-            ? { ...x, points: x.points.map(([px, py]) => [px + dx, py + dy]) }
-            : x,
-        ),
-      });
-      node.position({ x: 0, y: 0 });
-    } else if (el.kind === "line" || el.kind === "arrow") {
-      const dx = node.x();
-      const dy = node.y();
-      onChange({
-        ...board,
-        elements: board.elements.map((x) =>
-          x.id === id && (x.kind === "line" || x.kind === "arrow")
-            ? { ...x, from: [x.from[0] + dx, x.from[1] + dy], to: [x.to[0] + dx, x.to[1] + dy] }
-            : x,
-        ),
-      });
+    if (el.kind === "rectangle" || el.kind === "note" || el.kind === "text") {
+      onChange(updateElement(board, id, { x: node.x(), y: node.y() }));
+    } else if (el.kind === "ellipse") {
+      // Konva positions an ellipse by its centre; the document stores the top-left.
+      onChange(updateElement(board, id, { x: node.x() - el.width / 2, y: node.y() - el.height / 2 }));
+    } else if (el.kind === "stroke" || el.kind === "line" || el.kind === "arrow") {
+      // Konva keeps the drag delta on the node; the document moves by that delta.
+      onChange(moveElement(board, id, node.x(), node.y()));
       node.position({ x: 0, y: 0 });
     }
     setSelectedIds([id]);
@@ -687,7 +632,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
                     const newW = Math.max(10, node.x() - el.x + 5);
                     const newH = Math.max(10, node.y() - el.y + 5);
                     node.position({ x: el.x + el.width, y: el.y + el.height });
-                    onChange(updateElement(board, el.id, { width: newW, height: newH } as any));
+                    onChange(resizeElement(board, el.id, newW, newH));
                   }}
                 />
               );
@@ -705,9 +650,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
                       const node = e.target;
                       const newFrom: Point = [node.x(), node.y()];
                       node.position({ x: newFrom[0], y: newFrom[1] });
-                      onChange(
-                        updateElement(board, el.id, { from: newFrom } as any),
-                      );
+                      onChange(updateElement(board, el.id, { from: newFrom }));
                     }}
                   />
                   <Circle
@@ -720,9 +663,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
                       const node = e.target;
                       const newTo: Point = [node.x(), node.y()];
                       node.position({ x: newTo[0], y: newTo[1] });
-                      onChange(
-                        updateElement(board, el.id, { to: newTo } as any),
-                      );
+                      onChange(updateElement(board, el.id, { to: newTo }));
                     }}
                   />
                 </>
@@ -800,14 +741,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
                     style={{ width: "100%", height: "100%", border: "none", background: "transparent", resize: "none" }}
                     value={el.text}
                     onChange={(e) => {
-                      onChange(
-                        {
-                          ...board,
-                          elements: board.elements.map((x) =>
-                            x.id === el.id ? { ...el, text: e.target.value } : x,
-                          ),
-                        },
-                      );
+                      onChange(updateElement(board, el.id, { text: e.target.value }));
                     }}
                   />
                   {selectedNoteId === el.id && (
@@ -852,12 +786,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
                 <input
                   value={el.text}
                   onChange={(e) => {
-                    onChange({
-                      ...board,
-                      elements: board.elements.map((x) =>
-                        x.id === el.id ? { ...el, text: e.target.value } : x,
-                      ),
-                    });
+                    onChange(updateElement(board, el.id, { text: e.target.value }));
                   }}
                   style={{ border: "none", background: "transparent", color: el.color }}
                 />

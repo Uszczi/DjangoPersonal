@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 import { api } from "@/api";
 import { type ProjectResponse } from "@/generated/api";
+import { createLoadGuard } from "@/stores/loadGuard";
 
 export type ProjectInput = { name: string; description: string };
 
@@ -34,7 +35,7 @@ type ProjectsState = {
   confirmProjectDelete: (project: ProjectResponse) => Promise<ProjectResponse | null>;
 };
 
-let loadRequestId = 0;
+const loadGuard = createLoadGuard();
 
 export const useProjectsStore = create<ProjectsState>((set, get) => ({
   projects: [],
@@ -42,21 +43,21 @@ export const useProjectsStore = create<ProjectsState>((set, get) => ({
   pageError: "",
 
   loadProjects: async () => {
-    const requestId = ++loadRequestId;
+    const requestId = loadGuard.nextRequestId();
 
     try {
       const loadedProjects = await api.projectsList();
-      if (requestId !== loadRequestId) return;
+      if (!loadGuard.isLatest(requestId)) return;
       set({ projects: orderProjects(loadedProjects), pageError: "" });
     } catch {
-      if (requestId === loadRequestId) {
+      if (loadGuard.isLatest(requestId)) {
         set({
           pageError:
             "Nie udało się wczytać projektów. Odśwież stronę, aby spróbować ponownie.",
         });
       }
     } finally {
-      if (requestId === loadRequestId) set({ isLoading: false });
+      if (loadGuard.isLatest(requestId)) set({ isLoading: false });
     }
   },
 

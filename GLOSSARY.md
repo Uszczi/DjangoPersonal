@@ -21,3 +21,6 @@ The single Time entry that has a start but no end. At most one running timer exi
 
 **Whiteboard**:
 A named space that holds one freeform drawing — freehand strokes, shapes, and sticky notes. A user may keep several Whiteboards.
+
+**Notatki** (Notes):
+A Whiteboard whose content is a Markdown document instead of a drawing. Shares the Whiteboard API and editor; only the payload differs.

@@ -139,10 +139,71 @@ export function resizeElement(
 ): BoardDocument {
   const element = getElement(doc, id);
   if (!element) return doc;
-  if (element.kind === "rectangle" || element.kind === "ellipse" || element.kind === "note") {
-    return updateElement(doc, id, { width, height } as Partial<BoardElement>);
+  if (element.kind === "note") {
+    return updateElement(doc, id, {
+      width: Math.max(NOTE_MIN_SIZE.width, width),
+      height: Math.max(NOTE_MIN_SIZE.height, height),
+    });
+  }
+  if (element.kind === "rectangle" || element.kind === "ellipse") {
+    return updateElement(doc, id, { width, height });
   }
   return doc;
+}
+
+// ---------- Geometry (bounds and hit-testing) ----------
+
+/** Hit box used for text labels, which carry no stored width/height. */
+export const TEXT_LABEL_BOUNDS = { width: 60, height: 20 } as const;
+
+/** Smallest size a sticky note may be resized to. */
+export const NOTE_MIN_SIZE = { width: 40, height: 30 } as const;
+
+export type Bounds = { x: number; y: number; width: number; height: number };
+
+/** Axis-aligned bounding box of an element, in document coordinates. */
+export function elementBounds(el: BoardElement): Bounds {
+  switch (el.kind) {
+    case "stroke": {
+      const xs = el.points.map((p) => p[0]);
+      const ys = el.points.map((p) => p[1]);
+      const x = Math.min(...xs);
+      const y = Math.min(...ys);
+      return { x, y, width: Math.max(...xs) - x, height: Math.max(...ys) - y };
+    }
+    case "line":
+    case "arrow": {
+      const x = Math.min(el.from[0], el.to[0]);
+      const y = Math.min(el.from[1], el.to[1]);
+      return {
+        x,
+        y,
+        width: Math.abs(el.to[0] - el.from[0]),
+        height: Math.abs(el.to[1] - el.from[1]),
+      };
+    }
+    case "text":
+      return { x: el.x, y: el.y, width: TEXT_LABEL_BOUNDS.width, height: TEXT_LABEL_BOUNDS.height };
+    case "note":
+    case "rectangle":
+    case "ellipse":
+      return { x: el.x, y: el.y, width: el.width, height: el.height };
+  }
+}
+
+/** Ids of the elements whose bounding box overlaps the given rectangle. */
+export function elementsInRect(doc: BoardDocument, rect: Bounds): string[] {
+  return doc.elements
+    .filter((el) => {
+      const b = elementBounds(el);
+      return (
+        b.x < rect.x + rect.width &&
+        b.x + b.width > rect.x &&
+        b.y < rect.y + rect.height &&
+        b.y + b.height > rect.y
+      );
+    })
+    .map((el) => el.id);
 }
 
 export function setViewport(doc: BoardDocument, viewport: Viewport): BoardDocument {
