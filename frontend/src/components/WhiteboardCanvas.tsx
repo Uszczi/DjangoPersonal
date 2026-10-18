@@ -38,11 +38,22 @@ function toCanvas(stage: { x(): number; y(): number; scaleX(): number }, px: num
 export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
   const stageRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const canvasAreaRef = useRef<HTMLDivElement | null>(null);
+  const [dims, setDims] = useState({ width: 800, height: 600 });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const selectedId = selectedIds.length > 0 ? selectedIds[0] : null;
   const [marquee, setMarquee] = useState<{ start: Point; current: Point } | null>(null);
   const [spaceHeld, setSpaceHeld] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    function onFsChange() {
+      setIsFullscreen(!!document.fullscreenElement);
+    }
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -53,6 +64,19 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
+
+  useEffect(() => {
+    const el = canvasAreaRef.current;
+    if (!el) return;
+    function update() {
+      const r = el!.getBoundingClientRect();
+      setDims({ width: Math.max(300, r.width), height: Math.max(200, r.height) });
+    }
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [isFullscreen]);
   const [middleHeld, setMiddleHeld] = useState(false);
   const downOnEmptyRef = useRef(false);
   const downPosRef = useRef<Point | null>(null);
@@ -467,14 +491,29 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
         boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
       }}
     >
-      <div style={{ marginBottom: 8, fontSize: 12, color: "#6b7280", padding: "4px 8px" }}>
-        Narzędzie: {tool} · {elements.length} elementów · Przesuwanie: przytrzymaj Spację
+      <div style={{ marginBottom: 8, fontSize: 12, color: "#6b7280", padding: "4px 8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span>Narzędzie: {tool} · {elements.length} elementów · Przesuwanie: przytrzymaj Spację</span>
+        <button
+          type="button"
+          className="quiet-button"
+          onClick={() => {
+            const el = containerRef.current;
+            if (!el) return;
+            if (!document.fullscreenElement) el.requestFullscreen?.();
+            else document.exitFullscreen?.();
+          }}
+        >
+          {isFullscreen ? "Zamknij pełny ekran" : "Pełny ekran"}
+        </button>
       </div>
-      <div style={{ position: "relative" }}>
+      <div
+        ref={canvasAreaRef}
+        style={{ position: "relative", height: isFullscreen ? "calc(100vh - 48px)" : "600px", width: "100%" }}
+      >
       <Stage
         ref={stageRef}
-        width={window.innerWidth - 400}
-        height={window.innerHeight - 200}
+        width={dims.width}
+        height={dims.height}
         x={stagePos.x}
         y={stagePos.y}
         scaleX={stageScale}
