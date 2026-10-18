@@ -50,6 +50,27 @@ class ProjectRepository:
             raise DuplicateProjectName from error
         return project
 
+    def reorder(self, project: ProjectModel, *, index: int | None) -> ProjectModel:
+        """Move ``project`` to ``index`` among its reorderable siblings.
+
+        The reorderable siblings are the user's non-inbox projects. ``index``
+        is clamped to the sibling range and ``None`` appends at the end. Every
+        sibling is renumbered to a gapless ``0..n-1`` in one bulk update, so
+        ordering stays predictable after any move.
+        """
+        with transaction.atomic():
+            siblings = list(
+                ProjectModel.objects.filter(user=project.user, is_inbox=False)
+                .exclude(pk=project.pk)
+                .order_by('position', 'normalized_name')
+            )
+            target = len(siblings) if index is None else max(0, min(int(index), len(siblings)))
+            siblings.insert(target, project)
+            for position, sibling in enumerate(siblings):
+                sibling.position = position
+            ProjectModel.objects.bulk_update(siblings, ['position'])
+        return project
+
     def delete(self, project: ProjectModel) -> None:
         """Delete a project and all of its tasks atomically."""
         with transaction.atomic():

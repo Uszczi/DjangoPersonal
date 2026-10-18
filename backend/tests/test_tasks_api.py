@@ -142,6 +142,52 @@ def test_user_can_complete_and_reopen_a_task(api_client: Any, post_json: Any, pa
     assert reopened_list.json()[0]['is_completed'] is False
 
 
+def test_task_order_follows_position_updates(api_client: Any, post_json: Any, patch_json: Any) -> None:
+    project_id = post_json('/api/v1/projects/', {'name': 'Planning'}).json()['id']
+    post_json('/api/v1/tasks/', {'title': 'First', 'project': project_id})
+    post_json('/api/v1/tasks/', {'title': 'Second', 'project': project_id})
+    third = post_json('/api/v1/tasks/', {'title': 'Third', 'project': project_id}).json()
+
+    response = patch_json(f"/api/v1/tasks/{third['id']}/", {'position': 0})
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['position'] == 0
+    listing = api_client.get(f'/api/v1/tasks/?project={project_id}').json()
+    assert [task['title'] for task in listing] == ['Third', 'First', 'Second']
+
+
+def test_task_position_is_clamped_to_the_list_ends(api_client: Any, post_json: Any, patch_json: Any) -> None:
+    project_id = post_json('/api/v1/projects/', {'name': 'Planning'}).json()['id']
+    first = post_json('/api/v1/tasks/', {'title': 'First', 'project': project_id}).json()
+    post_json('/api/v1/tasks/', {'title': 'Second', 'project': project_id})
+
+    response = patch_json(f"/api/v1/tasks/{first['id']}/", {'position': 99})
+
+    assert response.status_code == HTTPStatus.OK
+    listing = api_client.get(f'/api/v1/tasks/?project={project_id}').json()
+    assert [task['title'] for task in listing] == ['Second', 'First']
+
+
+def test_new_task_lands_after_the_last_open_task(api_client: Any, post_json: Any) -> None:
+    project_id = post_json('/api/v1/projects/', {'name': 'Backlog'}).json()['id']
+    open_task = post_json(
+        '/api/v1/tasks/', {'title': 'Open', 'project': project_id}
+    ).json()
+    Task.objects.create(
+        title='Done A', project_id=project_id, is_completed=True, position=3
+    )
+    Task.objects.create(
+        title='Done B', project_id=project_id, is_completed=True, position=4
+    )
+
+    created = post_json('/api/v1/tasks/', {'title': 'Fresh', 'project': project_id})
+
+    assert created.status_code == HTTPStatus.CREATED
+    assert created.json()['position'] == open_task['position'] + 1
+    listing = api_client.get(f'/api/v1/tasks/?project={project_id}').json()
+    assert [task['title'] for task in listing] == ['Open', 'Fresh', 'Done A', 'Done B']
+
+
 def test_user_can_permanently_delete_a_task(api_client: Any, post_json: Any) -> None:
     project_id = post_json('/api/v1/projects/', {'name': 'Reading'}).json()['id']
     task = post_json(

@@ -61,6 +61,35 @@ def test_project_details_can_be_edited(post_json: Any, patch_json: Any) -> None:
     assert response.json()['description'] == 'Sources'
 
 
+def test_project_order_follows_position_updates(api_client: Any, post_json: Any, patch_json: Any) -> None:
+    post_json('/api/v1/projects/', {'name': 'Alpha'})
+    post_json('/api/v1/projects/', {'name': 'Bravo'})
+    charlie = post_json('/api/v1/projects/', {'name': 'Charlie'})
+
+    response = patch_json(
+        f"/api/v1/projects/{charlie.json()['id']}/", {'position': 0}
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['position'] == 0
+    listing = api_client.get('/api/v1/projects/').json()
+    assert [project['name'] for project in listing] == ['Inbox', 'Charlie', 'Alpha', 'Bravo']
+    assert [project['position'] for project in listing if not project['is_inbox']] == [0, 1, 2]
+
+
+def test_project_position_is_clamped_to_the_list_ends(api_client: Any, post_json: Any, patch_json: Any) -> None:
+    alpha = post_json('/api/v1/projects/', {'name': 'Alpha'})
+    bravo = post_json('/api/v1/projects/', {'name': 'Bravo'})
+
+    moved = patch_json(
+        f"/api/v1/projects/{bravo.json()['id']}/", {'position': -3}
+    )
+
+    assert moved.status_code == HTTPStatus.OK
+    listing = api_client.get('/api/v1/projects/').json()
+    assert [project['name'] for project in listing] == ['Inbox', 'Bravo', 'Alpha']
+
+
 def test_inbox_cannot_be_renamed_or_deleted(api_client: Any, patch_json: Any) -> None:
     inbox = api_client.get('/api/v1/projects/').json()[0]
 

@@ -3,7 +3,7 @@
 from functools import partial
 from typing import Any
 
-from django.db.models import Max, QuerySet
+from django.db.models import QuerySet
 
 from apps.infra.models import Task as TaskModel
 from apps.infra.models import User
@@ -76,18 +76,9 @@ class CreateTask:
             else _resolve_project(self.projects, data.project, user=self.user)
         )
 
-        position_aliases = ('position',)
-        provided_position = None
-        for alias in position_aliases:
-            if alias in data.model_fields_set:
-                value = getattr(data, alias)
-                if value is not None:
-                    provided_position = value
-                    break
-
         position = (
-            provided_position
-            if provided_position is not None
+            data.position
+            if data.position is not None
             else self.tasks.next_position(project=project)
         )
         return self.tasks.create(
@@ -125,38 +116,12 @@ class UpdateTask:
             },
         )
 
-        position_aliases = ('position',)
-        provided_position = None
-        for alias in position_aliases:
-            if alias in data.model_fields_set:
-                value = getattr(data, alias)
-                if value is not None:
-                    provided_position = value
-                    break
-
+        provided_position = data.position
         project_changed = task.project_id != old_project_id
         completed_changed = task.is_completed != old_completed
 
-        if (project_changed or completed_changed) and provided_position is None:
-            result = TaskModel.objects.filter(
-                project_id=task.project_id, is_completed=task.is_completed
-            ).exclude(pk=task.pk).aggregate(max_position=Max('position'))
-            current = result['max_position']
-            task.position = (current if current is not None else -1) + 1
-
-        if provided_position is not None:
-            siblings = list(
-                TaskModel.objects.filter(
-                    project_id=task.project_id, is_completed=task.is_completed
-                )
-                .exclude(pk=task.pk)
-                .order_by('position', 'id')
-            )
-            index = max(0, min(int(provided_position), len(siblings)))
-            siblings.insert(index, task)
-            for i, sibling in enumerate(siblings):
-                sibling.position = i
-                sibling.save(update_fields=['position'])
+        if provided_position is not None or project_changed or completed_changed:
+            self.tasks.reorder(task, index=provided_position)
 
         return self.tasks.save(task)
 
