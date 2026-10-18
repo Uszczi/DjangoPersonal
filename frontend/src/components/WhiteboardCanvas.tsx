@@ -422,6 +422,20 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
     else setSelectedNoteId(null);
   }
 
+  function handleDblClick(e: any) {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const target = e.target;
+    if (target && target !== stage) return; // only on empty space
+    const pos = stage.getPointerPosition();
+    if (!pos) return;
+    const canvasPos = toCanvas(stage, pos.x, pos.y);
+    const note = { id: uid(), kind: "note" as const, x: canvasPos[0], y: canvasPos[1], width: 240, height: 180, text: "", color: "#fef3c7" };
+    onChange(addElement(board, note));
+    setSelectedIds([note.id]);
+    setSelectedNoteId(note.id);
+  }
+
   // keyboard delete
   // (handled by parent? we add a window listener)
   // We'll keep simple: delete on Delete key via stage keydown
@@ -457,6 +471,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
         onPointerMove={handleMouseMove as any}
         onPointerUp={handleMouseUp as any}
         onPointerCancel={handleMouseUp as any}
+        onDblClick={handleDblClick as any}
         onContextMenu={(e: any) => e.evt.preventDefault()}
         onDragMove={(e) => {
           if (e.target === stageRef.current) {
