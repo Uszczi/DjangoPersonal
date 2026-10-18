@@ -37,8 +37,9 @@ function toCanvas(stage: { x(): number; y(): number; scaleX(): number }, px: num
 
 export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
   const stageRef = useRef<any>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const selectedId = selectedIds.length > 0 ? selectedIds[0] : null;
   const [marquee, setMarquee] = useState<{ start: Point; current: Point } | null>(null);
   const [spaceHeld, setSpaceHeld] = useState(false);
   const downOnEmptyRef = useRef(false);
@@ -99,10 +100,12 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Delete" || e.key === "Backspace") {
-        if (selectedId) {
+        if (selectedIds.length > 0) {
           e.preventDefault();
-          onChange(removeElement(board, selectedId));
-          setSelectedId(null);
+          let next = board;
+          for (const id of selectedIds) next = removeElement(next, id);
+          onChange(next);
+          setSelectedIds([]);
         } else if (selectedNoteId) {
           e.preventDefault();
           onChange(removeElement(board, selectedNoteId));
@@ -224,7 +227,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
         const rw = Math.abs(current[0] - start![0]);
         const rh = Math.abs(current[1] - start![1]);
         if (rw < 4 && rh < 4) {
-          setSelectedId(null);
+          setSelectedIds([]);
           setSelectedNoteId(null);
         } else {
           const hits = elements.filter((el) => {
@@ -245,17 +248,18 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
             return bx < rx + rw && bx + bw > rx && by < ry + rh && by + bh > ry;
           });
           if (hits.length > 0) {
-            setSelectedId(hits[0].id);
-            if (hits[0].kind === "note" || hits[0].kind === "text") setSelectedNoteId(hits[0].id);
+            setSelectedIds(hits.map((h) => h.id));
+            const primary = hits[0];
+            if (primary.kind === "note" || primary.kind === "text") setSelectedNoteId(primary.id);
             else setSelectedNoteId(null);
           } else {
-            setSelectedId(null);
+            setSelectedIds([]);
             setSelectedNoteId(null);
           }
         }
         setMarquee(null);
       } else {
-        setSelectedId(null);
+        setSelectedIds([]);
         setSelectedNoteId(null);
       }
       return;
@@ -268,7 +272,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
       const rh = Math.abs(current[1] - start[1]);
       // small drag = click on empty -> deselect
       if (rw < 4 && rh < 4) {
-        setSelectedId(null);
+        setSelectedIds([]);
         setSelectedNoteId(null);
       } else {
         const hits = elements.filter((el) => {
@@ -290,10 +294,11 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
           return bx < rx + rw && bx + bw > rx && by < ry + rh && by + bh > ry;
         });
         if (hits.length > 0) {
-          setSelectedId(hits[0].id);
+          setSelectedIds(hits.map((h) => h.id));
           if (hits[0].kind === "note" || hits[0].kind === "text") setSelectedNoteId(hits[0].id);
+          else setSelectedNoteId(null);
         } else {
-          setSelectedId(null);
+          setSelectedIds([]);
           setSelectedNoteId(null);
         }
       }
@@ -367,12 +372,15 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
       });
       node.position({ x: 0, y: 0 });
     }
-    setSelectedId(id);
+    setSelectedIds([id]);
   }
 
   function handleSelect(id: string) {
     if (tool !== "select") return;
-    setSelectedId(id);
+    setSelectedIds([id]);
+    const el = elements.find((e) => e.id === id);
+    if (el && (el.kind === "note" || el.kind === "text")) setSelectedNoteId(id);
+    else setSelectedNoteId(null);
   }
 
   // keyboard delete
@@ -426,7 +434,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
       >
         <Layer>
           {elements.map((el) => {
-            const isSelected = selectedId === el.id;
+            const isSelected = selectedIds.includes(el.id);
             if (el.kind === "stroke") {
               const pts = el.points.flatMap((p) => p);
               return (
