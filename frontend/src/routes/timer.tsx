@@ -1,6 +1,6 @@
 import { createFileRoute, useSearch } from "@tanstack/react-router";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
 import { defaultProject, useProjectsStore } from "@/stores/projects";
@@ -10,6 +10,57 @@ import type { TimeEntryResponse } from "@/generated/api";
 export const Route = createFileRoute("/timer")({
   component: TimerPage,
 });
+
+/**
+ * "Zadanie" input backed by a datalist. The caret button mirrors the browser
+ * dropdown: clicking it opens the suggestions (showPicker where available).
+ */
+function TaskTitleInput({
+  listId,
+  value,
+  onChange,
+}: {
+  listId: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function showSuggestions() {
+    const input = inputRef.current;
+    if (!input) return;
+    try {
+      input.showPicker();
+      return;
+    } catch {
+      // showPicker can be unsupported or rejected — fall back to focusing.
+      input.focus();
+      input.click();
+    }
+  }
+
+  return (
+    <div className="datalist-input">
+      <input
+        ref={inputRef}
+        type="text"
+        list={listId}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        required
+      />
+      <button
+        className="datalist-toggle"
+        type="button"
+        tabIndex={-1}
+        aria-hidden="true"
+        onClick={showSuggestions}
+      >
+        <span aria-hidden="true">▾</span>
+      </button>
+    </div>
+  );
+}
 
 function dateKey(date: Date) {
   const year = date.getFullYear();
@@ -344,20 +395,13 @@ export function TimerPage() {
               </label>
               <label className="form-field">
                 <span>Zadanie</span>
-                <div className="datalist-input">
-                  <input
-                    type="text"
-                    list="start-task-titles"
-                    value={startForm.title}
-                    onChange={(event) =>
-                      setStartForm((current) => ({
-                        ...current,
-                        title: event.target.value,
-                      }))
-                    }
-                    required
-                  />
-                </div>
+                <TaskTitleInput
+                  listId="start-task-titles"
+                  value={startForm.title}
+                  onChange={(title) =>
+                    setStartForm((current) => ({ ...current, title }))
+                  }
+                />
                 <datalist id="start-task-titles">
                   {startTasks.map((task) => (
                     <option key={task.id} value={task.title} />
@@ -423,20 +467,13 @@ export function TimerPage() {
           </label>
           <label className="form-field">
             <span>Zadanie</span>
-            <div className="datalist-input">
-              <input
-                type="text"
-                list="manual-task-titles"
-                value={manualForm.title}
-                onChange={(event) =>
-                  setManualForm((current) => ({
-                    ...current,
-                    title: event.target.value,
-                  }))
-                }
-                required
-              />
-            </div>
+            <TaskTitleInput
+              listId="manual-task-titles"
+              value={manualForm.title}
+              onChange={(title) =>
+                setManualForm((current) => ({ ...current, title }))
+              }
+            />
             <datalist id="manual-task-titles">
               {manualTasks.map((task) => (
                 <option key={task.id} value={task.title} />
@@ -675,20 +712,13 @@ export function TimerPage() {
               </label>
               <label className="form-field">
                 <span>Zadanie</span>
-                <div className="datalist-input">
-                  <input
-                    type="text"
-                    list="edit-task-titles"
-                    value={editForm.title}
-                    onChange={(event) =>
-                      setEditForm((current) => ({
-                        ...current,
-                        title: event.target.value,
-                      }))
-                    }
-                    required
-                  />
-                </div>
+                <TaskTitleInput
+                  listId="edit-task-titles"
+                  value={editForm.title}
+                  onChange={(title) =>
+                    setEditForm((current) => ({ ...current, title }))
+                  }
+                />
                 <datalist id="edit-task-titles">
                   {tasks.map((task) => (
                     <option key={task.id} value={task.title} />

@@ -95,6 +95,13 @@ export function TasksPage() {
 
   // --- Touch drag & drop (long-press on the handle, then drag) ---
 
+  // Latest version of handleTaskDrop, so the document-level listeners in the
+  // effect below can always call the current closure.
+  const handleTaskDropRef = useRef(handleTaskDrop);
+  useEffect(() => {
+    handleTaskDropRef.current = handleTaskDrop;
+  });
+
   function beginLongPress(taskId: number) {
     const timer = window.setTimeout(() => {
       if (!touchDragRef.current) return;
@@ -124,7 +131,7 @@ export function TasksPage() {
     const targetId = dragOverIdRef.current;
     cancelTouchDrag();
     if (wasActive && targetId !== null) {
-      void handleTaskDrop(draggedTaskId, targetId);
+      void handleTaskDropRef.current(draggedTaskId, targetId);
     }
   }
 

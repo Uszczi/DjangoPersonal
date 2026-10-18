@@ -89,7 +89,8 @@ export function ProjectsPage() {
       {projects.length === 0 ? (
         <p className="task-empty-state">Brak projektów.</p>
       ) : (
-        <ul className="project-list" aria-label="Projekty">
+        <>
+          <ul className="project-list" aria-label="Projekty">
           {projects.map((project) => (
             <li
               className={`project-row${draggedId === project.id ? " is-dragging" : ""}${dragOverId === project.id ? " is-drag-over" : ""}`}
@@ -149,7 +150,14 @@ export function ProjectsPage() {
               </div>
             </li>
           ))}
-        </ul>
+          </ul>
+          <div className="list-add-row">
+            <button className="primary-button" onClick={openCreateForm}>
+              <span aria-hidden="true">+</span>
+              Nowy projekt
+            </button>
+          </div>
+        </>
       )}
     </>
   );

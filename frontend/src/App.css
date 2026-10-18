@@ -49,6 +49,7 @@
   display: flex;
   flex-direction: column;
   padding: 42px 20px 25px;
+  position: relative;
 }
 
 .sidebar-heading {
@@ -1259,15 +1260,27 @@ a:focus-visible {
   padding-right: 30px;
 }
 
-.datalist-input::after {
-  content: "▾";
+.datalist-toggle {
+  align-items: center;
+  background: transparent;
+  border: 0;
   color: #64797c;
+  cursor: pointer;
+  display: inline-flex;
   font-size: 10px;
-  pointer-events: none;
+  height: 26px;
+  justify-content: center;
+  padding: 0;
   position: absolute;
-  right: 10px;
+  right: 4px;
   top: 50%;
   transform: translateY(-50%);
+  transition: color 120ms ease;
+  width: 22px;
+}
+
+.datalist-toggle:hover {
+  color: #477c7c;
 }
 
 /* --- Add buttons at the bottom of lists --- */
@@ -1281,11 +1294,6 @@ a:focus-visible {
   width: 100%;
 }
 
-.sidebar-footer-add {
-  margin-top: auto;
-  padding-top: 18px;
-}
-
 .sidebar .quiet-button {
   border-color: #46656b;
   color: #d8e4e1;
@@ -1294,6 +1302,20 @@ a:focus-visible {
 .sidebar .quiet-button:hover:not(:disabled) {
   background: #29474d;
   border-color: #5c7d82;
+  color: #fff;
+}
+
+.icon-button.sidebar-close {
+  color: #6f8f8b;
+  height: 28px;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  width: 28px;
+}
+
+.icon-button.sidebar-close:hover {
+  background: #29474d;
   color: #fff;
 }
 
@@ -1486,7 +1508,7 @@ a:focus-visible {
     display: flex;
   }
 
-  .topbar-user span {
+  .topbar-user {
     display: none;
   }
 
