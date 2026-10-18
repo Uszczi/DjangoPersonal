@@ -45,6 +45,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
   const [middleHeld, setMiddleHeld] = useState(false);
   const downOnEmptyRef = useRef(false);
   const downPosRef = useRef<Point | null>(null);
+  const panningRef = useRef<{ startX: number; startY: number; startPos: { x: number; y: number } } | null>(null);
   const resizingRef = useRef<{ id: string; startX: number; startY: number; startW: number; startH: number } | null>(null);
   const [drawing, setDrawing] = useState<{
     kind: BoardElement["kind"];
@@ -166,7 +167,12 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
     const pos = stage.getPointerPosition();
     const canvasPos = toCanvas(stage, pos.x, pos.y);
     // pan when select tool and clicking empty space with middle/right or shift
-    if (tool === "select" && e.target === stage && !spaceHeld && !middleHeld) {
+    const isPan = spaceHeld || (e as any).evt?.button === 1 || middleHeld;
+    if (tool === "select" && e.target === stage && isPan) {
+      panningRef.current = { startX: pos.x, startY: pos.y, startPos: { ...stagePos } };
+      return;
+    }
+    if (tool === "select" && e.target === stage && !isPan) {
       const canvasPos = toCanvas(stage, pos.x, pos.y);
       downOnEmptyRef.current = true;
       downPosRef.current = canvasPos;
@@ -203,6 +209,12 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
     if (!stage) return;
     const pos = stage.getPointerPosition();
     if (!pos) return;
+    if (panningRef.current) {
+      const p = panningRef.current;
+      const newPos = { x: p.startPos.x + (pos.x - p.startX), y: p.startPos.y + (pos.y - p.startY) };
+      setStagePos(newPos);
+      return;
+    }
     if (downOnEmptyRef.current && downPosRef.current) {
       const canvasPos = toCanvas(stage, pos.x, pos.y);
       const dx = canvasPos[0] - downPosRef.current[0];
@@ -235,6 +247,14 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
   }
 
   function handleMouseUp() {
+    if (panningRef.current) {
+      panningRef.current = null;
+      const stage = stageRef.current;
+      if (stage) {
+        onChange(setViewport(board, { x: stagePos.x, y: stagePos.y, zoom: stageScale }));
+      }
+      return;
+    }
     if (downOnEmptyRef.current) {
       downOnEmptyRef.current = false;
       const start = downPosRef.current;
@@ -431,7 +451,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
         y={stagePos.y}
         scaleX={stageScale}
         scaleY={stageScale}
-        draggable={tool === "select" && (spaceHeld || middleHeld)}
+        draggable={false}
         onWheel={handleWheel}
         onPointerDown={handleMouseDown as any}
         onPointerMove={handleMouseMove as any}
