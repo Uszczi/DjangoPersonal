@@ -45,15 +45,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
   const selectedId = selectedIds.length > 0 ? selectedIds[0] : null;
   const [marquee, setMarquee] = useState<{ start: Point; current: Point } | null>(null);
   const [spaceHeld, setSpaceHeld] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  useEffect(() => {
-    function onFsChange() {
-      setIsFullscreen(!!document.fullscreenElement);
-    }
-    document.addEventListener("fullscreenchange", onFsChange);
-    return () => document.removeEventListener("fullscreenchange", onFsChange);
-  }, []);
+  const [fillPage, setFillPage] = useState(false);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -76,7 +68,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [isFullscreen]);
+  }, [fillPage]);
   const [middleHeld, setMiddleHeld] = useState(false);
   const downOnEmptyRef = useRef(false);
   const downPosRef = useRef<Point | null>(null);
@@ -496,19 +488,14 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
         <button
           type="button"
           className="quiet-button"
-          onClick={() => {
-            const el = containerRef.current;
-            if (!el) return;
-            if (!document.fullscreenElement) el.requestFullscreen?.();
-            else document.exitFullscreen?.();
-          }}
+          onClick={() => setFillPage((v) => !v)}
         >
-          {isFullscreen ? "Zamknij pełny ekran" : "Pełny ekran"}
+          {fillPage ? "Zwykły rozmiar" : "Wypełnij stronę"}
         </button>
       </div>
       <div
         ref={canvasAreaRef}
-        style={{ position: "relative", height: isFullscreen ? "calc(100vh - 48px)" : "600px", width: "100%" }}
+        style={{ position: "relative", height: fillPage ? "calc(100vh - 120px)" : "600px", width: "100%" }}
       >
       <Stage
         ref={stageRef}
