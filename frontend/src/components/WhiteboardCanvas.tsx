@@ -258,7 +258,18 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
   // We'll keep simple: delete on Delete key via stage keydown
 
   return (
-    <div className="whiteboard-canvas" data-testid="whiteboard-canvas" aria-label="Tablica">
+    <div
+      className="whiteboard-canvas"
+      data-testid="whiteboard-canvas"
+      aria-label="Tablica"
+      style={{
+        border: "1px solid #d1d5db",
+        borderRadius: 8,
+        background: "#ffffff",
+        overflow: "hidden",
+        boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+      }}
+    >
       <div style={{ marginBottom: 8, fontSize: 12, color: "#6b7280" }}>
         Narzędzie: {tool} · {elements.length} elementów
       </div>
