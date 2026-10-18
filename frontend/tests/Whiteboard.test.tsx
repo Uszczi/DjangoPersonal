@@ -54,7 +54,7 @@ describe('Whiteboard', () => {
 
   test('empty list shows empty state', async () => {
     renderApp('/whiteboard')
-    expect(await screen.findByRole('heading', { name: 'Utwórz pierwszą tablicę' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Utwórz pierwszą notatkę' })).toBeInTheDocument()
   })
 
   test('not-found page for missing whiteboard', async () => {
@@ -75,7 +75,7 @@ describe('Whiteboard', () => {
 
   test('opening a whiteboard shows save state', async () => {
     renderApp('/whiteboard/5')
-    expect(await screen.findByRole('heading', { name: 'Tablica' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Bez tytułu' })).toBeInTheDocument()
     expect(screen.getByText('Zapisano')).toBeInTheDocument()
   })
 })
