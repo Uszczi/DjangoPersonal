@@ -45,7 +45,6 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
   const selectedId = selectedIds.length > 0 ? selectedIds[0] : null;
   const [marquee, setMarquee] = useState<{ start: Point; current: Point } | null>(null);
   const [spaceHeld, setSpaceHeld] = useState(false);
-  const [fillPage, setFillPage] = useState(false);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -68,12 +67,13 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [fillPage]);
+  }, []);
   const [middleHeld, setMiddleHeld] = useState(false);
   const downOnEmptyRef = useRef(false);
   const downPosRef = useRef<Point | null>(null);
   const panningRef = useRef<{ startX: number; startY: number; startPos: { x: number; y: number } } | null>(null);
   const resizingRef = useRef<{ id: string; startX: number; startY: number; startW: number; startH: number } | null>(null);
+  const draggingNoteRef = useRef<{ id: string; startX: number; startY: number; startPos: { x: number; y: number } } | null>(null);
   const [drawing, setDrawing] = useState<{
     kind: BoardElement["kind"];
     start: Point;
@@ -86,22 +86,38 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
   useEffect(() => {
     function onMove(e: PointerEvent) {
       const r = resizingRef.current;
-      if (!r) return;
-      const scale = stageScale;
-      const newW = Math.max(40, r.startW + (e.clientX - r.startX) / scale);
-      const newH = Math.max(30, r.startH + (e.clientY - r.startY) / scale);
-      onChange(
-        // update width/height of the note
-        {
-          ...board,
-          elements: board.elements.map((x) =>
-            x.id === r.id && x.kind === "note" ? { ...x, width: newW, height: newH } : x,
-          ),
-        },
-      );
+      if (r) {
+        const scale = stageScale;
+        const newW = Math.max(40, r.startW + (e.clientX - r.startX) / scale);
+        const newH = Math.max(30, r.startH + (e.clientY - r.startY) / scale);
+        onChange(
+          {
+            ...board,
+            elements: board.elements.map((x) =>
+              x.id === r.id && x.kind === "note" ? { ...x, width: newW, height: newH } : x,
+            ),
+          },
+        );
+        return;
+      }
+      const d = draggingNoteRef.current;
+      if (d) {
+        const scale = stageScale;
+        const newX = d.startPos.x + (e.clientX - d.startX) / scale;
+        const newY = d.startPos.y + (e.clientY - d.startY) / scale;
+        onChange(
+          {
+            ...board,
+            elements: board.elements.map((x) =>
+              x.id === d.id && x.kind === "note" ? { ...x, x: newX, y: newY } : x,
+            ),
+          },
+        );
+      }
     }
     function onUp() {
       resizingRef.current = null;
+      draggingNoteRef.current = null;
     }
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
@@ -483,19 +499,12 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
         boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
       }}
     >
-      <div style={{ marginBottom: 8, fontSize: 12, color: "#6b7280", padding: "4px 8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span>Narzędzie: {tool} · {elements.length} elementów · Przesuwanie: przytrzymaj Spację</span>
-        <button
-          type="button"
-          className="quiet-button"
-          onClick={() => setFillPage((v) => !v)}
-        >
-          {fillPage ? "Zwykły rozmiar" : "Wypełnij stronę"}
-        </button>
+      <div style={{ marginBottom: 8, fontSize: 12, color: "#6b7280", padding: "4px 8px" }}>
+        Narzędzie: {tool} · {elements.length} elementów · Przesuwanie: przytrzymaj Spację / środkowy przycisk myszy
       </div>
       <div
         ref={canvasAreaRef}
-        style={{ position: "relative", height: fillPage ? "calc(100vh - 120px)" : "600px", width: "100%" }}
+        style={{ position: "relative", height: "calc(100vh - 140px)", width: "100%" }}
       >
       <Stage
         ref={stageRef}
@@ -758,6 +767,20 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
                 <div
                   key={el.id}
                   onClick={() => setSelectedNoteId(el.id)}
+                  onPointerDown={(e) => {
+                    const target = e.target as HTMLElement;
+                    if (target.tagName === "TEXTAREA") return;
+                    if ((target as HTMLElement).dataset?.resizeHandle) return;
+                    const note = elements.find((x) => x.id === el.id);
+                    if (!note || note.kind !== "note") return;
+                    setSelectedNoteId(el.id);
+                    draggingNoteRef.current = {
+                      id: el.id,
+                      startX: e.clientX,
+                      startY: e.clientY,
+                      startPos: { x: note.x, y: note.y },
+                    };
+                  }}
                   style={{
                     position: "absolute",
                     left,
@@ -768,6 +791,8 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
                     border: selectedNoteId === el.id ? "2px solid #2563eb" : "1px solid #f59e0b",
                     padding: 4,
                     pointerEvents: "auto",
+                    cursor: "move",
+                    userSelect: "none",
                     fontSize: 12 * sx,
                   }}
                 >
