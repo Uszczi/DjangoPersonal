@@ -26,6 +26,7 @@ function WhiteboardEditorPage() {
   const [board, setBoard] = useState<BoardDocument | null>(null);
   const [name, setName] = useState("");
   const [editingName, setEditingName] = useState(false);
+  const nameBeforeEdit = useRef(name);
   const [history, setHistory] = useState<HistoryState | null>(null);
   const [tool, setTool] = useState<Tool>("select");
   const [saveState, setSaveState] = useState<"saved" | "saving" | "failed">("saved");
@@ -49,6 +50,7 @@ function WhiteboardEditorPage() {
         const parsed = parseBoard(wb.content);
         setBoard(parsed);
         setName(wb.name);
+        nameBeforeEdit.current = wb.name;
         setHistory(createHistory(parsed));
         latestBoard.current = parsed;
       } catch (error) {
@@ -92,10 +94,11 @@ function WhiteboardEditorPage() {
   async function saveName(newName: string) {
     const trimmed = newName.trim();
     if (!trimmed) {
+      setName(nameBeforeEdit.current);
       setEditingName(false);
       return;
     }
-    if (trimmed === name) {
+    if (trimmed === nameBeforeEdit.current) {
       setEditingName(false);
       return;
     }
@@ -210,7 +213,10 @@ function WhiteboardEditorPage() {
             />
           ) : (
             <h1
-              onClick={() => setEditingName(true)}
+              onClick={() => {
+                nameBeforeEdit.current = name;
+                setEditingName(true);
+              }}
               style={{ cursor: "pointer" }}
               title="Kliknij, aby zmienić nazwę"
             >
