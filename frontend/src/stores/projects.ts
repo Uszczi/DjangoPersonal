@@ -8,6 +8,9 @@ export type ProjectInput = { name: string; description: string };
 export function orderProjects(projects: ProjectResponse[]) {
   return [...projects].sort((left, right) => {
     if (left.isInbox !== right.isInbox) return left.isInbox ? -1 : 1;
+    const leftPosition = left.position ?? 0;
+    const rightPosition = right.position ?? 0;
+    if (leftPosition !== rightPosition) return leftPosition - rightPosition;
     return left.name.localeCompare(right.name, undefined, {
       sensitivity: "base",
     });

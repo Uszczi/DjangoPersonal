@@ -34,7 +34,6 @@ export function TasksPage() {
   const toggleTaskCompletion = useTasksStore(
     (state) => state.toggleTaskCompletion,
   );
-  const moveTask = useTasksStore((state) => state.moveTask);
   const startTaskTimer = useTasksStore((state) => state.startTaskTimer);
 
   const isSidebarCollapsed = useLayoutStore(

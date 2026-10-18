@@ -22,7 +22,7 @@ class ProjectRepository:
     def list_all(self, *, user: User) -> QuerySet[ProjectModel]:
         """Every project for ``user``, inbox first, then alphabetically."""
         projects = ProjectModel.objects.filter(user=user)
-        return projects.order_by('-is_inbox', 'normalized_name')
+        return projects.order_by('-is_inbox', 'position', 'normalized_name')
 
     def find(self, project_id: int, *, user: User) -> ProjectModel | None:
         """The project with this id for ``user``, or ``None``."""

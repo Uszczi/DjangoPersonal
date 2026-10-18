@@ -28,6 +28,10 @@ export interface PatchedProjectRequest {
      *
      */
     description?: string | null;
+    /**
+     *
+     */
+    position?: number | null;
 }
 
 /**
@@ -49,6 +53,7 @@ export function PatchedProjectRequestFromJSONTyped(json: any, ignoreDiscriminato
 
         'name': json['name'] === undefined ? undefined : json['name'] === null ? null : json['name'],
         'description': json['description'] === undefined ? undefined : json['description'] === null ? null : json['description'],
+        'position': json['position'] === undefined ? undefined : json['position'] === null ? null : json['position'],
     };
 }
 
@@ -65,6 +70,7 @@ export function PatchedProjectRequestToJSONTyped(value?: PatchedProjectRequest |
 
         'name': value['name'],
         'description': value['description'],
+        'position': value['position'],
     };
 }
 

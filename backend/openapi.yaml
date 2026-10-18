@@ -578,6 +578,11 @@ components:
           readOnly: true
           title: Is Inbox
           type: boolean
+        position:
+          default: 0
+          readOnly: true
+          title: Position
+          type: integer
       required:
       - id
       - name
@@ -596,6 +601,11 @@ components:
           default: ''
           title: Description
           type: string
+        position:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Position
       required:
       - name
       title: ProjectRequest
@@ -614,6 +624,11 @@ components:
           - type: string
           - type: 'null'
           title: Description
+        position:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Position
       title: PatchedProjectRequest
       type: object
     TaskResponse:

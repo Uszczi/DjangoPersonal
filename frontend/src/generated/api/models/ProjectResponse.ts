@@ -36,6 +36,10 @@ export interface ProjectResponse {
      *
      */
     readonly isInbox: boolean;
+    /**
+     *
+     */
+    readonly position?: number;
 }
 
 /**
@@ -63,6 +67,7 @@ export function ProjectResponseFromJSONTyped(json: any, ignoreDiscriminator: boo
         'name': json['name'],
         'description': json['description'],
         'isInbox': json['is_inbox'],
+        'position': json['position'] == null ? undefined : json['position'],
     };
 }
 
@@ -70,7 +75,7 @@ export function ProjectResponseToJSON(json: any): ProjectResponse {
     return ProjectResponseToJSONTyped(json, false);
 }
 
-export function ProjectResponseToJSONTyped(value?: Omit<ProjectResponse, 'id'|'isInbox'> | null, ignoreDiscriminator: boolean = false): any {
+export function ProjectResponseToJSONTyped(value?: Omit<ProjectResponse, 'id'|'isInbox'|'position'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

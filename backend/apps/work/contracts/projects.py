@@ -26,11 +26,13 @@ class _ProjectPayload(BaseModel):
 class ProjectRequest(_ProjectPayload):
     name: str = Field(min_length=1, max_length=100)
     description: str = ''
+    position: int | None = None
 
 
 class PatchedProjectRequest(_ProjectPayload):
     name: str | None = Field(default=None, min_length=1, max_length=100)
     description: str | None = None
+    position: int | None = None
 
 
 class ProjectResponse(BaseModel):
@@ -38,4 +40,5 @@ class ProjectResponse(BaseModel):
     name: str
     description: str
     is_inbox: bool = Field(..., json_schema_extra={'readOnly': True})
+    position: int = Field(default=0, json_schema_extra={'readOnly': True})
 

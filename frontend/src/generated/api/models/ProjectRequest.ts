@@ -28,6 +28,10 @@ export interface ProjectRequest {
      *
      */
     description?: string;
+    /**
+     *
+     */
+    position?: number | null;
 }
 
 /**
@@ -50,6 +54,7 @@ export function ProjectRequestFromJSONTyped(json: any, ignoreDiscriminator: bool
 
         'name': json['name'],
         'description': json['description'] == null ? undefined : json['description'],
+        'position': json['position'] === undefined ? undefined : json['position'] === null ? null : json['position'],
     };
 }
 
@@ -66,6 +71,7 @@ export function ProjectRequestToJSONTyped(value?: ProjectRequest | null, ignoreD
 
         'name': value['name'],
         'description': value['description'],
+        'position': value['position'],
     };
 }
 

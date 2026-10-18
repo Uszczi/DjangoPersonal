@@ -138,6 +138,8 @@ class UpdateProject:
 
     def execute(self, project_id: int, data: PatchedProjectRequest) -> ProjectModel:
         project = _get_project(self.projects, project_id, user=self.user)
+        old_position = project.position
+
         apply_provided(
             data,
             project,
@@ -145,6 +147,22 @@ class UpdateProject:
                 'name': partial(_validate_name, self.projects, current=project, user=self.user)
             },
         )
+
+        if project.is_inbox:
+            project.position = 0
+        elif data.position is not None and 'position' in data.model_fields_set:
+            siblings = list(
+                ProjectModel.objects.filter(user=self.user, is_inbox=False)
+                .exclude(pk=project.pk)
+                .order_by('position', 'normalized_name')
+            )
+            index = max(0, min(int(data.position), len(siblings)))
+            siblings.insert(index, project)
+            for i, sibling in enumerate(siblings):
+                sibling.position = i
+                sibling.save(update_fields=['position'])
+            project.position = index
+
         return _save(self.projects, project)
 
 

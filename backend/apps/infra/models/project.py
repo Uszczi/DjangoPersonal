@@ -25,8 +25,10 @@ class Project(models.Model):
     normalized_name = models.CharField(max_length=100, editable=False)
     description = models.TextField(blank=True)
     is_inbox = models.BooleanField(default=False, editable=False)
+    position = models.IntegerField(default=0)
 
     class Meta:
+        ordering = ["-is_inbox", "position", "normalized_name"]
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "normalized_name"],
