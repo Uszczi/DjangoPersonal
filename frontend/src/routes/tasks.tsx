@@ -3,7 +3,7 @@ import {
   useNavigate,
   useSearch,
 } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { DeleteTaskModal } from "@/components/DeleteTaskModal";
 import { ProjectEditorModal } from "@/components/ProjectEditorModal";
@@ -53,15 +53,17 @@ export function TasksPage() {
   const tasks = taskList?.projectId === selectedProjectId ? taskList.tasks : [];
   const [draggedId, setDraggedId] = useState<number | null>(null);
   const [dragOverId, setDragOverId] = useState<number | null>(null);
+  const dragOverIdRef = useRef<number | null>(null);
+  const touchDragRef = useRef<{
+    taskId: number;
+    active: boolean;
+    longPressTimer: number | null;
+  } | null>(null);
+  const [isTouchDragging, setIsTouchDragging] = useState(false);
 
-  async function handleTaskDrop(targetId: number) {
-    if (
-      draggedId === null ||
-      draggedId === targetId ||
-      selectedProjectId === null
-    )
-      return;
-    const draggedTask = tasks.find((task) => task.id === draggedId);
+  async function handleTaskDrop(draggedTaskId: number, targetId: number) {
+    if (draggedTaskId === targetId || selectedProjectId === null) return;
+    const draggedTask = tasks.find((task) => task.id === draggedTaskId);
     const targetTask = tasks.find((task) => task.id === targetId);
     if (
       !draggedTask ||
@@ -77,10 +79,11 @@ export function TasksPage() {
 
     setDraggedId(null);
     setDragOverId(null);
+    dragOverIdRef.current = null;
 
     try {
       await api.tasksPartialUpdate({
-        id: draggedId,
+        id: draggedTaskId,
         patchedTaskUpdateRequest: { position: targetIndex },
       });
       await loadTasks(selectedProjectId);
@@ -89,6 +92,67 @@ export function TasksPage() {
       await loadTasks(selectedProjectId);
     }
   }
+
+  // --- Touch drag & drop (long-press on the handle, then drag) ---
+
+  function beginLongPress(taskId: number) {
+    const timer = window.setTimeout(() => {
+      if (!touchDragRef.current) return;
+      touchDragRef.current.active = true;
+      setIsTouchDragging(true);
+      setDraggedId(taskId);
+    }, 260);
+    touchDragRef.current = { taskId, active: false, longPressTimer: timer };
+  }
+
+  function cancelTouchDrag() {
+    if (touchDragRef.current?.longPressTimer != null) {
+      window.clearTimeout(touchDragRef.current.longPressTimer);
+    }
+    touchDragRef.current = null;
+    setIsTouchDragging(false);
+    setDraggedId(null);
+    dragOverIdRef.current = null;
+    setDragOverId(null);
+  }
+
+  function endTouchDrag() {
+    const state = touchDragRef.current;
+    if (!state) return;
+    const draggedTaskId = state.taskId;
+    const wasActive = state.active;
+    const targetId = dragOverIdRef.current;
+    cancelTouchDrag();
+    if (wasActive && targetId !== null) {
+      void handleTaskDrop(draggedTaskId, targetId);
+    }
+  }
+
+  useEffect(() => {
+    if (!isTouchDragging) return;
+    function onTouchMove(event: TouchEvent) {
+      if (!touchDragRef.current?.active) return;
+      event.preventDefault();
+      const touch = event.touches[0];
+      if (!touch) return;
+      const element = document.elementFromPoint(touch.clientX, touch.clientY);
+      const row =
+        element instanceof Element ? element.closest("li[data-task-id]") : null;
+      if (!row) return;
+      const targetId = Number(row.getAttribute("data-task-id"));
+      if (!Number.isFinite(targetId)) return;
+      dragOverIdRef.current = targetId;
+      setDragOverId(targetId);
+    }
+    document.addEventListener("touchmove", onTouchMove, { passive: false });
+    document.addEventListener("touchend", endTouchDrag);
+    document.addEventListener("touchcancel", endTouchDrag);
+    return () => {
+      document.removeEventListener("touchmove", onTouchMove);
+      document.removeEventListener("touchend", endTouchDrag);
+      document.removeEventListener("touchcancel", endTouchDrag);
+    };
+  }, [isTouchDragging]);
   const tasksError =
     loadError?.projectId === selectedProjectId ? loadError.message : "";
   const isTasksLoading =
@@ -154,6 +218,9 @@ export function TasksPage() {
                 <span aria-hidden="true">{isSidebarCollapsed ? "»" : "«"}</span>
               </button>
               <h2 id="tasks-heading">Zadania</h2>
+              <span className="task-project-name" title="Aktualny projekt">
+                {selectedProject.name}
+              </span>
             </div>
             <div className="task-heading-actions">
               <span className="task-count">
@@ -185,22 +252,32 @@ export function TasksPage() {
                 <li
                   className={`task-row${task.isCompleted ? " is-completed" : ""}${draggedId === task.id ? " is-dragging" : ""}${dragOverId === task.id ? " is-drag-over" : ""}`}
                   key={task.id}
+                  data-task-id={task.id}
                   draggable
                   onDragStart={() => setDraggedId(task.id)}
                   onDragOver={(event) => {
                     event.preventDefault();
                     setDragOverId(task.id);
+                    dragOverIdRef.current = task.id;
                   }}
-                  onDrop={() => void handleTaskDrop(task.id)}
+                  onDrop={() => void handleTaskDrop(draggedId ?? task.id, task.id)}
                   onDragEnd={() => {
                     setDraggedId(null);
                     setDragOverId(null);
+                    dragOverIdRef.current = null;
                   }}
                 >
                   <span
                     className="task-drag-handle"
                     aria-label={`Przeciągnij zadanie: ${task.title}`}
                     title="Przeciągnij"
+                    onTouchStart={() => beginLongPress(task.id)}
+                    onTouchMove={() => {
+                      if (touchDragRef.current && !touchDragRef.current.active) {
+                        // Scrolling before the long-press fires — not a drag.
+                        cancelTouchDrag();
+                      }
+                    }}
                   >
                     <span aria-hidden="true">⠿</span>
                   </span>
@@ -247,6 +324,12 @@ export function TasksPage() {
               ))}
             </ul>
           )}
+          <div className="list-add-row">
+            <button className="quiet-button" onClick={openTaskForm}>
+              <span aria-hidden="true">+</span>
+              Nowe zadanie
+            </button>
+          </div>
           {actionError && (
             <p className="task-error" role="alert">
               {actionError}

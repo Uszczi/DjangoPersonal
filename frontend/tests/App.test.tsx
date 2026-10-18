@@ -100,7 +100,7 @@ describe('Projects', () => {
     expect(await screen.findByRole('link', { name: 'Inbox' })).toBeInTheDocument()
     await screen.findByText('Nie ma tu jeszcze zadań.')
 
-    await user.click(screen.getByRole('button', { name: 'Nowy projekt' }))
+    await user.click(screen.getAllByRole('button', { name: 'Nowy projekt' })[0])
     await user.type(screen.getByLabelText('Nazwa projektu'), '  Planning  ')
     await user.type(screen.getByLabelText('Opis (opcjonalnie)'), 'Quarterly plans')
     await user.click(screen.getByRole('button', { name: 'Utwórz projekt' }))
@@ -250,7 +250,7 @@ describe('Projects', () => {
     await screen.findByText('Nie ma tu jeszcze zadań.')
     await user.click(screen.getByRole('link', { name: 'Planning' }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
-    await user.click(screen.getByRole('button', { name: 'Nowe zadanie' }))
+    await user.click(screen.getAllByRole('button', { name: 'Nowe zadanie' })[0])
     await user.type(screen.getByLabelText('Tytuł zadania'), 'Capture requirements')
     await user.type(screen.getByLabelText('Opis (opcjonalnie)'), 'Talk to the team')
     await user.click(screen.getByRole('button', { name: 'Utwórz zadanie' }))

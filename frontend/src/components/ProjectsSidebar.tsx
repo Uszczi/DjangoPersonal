@@ -83,6 +83,12 @@ export function ProjectsSidebar({
               ))
             )}
           </nav>
+          <div className="sidebar-footer-add">
+            <button className="quiet-button" onClick={() => ShowModal(ProjectEditorModal)}>
+              <span aria-hidden="true">+</span>
+              Nowy projekt
+            </button>
+          </div>
         </>
       )}
     </aside>

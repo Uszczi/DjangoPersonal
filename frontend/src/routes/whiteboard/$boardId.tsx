@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { api } from "@/api";
 import { WhiteboardCanvas } from "@/components/WhiteboardCanvas";
+import { MarkdownHighlightEditor } from "@/components/MarkdownHighlightEditor";
 import { apiErrorMessage } from "@/apiErrorMessage";
 import { NotFoundPage } from "@/components/NotFoundPage";
 import type { BoardDocument } from "@/whiteboard/boardDocument";
@@ -31,6 +32,16 @@ function renderMarkdown(md: string): string {
     .replace(/\n/g, "<br/>");
 }
 
+type MarkdownViewMode = "split" | "edit" | "highlight";
+
+const MARKDOWN_MODE_LABELS: Record<MarkdownViewMode, string> = {
+  split: "Podgląd",
+  edit: "Edycja",
+  highlight: "Podświetlony",
+};
+
+const MARKDOWN_MODES: MarkdownViewMode[] = ["split", "edit", "highlight"];
+
 export const Route = createFileRoute("/whiteboard/$boardId")({
   component: WhiteboardEditorPage,
 });
@@ -40,6 +51,7 @@ function WhiteboardEditorPage() {
   const [board, setBoard] = useState<BoardDocument | null>(null);
   const [kind, setKind] = useState<string>("whiteboard");
   const [markdownText, setMarkdownText] = useState("");
+  const [markdownMode, setMarkdownMode] = useState<MarkdownViewMode>("split");
   const [name, setName] = useState("");
   const [editingName, setEditingName] = useState(false);
   const nameBeforeEdit = useRef(name);
@@ -308,17 +320,55 @@ function WhiteboardEditorPage() {
         </button>
       </div>
       {kind === "markdown" ? (
-        <div className="markdown-editor">
-          <textarea
-            className="markdown-textarea"
-            value={markdownText}
-            onChange={(e) => handleMarkdownChange(e.target.value)}
-            placeholder="Napisz notatkę w Markdown…"
-          />
-          <div className="markdown-preview">
-            <div dangerouslySetInnerHTML={{ __html: renderMarkdown(markdownText) }} />
+        <>
+          <div
+            className="markdown-mode-switch"
+            role="group"
+            aria-label="Tryb widoku notatki"
+          >
+            {MARKDOWN_MODES.map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                className={
+                  markdownMode === mode ? "primary-button" : "quiet-button"
+                }
+                aria-pressed={markdownMode === mode}
+                onClick={() => setMarkdownMode(mode)}
+              >
+                {MARKDOWN_MODE_LABELS[mode]}
+              </button>
+            ))}
           </div>
-        </div>
+          {markdownMode === "split" && (
+            <div className="markdown-editor">
+              <textarea
+                className="markdown-textarea"
+                value={markdownText}
+                onChange={(e) => handleMarkdownChange(e.target.value)}
+                placeholder="Napisz notatkę w Markdown…"
+              />
+              <div className="markdown-preview">
+                <div dangerouslySetInnerHTML={{ __html: renderMarkdown(markdownText) }} />
+              </div>
+            </div>
+          )}
+          {markdownMode === "edit" && (
+            <textarea
+              className="markdown-textarea markdown-textarea-solo"
+              value={markdownText}
+              onChange={(e) => handleMarkdownChange(e.target.value)}
+              placeholder="Napisz notatkę w Markdown…"
+            />
+          )}
+          {markdownMode === "highlight" && (
+            <MarkdownHighlightEditor
+              value={markdownText}
+              onChange={handleMarkdownChange}
+              placeholder="Napisz notatkę w Markdown…"
+            />
+          )}
+        </>
       ) : (
         <>
           <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>

@@ -96,59 +96,73 @@ function WhiteboardsPage() {
           </div>
         </div>
       ) : (
-        <ul className="whiteboard-list" aria-label="Tablice">
-          {whiteboards.map((wb) => (
-            <li className="whiteboard-row" key={wb.id}>
-              {editingId === wb.id ? (
-                <input
-                  className="whiteboard-name-input"
-                  value={editingName}
-                  autoFocus
-                  onChange={(e) => setEditingName(e.target.value)}
-                  onBlur={() => void handleRename(wb.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") void handleRename(wb.id);
-                    if (e.key === "Escape") setEditingId(null);
-                  }}
-                />
-              ) : (
-                <button
-                  className="whiteboard-name"
-                  onClick={() =>
-                    navigate({ to: "/whiteboard/$boardId", params: { boardId: String(wb.id) } })
-                  }
-                >
-                  <span className="whiteboard-kind">
-                    {wb.kind === "markdown" ? "📝" : "🎨"}
-                  </span>
-                  {wb.name}
-                </button>
-              )}
-              <span className="whiteboard-date">
-                {new Date(wb.updatedAt).toLocaleDateString("pl-PL")}
-              </span>
-              <div className="whiteboard-row-actions">
-                <button
-                  className="task-edit-button"
-                  type="button"
-                  onClick={() => {
-                    setEditingId(wb.id);
-                    setEditingName(wb.name);
-                  }}
-                >
-                  Zmień nazwę
-                </button>
-                <button
-                  className="task-delete-button"
-                  type="button"
-                  onClick={() => void handleDelete(wb.id)}
-                >
-                  Usuń
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="whiteboard-list" aria-label="Tablice">
+            {whiteboards.map((wb) => (
+              <li className="whiteboard-row" key={wb.id}>
+                {editingId === wb.id ? (
+                  <input
+                    className="whiteboard-name-input"
+                    value={editingName}
+                    autoFocus
+                    onChange={(e) => setEditingName(e.target.value)}
+                    onBlur={() => void handleRename(wb.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") void handleRename(wb.id);
+                      if (e.key === "Escape") setEditingId(null);
+                    }}
+                  />
+                ) : (
+                  <button
+                    className="whiteboard-name"
+                    onClick={() =>
+                      navigate({ to: "/whiteboard/$boardId", params: { boardId: String(wb.id) } })
+                    }
+                  >
+                    <span className="whiteboard-kind">
+                      {wb.kind === "markdown" ? "📝" : "🎨"}
+                    </span>
+                    {wb.name}
+                  </button>
+                )}
+                <span className="whiteboard-date">
+                  {new Date(wb.updatedAt).toLocaleDateString("pl-PL")}
+                </span>
+                <div className="whiteboard-row-actions">
+                  <button
+                    className="task-edit-button"
+                    type="button"
+                    onClick={() => {
+                      setEditingId(wb.id);
+                      setEditingName(wb.name);
+                    }}
+                  >
+                    Zmień nazwę
+                  </button>
+                  <button
+                    className="task-delete-button"
+                    type="button"
+                    onClick={() => void handleDelete(wb.id)}
+                  >
+                    Usuń
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="list-add-row">
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="primary-button" onClick={() => void handleCreate("whiteboard")}>
+                <span aria-hidden="true">+</span>
+                Nowa tablica
+              </button>
+              <button className="quiet-button" onClick={() => void handleCreate("markdown")}>
+                <span aria-hidden="true">+</span>
+                Nowa notatka
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </>
   );

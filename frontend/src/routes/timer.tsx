@@ -344,18 +344,20 @@ export function TimerPage() {
               </label>
               <label className="form-field">
                 <span>Zadanie</span>
-                <input
-                  type="text"
-                  list="start-task-titles"
-                  value={startForm.title}
-                  onChange={(event) =>
-                    setStartForm((current) => ({
-                      ...current,
-                      title: event.target.value,
-                    }))
-                  }
-                  required
-                />
+                <div className="datalist-input">
+                  <input
+                    type="text"
+                    list="start-task-titles"
+                    value={startForm.title}
+                    onChange={(event) =>
+                      setStartForm((current) => ({
+                        ...current,
+                        title: event.target.value,
+                      }))
+                    }
+                    required
+                  />
+                </div>
                 <datalist id="start-task-titles">
                   {startTasks.map((task) => (
                     <option key={task.id} value={task.title} />
@@ -421,18 +423,20 @@ export function TimerPage() {
           </label>
           <label className="form-field">
             <span>Zadanie</span>
-            <input
-              type="text"
-              list="manual-task-titles"
-              value={manualForm.title}
-              onChange={(event) =>
-                setManualForm((current) => ({
-                  ...current,
-                  title: event.target.value,
-                }))
-              }
-              required
-            />
+            <div className="datalist-input">
+              <input
+                type="text"
+                list="manual-task-titles"
+                value={manualForm.title}
+                onChange={(event) =>
+                  setManualForm((current) => ({
+                    ...current,
+                    title: event.target.value,
+                  }))
+                }
+                required
+              />
+            </div>
             <datalist id="manual-task-titles">
               {manualTasks.map((task) => (
                 <option key={task.id} value={task.title} />
@@ -671,18 +675,20 @@ export function TimerPage() {
               </label>
               <label className="form-field">
                 <span>Zadanie</span>
-                <input
-                  type="text"
-                  list="edit-task-titles"
-                  value={editForm.title}
-                  onChange={(event) =>
-                    setEditForm((current) => ({
-                      ...current,
-                      title: event.target.value,
-                    }))
-                  }
-                  required
-                />
+                <div className="datalist-input">
+                  <input
+                    type="text"
+                    list="edit-task-titles"
+                    value={editForm.title}
+                    onChange={(event) =>
+                      setEditForm((current) => ({
+                        ...current,
+                        title: event.target.value,
+                      }))
+                    }
+                    required
+                  />
+                </div>
                 <datalist id="edit-task-titles">
                   {tasks.map((task) => (
                     <option key={task.id} value={task.title} />
