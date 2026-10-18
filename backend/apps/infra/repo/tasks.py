@@ -1,10 +1,10 @@
 """Persistence for tasks."""
 
-
 from typing import Any
 
 from django.db.models import ProtectedError, QuerySet
 
+from django.db.models import Max
 from apps.infra.models import Project as ProjectModel
 from apps.infra.models import User
 from apps.infra.models import Task as TaskModel
@@ -30,12 +30,22 @@ class TaskRepository:
         """The task with this id, or ``None``."""
         return TaskModel.objects.filter(pk=task_id, project__user=user).first()
 
-    def create(self, *, title: str, description: str, project: ProjectModel) -> TaskModel:
+    def create(
+        self, *, title: str, description: str, project: ProjectModel, position: int = 0
+    ) -> TaskModel:
         return TaskModel.objects.create(
             title=title,
             description=description,
             project=project,
+            position=position,
         )
+
+    def next_position(self, *, project: ProjectModel) -> int:
+        result = TaskModel.objects.filter(project=project).aggregate(
+            max_position=Max("position")
+        )
+        current = result["max_position"]
+        return (current if current is not None else -1) + 1
 
     def save(self, task: TaskModel) -> TaskModel:
         """Persist changes made to an existing task."""

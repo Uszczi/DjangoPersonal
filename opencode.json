@@ -4,6 +4,14 @@
     "djangopersonal": {
       "type": "remote",
       "url": "http://localhost:8001/mcp"
+    },
+    "djangopersonalcpp": {
+      "type": "remote",
+      "url": "http://127.0.0.1:8080/mcp",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkamFuZ29wZXJzb25hbCIsInN1YiI6IjEiLCJ1c2VybmFtZSI6ImFsaWNlIiwidG9rZW5fdHlwZSI6ImFjY2VzcyIsImlhdCI6MTc5MjMxMDM4MiwiZXhwIjoxNzk0OTAyMzgyfQ.TptZB1kCvRmnUOBJGymM_RKlLIlV1BuMniIKCppsZg4"
+      },
+      "oauth": false
     }
   }
 }

@@ -17,6 +17,9 @@ function orderTasks(tasks: TaskResponse[]) {
   return [...tasks].sort((left, right) => {
     if (left.isCompleted !== right.isCompleted)
       return left.isCompleted ? 1 : -1;
+    const leftPosition = left.position ?? left.id;
+    const rightPosition = right.position ?? right.id;
+    if (leftPosition !== rightPosition) return leftPosition - rightPosition;
     return left.id - right.id;
   });
 }
@@ -28,6 +31,7 @@ type TasksState = {
   loadTasks: (projectId: number) => Promise<void>;
   saveTask: (input: TaskInput, task?: TaskResponse | null) => Promise<TaskResponse>;
   toggleTaskCompletion: (task: TaskResponse) => Promise<void>;
+  moveTask: (task: TaskResponse, direction: "up" | "down") => Promise<void>;
   startTaskTimer: (task: TaskResponse) => Promise<boolean>;
   confirmDelete: (task: TaskResponse) => Promise<void>;
 };
@@ -103,6 +107,31 @@ export const useTasksStore = create<TasksState>((set) => ({
       set({ actionError: await apiErrorMessage(error) });
     }
   },
+
+  moveTask: async (task, direction) => {
+    const current = useTasksStore.getState().taskList;
+    if (!current || current.projectId !== task.projectId) return;
+
+    const siblings = current.tasks.filter(
+      (item) => item.isCompleted === task.isCompleted,
+    );
+    const index = siblings.findIndex((item) => item.id === task.id);
+    if (index < 0) return;
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= siblings.length) return;
+
+    set({ actionError: "" });
+    try {
+      await api.tasksPartialUpdate({
+        id: task.id,
+        patchedTaskUpdateRequest: { position: targetIndex },
+      });
+      await useTasksStore.getState().loadTasks(current.projectId);
+    } catch (error) {
+      set({ actionError: await apiErrorMessage(error) });
+    }
+  },
+
 
   startTaskTimer: async (task) => {
     set({ actionError: "" });

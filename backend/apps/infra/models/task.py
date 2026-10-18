@@ -20,9 +20,10 @@ class Task(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     is_completed = models.BooleanField(default=False)
+    position = models.IntegerField(default=0)
 
     class Meta:
-        ordering = ["is_completed", "id"]
+        ordering = ["is_completed", "position", "id"]
 
     def __str__(self) -> str:
         return self.title

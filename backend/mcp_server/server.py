@@ -174,6 +174,7 @@ def update_task(
     description: str | None = None,
     project_id: int | None = None,
     is_completed: bool | None = None,
+    position: int | None = None,
 ) -> dict[str, Any]:
     """Update a task (partial)."""
     user = _user(ctx)
@@ -183,6 +184,7 @@ def update_task(
             description=description,
             project=project_id,
             is_completed=is_completed,
+            position=position,
         )
         return task(
             handlers.UpdateTask(
@@ -193,6 +195,9 @@ def update_task(
         )
     except Exception as exc:  # noqa: BLE001
         _raise(exc)
+
+
+
 
 
 def delete_task(ctx: Context[Any, Any, Any], task_id: int) -> str:

@@ -489,14 +489,80 @@
   padding: 0;
 }
 
+.project-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.project-row {
+  align-items: center;
+  border-bottom: 1px solid #dce5e1;
+  display: grid;
+  gap: 13px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 62px;
+  padding: 10px 3px;
+}
+
+.task-row.is-dragging {
+  opacity: 0.45;
+}
+
+.task-row.is-drag-over {
+  background: #eef5f1;
+  box-shadow: inset 0 2px 0 #668b79;
+}
+
+.project-row-copy {
+  min-width: 0;
+}
+
+.project-row-copy p {
+  color: #344d52;
+  font-size: 13px;
+  line-height: 1.45;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.project-row-copy small {
+  color: #7a8d8f;
+  display: block;
+  font-size: 11px;
+  line-height: 1.4;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+}
+
+.project-row-actions {
+  align-items: center;
+  display: flex;
+  gap: 13px;
+}
+
 .task-row {
   align-items: center;
   border-bottom: 1px solid #dce5e1;
   display: grid;
   gap: 13px;
-  grid-template-columns: 18px minmax(0, 1fr) auto;
+  grid-template-columns: 24px 18px minmax(0, 1fr) auto;
   min-height: 62px;
   padding: 10px 3px;
+}
+
+.task-drag-handle {
+  align-items: center;
+  color: #9aafaa;
+  cursor: grab;
+  display: inline-flex;
+  font-size: 16px;
+  justify-content: center;
+  user-select: none;
+}
+
+.task-drag-handle:active {
+  cursor: grabbing;
 }
 
 .task-status-toggle {
@@ -835,7 +901,7 @@ a:focus-visible {
 
   .task-row {
     gap: 9px;
-    grid-template-columns: 18px minmax(0, 1fr);
+    grid-template-columns: 24px 18px minmax(0, 1fr);
   }
 
   .task-heading-actions {

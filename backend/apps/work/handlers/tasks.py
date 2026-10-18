@@ -3,7 +3,7 @@
 from functools import partial
 from typing import Any
 
-from django.db.models import QuerySet
+from django.db.models import Max, QuerySet
 
 from apps.infra.models import Task as TaskModel
 from apps.infra.models import User
@@ -71,10 +71,26 @@ class CreateTask:
             if data.project is None
             else _resolve_project(self.projects, data.project, user=self.user)
         )
+
+        position_aliases = ('position',)
+        provided_position = None
+        for alias in position_aliases:
+            if alias in data.model_fields_set:
+                value = getattr(data, alias)
+                if value is not None:
+                    provided_position = value
+                    break
+
+        position = (
+            provided_position
+            if provided_position is not None
+            else self.tasks.next_position(project=project)
+        )
         return self.tasks.create(
             title=data.title,
             description=data.description,
             project=project,
+            position=position,
         )
 
 
@@ -93,6 +109,10 @@ class UpdateTask:
 
     def execute(self, task_id: int, data: PatchedTaskUpdateRequest) -> TaskModel:
         task = _get_task(self.tasks, task_id, user=self.user)
+
+        old_project_id = task.project_id
+        old_completed = task.is_completed
+
         apply_provided(
             data,
             task,
@@ -100,6 +120,40 @@ class UpdateTask:
                 'project': partial(_resolve_project, self.projects, user=self.user)
             },
         )
+
+        position_aliases = ('position',)
+        provided_position = None
+        for alias in position_aliases:
+            if alias in data.model_fields_set:
+                value = getattr(data, alias)
+                if value is not None:
+                    provided_position = value
+                    break
+
+        project_changed = task.project_id != old_project_id
+        completed_changed = task.is_completed != old_completed
+
+        if (project_changed or completed_changed) and provided_position is None:
+            result = TaskModel.objects.filter(
+                project_id=task.project_id, is_completed=task.is_completed
+            ).exclude(pk=task.pk).aggregate(max_position=Max('position'))
+            current = result['max_position']
+            task.position = (current if current is not None else -1) + 1
+
+        if provided_position is not None:
+            siblings = list(
+                TaskModel.objects.filter(
+                    project_id=task.project_id, is_completed=task.is_completed
+                )
+                .exclude(pk=task.pk)
+                .order_by('position', 'id')
+            )
+            index = max(0, min(int(provided_position), len(siblings)))
+            siblings.insert(index, task)
+            for i, sibling in enumerate(siblings):
+                sibling.position = i
+                sibling.save(update_fields=['position'])
+
         return self.tasks.save(task)
 
 

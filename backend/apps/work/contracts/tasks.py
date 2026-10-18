@@ -25,6 +25,7 @@ class TaskCreateRequest(_TaskPayload):
     title: str = Field(min_length=1, max_length=200)
     description: str = ''
     project: int | None = None
+    position: int | None = None
 
 
 class PatchedTaskUpdateRequest(_TaskPayload):
@@ -32,6 +33,7 @@ class PatchedTaskUpdateRequest(_TaskPayload):
     description: str | None = None
     project: int | None = None
     is_completed: bool | None = None
+    position: int | None = None
 
 
 class TaskResponse(BaseModel):
@@ -40,4 +42,5 @@ class TaskResponse(BaseModel):
     description: str
     project_id: int = Field(..., json_schema_extra={'readOnly': True})
     is_completed: bool = Field(..., json_schema_extra={'readOnly': True})
+    position: int = Field(default=0, json_schema_extra={'readOnly': True})
 

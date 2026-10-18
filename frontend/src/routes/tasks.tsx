@@ -3,7 +3,7 @@ import {
   useNavigate,
   useSearch,
 } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { DeleteTaskModal } from "@/components/DeleteTaskModal";
 import { ProjectEditorModal } from "@/components/ProjectEditorModal";
@@ -13,6 +13,7 @@ import { useLayoutStore } from "@/stores/layout";
 import { ShowModal } from "@/stores/modal";
 import { defaultProject, useProjectsStore } from "@/stores/projects";
 import { useTasksStore } from "@/stores/tasks";
+import { api } from "@/api";
 import type { TaskResponse } from "@/generated/api";
 
 export const Route = createFileRoute("/tasks")({
@@ -33,6 +34,7 @@ export function TasksPage() {
   const toggleTaskCompletion = useTasksStore(
     (state) => state.toggleTaskCompletion,
   );
+  const moveTask = useTasksStore((state) => state.moveTask);
   const startTaskTimer = useTasksStore((state) => state.startTaskTimer);
 
   const isSidebarCollapsed = useLayoutStore(
@@ -50,6 +52,44 @@ export function TasksPage() {
   }, [loadTasks, selectedProjectId]);
 
   const tasks = taskList?.projectId === selectedProjectId ? taskList.tasks : [];
+  const [draggedId, setDraggedId] = useState<number | null>(null);
+  const [dragOverId, setDragOverId] = useState<number | null>(null);
+
+  async function handleTaskDrop(targetId: number) {
+    if (
+      draggedId === null ||
+      draggedId === targetId ||
+      selectedProjectId === null
+    )
+      return;
+    const draggedTask = tasks.find((task) => task.id === draggedId);
+    const targetTask = tasks.find((task) => task.id === targetId);
+    if (
+      !draggedTask ||
+      !targetTask ||
+      draggedTask.isCompleted !== targetTask.isCompleted
+    )
+      return;
+
+    const siblings = tasks.filter(
+      (task) => task.isCompleted === draggedTask.isCompleted,
+    );
+    const targetIndex = siblings.findIndex((task) => task.id === targetId);
+
+    setDraggedId(null);
+    setDragOverId(null);
+
+    try {
+      await api.tasksPartialUpdate({
+        id: draggedId,
+        patchedTaskUpdateRequest: { position: targetIndex },
+      });
+      await loadTasks(selectedProjectId);
+    } catch {
+      // ignore; loadTasks will restore server order
+      await loadTasks(selectedProjectId);
+    }
+  }
   const tasksError =
     loadError?.projectId === selectedProjectId ? loadError.message : "";
   const isTasksLoading =
@@ -144,9 +184,27 @@ export function TasksPage() {
             <ul className="task-list" aria-label="Zadania">
               {tasks.map((task) => (
                 <li
-                  className={`task-row${task.isCompleted ? " is-completed" : ""}`}
+                  className={`task-row${task.isCompleted ? " is-completed" : ""}${draggedId === task.id ? " is-dragging" : ""}${dragOverId === task.id ? " is-drag-over" : ""}`}
                   key={task.id}
+                  draggable
+                  onDragStart={() => setDraggedId(task.id)}
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    setDragOverId(task.id);
+                  }}
+                  onDrop={() => void handleTaskDrop(task.id)}
+                  onDragEnd={() => {
+                    setDraggedId(null);
+                    setDragOverId(null);
+                  }}
                 >
+                  <span
+                    className="task-drag-handle"
+                    aria-label={`Przeciągnij zadanie: ${task.title}`}
+                    title="Przeciągnij"
+                  >
+                    <span aria-hidden="true">⠿</span>
+                  </span>
                   <button
                     className={`task-status-toggle${task.isCompleted ? " is-completed" : ""}`}
                     type="button"
@@ -169,9 +227,6 @@ export function TasksPage() {
                     >
                       <span aria-hidden="true">▶</span>
                     </button>
-                    <span className="task-status-label">
-                      {task.isCompleted ? "UKOŃCZONE" : "OTWARTE"}
-                    </span>
                     <button
                       className="task-edit-button"
                       type="button"
