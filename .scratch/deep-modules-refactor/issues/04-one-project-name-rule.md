@@ -4,6 +4,8 @@
 
 **Blocked by:** None (can start immediately).
 
+**Status:** done
+
 - [x] Nazwy Projectów nadal przycinane, porównywane case-insensitive, `Inbox` zastrzeżone.
 - [x] Obie funkcje (normalizacja + klucz) mają jedną definicję współdzieloną.
 - [x] Martwa kopia na modelu Task usunięta.

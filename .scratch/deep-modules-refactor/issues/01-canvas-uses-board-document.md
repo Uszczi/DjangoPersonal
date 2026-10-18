@@ -4,6 +4,8 @@
 
 **Blocked by:** None (can start immediately).
 
+**Status:** done
+
 - [x] `elementBounds` zwraca granice dla każdego rodzaju elementu: stroke, line/arrow, note, rectangle, ellipse, text.
 - [x] `elementsInRect` zwraca id elementów przecinających prostokąt (trafienia i mimośrody), z identycznym predykatem AABB co dotychczas.
 - [x] Marquee wybiera dokładnie elementy, których dotyka, z zachowanym progiem drag-threshold i pochodzeniem prostokąta.

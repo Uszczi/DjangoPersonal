@@ -4,7 +4,7 @@
 
 **Blocked by:** 05 (Reorder pozycji za szwem repozytorium).
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Jeden `DomainError` z podklasą `NotFound` i taksonomią kodów `invalid` / `not_found`.
 - [x] Precedencja zachowana: jawny `status` wygrywa, potem mapa kodów, potem `400`.

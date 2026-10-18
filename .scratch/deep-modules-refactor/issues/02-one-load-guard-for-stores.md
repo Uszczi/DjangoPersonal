@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Wszystkie cztery stor-y oraz edytor tablicy używają jednego guarda (factory dla storów, hook dla route).
 - [x] Przeplot dwóch ładowań odrzuca odpowiedź pierwszego, gdy drugie już ruszyło.

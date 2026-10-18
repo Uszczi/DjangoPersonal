@@ -4,7 +4,7 @@
 
 **Blocked by:** 04 (Jedno źródło reguły nazw Project).
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Reorder Projectów i Tasków odbywa się przez metodę repozytorium w `transaction.atomic`.
 - [x] Indeks clampowany na obu końcach; pozycje pozostają gapless po każdym reorder.

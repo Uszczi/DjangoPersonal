@@ -4,6 +4,8 @@
 
 **Blocked by:** 02 (Jeden guard ładowania dla storów).
 
+**Status:** done
+
 - [x] Jeden hook autosave nad unią payloadów (content / markdown / name); format wire pozostaje w route.
 - [x] Autosave 500 ms, `Ctrl+S` i przycisk „Zapisz" działają identycznie dla Whiteboarda i Notatek.
 - [x] Unmount-flush obejmuje oba rodzaje dokumentów (naprawia brak flusha dla Notatek).

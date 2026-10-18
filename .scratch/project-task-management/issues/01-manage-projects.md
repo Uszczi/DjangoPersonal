@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] The user can create a Project with a required name and optional description, and edit its name and description.
 - [x] Project names are trimmed and unique without regard to letter case; `Inbox` is reserved for the default Project.

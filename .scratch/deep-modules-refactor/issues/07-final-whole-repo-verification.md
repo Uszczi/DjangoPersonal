@@ -4,7 +4,7 @@
 
 **Blocked by:** 01, 02, 03, 04, 05, 06.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Pełny `just check` zielony (mypy + pytest + `manage.py check` + `npm test` + lint + build).
 - [x] QA ręczne canvas wg checklisty z ticketu 01.
