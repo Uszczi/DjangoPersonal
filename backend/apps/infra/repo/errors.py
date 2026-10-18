@@ -14,6 +14,10 @@ class DuplicateProjectName(RepositoryError):
     """A unique-constraint clash: another project already uses this name."""
 
 
+class DuplicateWalletName(RepositoryError):
+    """A unique-constraint clash: another wallet already uses this name."""
+
+
 class TaskHasTimeEntries(RepositoryError):
     """A task cannot be deleted while time entries still reference it."""
 

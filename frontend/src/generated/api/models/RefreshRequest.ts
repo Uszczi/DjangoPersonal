@@ -3,7 +3,7 @@
 /* eslint-disable */
 /**
  * DjangoPersonal API
- * API for DjangoPersonal projects and tasks.
+ * API for DjangoPersonal projects, tasks, and expenses.
  *
  * The version of the OpenAPI document: 1.0.0
  *

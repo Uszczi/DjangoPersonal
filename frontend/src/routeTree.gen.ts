@@ -11,12 +11,15 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SplatRouteImport } from './routes/$'
+import { Route as ExpensesRouteImport } from './routes/expenses'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as TimerRouteImport } from './routes/timer'
 import { Route as WhiteboardRouteImport } from './routes/whiteboard'
+import { Route as ExpensesIndexRouteImport } from './routes/expenses/index'
+import { Route as ExpensesWalletIdRouteImport } from './routes/expenses/$walletId'
 import { Route as WhiteboardIndexRouteImport } from './routes/whiteboard/index'
 import { Route as WhiteboardBoardIdRouteImport } from './routes/whiteboard/$boardId'
 
@@ -28,6 +31,11 @@ const IndexRoute = IndexRouteImport.update({
 const SplatRoute = SplatRouteImport.update({
   id: '/$',
   path: '/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExpensesRoute = ExpensesRouteImport.update({
+  id: '/expenses',
+  path: '/expenses',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -60,6 +68,16 @@ const WhiteboardRoute = WhiteboardRouteImport.update({
   path: '/whiteboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExpensesIndexRoute = ExpensesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ExpensesRoute,
+} as any)
+const ExpensesWalletIdRoute = ExpensesWalletIdRouteImport.update({
+  id: '/$walletId',
+  path: '/$walletId',
+  getParentRoute: () => ExpensesRoute,
+} as any)
 const WhiteboardIndexRoute = WhiteboardIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -74,13 +92,16 @@ const WhiteboardBoardIdRoute = WhiteboardBoardIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
+  '/expenses': typeof ExpensesRouteWithChildren
   '/login': typeof LoginRoute
   '/projects': typeof ProjectsRoute
   '/register': typeof RegisterRoute
   '/tasks': typeof TasksRoute
   '/timer': typeof TimerRoute
   '/whiteboard': typeof WhiteboardRouteWithChildren
+  '/expenses/$walletId': typeof ExpensesWalletIdRoute
   '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
+  '/expenses/': typeof ExpensesIndexRoute
   '/whiteboard/': typeof WhiteboardIndexRoute
 }
 export interface FileRoutesByTo {
@@ -91,20 +112,25 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/tasks': typeof TasksRoute
   '/timer': typeof TimerRoute
+  '/expenses/$walletId': typeof ExpensesWalletIdRoute
   '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
+  '/expenses': typeof ExpensesIndexRoute
   '/whiteboard': typeof WhiteboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
+  '/expenses': typeof ExpensesRouteWithChildren
   '/login': typeof LoginRoute
   '/projects': typeof ProjectsRoute
   '/register': typeof RegisterRoute
   '/tasks': typeof TasksRoute
   '/timer': typeof TimerRoute
   '/whiteboard': typeof WhiteboardRouteWithChildren
+  '/expenses/$walletId': typeof ExpensesWalletIdRoute
   '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
+  '/expenses/': typeof ExpensesIndexRoute
   '/whiteboard/': typeof WhiteboardIndexRoute
 }
 export interface FileRouteTypes {
@@ -112,13 +138,16 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$'
+    | '/expenses'
     | '/login'
     | '/projects'
     | '/register'
     | '/tasks'
     | '/timer'
     | '/whiteboard'
+    | '/expenses/$walletId'
     | '/whiteboard/$boardId'
+    | '/expenses/'
     | '/whiteboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -129,25 +158,31 @@ export interface FileRouteTypes {
     | '/register'
     | '/tasks'
     | '/timer'
+    | '/expenses/$walletId'
     | '/whiteboard/$boardId'
+    | '/expenses'
     | '/whiteboard'
   id:
     | '__root__'
     | '/'
     | '/$'
+    | '/expenses'
     | '/login'
     | '/projects'
     | '/register'
     | '/tasks'
     | '/timer'
     | '/whiteboard'
+    | '/expenses/$walletId'
     | '/whiteboard/$boardId'
+    | '/expenses/'
     | '/whiteboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SplatRoute: typeof SplatRoute
+  ExpensesRoute: typeof ExpensesRouteWithChildren
   LoginRoute: typeof LoginRoute
   ProjectsRoute: typeof ProjectsRoute
   RegisterRoute: typeof RegisterRoute
@@ -170,6 +205,13 @@ declare module '@tanstack/react-router' {
       path: '/$'
       fullPath: '/$'
       preLoaderRoute: typeof SplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/expenses': {
+      id: '/expenses'
+      path: '/expenses'
+      fullPath: '/expenses'
+      preLoaderRoute: typeof ExpensesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -214,6 +256,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WhiteboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/expenses/': {
+      id: '/expenses/'
+      path: '/'
+      fullPath: '/expenses/'
+      preLoaderRoute: typeof ExpensesIndexRouteImport
+      parentRoute: typeof ExpensesRoute
+    }
+    '/expenses/$walletId': {
+      id: '/expenses/$walletId'
+      path: '/$walletId'
+      fullPath: '/expenses/$walletId'
+      preLoaderRoute: typeof ExpensesWalletIdRouteImport
+      parentRoute: typeof ExpensesRoute
+    }
     '/whiteboard/': {
       id: '/whiteboard/'
       path: '/'
@@ -230,6 +286,20 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface ExpensesRouteChildren {
+  ExpensesWalletIdRoute: typeof ExpensesWalletIdRoute
+  ExpensesIndexRoute: typeof ExpensesIndexRoute
+}
+
+const ExpensesRouteChildren: ExpensesRouteChildren = {
+  ExpensesWalletIdRoute: ExpensesWalletIdRoute,
+  ExpensesIndexRoute: ExpensesIndexRoute,
+}
+
+const ExpensesRouteWithChildren = ExpensesRoute._addFileChildren(
+  ExpensesRouteChildren,
+)
 
 interface WhiteboardRouteChildren {
   WhiteboardBoardIdRoute: typeof WhiteboardBoardIdRoute
@@ -248,6 +318,7 @@ const WhiteboardRouteWithChildren = WhiteboardRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
+  ExpensesRoute: ExpensesRouteWithChildren,
   LoginRoute: LoginRoute,
   ProjectsRoute: ProjectsRoute,
   RegisterRoute: RegisterRoute,

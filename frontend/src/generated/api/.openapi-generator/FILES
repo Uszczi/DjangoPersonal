@@ -7,6 +7,7 @@ models/LoginResponse.ts
 models/PatchedProjectRequest.ts
 models/PatchedTaskUpdateRequest.ts
 models/PatchedTimeEntryRequest.ts
+models/PatchedWalletRequest.ts
 models/PatchedWhiteboardRequest.ts
 models/ProjectRequest.ts
 models/ProjectResponse.ts
@@ -20,6 +21,8 @@ models/TimeEntryResponse.ts
 models/TimerResponse.ts
 models/TimerStartRequest.ts
 models/UserResponse.ts
+models/WalletRequest.ts
+models/WalletResponse.ts
 models/WhiteboardRequest.ts
 models/WhiteboardResponse.ts
 models/index.ts

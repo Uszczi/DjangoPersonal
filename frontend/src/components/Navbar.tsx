@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import { useAuthStore } from "@/stores/auth";
 
-type TopTabPath = "/" | "/tasks" | "/projects" | "/timer" | "/whiteboard";
+type TopTabPath = "/" | "/tasks" | "/projects" | "/timer" | "/whiteboard" | "/expenses";
 
 function TopTabLink({
   to,
@@ -37,6 +37,7 @@ const NAV_ITEMS: Array<{ to: TopTabPath; label: string }> = [
   { to: "/projects", label: "Projekty" },
   { to: "/timer", label: "Czas" },
   { to: "/whiteboard", label: "Notatki" },
+  { to: "/expenses", label: "Wydatki" },
 ];
 
 export function Navbar() {

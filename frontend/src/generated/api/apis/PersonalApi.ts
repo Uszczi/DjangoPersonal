@@ -3,7 +3,7 @@
 /* eslint-disable */
 /**
  * DjangoPersonal API
- * API for DjangoPersonal projects and tasks.
+ * API for DjangoPersonal projects, tasks, and expenses.
  *
  * The version of the OpenAPI document: 1.0.0
  *
@@ -44,6 +44,11 @@ import {
     PatchedTimeEntryRequestFromJSON,
     PatchedTimeEntryRequestToJSON,
 } from '../models/PatchedTimeEntryRequest';
+import {
+    type PatchedWalletRequest,
+    PatchedWalletRequestFromJSON,
+    PatchedWalletRequestToJSON,
+} from '../models/PatchedWalletRequest';
 import {
     type PatchedWhiteboardRequest,
     PatchedWhiteboardRequestFromJSON,
@@ -109,6 +114,16 @@ import {
     UserResponseFromJSON,
     UserResponseToJSON,
 } from '../models/UserResponse';
+import {
+    type WalletRequest,
+    WalletRequestFromJSON,
+    WalletRequestToJSON,
+} from '../models/WalletRequest';
+import {
+    type WalletResponse,
+    WalletResponseFromJSON,
+    WalletResponseToJSON,
+} from '../models/WalletResponse';
 import {
     type WhiteboardRequest,
     WhiteboardRequestFromJSON,
@@ -261,6 +276,49 @@ export interface TimerStartOperationRequest {
      *
      */
     timerStartRequest: TimerStartRequest;
+}
+
+export interface WalletsCreateRequest {
+    /**
+     *
+     */
+    walletRequest: WalletRequest;
+}
+
+export interface WalletsDestroyRequest {
+    /**
+     *
+     */
+    id: number;
+}
+
+export interface WalletsPartialUpdateRequest {
+    /**
+     *
+     */
+    id: number;
+    /**
+     *
+     */
+    patchedWalletRequest: PatchedWalletRequest;
+}
+
+export interface WalletsRetrieveRequest {
+    /**
+     *
+     */
+    id: number;
+}
+
+export interface WalletsUpdateRequest {
+    /**
+     *
+     */
+    id: number;
+    /**
+     *
+     */
+    walletRequest: WalletRequest;
 }
 
 export interface WhiteboardsCreateRequest {
@@ -1405,6 +1463,337 @@ export class PersonalApi extends runtime.BaseAPI {
      */
     async timerStop(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TimerResponse> {
         const response = await this.timerStopRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for walletsCreate without sending the request
+     */
+    async walletsCreateRequestOpts(requestParameters: WalletsCreateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['walletRequest'] == null) {
+            throw new runtime.RequiredError(
+                'walletRequest',
+                'Required parameter "walletRequest" was null or undefined when calling walletsCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/wallets/`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: WalletRequestToJSON(requestParameters['walletRequest']),
+        };
+    }
+
+    /**
+     * Create Wallet
+     */
+    async walletsCreateRaw(requestParameters: WalletsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WalletResponse>> {
+        const requestOptions = await this.walletsCreateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => WalletResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Create Wallet
+     */
+    async walletsCreate(requestParameters: WalletsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<WalletResponse> {
+        const response = await this.walletsCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for walletsDestroy without sending the request
+     */
+    async walletsDestroyRequestOpts(requestParameters: WalletsDestroyRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling walletsDestroy().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/wallets/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Delete Wallet
+     */
+    async walletsDestroyRaw(requestParameters: WalletsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.walletsDestroyRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Delete Wallet
+     */
+    async walletsDestroy(requestParameters: WalletsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.walletsDestroyRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Creates request options for walletsList without sending the request
+     */
+    async walletsListRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/wallets/`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * List Wallets
+     */
+    async walletsListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<WalletResponse>>> {
+        const requestOptions = await this.walletsListRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(WalletResponseFromJSON));
+    }
+
+    /**
+     * List Wallets
+     */
+    async walletsList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<WalletResponse>> {
+        const response = await this.walletsListRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for walletsPartialUpdate without sending the request
+     */
+    async walletsPartialUpdateRequestOpts(requestParameters: WalletsPartialUpdateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling walletsPartialUpdate().'
+            );
+        }
+
+        if (requestParameters['patchedWalletRequest'] == null) {
+            throw new runtime.RequiredError(
+                'patchedWalletRequest',
+                'Required parameter "patchedWalletRequest" was null or undefined when calling walletsPartialUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/wallets/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedWalletRequestToJSON(requestParameters['patchedWalletRequest']),
+        };
+    }
+
+    /**
+     * Update Wallet
+     */
+    async walletsPartialUpdateRaw(requestParameters: WalletsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WalletResponse>> {
+        const requestOptions = await this.walletsPartialUpdateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => WalletResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Update Wallet
+     */
+    async walletsPartialUpdate(requestParameters: WalletsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<WalletResponse> {
+        const response = await this.walletsPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for walletsRetrieve without sending the request
+     */
+    async walletsRetrieveRequestOpts(requestParameters: WalletsRetrieveRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling walletsRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/wallets/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Get Wallet
+     */
+    async walletsRetrieveRaw(requestParameters: WalletsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WalletResponse>> {
+        const requestOptions = await this.walletsRetrieveRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => WalletResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get Wallet
+     */
+    async walletsRetrieve(requestParameters: WalletsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<WalletResponse> {
+        const response = await this.walletsRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for walletsUpdate without sending the request
+     */
+    async walletsUpdateRequestOpts(requestParameters: WalletsUpdateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling walletsUpdate().'
+            );
+        }
+
+        if (requestParameters['walletRequest'] == null) {
+            throw new runtime.RequiredError(
+                'walletRequest',
+                'Required parameter "walletRequest" was null or undefined when calling walletsUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/wallets/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'PUT',
+            headers: headerParameters,
+            query: queryParameters,
+            body: WalletRequestToJSON(requestParameters['walletRequest']),
+        };
+    }
+
+    /**
+     * Replace Wallet
+     */
+    async walletsUpdateRaw(requestParameters: WalletsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WalletResponse>> {
+        const requestOptions = await this.walletsUpdateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => WalletResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Replace Wallet
+     */
+    async walletsUpdate(requestParameters: WalletsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<WalletResponse> {
+        const response = await this.walletsUpdateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

@@ -24,3 +24,12 @@ A named space that holds one freeform drawing — freehand strokes, shapes, and 
 
 **Notatki** (Notes):
 A Whiteboard whose content is a Markdown document instead of a drawing. Shares the Whiteboard API and editor; only the payload differs.
+
+**Wallet**:
+A named purse a user creates to separate money by purpose. Has a required name (trimmed, unique case-insensitively per user) and owns its Transactions. There is no default wallet — the user creates the first one.
+
+**Transaction**:
+A record of money spent. Has a required title, a required positive Decimal amount (at most two decimal places), a required date, an optional description, an optional Category, and a required Wallet. Deleting a Wallet cascades to its Transactions.
+
+**Category**:
+A per-user label for classifying Transactions. Has a required name (trimmed, unique case-insensitively per user). The system seeds ten base categories when the user creates their first Wallet. Deleting a Category cascades to its Transactions.

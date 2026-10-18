@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'apps.work.apps.WorkConfig',
     'apps.accounts.apps.AccountsConfig',
     'apps.whiteboard.apps.WhiteboardConfig',
+    'apps.expenses.apps.ExpensesConfig',
 ]
 
 MIDDLEWARE = [

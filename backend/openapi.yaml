@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: DjangoPersonal API
   version: 1.0.0
-  description: API for DjangoPersonal projects and tasks.
+  description: API for DjangoPersonal projects, tasks, and expenses.
 paths:
   /api/v1/auth/register/:
     post:
@@ -575,6 +575,139 @@ paths:
       - personal
       security:
       - JWTAuth: []
+  /api/v1/wallets/:
+    get:
+      operationId: wallets_list
+      summary: List Wallets
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/WalletResponse'
+                title: Response
+                type: array
+      tags:
+      - personal
+      security:
+      - JWTAuth: []
+    post:
+      operationId: wallets_create
+      summary: Create Wallet
+      parameters: []
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletResponse'
+      tags:
+      - personal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WalletRequest'
+        required: true
+      security:
+      - JWTAuth: []
+  /api/v1/wallets/{id}/:
+    get:
+      operationId: wallets_retrieve
+      summary: Get Wallet
+      parameters:
+      - in: path
+        name: id
+        schema:
+          title: Id
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletResponse'
+      tags:
+      - personal
+      security:
+      - JWTAuth: []
+    put:
+      operationId: wallets_update
+      summary: Replace Wallet
+      parameters:
+      - in: path
+        name: id
+        schema:
+          title: Id
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletResponse'
+      tags:
+      - personal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WalletRequest'
+        required: true
+      security:
+      - JWTAuth: []
+    patch:
+      operationId: wallets_partial_update
+      summary: Update Wallet
+      parameters:
+      - in: path
+        name: id
+        schema:
+          title: Id
+          type: integer
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletResponse'
+      tags:
+      - personal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedWalletRequest'
+        required: true
+      security:
+      - JWTAuth: []
+    delete:
+      operationId: wallets_destroy
+      summary: Delete Wallet
+      parameters:
+      - in: path
+        name: id
+        schema:
+          title: Id
+          type: integer
+        required: true
+      responses:
+        '204':
+          description: No Content
+      tags:
+      - personal
+      security:
+      - JWTAuth: []
 components:
   schemas:
     AuthResponse:
@@ -1017,6 +1150,47 @@ components:
           - type: 'null'
           title: Content
       title: PatchedWhiteboardRequest
+      type: object
+    WalletResponse:
+      properties:
+        id:
+          readOnly: true
+          title: Id
+          type: integer
+        name:
+          title: Name
+          type: string
+        transaction_count:
+          default: 0
+          readOnly: true
+          title: Transaction Count
+          type: integer
+      required:
+      - id
+      - name
+      title: WalletResponse
+      type: object
+    WalletRequest:
+      properties:
+        name:
+          maxLength: 100
+          minLength: 1
+          title: Name
+          type: string
+      required:
+      - name
+      title: WalletRequest
+      type: object
+    PatchedWalletRequest:
+      properties:
+        name:
+          anyOf:
+          - maxLength: 100
+            minLength: 1
+            type: string
+          - type: 'null'
+          title: Name
+      title: PatchedWalletRequest
       type: object
   securitySchemes:
     JWTAuth:

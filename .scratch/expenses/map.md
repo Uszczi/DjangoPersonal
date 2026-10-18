@@ -38,6 +38,14 @@ A complete spec for the expenses domain in DjangoPersonal — Wallets, Transacti
 
 - The API surface details (endpoint shapes, payloads) — follows the conventions captured in 01-api-surface; sharp enough to write directly into the spec.
 
+## Implementation
+
+Built from `spec.md` as three sequential tickets; each is resolved in place with an Answer.
+
+- [01-wallets](issues/01-wallets.md): **resolved** — Wallet CRUD + list, header select, per-user name rules. `transaction_count` is `0` until ticket 03.
+- [02-categories](issues/02-categories.md): pending.
+- [03-transactions](issues/03-transactions.md): pending.
+
 ## Out of scope
 
 - Income and transfers between wallets.

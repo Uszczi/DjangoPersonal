@@ -45,6 +45,18 @@ def patch_json(api_client: Any) -> Any:
 
 
 @pytest.fixture
+def put_json(api_client: Any) -> Any:
+    def send(path: Any, payload: Any) -> Any:
+        return api_client.put(
+            path,
+            data=json.dumps(payload),
+            content_type='application/json',
+        )
+
+    return send
+
+
+@pytest.fixture
 def auth_headers(db: Any) -> Any:
     def make(user: Any = None, *, username: str = 'testuser', password: str = 'StrongPass123!') -> dict[str, str]:
         if user is None:
