@@ -40,6 +40,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [marquee, setMarquee] = useState<{ start: Point; current: Point } | null>(null);
+  const [spaceHeld, setSpaceHeld] = useState(false);
   const downOnEmptyRef = useRef(false);
   const downPosRef = useRef<Point | null>(null);
   const resizingRef = useRef<{ id: string; startX: number; startY: number; startW: number; startH: number } | null>(null);
@@ -79,6 +80,21 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
       window.removeEventListener("pointerup", onUp);
     };
   }, [board, onChange, stageScale]);
+
+  useEffect(() => {
+    function onSpaceDown(e: KeyboardEvent) {
+      if (e.code === "Space") { e.preventDefault(); setSpaceHeld(true); }
+    }
+    function onSpaceUp(e: KeyboardEvent) {
+      if (e.code === "Space") setSpaceHeld(false);
+    }
+    window.addEventListener("keydown", onSpaceDown);
+    window.addEventListener("keyup", onSpaceUp);
+    return () => {
+      window.removeEventListener("keydown", onSpaceDown);
+      window.removeEventListener("keyup", onSpaceUp);
+    };
+  }, []);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -128,7 +144,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
     const pos = stage.getPointerPosition();
     const canvasPos = toCanvas(stage, pos.x, pos.y);
     // pan when select tool and clicking empty space with middle/right or shift
-    if (tool === "select" && e.target === stage) {
+    if (tool === "select" && e.target === stage && !spaceHeld) {
       const canvasPos = toCanvas(stage, pos.x, pos.y);
       downOnEmptyRef.current = true;
       downPosRef.current = canvasPos;
@@ -377,7 +393,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
       }}
     >
       <div style={{ marginBottom: 8, fontSize: 12, color: "#6b7280", padding: "4px 8px" }}>
-        Narzędzie: {tool} · {elements.length} elementów
+        Narzędzie: {tool} · {elements.length} elementów · Przesuwanie: przytrzymaj Spację
       </div>
       <div style={{ position: "relative" }}>
       <Stage
@@ -388,7 +404,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
         y={stagePos.y}
         scaleX={stageScale}
         scaleY={stageScale}
-        draggable={tool === "select"}
+        draggable={tool === "select" && spaceHeld}
         onWheel={handleWheel}
         onPointerDown={handleMouseDown as any}
         onPointerMove={handleMouseMove as any}
