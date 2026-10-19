@@ -31,9 +31,7 @@ export function TasksPage() {
   const loadError = useTasksStore((state) => state.loadError);
   const actionError = useTasksStore((state) => state.actionError);
   const loadTasks = useTasksStore((state) => state.loadTasks);
-  const toggleTaskCompletion = useTasksStore(
-    (state) => state.toggleTaskCompletion,
-  );
+  const toggleTaskStatus = useTasksStore((state) => state.toggleTaskStatus);
   const startTaskTimer = useTasksStore((state) => state.startTaskTimer);
 
   const isSidebarCollapsed = useLayoutStore(
@@ -44,6 +42,7 @@ export function TasksPage() {
   const selectedProjectId = project ?? defaultProject(projects)?.id ?? null;
   const selectedProject =
     projects.find((item) => item.id === selectedProjectId) ?? null;
+  const terminalStatus = selectedProject?.terminalStatus;
 
   useEffect(() => {
     if (selectedProjectId === null) return;
@@ -68,12 +67,12 @@ export function TasksPage() {
     if (
       !draggedTask ||
       !targetTask ||
-      draggedTask.isCompleted !== targetTask.isCompleted
+      draggedTask.status !== targetTask.status
     )
       return;
 
     const siblings = tasks.filter(
-      (task) => task.isCompleted === draggedTask.isCompleted,
+      (task) => task.status === draggedTask.status,
     );
     const targetIndex = siblings.findIndex((task) => task.id === targetId);
 
@@ -257,7 +256,7 @@ export function TasksPage() {
             <ul className="task-list" aria-label="Zadania">
               {tasks.map((task) => (
                 <li
-                  className={`task-row${task.isCompleted ? " is-completed" : ""}${draggedId === task.id ? " is-dragging" : ""}${dragOverId === task.id ? " is-drag-over" : ""}`}
+                  className={`task-row${terminalStatus != null && task.status === terminalStatus ? " is-completed" : ""}${draggedId === task.id ? " is-dragging" : ""}${dragOverId === task.id ? " is-drag-over" : ""}`}
                   key={task.id}
                   data-task-id={task.id}
                   draggable
@@ -289,12 +288,12 @@ export function TasksPage() {
                     <span aria-hidden="true">⠿</span>
                   </span>
                   <button
-                    className={`task-status-toggle${task.isCompleted ? " is-completed" : ""}`}
+                    className={`task-status-toggle${terminalStatus != null && task.status === terminalStatus ? " is-completed" : ""}`}
                     type="button"
-                    aria-label={`${task.isCompleted ? "Otwórz zadanie" : "Oznacz jako ukończone"}: ${task.title}`}
-                    onClick={() => void toggleTaskCompletion(task)}
+                    aria-label={`${terminalStatus != null && task.status === terminalStatus ? "Otwórz zadanie" : "Oznacz jako ukończone"}: ${task.title}`}
+                    onClick={() => void toggleTaskStatus(task)}
                   >
-                    {task.isCompleted ? "✓" : ""}
+                    {terminalStatus != null && task.status === terminalStatus ? "✓" : ""}
                   </button>
                   <div className="task-copy">
                     <p>{task.title}</p>

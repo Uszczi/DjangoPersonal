@@ -19,7 +19,7 @@ from apps.infra.factories import ProjectFactory
 from apps.infra.factories import TaskFactory
 from apps.infra.factories import TimeEntryFactory
 from apps.infra.factories import UserFactory
-from apps.infra.models import Project
+from apps.infra.models import DEFAULT_PROJECT_STATUSES, Project
 from apps.infra.models import Task
 from apps.infra.models import TimeEntry
 from apps.infra.models import User
@@ -139,7 +139,9 @@ class Command(BaseCommand):
             stats['time_entries'] += 1
 
     def _seed_running_entry(self, user: User, rng: random.Random, stats: dict[str, int]) -> None:
-        open_tasks = Task.objects.filter(project__user=user, is_completed=False)
+        open_tasks = Task.objects.filter(
+            project__user=user, status=DEFAULT_PROJECT_STATUSES[0]
+        )
         task = open_tasks.order_by('?').first()
         if task is None:
             return

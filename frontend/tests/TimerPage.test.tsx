@@ -11,6 +11,8 @@ const inbox = {
   name: 'Inbox',
   description: '',
   is_inbox: true,
+  project_statuses: ['Todo', 'Zrobione'],
+  terminal_status: 'Zrobione',
 }
 
 const task = {
@@ -18,7 +20,7 @@ const task = {
   title: 'Prepare outline',
   description: '',
   project_id: 1,
-  is_completed: false,
+  status: 'Todo',
 }
 
 function jsonResponse(data: unknown, status = 200) {

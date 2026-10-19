@@ -221,7 +221,7 @@ def test_completing_a_task_does_not_stop_its_running_timer(
     task = create_task(post_json)
     post_json('/api/v1/timer/start/', {'task': task['id']})
 
-    completed = patch_json(f"/api/v1/tasks/{task['id']}/", {'is_completed': True})
+    completed = patch_json(f"/api/v1/tasks/{task['id']}/", {'status': 'Zrobione'})
 
     assert completed.status_code == HTTPStatus.OK
     state = api_client.get('/api/v1/timer/').json()
@@ -233,13 +233,13 @@ def test_timer_can_run_on_a_completed_task_without_reopening_it(
     api_client: Any, post_json: Any, patch_json: Any, fixed_clock: Any
 ) -> None:
     task = create_task(post_json)
-    patch_json(f"/api/v1/tasks/{task['id']}/", {'is_completed': True})
+    patch_json(f"/api/v1/tasks/{task['id']}/", {'status': 'Zrobione'})
 
     started = post_json('/api/v1/timer/start/', {'task': task['id']})
 
     assert started.status_code == HTTPStatus.OK
     tasks = api_client.get(f"/api/v1/tasks/?project={task['project_id']}").json()
-    assert tasks[0]['is_completed'] is True
+    assert tasks[0]['status'] == 'Zrobione'
 
 
 def test_manual_entry_rejects_out_of_range_duration(post_json: Any, fixed_clock: Any) -> None:

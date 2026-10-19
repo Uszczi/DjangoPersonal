@@ -4,7 +4,12 @@ import { api } from "@/api";
 import { type ProjectResponse } from "@/generated/api";
 import { createLoadGuard } from "@/stores/loadGuard";
 
-export type ProjectInput = { name: string; description: string };
+export type ProjectInput = {
+  name: string;
+  description: string;
+  projectStatuses?: string[];
+  terminalStatus?: string;
+};
 
 export function orderProjects(projects: ProjectResponse[]) {
   return [...projects].sort((left, right) => {

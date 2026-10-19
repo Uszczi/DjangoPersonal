@@ -8,7 +8,10 @@ DjangoPersonal organizes a person's work into projects and the tasks that belong
 A named space that groups tasks.
 
 **Task**:
-An action item with a title, optional description, and an open or completed state. Every task belongs to exactly one project.
+An action item with a title, optional description, and a status drawn from its project's ordered list of statuses. Every task belongs to exactly one project.
+
+**Project status**:
+A named state a Task can be in, defined per Project as an ordered list. The list order is the order statuses and their tasks are displayed in. One status in the list is the Project's terminal status — its "done" status.
 
 **Inbox**:
 The permanent, non-renamable default project. Tasks created without an explicitly selected project, and tasks from a deleted project, are assigned to the Inbox.

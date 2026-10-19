@@ -112,11 +112,22 @@ def get_project(ctx: Context[Any, Any, Any], project_id: int) -> dict[str, Any]:
         _raise(exc)
 
 
-def create_project(ctx: Context[Any, Any, Any], name: str, description: str = "") -> dict[str, Any]:
+def create_project(
+    ctx: Context[Any, Any, Any],
+    name: str,
+    description: str = "",
+    project_statuses: list[str] | None = None,
+    terminal_status: str | None = None,
+) -> dict[str, Any]:
     """Create a project."""
     user = _user(ctx)
     try:
-        payload = ProjectRequest(name=name, description=description)
+        payload = ProjectRequest(
+            name=name,
+            description=description,
+            project_statuses=project_statuses,
+            terminal_status=terminal_status,
+        )
         return project(
             handlers.CreateProject(deps.project_repository(), user).execute(payload)
         )
@@ -129,11 +140,18 @@ def update_project(
     project_id: int,
     name: str | None = None,
     description: str | None = None,
+    project_statuses: list[str] | None = None,
+    terminal_status: str | None = None,
 ) -> dict[str, Any]:
     """Update a project (partial)."""
     user = _user(ctx)
     try:
-        payload = PatchedProjectRequest(name=name, description=description)
+        payload = PatchedProjectRequest(
+            name=name,
+            description=description,
+            project_statuses=project_statuses,
+            terminal_status=terminal_status,
+        )
         return project(
             handlers.UpdateProject(deps.project_repository(), user).execute(project_id, payload)
         )
@@ -174,11 +192,14 @@ def create_task(
     title: str,
     description: str = "",
     project_id: int | None = None,
+    status: str | None = None,
 ) -> dict[str, Any]:
     """Create a task (defaults to the inbox project)."""
     user = _user(ctx)
     try:
-        payload = TaskCreateRequest(title=title, description=description, project=project_id)
+        payload = TaskCreateRequest(
+            title=title, description=description, project=project_id, status=status
+        )
         return task(
             handlers.CreateTask(
                 projects=deps.project_repository(),
@@ -196,7 +217,7 @@ def update_task(
     title: str | None = None,
     description: str | None = None,
     project_id: int | None = None,
-    is_completed: bool | None = None,
+    status: str | None = None,
     position: int | None = None,
 ) -> dict[str, Any]:
     """Update a task (partial)."""
@@ -206,7 +227,7 @@ def update_task(
             title=title,
             description=description,
             project=project_id,
-            is_completed=is_completed,
+            status=status,
             position=position,
         )
         return task(

@@ -35,7 +35,7 @@ export interface PatchedTaskUpdateRequest {
     /**
      *
      */
-    isCompleted?: boolean | null;
+    status?: string | null;
     /**
      *
      */
@@ -62,7 +62,7 @@ export function PatchedTaskUpdateRequestFromJSONTyped(json: any, ignoreDiscrimin
         'title': json['title'] === undefined ? undefined : json['title'] === null ? null : json['title'],
         'description': json['description'] === undefined ? undefined : json['description'] === null ? null : json['description'],
         'project': json['project'] === undefined ? undefined : json['project'] === null ? null : json['project'],
-        'isCompleted': json['is_completed'] === undefined ? undefined : json['is_completed'] === null ? null : json['is_completed'],
+        'status': json['status'] === undefined ? undefined : json['status'] === null ? null : json['status'],
         'position': json['position'] === undefined ? undefined : json['position'] === null ? null : json['position'],
     };
 }
@@ -81,7 +81,7 @@ export function PatchedTaskUpdateRequestToJSONTyped(value?: PatchedTaskUpdateReq
         'title': value['title'],
         'description': value['description'],
         'project': value['project'],
-        'is_completed': value['isCompleted'],
+        'status': value['status'],
         'position': value['position'],
     };
 }

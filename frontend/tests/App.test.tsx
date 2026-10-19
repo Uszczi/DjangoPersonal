@@ -10,11 +10,15 @@ import type { ProjectResponse } from '@/generated/api'
 import { ShowModal } from '@/stores/modal'
 import { renderApp } from './renderApp'
 
+const DEFAULT_STATUSES = ['Todo', 'Zrobione']
+
 const inbox = {
   id: 1,
   name: 'Inbox',
   description: '',
   is_inbox: true,
+  project_statuses: DEFAULT_STATUSES,
+  terminal_status: 'Zrobione',
 }
 
 const planning = {
@@ -22,6 +26,8 @@ const planning = {
   name: 'Planning',
   description: '',
   is_inbox: false,
+  project_statuses: DEFAULT_STATUSES,
+  terminal_status: 'Zrobione',
 }
 
 const task = {
@@ -29,7 +35,7 @@ const task = {
   title: 'Prepare outline',
   description: '',
   project_id: 2,
-  is_completed: false,
+  status: 'Todo',
 }
 
 // The project editor and delete dialog have no trigger in the current UI, so
@@ -39,6 +45,8 @@ const inboxProject: ProjectResponse = {
   name: 'Inbox',
   description: '',
   isInbox: true,
+  projectStatuses: DEFAULT_STATUSES,
+  terminalStatus: 'Zrobione',
 }
 
 const planningProject: ProjectResponse = {
@@ -46,6 +54,8 @@ const planningProject: ProjectResponse = {
   name: 'Planning',
   description: '',
   isInbox: false,
+  projectStatuses: DEFAULT_STATUSES,
+  terminalStatus: 'Zrobione',
 }
 
 const readingProject: ProjectResponse = {
@@ -53,6 +63,8 @@ const readingProject: ProjectResponse = {
   name: 'Reading',
   description: 'Books to explore',
   isInbox: false,
+  projectStatuses: DEFAULT_STATUSES,
+  terminalStatus: 'Zrobione',
 }
 
 function jsonResponse(data: unknown, status = 200) {
@@ -89,7 +101,14 @@ describe('Projects', () => {
       .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(
         jsonResponse(
-          { id: 2, name: 'Planning', description: 'Quarterly plans', is_inbox: false },
+          {
+            id: 2,
+            name: 'Planning',
+            description: 'Quarterly plans',
+            is_inbox: false,
+            project_statuses: DEFAULT_STATUSES,
+            terminal_status: 'Zrobione',
+          },
           201,
         ),
       )
@@ -111,7 +130,12 @@ describe('Projects', () => {
       '/api/v1/projects/',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ name: 'Planning', description: 'Quarterly plans' }),
+        body: JSON.stringify({
+          name: 'Planning',
+          description: 'Quarterly plans',
+          project_statuses: DEFAULT_STATUSES,
+          terminal_status: 'Zrobione',
+        }),
       }),
     )
   })
@@ -134,7 +158,14 @@ describe('Projects', () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([
         inbox,
-        { id: 2, name: 'Reading', description: 'Books to explore', is_inbox: false },
+        {
+          id: 2,
+          name: 'Reading',
+          description: 'Books to explore',
+          is_inbox: false,
+          project_statuses: DEFAULT_STATUSES,
+          terminal_status: 'Zrobione',
+        },
       ]))
       .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(jsonResponse([]))
@@ -144,6 +175,8 @@ describe('Projects', () => {
           name: 'Research',
           description: 'Sources and notes',
           is_inbox: false,
+          project_statuses: DEFAULT_STATUSES,
+          terminal_status: 'Zrobione',
         }),
       )
     const user = userEvent.setup()
@@ -169,7 +202,12 @@ describe('Projects', () => {
       '/api/v1/projects/2/',
       expect.objectContaining({
         method: 'PATCH',
-        body: JSON.stringify({ name: 'Research', description: 'Sources and notes' }),
+        body: JSON.stringify({
+          name: 'Research',
+          description: 'Sources and notes',
+          project_statuses: DEFAULT_STATUSES,
+          terminal_status: 'Zrobione',
+        }),
       }),
     )
   })
@@ -177,9 +215,9 @@ describe('Projects', () => {
   test('user sees Inbox first and other Projects alphabetically', async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([
-        { id: 3, name: 'Zulu', description: '', is_inbox: false },
+        { id: 3, name: 'Zulu', description: '', is_inbox: false, project_statuses: DEFAULT_STATUSES, terminal_status: 'Zrobione' },
         inbox,
-        { id: 2, name: 'Alpha', description: '', is_inbox: false },
+        { id: 2, name: 'Alpha', description: '', is_inbox: false, project_statuses: DEFAULT_STATUSES, terminal_status: 'Zrobione' },
       ]))
       .mockResolvedValueOnce(jsonResponse([]))
 
@@ -216,8 +254,8 @@ describe('Projects', () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([inbox]))
       .mockResolvedValueOnce(jsonResponse([
-        { id: 2, title: 'Completed note', description: '', project_id: 1, is_completed: true },
-        { id: 1, title: 'Open note', description: '', project_id: 1, is_completed: false },
+        { id: 2, title: 'Completed note', description: '', project_id: 1, status: 'Zrobione' },
+        { id: 1, title: 'Open note', description: '', project_id: 1, status: 'Todo' },
       ]))
 
     renderApp('/tasks')
@@ -242,7 +280,14 @@ describe('Projects', () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([
         inbox,
-        { id: 2, name: 'Planning', description: '', is_inbox: false },
+        {
+          id: 2,
+          name: 'Planning',
+          description: '',
+          is_inbox: false,
+          project_statuses: DEFAULT_STATUSES,
+          terminal_status: 'Zrobione',
+        },
       ]))
       .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(jsonResponse([]))
@@ -253,7 +298,7 @@ describe('Projects', () => {
             title: 'Capture requirements',
             description: 'Talk to the team',
             project_id: 2,
-            is_completed: false,
+            status: 'Todo',
           },
           201,
         ),
@@ -279,6 +324,7 @@ describe('Projects', () => {
           title: 'Capture requirements',
           description: 'Talk to the team',
           project: 2,
+          status: 'Todo',
         }),
       }),
     )
@@ -288,26 +334,33 @@ describe('Projects', () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([
         inbox,
-        { id: 2, name: 'Planning', description: '', is_inbox: false },
+        {
+          id: 2,
+          name: 'Planning',
+          description: '',
+          is_inbox: false,
+          project_statuses: DEFAULT_STATUSES,
+          terminal_status: 'Zrobione',
+        },
       ]))
       .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(jsonResponse([
-        { id: 7, title: 'Prepare outline', description: '', project_id: 2, is_completed: false },
-        { id: 6, title: 'Completed note', description: '', project_id: 2, is_completed: true },
+        { id: 7, title: 'Prepare outline', description: '', project_id: 2, status: 'Todo' },
+        { id: 6, title: 'Completed note', description: '', project_id: 2, status: 'Zrobione' },
       ]))
       .mockResolvedValueOnce(jsonResponse({
         id: 7,
         title: 'Prepare outline',
         description: '',
         project_id: 2,
-        is_completed: true,
+        status: 'Zrobione',
       }))
       .mockResolvedValueOnce(jsonResponse({
         id: 7,
         title: 'Prepare outline',
         description: '',
         project_id: 2,
-        is_completed: false,
+        status: 'Todo',
       }))
     const user = userEvent.setup()
 
@@ -332,7 +385,7 @@ describe('Projects', () => {
       '/api/v1/tasks/7/',
       expect.objectContaining({
         method: 'PATCH',
-        body: JSON.stringify({ is_completed: true }),
+        body: JSON.stringify({ status: 'Zrobione' }),
       }),
     )
     expect(fetchMock).toHaveBeenNthCalledWith(
@@ -340,7 +393,7 @@ describe('Projects', () => {
       '/api/v1/tasks/7/',
       expect.objectContaining({
         method: 'PATCH',
-        body: JSON.stringify({ is_completed: false }),
+        body: JSON.stringify({ status: 'Todo' }),
       }),
     )
     expect(listedTaskTitles()).toEqual(['Prepare outline', 'Completed note'])
@@ -350,19 +403,33 @@ describe('Projects', () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([
         inbox,
-        { id: 2, name: 'Planning', description: '', is_inbox: false },
-        { id: 3, name: 'Archive', description: '', is_inbox: false },
+        {
+          id: 2,
+          name: 'Planning',
+          description: '',
+          is_inbox: false,
+          project_statuses: DEFAULT_STATUSES,
+          terminal_status: 'Zrobione',
+        },
+        {
+          id: 3,
+          name: 'Archive',
+          description: '',
+          is_inbox: false,
+          project_statuses: DEFAULT_STATUSES,
+          terminal_status: 'Zrobione',
+        },
       ]))
       .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(jsonResponse([
-        { id: 8, title: 'Capture scope', description: '', project_id: 2, is_completed: false },
+        { id: 8, title: 'Capture scope', description: '', project_id: 2, status: 'Todo' },
       ]))
       .mockResolvedValueOnce(jsonResponse({
         id: 8,
         title: 'Capture requirements',
         description: 'Confirm with the team',
         project_id: 3,
-        is_completed: false,
+        status: 'Todo',
       }))
       .mockResolvedValueOnce(jsonResponse([
         {
@@ -370,7 +437,7 @@ describe('Projects', () => {
           title: 'Capture requirements',
           description: 'Confirm with the team',
           project_id: 3,
-          is_completed: false,
+          status: 'Todo',
         },
       ]))
     const user = userEvent.setup()
@@ -400,6 +467,7 @@ describe('Projects', () => {
           title: 'Capture requirements',
           description: 'Confirm with the team',
           project: 3,
+          status: 'Todo',
         }),
       }),
     )
@@ -409,18 +477,25 @@ describe('Projects', () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([
         inbox,
-        { id: 2, name: 'Planning', description: '', is_inbox: false },
+        {
+          id: 2,
+          name: 'Planning',
+          description: '',
+          is_inbox: false,
+          project_statuses: DEFAULT_STATUSES,
+          terminal_status: 'Zrobione',
+        },
       ]))
       .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(jsonResponse([
-        { id: 9, title: 'First title', description: 'Old note', project_id: 2, is_completed: false },
+        { id: 9, title: 'First title', description: 'Old note', project_id: 2, status: 'Todo' },
       ]))
       .mockResolvedValueOnce(jsonResponse({
         id: 9,
         title: 'Updated title',
         description: 'New note',
         project_id: 2,
-        is_completed: false,
+        status: 'Todo',
       }))
     const user = userEvent.setup()
 
@@ -447,6 +522,7 @@ describe('Projects', () => {
           title: 'Updated title',
           description: 'New note',
           project: 2,
+          status: 'Todo',
         }),
       }),
     )
@@ -457,16 +533,30 @@ describe('Projects', () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([
         inbox,
-        { id: 2, name: 'Planning', description: '', is_inbox: false },
-        { id: 3, name: 'Archive', description: '', is_inbox: false },
+        {
+          id: 2,
+          name: 'Planning',
+          description: '',
+          is_inbox: false,
+          project_statuses: DEFAULT_STATUSES,
+          terminal_status: 'Zrobione',
+        },
+        {
+          id: 3,
+          name: 'Archive',
+          description: '',
+          is_inbox: false,
+          project_statuses: DEFAULT_STATUSES,
+          terminal_status: 'Zrobione',
+        },
       ]))
       .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(jsonResponse([
-        { id: 7, title: 'Planning task', description: '', project_id: 2, is_completed: false },
+        { id: 7, title: 'Planning task', description: '', project_id: 2, status: 'Todo' },
       ]))
       .mockReturnValueOnce(pendingUpdate.promise)
       .mockResolvedValueOnce(jsonResponse([
-        { id: 9, title: 'Archive task', description: '', project_id: 3, is_completed: false },
+        { id: 9, title: 'Archive task', description: '', project_id: 3, status: 'Todo' },
       ]))
     const user = userEvent.setup()
 
@@ -487,7 +577,7 @@ describe('Projects', () => {
         title: 'Planning task',
         description: '',
         project_id: 2,
-        is_completed: true,
+        status: 'Zrobione',
       }))
       await pendingUpdate.promise
     })

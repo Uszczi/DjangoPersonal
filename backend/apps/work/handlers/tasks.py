@@ -5,6 +5,7 @@ from typing import Any
 
 from django.db.models import QuerySet
 
+from apps.infra.models import Project as ProjectModel
 from apps.infra.models import Task as TaskModel
 from apps.infra.models import User
 from apps.infra.repo import (
@@ -39,6 +40,31 @@ def _resolve_task(
     return task
 
 
+def _resolve_status(project: ProjectModel, status: str | None) -> str:
+    """The status a task should carry, defaulting to the project's first one."""
+    if status is None:
+        return project.first_status
+    if status not in project.project_statuses:
+        raise DomainError('Invalid status for this project.')
+    return status
+
+
+def _order_tasks(tasks: QuerySet[TaskModel] | list[TaskModel]) -> list[TaskModel]:
+    """Order tasks by their status order, then position, then id.
+
+    Status order comes from each project's own ``project_statuses`` list, so
+    it is read in Python rather than in the database.
+    """
+    return sorted(
+        tasks,
+        key=lambda task: (
+            task.project.status_index(task.status),
+            task.position,
+            task.id,
+        ),
+    )
+
+
 class ListTasks:
     """List tasks, scoped to one project, the inbox, or every project."""
 
@@ -48,12 +74,14 @@ class ListTasks:
 
     def execute(
         self, project_id: int | None = None, all_projects: bool = False
-    ) -> QuerySet[TaskModel]:
+    ) -> list[TaskModel]:
         if all_projects:
-            return self.tasks.list_all(user=self.user)
-        if project_id is None:
-            return self.tasks.list_inbox(user=self.user)
-        return self.tasks.list_for_project(project_id, user=self.user)
+            tasks = self.tasks.list_all(user=self.user)
+        elif project_id is None:
+            tasks = self.tasks.list_inbox(user=self.user)
+        else:
+            tasks = self.tasks.list_for_project(project_id, user=self.user)
+        return _order_tasks(tasks)
 
 
 class CreateTask:
@@ -76,15 +104,17 @@ class CreateTask:
             else _resolve_project(self.projects, data.project, user=self.user)
         )
 
+        status = _resolve_status(project, data.status)
         position = (
             data.position
             if data.position is not None
-            else self.tasks.next_position(project=project)
+            else self.tasks.next_position(project=project, status=status)
         )
         return self.tasks.create(
             title=data.title,
             description=data.description,
             project=project,
+            status=status,
             position=position,
         )
 
@@ -106,7 +136,7 @@ class UpdateTask:
         task = _get_task(self.tasks, task_id, user=self.user)
 
         old_project_id = task.project_id
-        old_completed = task.is_completed
+        old_status = task.status
 
         apply_provided(
             data,
@@ -116,11 +146,14 @@ class UpdateTask:
             },
         )
 
+        if task.status not in task.project.project_statuses:
+            raise DomainError('Invalid status for this project.')
+
         provided_position = data.position
         project_changed = task.project_id != old_project_id
-        completed_changed = task.is_completed != old_completed
+        status_changed = task.status != old_status
 
-        if provided_position is not None or project_changed or completed_changed:
+        if provided_position is not None or project_changed or status_changed:
             self.tasks.reorder(task, index=provided_position)
 
         return self.tasks.save(task)

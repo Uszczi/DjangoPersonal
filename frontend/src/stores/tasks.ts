@@ -3,21 +3,42 @@ import { create } from "zustand";
 import { apiErrorMessage } from "@/apiErrorMessage";
 import { api } from "@/api";
 import { type TaskResponse } from "@/generated/api";
+import { useProjectsStore } from "@/stores/projects";
 import { createLoadGuard } from "@/stores/loadGuard";
 
 export type TaskInput = {
   title: string;
   description: string;
   project: number;
+  status?: string;
 };
 
 export type TaskListState = { projectId: number; tasks: TaskResponse[] } | null;
 export type TaskLoadError = { projectId: number; message: string } | null;
 
+function findProject(projectId: number) {
+  return useProjectsStore.getState().projects.find((p) => p.id === projectId);
+}
+
+function projectStatuses(projectId: number): string[] {
+  return findProject(projectId)?.projectStatuses ?? [];
+}
+
+function projectTerminalStatus(projectId: number): string | undefined {
+  return findProject(projectId)?.terminalStatus;
+}
+
+function statusIndex(task: TaskResponse): number {
+  const statuses = projectStatuses(task.projectId);
+  const index = statuses.indexOf(task.status);
+  return index === -1 ? statuses.length : index;
+}
+
 function orderTasks(tasks: TaskResponse[]) {
   return [...tasks].sort((left, right) => {
-    if (left.isCompleted !== right.isCompleted)
-      return left.isCompleted ? 1 : -1;
+    const leftIndex = statusIndex(left);
+    const rightIndex = statusIndex(right);
+    if (leftIndex !== rightIndex) return leftIndex - rightIndex;
     const leftPosition = left.position ?? left.id;
     const rightPosition = right.position ?? right.id;
     if (leftPosition !== rightPosition) return leftPosition - rightPosition;
@@ -31,7 +52,7 @@ type TasksState = {
   actionError: string;
   loadTasks: (projectId: number) => Promise<void>;
   saveTask: (input: TaskInput, task?: TaskResponse | null) => Promise<TaskResponse>;
-  toggleTaskCompletion: (task: TaskResponse) => Promise<void>;
+  toggleTaskStatus: (task: TaskResponse) => Promise<void>;
   moveTask: (task: TaskResponse, direction: "up" | "down") => Promise<void>;
   startTaskTimer: (task: TaskResponse) => Promise<boolean>;
   confirmDelete: (task: TaskResponse) => Promise<void>;
@@ -95,13 +116,17 @@ export const useTasksStore = create<TasksState>((set) => ({
     return createdTask;
   },
 
-  toggleTaskCompletion: async (task) => {
+  toggleTaskStatus: async (task) => {
     set({ actionError: "" });
 
     try {
+      const statuses = projectStatuses(task.projectId);
+      const terminal =
+        projectTerminalStatus(task.projectId) ?? statuses[statuses.length - 1];
+      const nextStatus = task.status === terminal ? statuses[0] : terminal;
       const updatedTask = await api.tasksPartialUpdate({
         id: task.id,
-        patchedTaskUpdateRequest: { isCompleted: !task.isCompleted },
+        patchedTaskUpdateRequest: { status: nextStatus },
       });
       upsertTask(set, task, updatedTask);
     } catch (error) {
@@ -113,9 +138,7 @@ export const useTasksStore = create<TasksState>((set) => ({
     const current = useTasksStore.getState().taskList;
     if (!current || current.projectId !== task.projectId) return;
 
-    const siblings = current.tasks.filter(
-      (item) => item.isCompleted === task.isCompleted,
-    );
+    const siblings = current.tasks.filter((item) => item.status === task.status);
     const index = siblings.findIndex((item) => item.id === task.id);
     if (index < 0) return;
     const targetIndex = direction === "up" ? index - 1 : index + 1;

@@ -32,6 +32,14 @@ export interface ProjectRequest {
      *
      */
     position?: number | null;
+    /**
+     *
+     */
+    projectStatuses?: Array<string> | null;
+    /**
+     *
+     */
+    terminalStatus?: string | null;
 }
 
 /**
@@ -55,6 +63,8 @@ export function ProjectRequestFromJSONTyped(json: any, ignoreDiscriminator: bool
         'name': json['name'],
         'description': json['description'] == null ? undefined : json['description'],
         'position': json['position'] === undefined ? undefined : json['position'] === null ? null : json['position'],
+        'projectStatuses': json['project_statuses'] === undefined ? undefined : json['project_statuses'] === null ? null : json['project_statuses'],
+        'terminalStatus': json['terminal_status'] === undefined ? undefined : json['terminal_status'] === null ? null : json['terminal_status'],
     };
 }
 
@@ -72,6 +82,8 @@ export function ProjectRequestToJSONTyped(value?: ProjectRequest | null, ignoreD
         'name': value['name'],
         'description': value['description'],
         'position': value['position'],
+        'project_statuses': value['projectStatuses'],
+        'terminal_status': value['terminalStatus'],
     };
 }
 

@@ -12,7 +12,7 @@ from factory.declarations import SubFactory
 from factory.django import DjangoModelFactory
 from factory.faker import Faker
 
-from apps.infra.models import Project
+from apps.infra.models import DEFAULT_PROJECT_STATUSES, Project
 from apps.infra.models import Task
 from apps.infra.models import TimeEntry
 from apps.infra.models import User
@@ -44,7 +44,7 @@ class TaskFactory(DjangoModelFactory[Task]):
     project = SubFactory(ProjectFactory)
     title = Faker('sentence', nb_words=5, locale='pl_PL')
     description = Faker('text', max_nb_chars=200, locale='pl_PL')
-    is_completed = Faker('boolean', chance_of_getting_true=30)
+    status = Faker('random_element', elements=list(DEFAULT_PROJECT_STATUSES))
 
 
 class TimeEntryFactory(DjangoModelFactory[TimeEntry]):

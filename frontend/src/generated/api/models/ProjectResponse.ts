@@ -40,6 +40,14 @@ export interface ProjectResponse {
      *
      */
     readonly position?: number;
+    /**
+     *
+     */
+    readonly projectStatuses: Array<string>;
+    /**
+     *
+     */
+    readonly terminalStatus: string;
 }
 
 /**
@@ -50,6 +58,8 @@ export function instanceOfProjectResponse(value: object): value is ProjectRespon
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('description' in value) || value['description'] === undefined) return false;
     if ((!('isInbox' in (value as Record<string, any>)) && !('is_inbox' in (value as Record<string, any>))) || ((value as Record<string, any>)['isInbox'] === undefined && (value as Record<string, any>)['is_inbox'] === undefined)) return false;
+    if ((!('projectStatuses' in (value as Record<string, any>)) && !('project_statuses' in (value as Record<string, any>))) || ((value as Record<string, any>)['projectStatuses'] === undefined && (value as Record<string, any>)['project_statuses'] === undefined)) return false;
+    if ((!('terminalStatus' in (value as Record<string, any>)) && !('terminal_status' in (value as Record<string, any>))) || ((value as Record<string, any>)['terminalStatus'] === undefined && (value as Record<string, any>)['terminal_status'] === undefined)) return false;
     return true;
 }
 
@@ -68,6 +78,8 @@ export function ProjectResponseFromJSONTyped(json: any, ignoreDiscriminator: boo
         'description': json['description'],
         'isInbox': json['is_inbox'],
         'position': json['position'] == null ? undefined : json['position'],
+        'projectStatuses': json['project_statuses'],
+        'terminalStatus': json['terminal_status'],
     };
 }
 
@@ -75,7 +87,7 @@ export function ProjectResponseToJSON(json: any): ProjectResponse {
     return ProjectResponseToJSONTyped(json, false);
 }
 
-export function ProjectResponseToJSONTyped(value?: Omit<ProjectResponse, 'id'|'isInbox'|'position'> | null, ignoreDiscriminator: boolean = false): any {
+export function ProjectResponseToJSONTyped(value?: Omit<ProjectResponse, 'id'|'isInbox'|'position'|'projectStatuses'|'terminalStatus'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

@@ -1105,11 +1105,23 @@ components:
           readOnly: true
           title: Position
           type: integer
+        project_statuses:
+          items:
+            type: string
+          readOnly: true
+          title: Project Statuses
+          type: array
+        terminal_status:
+          readOnly: true
+          title: Terminal Status
+          type: string
       required:
       - id
       - name
       - description
       - is_inbox
+      - project_statuses
+      - terminal_status
       title: ProjectResponse
       type: object
     ProjectRequest:
@@ -1128,6 +1140,18 @@ components:
           - type: integer
           - type: 'null'
           title: Position
+        project_statuses:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Project Statuses
+        terminal_status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Terminal Status
       required:
       - name
       title: ProjectRequest
@@ -1151,6 +1175,18 @@ components:
           - type: integer
           - type: 'null'
           title: Position
+        project_statuses:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Project Statuses
+        terminal_status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Terminal Status
       title: PatchedProjectRequest
       type: object
     TaskResponse:
@@ -1169,10 +1205,10 @@ components:
           readOnly: true
           title: Project Id
           type: integer
-        is_completed:
+        status:
           readOnly: true
-          title: Is Completed
-          type: boolean
+          title: Status
+          type: string
         position:
           default: 0
           readOnly: true
@@ -1183,7 +1219,7 @@ components:
       - title
       - description
       - project_id
-      - is_completed
+      - status
       title: TaskResponse
       type: object
     TaskCreateRequest:
@@ -1202,6 +1238,11 @@ components:
           - type: integer
           - type: 'null'
           title: Project
+        status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
         position:
           anyOf:
           - type: integer
@@ -1230,11 +1271,11 @@ components:
           - type: integer
           - type: 'null'
           title: Project
-        is_completed:
+        status:
           anyOf:
-          - type: boolean
+          - type: string
           - type: 'null'
-          title: Is Completed
+          title: Status
         position:
           anyOf:
           - type: integer

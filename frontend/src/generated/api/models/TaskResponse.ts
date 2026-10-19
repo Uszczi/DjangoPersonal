@@ -39,7 +39,7 @@ export interface TaskResponse {
     /**
      *
      */
-    readonly isCompleted: boolean;
+    readonly status: string;
     /**
      *
      */
@@ -54,7 +54,7 @@ export function instanceOfTaskResponse(value: object): value is TaskResponse {
     if (!('title' in value) || value['title'] === undefined) return false;
     if (!('description' in value) || value['description'] === undefined) return false;
     if ((!('projectId' in (value as Record<string, any>)) && !('project_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['projectId'] === undefined && (value as Record<string, any>)['project_id'] === undefined)) return false;
-    if ((!('isCompleted' in (value as Record<string, any>)) && !('is_completed' in (value as Record<string, any>))) || ((value as Record<string, any>)['isCompleted'] === undefined && (value as Record<string, any>)['is_completed'] === undefined)) return false;
+    if (!('status' in value) || value['status'] === undefined) return false;
     return true;
 }
 
@@ -72,7 +72,7 @@ export function TaskResponseFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'title': json['title'],
         'description': json['description'],
         'projectId': json['project_id'],
-        'isCompleted': json['is_completed'],
+        'status': json['status'],
         'position': json['position'] == null ? undefined : json['position'],
     };
 }
@@ -81,7 +81,7 @@ export function TaskResponseToJSON(json: any): TaskResponse {
     return TaskResponseToJSONTyped(json, false);
 }
 
-export function TaskResponseToJSONTyped(value?: Omit<TaskResponse, 'id'|'projectId'|'isCompleted'|'position'> | null, ignoreDiscriminator: boolean = false): any {
+export function TaskResponseToJSONTyped(value?: Omit<TaskResponse, 'id'|'projectId'|'status'|'position'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

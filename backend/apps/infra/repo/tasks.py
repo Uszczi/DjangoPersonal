@@ -16,37 +16,48 @@ class TaskRepository:
     """Every database access the ``work`` app needs for tasks."""
 
     def list_all(self, *, user: User) -> QuerySet[TaskModel]:
-        return TaskModel.objects.filter(project__user=user)
+        return TaskModel.objects.filter(project__user=user).select_related('project')
 
     def list_inbox(self, *, user: User) -> QuerySet[TaskModel]:
         """Tasks that live in the inbox project."""
-        return TaskModel.objects.filter(project__is_inbox=True, project__user=user)
+        return TaskModel.objects.filter(
+            project__is_inbox=True, project__user=user
+        ).select_related('project')
 
     def list_for_project(self, project_id: int, *, user: User) -> QuerySet[TaskModel]:
-        return TaskModel.objects.filter(project_id=project_id, project__user=user)
+        return TaskModel.objects.filter(project_id=project_id, project__user=user).select_related(
+            'project'
+        )
 
     def find(self, task_id: int, *, user: User) -> TaskModel | None:
         """The task with this id, or ``None``."""
         return TaskModel.objects.filter(pk=task_id, project__user=user).first()
 
     def create(
-        self, *, title: str, description: str, project: ProjectModel, position: int = 0
+        self,
+        *,
+        title: str,
+        description: str,
+        project: ProjectModel,
+        status: str,
+        position: int = 0,
     ) -> TaskModel:
         return TaskModel.objects.create(
             title=title,
             description=description,
             project=project,
+            status=status,
             position=position,
         )
 
-    def next_position(self, *, project: ProjectModel) -> int:
-        """The position right after the last open task in ``project``.
+    def next_position(self, *, project: ProjectModel, status: str) -> int:
+        """The position right after the last task in ``status`` within ``project``.
 
-        Open and completed tasks are ordered independently, so a new task
-        always lands at the end of the open list, never behind a completed
-        one.
+        Tasks are ordered independently within each status, so a new task
+        always lands at the end of its own status list, never behind another
+        status.
         """
-        result = TaskModel.objects.filter(project=project, is_completed=False).aggregate(
+        result = TaskModel.objects.filter(project=project, status=status).aggregate(
             max_position=Max("position")
         )
         current = result["max_position"]
@@ -55,16 +66,15 @@ class TaskRepository:
     def reorder(self, task: TaskModel, *, index: int | None) -> TaskModel:
         """Move ``task`` to ``index`` among its reorderable siblings.
 
-        The reorderable siblings are the tasks of the same project in the
-        same completion state. ``index`` is clamped to the sibling range and
-        ``None`` appends at the end. Every sibling is renumbered to a gapless
-        ``0..n-1`` in one bulk update, so ordering stays predictable after
-        any move.
+        The reorderable siblings are the tasks of the same project in the same
+        status. ``index`` is clamped to the sibling range and ``None`` appends
+        at the end. Every sibling is renumbered to a gapless ``0..n-1`` in one
+        bulk update, so ordering stays predictable after any move.
         """
         with transaction.atomic():
             siblings = list(
                 TaskModel.objects.filter(
-                    project_id=task.project_id, is_completed=task.is_completed
+                    project_id=task.project_id, status=task.status
                 )
                 .exclude(pk=task.pk)
                 .order_by('position', 'id')

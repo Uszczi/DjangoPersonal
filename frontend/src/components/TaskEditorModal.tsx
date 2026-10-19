@@ -21,15 +21,20 @@ export function TaskEditorModal({
   const projects = useProjectsStore((state) => state.projects);
   const saveTask = useTasksStore((state) => state.saveTask);
 
+  const initialProjectId = task?.projectId ?? projectId ?? 0;
+
   const [form, setForm] = useState<TaskInput>({
     title: task?.title ?? "",
     description: task?.description ?? "",
-    project: task?.projectId ?? projectId ?? 0,
+    project: initialProjectId,
+    status: task?.status ?? "",
   });
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   const targetProject = projects.find((item) => item.id === form.project);
+  const statuses = targetProject?.projectStatuses ?? [];
+
   const titleId = task ? "task-edit-title" : "task-dialog-title";
 
   function close() {
@@ -38,10 +43,15 @@ export function TaskEditorModal({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const status =
+      typeof form.status === "string" && statuses.includes(form.status)
+        ? form.status
+        : statuses[0];
     const input = {
       title: form.title.trim(),
       description: form.description.trim(),
       project: form.project,
+      status,
     };
 
     if (!input.title) {
@@ -146,6 +156,26 @@ export function TaskEditorModal({
                 {projects.map((project) => (
                   <option key={project.id} value={project.id}>
                     {project.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {statuses.length > 0 && (
+            <label className="form-field">
+              <span>Status</span>
+              <select
+                value={form.status || statuses[0]}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    status: event.target.value,
+                  }))
+                }
+              >
+                {statuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
                   </option>
                 ))}
               </select>

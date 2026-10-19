@@ -1,10 +1,37 @@
 
-from typing import Any
+from typing import Any, cast
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
+
+DEFAULT_PROJECT_STATUSES: tuple[str, ...] = ("Todo", "Zrobione")
+DEFAULT_TERMINAL_STATUS = DEFAULT_PROJECT_STATUSES[-1]
+MAX_STATUSES = 20
+MAX_STATUS_LENGTH = 50
+
+
+def default_project_statuses() -> list[str]:
+    return list(DEFAULT_PROJECT_STATUSES)
+
+
+def normalize_project_statuses(statuses: Any) -> list[str]:
+    """Trim, drop blanks and de-duplicate, preserving the given order.
+
+    Returns an empty list when nothing usable remains; callers decide whether
+    that means "fall back to the defaults" or "reject the payload".
+    """
+    if not isinstance(statuses, (list, tuple)):
+        return []
+    normalized: list[str] = []
+    for status in statuses:
+        if not isinstance(status, str):
+            continue
+        status = status.strip()
+        if status and status not in normalized:
+            normalized.append(status)
+    return normalized
 
 
 def normalize_project_name(name: str) -> str:
@@ -26,6 +53,10 @@ class Project(models.Model):
     description = models.TextField(blank=True)
     is_inbox = models.BooleanField(default=False, editable=False)
     position = models.IntegerField(default=0)
+    project_statuses = models.JSONField(default=default_project_statuses)
+    terminal_status = models.CharField(
+        max_length=MAX_STATUS_LENGTH, default=DEFAULT_TERMINAL_STATUS
+    )
 
     class Meta:
         ordering = ["-is_inbox", "position", "normalized_name"]
@@ -51,6 +82,7 @@ class Project(models.Model):
     def save(self, *args: Any, **kwargs: Any) -> None:
         self.name = normalize_project_name(self.name)
         self.normalized_name = project_name_key(self.name)
+        self._normalize_statuses()
 
         if self.pk:
             original = (
@@ -60,6 +92,42 @@ class Project(models.Model):
                 raise ValidationError({"name": "Inbox cannot be renamed."})
 
         super().save(*args, **kwargs)
+
+    def _normalize_statuses(self) -> None:
+        """Keep the status list and the terminal status consistent.
+
+        A project always keeps at least the default statuses, and the terminal
+        status always names one of them. This is the invariant the API contract
+        enforces too; the model repeats it so direct construction cannot leave
+        the database inconsistent.
+        """
+        statuses = normalize_project_statuses(self.project_statuses) or list(
+            DEFAULT_PROJECT_STATUSES
+        )
+        self.project_statuses = statuses
+        if self.terminal_status not in statuses:
+            self.terminal_status = statuses[-1]
+
+    @property
+    def first_status(self) -> str:
+        """The status a newly created task starts in."""
+        return cast(str, self.project_statuses[0])
+
+    def status_index(self, status: str) -> int:
+        """Where ``status`` sits in this project's ordered status list.
+
+        An unknown status sorts after every known one, so a task left pointing
+        at a removed status still has a deterministic place in the list.
+        """
+        statuses = cast(list[str], self.project_statuses)
+        try:
+            return statuses.index(status)
+        except ValueError:
+            return len(statuses)
+
+    def is_terminal(self, status: str) -> bool:
+        """Whether ``status`` is this project's "done" status."""
+        return status == self.terminal_status
 
     def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
         if self.is_inbox:

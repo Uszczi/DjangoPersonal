@@ -1,6 +1,6 @@
 from django.db import models
 
-from apps.infra.models.project import Project
+from apps.infra.models.project import DEFAULT_PROJECT_STATUSES, MAX_STATUS_LENGTH, Project
 
 
 class Task(models.Model):
@@ -11,11 +11,18 @@ class Task(models.Model):
     )
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    is_completed = models.BooleanField(default=False)
+    status = models.CharField(
+        max_length=MAX_STATUS_LENGTH, default=DEFAULT_PROJECT_STATUSES[0]
+    )
     position = models.IntegerField(default=0)
 
     class Meta:
-        ordering = ["is_completed", "position", "id"]
+        ordering = ["status", "position", "id"]
+
+    @property
+    def is_done(self) -> bool:
+        """Whether the task sits in its project's terminal status."""
+        return self.project.is_terminal(self.status)
 
     def __str__(self) -> str:
         return self.title

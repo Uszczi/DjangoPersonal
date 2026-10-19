@@ -6,6 +6,7 @@ from django.db import IntegrityError, transaction
 from django.db.models import QuerySet
 
 from apps.infra.models import Project as ProjectModel
+from apps.infra.models import Task as TaskModel
 from apps.infra.models import User
 
 from .errors import DuplicateProjectName
@@ -49,6 +50,18 @@ class ProjectRepository:
         except IntegrityError as error:
             raise DuplicateProjectName from error
         return project
+
+    def reassign_task_statuses(
+        self, project: ProjectModel, *, valid_statuses: list[str], fallback: str
+    ) -> int:
+        """Move tasks whose status left the project's list to ``fallback``.
+
+        Called after a project's status list changes, so no task is left
+        pointing at a status the project no longer defines.
+        """
+        return TaskModel.objects.filter(project=project).exclude(
+            status__in=valid_statuses
+        ).update(status=fallback)
 
     def reorder(self, project: ProjectModel, *, index: int | None) -> ProjectModel:
         """Move ``project`` to ``index`` among its reorderable siblings.

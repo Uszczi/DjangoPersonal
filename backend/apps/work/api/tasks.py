@@ -1,4 +1,3 @@
-from django.db.models import QuerySet
 from django.http import HttpRequest
 from typing import cast
 from ninja import Router, Status
@@ -20,7 +19,7 @@ router = Router(tags=['personal'])
 )
 def list_tasks(
     request: HttpRequest, project: int | None = None, all: bool = False
-) -> QuerySet[TaskModel]:
+) -> list[TaskModel]:
     handler = handlers.ListTasks(deps.task_repository(), cast(User, request.user))
     return handler.execute(project_id=project, all_projects=all)
 

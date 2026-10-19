@@ -1,6 +1,15 @@
 from .category import Category, category_name_key, normalize_category_name
 from .task import Task
-from .project import Project, normalize_project_name, project_name_key
+from .project import (
+    DEFAULT_PROJECT_STATUSES,
+    DEFAULT_TERMINAL_STATUS,
+    MAX_STATUS_LENGTH,
+    MAX_STATUSES,
+    Project,
+    normalize_project_name,
+    normalize_project_statuses,
+    project_name_key,
+)
 from .timeentry import TimeEntry
 from .transaction import Transaction
 from .user import User
@@ -11,6 +20,10 @@ __all__ = [
     'Category',
     'Task',
     'Project',
+    'DEFAULT_PROJECT_STATUSES',
+    'DEFAULT_TERMINAL_STATUS',
+    'MAX_STATUS_LENGTH',
+    'MAX_STATUSES',
     'TimeEntry',
     'Transaction',
     'User',
@@ -19,6 +32,7 @@ __all__ = [
     'category_name_key',
     'normalize_category_name',
     'normalize_project_name',
+    'normalize_project_statuses',
     'project_name_key',
     'normalize_wallet_name',
     'wallet_name_key',

@@ -32,6 +32,14 @@ export interface PatchedProjectRequest {
      *
      */
     position?: number | null;
+    /**
+     *
+     */
+    projectStatuses?: Array<string> | null;
+    /**
+     *
+     */
+    terminalStatus?: string | null;
 }
 
 /**
@@ -54,6 +62,8 @@ export function PatchedProjectRequestFromJSONTyped(json: any, ignoreDiscriminato
         'name': json['name'] === undefined ? undefined : json['name'] === null ? null : json['name'],
         'description': json['description'] === undefined ? undefined : json['description'] === null ? null : json['description'],
         'position': json['position'] === undefined ? undefined : json['position'] === null ? null : json['position'],
+        'projectStatuses': json['project_statuses'] === undefined ? undefined : json['project_statuses'] === null ? null : json['project_statuses'],
+        'terminalStatus': json['terminal_status'] === undefined ? undefined : json['terminal_status'] === null ? null : json['terminal_status'],
     };
 }
 
@@ -71,6 +81,8 @@ export function PatchedProjectRequestToJSONTyped(value?: PatchedProjectRequest |
         'name': value['name'],
         'description': value['description'],
         'position': value['position'],
+        'project_statuses': value['projectStatuses'],
+        'terminal_status': value['terminalStatus'],
     };
 }
 

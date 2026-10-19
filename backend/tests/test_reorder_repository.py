@@ -108,12 +108,12 @@ def test_project_reorder_appends_when_index_is_none(user: User) -> None:
     assert charlie.position == 1
 
 
-def test_task_reorder_scopes_siblings_to_project_and_completion_state(user: User) -> None:
+def test_task_reorder_scopes_siblings_to_project_and_status(user: User) -> None:
     work = _project(user, 'Work', 0)
     home = _project(user, 'Home', 1)
     open_a = _open_task(work, 'A', 0)
     open_b = _open_task(work, 'B', 1)
-    done_a = Task.objects.create(title='Done', project=work, is_completed=True, position=0)
+    done_a = Task.objects.create(title='Done', project=work, status='Zrobione', position=0)
     other = _open_task(home, 'Other', 0)
     tasks = TaskRepository()
 
@@ -122,7 +122,7 @@ def test_task_reorder_scopes_siblings_to_project_and_completion_state(user: User
     refreshed = Task.objects.get(pk=open_b.pk)
     assert refreshed.position == 0
     assert Task.objects.get(pk=open_a.pk).position == 1
-    # Completed tasks and other projects are not part of the open scope.
+    # Tasks in another status and other projects are not part of the scope.
     assert Task.objects.get(pk=done_a.pk).position == 0
     assert Task.objects.get(pk=other.pk).position == 0
 
@@ -139,7 +139,7 @@ def test_task_reorder_appends_at_the_end_of_its_scope_when_index_is_none(user: U
     assert Task.objects.get(pk=open_b.pk).position == 0
     listing = [
         t.title
-        for t in Task.objects.filter(project=work, is_completed=False).order_by('position', 'id')
+        for t in Task.objects.filter(project=work, status='Todo').order_by('position', 'id')
     ]
     assert listing == ['B', 'A']
 
@@ -171,14 +171,14 @@ def test_task_reorder_clamps_the_index_at_both_ends(user: User) -> None:
 def test_next_position_places_a_new_task_after_the_last_open_one(user: User) -> None:
     work = _project(user, 'Work', 0)
     _open_task(work, 'A', 0)
-    Task.objects.create(title='Done B', project=work, is_completed=True, position=5)
-    Task.objects.create(title='Done C', project=work, is_completed=True, position=6)
+    Task.objects.create(title='Done B', project=work, status='Zrobione', position=5)
+    Task.objects.create(title='Done C', project=work, status='Zrobione', position=6)
     tasks = TaskRepository()
 
-    assert tasks.next_position(project=work) == 1
+    assert tasks.next_position(project=work, status='Todo') == 1
 
 
 def test_next_position_is_zero_for_an_empty_project(user: User) -> None:
     work = _project(user, 'Work', 0)
 
-    assert TaskRepository().next_position(project=work) == 0
+    assert TaskRepository().next_position(project=work, status='Todo') == 0

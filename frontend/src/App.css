@@ -934,6 +934,31 @@
   font-weight: 400;
 }
 
+.status-list {
+  display: grid;
+  gap: 8px;
+}
+
+.status-row {
+  display: flex;
+  gap: 8px;
+}
+
+.status-row input {
+  flex: 1;
+}
+
+.status-row .icon-button {
+  color: #64797c;
+  flex: 0 0 34px;
+  font-size: 18px;
+  height: 38px;
+}
+
+.status-row .icon-button:disabled {
+  opacity: 0.4;
+}
+
 .form-error {
   background: #fff0eb;
   border-left: 3px solid var(--signal);

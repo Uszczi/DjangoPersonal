@@ -22,7 +22,18 @@ class _TaskPayload(BaseModel):
                 value = value[0].upper() + value[1:]
         return value
 
-    @field_validator('title', 'description', 'project', 'is_completed', 'position', check_fields=False)
+    @field_validator('status', mode='before', check_fields=False)
+    @classmethod
+    def normalize_status(cls, value: object) -> object:
+        if isinstance(value, str):
+            value = value.strip()
+            if not value:
+                raise ValueError('This field may not be blank.')
+        return value
+
+    @field_validator(
+        'title', 'description', 'project', 'status', 'position', check_fields=False
+    )
     @classmethod
     def reject_null(cls, value: object) -> object:
         """An explicit ``null`` is not "leave it alone" — it is a 400."""
@@ -35,6 +46,7 @@ class TaskCreateRequest(_TaskPayload):
     title: str = Field(min_length=1, max_length=200)
     description: str = ''
     project: int | None = None
+    status: str | None = None
     position: int | None = None
 
 
@@ -42,7 +54,7 @@ class PatchedTaskUpdateRequest(_TaskPayload):
     title: str | None = Field(default=None, min_length=1, max_length=200)
     description: str | None = None
     project: int | None = None
-    is_completed: bool | None = None
+    status: str | None = None
     position: int | None = None
 
 
@@ -51,6 +63,5 @@ class TaskResponse(BaseModel):
     title: str
     description: str
     project_id: int = Field(..., json_schema_extra={'readOnly': True})
-    is_completed: bool = Field(..., json_schema_extra={'readOnly': True})
+    status: str = Field(..., json_schema_extra={'readOnly': True})
     position: int = Field(default=0, json_schema_extra={'readOnly': True})
-
