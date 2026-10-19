@@ -1,21 +1,34 @@
 """Wallet use cases."""
 
+from datetime import date
+from decimal import Decimal
 from functools import partial
 
 from django.contrib.auth.models import AbstractUser
 from django.db.models import QuerySet
 
+from apps.infra.models import Transaction as TransactionModel
 from apps.infra.models import User
 from apps.infra.models import Wallet as WalletModel
 from apps.infra.models import normalize_wallet_name, wallet_name_key
-from apps.infra.repo import CategoryRepository, DuplicateWalletName, WalletRepository
+from apps.infra.repo import (
+    CategoryRepository,
+    DuplicateWalletName,
+    TransactionRepository,
+    WalletRepository,
+)
 from apps.shared.errors import DomainError, NotFound
 
-from ..contracts import PatchedWalletRequest, WalletRequest
+from ..contracts import PatchedWalletRequest, WalletCreateRequest, WalletRequest
 from ._patch import apply_provided
-from .categories import seed_base_categories
+from .categories import ensure_system_category, seed_base_categories
 
 UserType = AbstractUser
+
+#: The two entries the balance ledger writes itself: the opening balance the
+#: wallet is created with, and the correction when the current balance is set.
+OPENING_BALANCE_TITLE = 'Stan początkowy'
+BALANCE_CORRECTION_TITLE = 'Korekta stanu'
 
 
 def _get_wallet(
@@ -54,11 +67,7 @@ def _save(repository: WalletRepository, wallet: WalletModel) -> WalletModel:
 
 
 class ListWallets:
-    """List every wallet.
-
-    ``transaction_count`` comes from the response default until the
-    Transaction model lands (ticket 03), which annotates the real count.
-    """
+    """List every wallet, with its transaction count and balance."""
 
     def __init__(self, wallets: WalletRepository, user: User):
         self.wallets = wallets
@@ -83,20 +92,24 @@ class CreateWallet:
     """Create a wallet from a validated payload.
 
     A user's very first wallet also seeds their base categories, so they can
-    categorize spending immediately.
+    categorize spending immediately. An opening balance, when given, is
+    written straight away as a System transaction so the wallet's balance is
+    always the sum of its ledger.
     """
 
     def __init__(
         self,
         wallets: WalletRepository,
         categories: CategoryRepository,
+        transactions: TransactionRepository,
         user: User,
     ):
         self.wallets = wallets
         self.categories = categories
+        self.transactions = transactions
         self.user = user
 
-    def execute(self, data: WalletRequest) -> WalletModel:
+    def execute(self, data: WalletCreateRequest) -> WalletModel:
         is_first_wallet = self.wallets.count(user=self.user) == 0
         wallet = WalletModel(
             user=self.user,
@@ -105,7 +118,24 @@ class CreateWallet:
         created = _save(self.wallets, wallet)
         if is_first_wallet:
             seed_base_categories(self.categories, self.user)
-        return created
+        if data.initial_balance:
+            self._record_opening_balance(created, data.initial_balance)
+        # Re-read so the response carries the annotated count and balance the
+        # opening entry just produced.
+        return self.wallets.find(created.id, user=self.user) or created
+
+    def _record_opening_balance(self, wallet: WalletModel, amount: Decimal) -> None:
+        system = ensure_system_category(self.categories, self.user)
+        self.transactions.save(
+            TransactionModel(
+                user=self.user,
+                wallet=wallet,
+                category=system,
+                title=OPENING_BALANCE_TITLE,
+                amount=amount,
+                date=date.today(),
+            )
+        )
 
 
 class ReplaceWallet:
@@ -128,24 +158,53 @@ class ReplaceWallet:
 
 
 class UpdateWallet:
-    """Apply the supplied fields to an existing wallet (PATCH)."""
+    """Apply the supplied fields to an existing wallet (PATCH).
 
-    def __init__(self, wallets: WalletRepository, user: User):
+    Renaming is ordinary. Setting ``current_balance`` records the difference
+    against the wallet's computed balance as a System transaction, so the
+    ledger keeps summing to what the user says they have.
+    """
+
+    def __init__(
+        self,
+        wallets: WalletRepository,
+        categories: CategoryRepository,
+        transactions: TransactionRepository,
+        user: User,
+    ):
         self.wallets = wallets
+        self.categories = categories
+        self.transactions = transactions
         self.user = user
 
     def execute(self, wallet_id: int, data: PatchedWalletRequest) -> WalletModel:
         wallet = _get_wallet(self.wallets, wallet_id, user=self.user)
 
-        apply_provided(
-            data,
-            wallet,
-            resolve={
-                'name': partial(_validate_name, self.wallets, current=wallet, user=self.user)
-            },
-        )
+        if data.name is not None:
+            wallet.name = _validate_name(
+                self.wallets, data.name, current=wallet, user=self.user
+            )
+        saved = _save(self.wallets, wallet)
 
-        return _save(self.wallets, wallet)
+        if data.current_balance is not None:
+            current = self.wallets.balance(saved.id, user=self.user)
+            difference = data.current_balance - current
+            if difference:
+                system = ensure_system_category(self.categories, self.user)
+                self.transactions.save(
+                    TransactionModel(
+                        user=self.user,
+                        wallet=saved,
+                        category=system,
+                        title=BALANCE_CORRECTION_TITLE,
+                        amount=difference,
+                        date=date.today(),
+                    )
+                )
+
+        # Re-read so the response carries the annotated count and balance the
+        # correction just produced.
+        return self.wallets.find(saved.id, user=self.user) or saved
 
 
 class DeleteWallet:

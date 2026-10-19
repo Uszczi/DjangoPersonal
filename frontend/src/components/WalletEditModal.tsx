@@ -2,23 +2,24 @@ import { useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
 import type { WalletResponse } from "@/generated/api";
-import { useWalletsStore, type WalletInput } from "@/stores/wallets";
+import { balanceError } from "@/money";
+import { useWalletsStore } from "@/stores/wallets";
 
-type WalletEditorModalProps = {
-  /** Omit (or pass `null`) to create a new WalletResponse; pass a WalletResponse to edit it. */
-  wallet?: WalletResponse | null;
+type WalletEditModalProps = {
+  wallet: WalletResponse;
   onClose: () => void;
 };
 
-export function WalletEditorModal({
-  wallet = null,
-  onClose,
-}: WalletEditorModalProps) {
-  const saveWallet = useWalletsStore((state) => state.saveWallet);
+/**
+ * The edit modal: rename the wallet and/or state the balance it now holds.
+ * Changing the balance writes a System correction, so the ledger keeps
+ * summing to what the user says they have.
+ */
+export function WalletEditModal({ wallet, onClose }: WalletEditModalProps) {
+  const updateWallet = useWalletsStore((state) => state.updateWallet);
 
-  const [form, setForm] = useState<WalletInput>({
-    name: wallet?.name ?? "",
-  });
+  const [name, setName] = useState(wallet.name);
+  const [currentBalance, setCurrentBalance] = useState(wallet.balance ?? "0.00");
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -28,10 +29,14 @@ export function WalletEditorModal({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const input = { name: form.name.trim() };
-
-    if (!input.name) {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
       setFormError("Podaj nazwę portfela.");
+      return;
+    }
+    const balanceProblem = balanceError(currentBalance);
+    if (balanceProblem) {
+      setFormError(balanceProblem);
       return;
     }
 
@@ -39,7 +44,10 @@ export function WalletEditorModal({
     setFormError("");
 
     try {
-      await saveWallet(input, wallet);
+      await updateWallet(wallet, {
+        name: trimmedName,
+        currentBalance: currentBalance.trim(),
+      });
       onClose();
     } catch (error) {
       setFormError(await apiErrorMessage(error));
@@ -59,16 +67,12 @@ export function WalletEditorModal({
         className="project-dialog"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="wallet-dialog-title"
+        aria-labelledby="wallet-edit-title"
       >
         <div className="dialog-heading">
           <div>
-            <p className="eyebrow">
-              {wallet ? "ZMIANA SZCZEGÓŁÓW" : "NOWE MIEJSCE"}
-            </p>
-            <h2 id="wallet-dialog-title">
-              {wallet ? "Edytuj portfel" : "Nowy portfel"}
-            </h2>
+            <p className="eyebrow">ZMIANA SZCZEGÓŁÓW</p>
+            <h2 id="wallet-edit-title">Edytuj portfel</h2>
           </div>
           <button
             className="icon-button close-button"
@@ -79,20 +83,24 @@ export function WalletEditorModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <label className="form-field">
             <span>Nazwa portfela</span>
             <input
               autoFocus
               maxLength={100}
-              value={form.name}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  name: event.target.value,
-                }))
-              }
+              value={name}
+              onChange={(event) => setName(event.target.value)}
               required
+            />
+          </label>
+          <label className="form-field">
+            <span>Stan aktualny</span>
+            <input
+              inputMode="decimal"
+              autoComplete="off"
+              value={currentBalance}
+              onChange={(event) => setCurrentBalance(event.target.value)}
             />
           </label>
           {formError && (
@@ -114,11 +122,7 @@ export function WalletEditorModal({
               type="submit"
               disabled={isSaving}
             >
-              {isSaving
-                ? "Zapisywanie…"
-                : wallet
-                  ? "Zapisz zmiany"
-                  : "Utwórz portfel"}
+              {isSaving ? "Zapisywanie…" : "Zapisz zmiany"}
             </button>
           </div>
         </form>

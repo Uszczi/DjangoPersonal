@@ -43,10 +43,12 @@ function routeByUrl({
   transactions = [coffeeTransactionApi, lunchTransactionApi],
   created,
   patched,
+  categories = categoriesApi,
 }: {
   transactions?: unknown[]
   created?: unknown
   patched?: unknown
+  categories?: unknown[]
 } = {}) {
   return (url: string | URL | Request, init?: RequestInit): Promise<Response> => {
     const path = String(url)
@@ -63,7 +65,7 @@ function routeByUrl({
       return Promise.resolve(jsonResponse(transactions))
     }
     if (path.includes('/categories/')) {
-      return Promise.resolve(jsonResponse(categoriesApi))
+      return Promise.resolve(jsonResponse(categories))
     }
     if (path.includes('/wallets/')) {
       return Promise.resolve(jsonResponse([personalWalletApi]))
@@ -210,6 +212,54 @@ describe('Transactions', () => {
         }),
       }),
     )
+  })
+
+  test('the System category is not offered for a new transaction', async () => {
+    fetchMock.mockImplementation(
+      routeByUrl({
+        categories: [...categoriesApi, { id: 9, name: 'System', is_system: true }],
+      }),
+    )
+    const user = userEvent.setup()
+
+    renderApp('/expenses/1')
+    await screen.findByRole('list', { name: 'Transakcje z dnia 16 października 2026' })
+
+    await user.click(screen.getByRole('button', { name: 'Nowa transakcja' }))
+    const select = await screen.findByLabelText('Kategoria')
+
+    expect(within(select).queryByRole('option', { name: 'System' })).not.toBeInTheDocument()
+    expect(within(select).getByRole('option', { name: 'Jedzenie' })).toBeInTheDocument()
+  })
+
+  test('editing a System-categorised transaction keeps its category', async () => {
+    const correction = {
+      id: 12,
+      title: 'Korekta stanu',
+      amount: '-20.00',
+      date: '2026-10-18',
+      description: '',
+      category_id: 9,
+      wallet_id: 1,
+    }
+    fetchMock.mockImplementation(
+      routeByUrl({
+        transactions: [correction],
+        categories: [...categoriesApi, { id: 9, name: 'System', is_system: true }],
+      }),
+    )
+    const user = userEvent.setup()
+
+    renderApp('/expenses/1')
+    await screen.findByRole('list', { name: 'Transakcje z dnia 18 października 2026' })
+
+    await user.click(
+      screen.getByRole('button', { name: 'Edytuj transakcję: Korekta stanu' }),
+    )
+    const select = await screen.findByLabelText('Kategoria')
+
+    expect(within(select).getByRole('option', { name: 'System' })).toBeInTheDocument()
+    expect(select).toHaveValue('9')
   })
 
   test('user can delete a transaction after confirming', async () => {

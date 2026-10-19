@@ -24,13 +24,13 @@ def apply_provided(
     what the entity stores, for the fields that do not map one to one — an id
     that has to be looked up, a name that has to be validated.
 
-    An explicit ``null`` is skipped: nothing stored here is nullable, so the
-    only meaning ``null`` could carry is "leave this field alone".
+    Only fields absent from the payload are skipped. An explicit ``null`` is
+    applied verbatim, so it clears nullable fields; contracts reject ``null``
+    for fields whose storage cannot hold it. A ``null`` bypasses ``resolve``:
+    clearing needs no translation.
     """
     resolve = resolve or {}
     for field in payload.model_fields_set:
         value = getattr(payload, field)
-        if value is None:
-            continue
         converter = resolve.get(field)
-        setattr(target, field, converter(value) if converter else value)
+        setattr(target, field, converter(value) if converter and value is not None else value)

@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 
-import { WalletEditorModal } from "@/components/WalletEditorModal";
+import { WalletCreateModal } from "@/components/WalletCreateModal";
+import { WalletEditModal } from "@/components/WalletEditModal";
 import { DeleteWalletModal } from "@/components/DeleteWalletModal";
 import { WalletSelect } from "@/components/WalletSelect";
 import { CategoryPanel } from "@/components/CategoryPanel";
@@ -23,11 +24,11 @@ export function ExpensesPage() {
   }, [loadWallets]);
 
   function openCreateForm() {
-    ShowModal(WalletEditorModal);
+    ShowModal(WalletCreateModal);
   }
 
   function openEditForm(wallet: (typeof wallets)[number]) {
-    ShowModal(WalletEditorModal, { wallet });
+    ShowModal(WalletEditModal, { wallet });
   }
 
   function openDeleteDialog(wallet: (typeof wallets)[number]) {

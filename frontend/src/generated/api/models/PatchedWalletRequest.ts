@@ -24,6 +24,10 @@ export interface PatchedWalletRequest {
      *
      */
     name?: string | null;
+    /**
+     *
+     */
+    currentBalance?: string | null;
 }
 
 /**
@@ -44,6 +48,7 @@ export function PatchedWalletRequestFromJSONTyped(json: any, ignoreDiscriminator
     return {
 
         'name': json['name'] === undefined ? undefined : json['name'] === null ? null : json['name'],
+        'currentBalance': json['current_balance'] === undefined ? undefined : json['current_balance'] === null ? null : json['current_balance'],
     };
 }
 
@@ -59,6 +64,7 @@ export function PatchedWalletRequestToJSONTyped(value?: PatchedWalletRequest | n
     return {
 
         'name': value['name'],
+        'current_balance': value['currentBalance'],
     };
 }
 

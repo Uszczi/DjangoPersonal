@@ -6,18 +6,28 @@ from pydantic import Field, field_validator
 
 
 class _TaskPayload(BaseModel):
-    """Title trimming shared by the create and the partial payloads.
+    """Title normalization shared by the create and the partial payloads.
 
     ``check_fields=False`` because this base declares no fields itself.
     """
 
     @field_validator('title', mode='before', check_fields=False)
     @classmethod
-    def trim_title(cls, value: object) -> object:
+    def normalize_title(cls, value: object) -> object:
         if isinstance(value, str):
             value = value.strip()
             if not value:
                 raise ValueError('This field may not be blank.')
+            if value[0].islower():
+                value = value[0].upper() + value[1:]
+        return value
+
+    @field_validator('title', 'description', 'project', 'is_completed', 'position', check_fields=False)
+    @classmethod
+    def reject_null(cls, value: object) -> object:
+        """An explicit ``null`` is not "leave it alone" — it is a 400."""
+        if value is None:
+            raise ValueError('This field may not be null.')
         return value
 
 

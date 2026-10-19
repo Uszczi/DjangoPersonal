@@ -198,11 +198,17 @@ export function TransactionEditorModal({
               }
             >
               <option value="">Bez kategorii</option>
-              {categories.map((category) => (
-                <option key={category.id} value={String(category.id)}>
-                  {category.name}
-                </option>
-              ))}
+              {categories
+                .filter(
+                  (category) =>
+                    !category.isSystem ||
+                    category.id === transaction?.categoryId,
+                )
+                .map((category) => (
+                  <option key={category.id} value={String(category.id)}>
+                    {category.name}
+                  </option>
+                ))}
             </select>
           </label>
           <label className="form-field">

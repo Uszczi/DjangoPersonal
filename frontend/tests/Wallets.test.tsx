@@ -13,12 +13,14 @@ const personalWalletApi = {
   id: 1,
   name: 'Personal',
   transaction_count: 0,
+  balance: '0.00',
 }
 
 const businessWalletApi = {
   id: 2,
   name: 'Business',
   transaction_count: 3,
+  balance: '120.00',
 }
 
 function jsonResponse(data: unknown, status = 200) {
@@ -64,7 +66,7 @@ describe('Wallets', () => {
       .mockResolvedValueOnce(jsonResponse([inbox]))  // projects (root layout)
       .mockResolvedValueOnce(jsonResponse([]))       // categories (CategoryPanel)
       .mockResolvedValueOnce(
-        jsonResponse({ id: 1, name: 'Personal', transaction_count: 0 }, 201),
+        jsonResponse({ id: 1, name: 'Personal', transaction_count: 0, balance: '0.00' }, 201),
       )
     const user = userEvent.setup()
 
@@ -87,13 +89,78 @@ describe('Wallets', () => {
     )
   })
 
+  test('user can open a wallet with an initial balance', async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse([]))       // wallets list
+      .mockResolvedValueOnce(jsonResponse([inbox]))  // projects (root layout)
+      .mockResolvedValueOnce(jsonResponse([]))       // categories (CategoryPanel)
+      .mockResolvedValueOnce(
+        jsonResponse(
+          { id: 1, name: 'Personal', transaction_count: 1, balance: '250.00' },
+          201,
+        ),
+      )
+    const user = userEvent.setup()
+
+    renderApp('/expenses')
+    await screen.findByText('Brak portfeli. Utwórz pierwszy portfel.')
+
+    await user.click(screen.getAllByRole('button', { name: 'Nowy portfel' })[0])
+    await user.type(await screen.findByLabelText('Nazwa portfela'), 'Personal')
+    await user.type(screen.getByLabelText('Stan początkowy'), '250')
+    await user.click(screen.getByRole('button', { name: 'Utwórz portfel' }))
+
+    await screen.findByRole('list', { name: 'Portfele' })
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
+      '/api/v1/wallets/',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ name: 'Personal', initial_balance: '250' }),
+      }),
+    )
+  })
+
+  test('user can set the current balance from the edit modal', async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse([personalWalletApi]))
+      .mockResolvedValueOnce(jsonResponse([inbox]))
+      .mockResolvedValueOnce(jsonResponse([])) // categories (CategoryPanel)
+      .mockResolvedValueOnce(
+        jsonResponse({ id: 1, name: 'Personal', transaction_count: 1, balance: '75.00' }),
+      )
+    const user = userEvent.setup()
+
+    renderApp('/expenses')
+    await screen.findByRole('list', { name: 'Portfele' })
+
+    await user.click(screen.getByRole('button', { name: 'Edytuj portfel: Personal' }))
+    const balanceInput = await screen.findByLabelText('Stan aktualny')
+    expect(balanceInput).toHaveValue('0.00')
+
+    await user.clear(balanceInput)
+    await user.type(balanceInput, '75')
+    await user.click(screen.getByRole('button', { name: 'Zapisz zmiany' }))
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        4,
+        '/api/v1/wallets/1/',
+        expect.objectContaining({
+          method: 'PATCH',
+          body: JSON.stringify({ name: 'Personal', current_balance: '75' }),
+        }),
+      ),
+    )
+  })
+
   test('user can rename a wallet', async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([personalWalletApi]))
       .mockResolvedValueOnce(jsonResponse([inbox]))
       .mockResolvedValueOnce(jsonResponse([])) // categories (CategoryPanel)
       .mockResolvedValueOnce(
-        jsonResponse({ id: 1, name: 'Personal renamed', transaction_count: 0 }),
+        jsonResponse({ id: 1, name: 'Personal renamed', transaction_count: 0, balance: '0.00' }),
       )
     const user = userEvent.setup()
 

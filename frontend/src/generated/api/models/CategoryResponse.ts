@@ -28,6 +28,10 @@ export interface CategoryResponse {
      *
      */
     name: string;
+    /**
+     *
+     */
+    readonly isSystem?: boolean;
 }
 
 /**
@@ -51,6 +55,7 @@ export function CategoryResponseFromJSONTyped(json: any, ignoreDiscriminator: bo
 
         'id': json['id'],
         'name': json['name'],
+        'isSystem': json['is_system'] == null ? undefined : json['is_system'],
     };
 }
 
@@ -58,7 +63,7 @@ export function CategoryResponseToJSON(json: any): CategoryResponse {
     return CategoryResponseToJSONTyped(json, false);
 }
 
-export function CategoryResponseToJSONTyped(value?: Omit<CategoryResponse, 'id'> | null, ignoreDiscriminator: boolean = false): any {
+export function CategoryResponseToJSONTyped(value?: Omit<CategoryResponse, 'id'|'isSystem'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

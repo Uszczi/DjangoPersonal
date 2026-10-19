@@ -42,6 +42,25 @@ def test_task_without_a_project_is_assigned_to_inbox(api_client: Any, post_json:
     assert [task['id'] for task in inbox_tasks.json()] == [create_response.json()['id']]
 
 
+def test_task_title_starts_with_a_capital_letter(post_json: Any, patch_json: Any) -> None:
+    project_id = post_json('/api/v1/projects/', {'name': 'Writing'}).json()['id']
+
+    created = post_json(
+        '/api/v1/tasks/', {'title': '  kup mleko ', 'project': project_id}
+    )
+    assert created.status_code == HTTPStatus.CREATED
+    assert created.json()['title'] == 'Kup mleko'
+
+    digit_first = post_json('/api/v1/tasks/', {'title': '2x pomidor', 'project': project_id})
+    assert digit_first.json()['title'] == '2x pomidor'
+
+    edited = patch_json(
+        f"/api/v1/tasks/{created.json()['id']}/", {'title': 'nowy tytuł'}
+    )
+    assert edited.status_code == HTTPStatus.OK
+    assert edited.json()['title'] == 'Nowy tytuł'
+
+
 def test_task_title_is_required_and_cannot_be_blank(post_json: Any) -> None:
     missing = post_json('/api/v1/tasks/', {})
     blank = post_json('/api/v1/tasks/', {'title': '   '})
@@ -50,6 +69,33 @@ def test_task_title_is_required_and_cannot_be_blank(post_json: Any) -> None:
     assert missing.json()['detail'][0]['loc'] == ['body', 'payload', 'title']
     assert missing.json()['detail'][0]['type'] == 'missing'
     assert blank.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_patch_with_explicit_null_is_rejected(post_json: Any, patch_json: Any) -> None:
+    project_id = post_json('/api/v1/projects/', {'name': 'Writing'}).json()['id']
+    task_id = post_json(
+        '/api/v1/tasks/', {'title': 'Szkic', 'description': 'opis', 'project': project_id}
+    ).json()['id']
+
+    response = patch_json(f'/api/v1/tasks/{task_id}/', {'description': None})
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_patch_with_omitted_fields_leaves_them_alone(
+    post_json: Any, patch_json: Any
+) -> None:
+    project_id = post_json('/api/v1/projects/', {'name': 'Writing'}).json()['id']
+    task_id = post_json(
+        '/api/v1/tasks/', {'title': 'Szkic', 'description': 'opis', 'project': project_id}
+    ).json()['id']
+
+    response = patch_json(f'/api/v1/tasks/{task_id}/', {'title': 'Final'})
+
+    assert response.status_code == HTTPStatus.OK
+    body = response.json()
+    assert body['title'] == 'Final'
+    assert body['description'] == 'opis'
 
 
 def test_task_list_is_scoped_to_a_project_and_shows_open_tasks_first(api_client: Any, post_json: Any) -> None:

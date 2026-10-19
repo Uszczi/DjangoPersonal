@@ -4,7 +4,12 @@ from .transactions import (
     TransactionRequest,
     TransactionResponse,
 )
-from .wallets import PatchedWalletRequest, WalletRequest, WalletResponse
+from .wallets import (
+    PatchedWalletRequest,
+    WalletCreateRequest,
+    WalletRequest,
+    WalletResponse,
+)
 
 __all__ = [
     'CategoryRequest',
@@ -14,6 +19,7 @@ __all__ = [
     'PatchedWalletRequest',
     'TransactionRequest',
     'TransactionResponse',
+    'WalletCreateRequest',
     'WalletRequest',
     'WalletResponse',
 ]

@@ -611,7 +611,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/WalletRequest'
+              $ref: '#/components/schemas/WalletCreateRequest'
         required: true
       security:
       - JWTAuth: []
@@ -1437,10 +1437,33 @@ components:
           readOnly: true
           title: Transaction Count
           type: integer
+        balance:
+          default: '0.00'
+          readOnly: true
+          title: Amount
+          type: string
       required:
       - id
       - name
       title: WalletResponse
+      type: object
+    WalletCreateRequest:
+      description: 'Create payload: the wallet plus the balance it opens with.'
+      properties:
+        name:
+          maxLength: 100
+          minLength: 1
+          title: Name
+          type: string
+        initial_balance:
+          anyOf:
+          - title: Amount
+            type: string
+          - type: 'null'
+          title: Initial Balance
+      required:
+      - name
+      title: WalletCreateRequest
       type: object
     WalletRequest:
       properties:
@@ -1462,6 +1485,12 @@ components:
             type: string
           - type: 'null'
           title: Name
+        current_balance:
+          anyOf:
+          - title: Amount
+            type: string
+          - type: 'null'
+          title: Current Balance
       title: PatchedWalletRequest
       type: object
     CategoryResponse:
@@ -1473,6 +1502,11 @@ components:
         name:
           title: Name
           type: string
+        is_system:
+          default: false
+          readOnly: true
+          title: Is System
+          type: boolean
       required:
       - id
       - name

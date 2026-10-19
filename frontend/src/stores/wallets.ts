@@ -4,21 +4,31 @@ import { api } from "@/api";
 import { type WalletResponse } from "@/generated/api";
 import { createLoadGuard } from "@/stores/loadGuard";
 
-export type WalletInput = { name: string };
+/** What the create modal collects: a name and, optionally, an opening balance. */
+export type WalletCreateInput = { name: string; initialBalance: string };
+
+/** What the edit modal collects: a name and the balance the wallet now holds. */
+export type WalletUpdateInput = { name: string; currentBalance: string };
 
 type WalletsState = {
   wallets: WalletResponse[];
   isLoading: boolean;
   pageError: string;
   loadWallets: () => Promise<void>;
-  saveWallet: (
-    input: WalletInput,
-    wallet?: WalletResponse | null,
+  createWallet: (input: WalletCreateInput) => Promise<WalletResponse>;
+  updateWallet: (
+    wallet: WalletResponse,
+    input: WalletUpdateInput,
   ) => Promise<WalletResponse>;
   confirmWalletDelete: (wallet: WalletResponse) => Promise<void>;
 };
 
 const loadGuard = createLoadGuard();
+
+/** Mirror the server's `ordering = ['normalized_name']` for optimistic inserts. */
+function sortKey(name: string) {
+  return name.trim().toLocaleLowerCase();
+}
 
 export const useWalletsStore = create<WalletsState>((set) => ({
   wallets: [],
@@ -44,35 +54,45 @@ export const useWalletsStore = create<WalletsState>((set) => ({
     }
   },
 
-  saveWallet: async (input, wallet) => {
-    if (wallet) {
-      const updatedWallet = await api.walletsPartialUpdate({
-        id: wallet.id,
-        patchedWalletRequest: input,
-      });
-      set((state) => ({
-        wallets: state.wallets.map((item) =>
-          item.id === updatedWallet.id ? updatedWallet : item,
-        ),
-      }));
-      return updatedWallet;
-    }
-
+  createWallet: async ({ name, initialBalance }) => {
     const createdWallet = await api.walletsCreate({
-      walletRequest: input,
+      walletCreateRequest: {
+        name,
+        // Omitted when blank, so a wallet without an opening balance sends
+        // exactly the name it always did.
+        initialBalance: initialBalance.trim() || undefined,
+      },
     });
     set((state) => {
-      // Mirror the server's `ordering = ['normalized_name']` so the optimistic
-      // insert lands where a reload would put it.
-      const key = (name: string) => name.trim().toLocaleLowerCase();
       const insertAt = state.wallets.findIndex(
-        (item) => key(item.name) > key(createdWallet.name),
+        (item) => sortKey(item.name) > sortKey(createdWallet.name),
       );
       const wallets = [...state.wallets];
       wallets.splice(insertAt === -1 ? wallets.length : insertAt, 0, createdWallet);
       return { wallets };
     });
     return createdWallet;
+  },
+
+  updateWallet: async (wallet, { name, currentBalance }) => {
+    const updatedWallet = await api.walletsPartialUpdate({
+      id: wallet.id,
+      patchedWalletRequest: {
+        name,
+        // Only send the balance when it actually changed, so a plain rename
+        // never writes a System correction.
+        currentBalance:
+          currentBalance === (wallet.balance ?? "")
+            ? undefined
+            : currentBalance.trim() || undefined,
+      },
+    });
+    set((state) => ({
+      wallets: state.wallets.map((item) =>
+        item.id === updatedWallet.id ? updatedWallet : item,
+      ),
+    }));
+    return updatedWallet;
   },
 
   confirmWalletDelete: async (wallet) => {

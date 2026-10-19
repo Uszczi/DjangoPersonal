@@ -27,6 +27,7 @@ export * from './TimerStartRequest';
 export * from './TransactionRequest';
 export * from './TransactionResponse';
 export * from './UserResponse';
+export * from './WalletCreateRequest';
 export * from './WalletRequest';
 export * from './WalletResponse';
 export * from './WhiteboardRequest';

@@ -32,6 +32,10 @@ export interface WalletResponse {
      *
      */
     readonly transactionCount?: number;
+    /**
+     *
+     */
+    readonly balance?: string;
 }
 
 /**
@@ -56,6 +60,7 @@ export function WalletResponseFromJSONTyped(json: any, ignoreDiscriminator: bool
         'id': json['id'],
         'name': json['name'],
         'transactionCount': json['transaction_count'] == null ? undefined : json['transaction_count'],
+        'balance': json['balance'] == null ? undefined : json['balance'],
     };
 }
 
@@ -63,7 +68,7 @@ export function WalletResponseToJSON(json: any): WalletResponse {
     return WalletResponseToJSONTyped(json, false);
 }
 
-export function WalletResponseToJSONTyped(value?: Omit<WalletResponse, 'id'|'transactionCount'> | null, ignoreDiscriminator: boolean = false): any {
+export function WalletResponseToJSONTyped(value?: Omit<WalletResponse, 'id'|'transactionCount'|'balance'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

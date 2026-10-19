@@ -22,9 +22,127 @@ def test_create_wallet(post_json: Any, api_client: Any) -> None:
     assert response.status_code == HTTPStatus.CREATED
     assert response.json()['name'] == 'Personal'
     assert response.json()['transaction_count'] == 0
+    assert response.json()['balance'] == '0.00'
 
     listing = api_client.get('/api/v1/wallets/').json()
     assert [w['name'] for w in listing] == ['Personal']
+
+
+def test_create_wallet_with_initial_balance(post_json: Any, api_client: Any) -> None:
+    response = post_json(
+        '/api/v1/wallets/', {'name': 'Personal', 'initial_balance': '100.50'}
+    )
+
+    assert response.status_code == HTTPStatus.CREATED
+    assert response.json()['balance'] == '100.50'
+    assert response.json()['transaction_count'] == 1
+
+    # The opening balance is a real System-category transaction, so the ledger
+    # sums to the wallet's balance.
+    wallet_id = response.json()['id']
+    transactions = api_client.get(f'/api/v1/transactions/?wallet={wallet_id}').json()
+    assert [t['title'] for t in transactions] == ['Stan początkowy']
+    assert transactions[0]['amount'] == '100.50'
+    system_id = next(
+        c['id'] for c in api_client.get('/api/v1/categories/').json() if c['is_system']
+    )
+    assert transactions[0]['category_id'] == system_id
+
+    listing = api_client.get('/api/v1/wallets/').json()
+    assert listing[0]['balance'] == '100.50'
+
+
+def test_spending_reduces_the_wallet_balance(post_json: Any, api_client: Any) -> None:
+    wallet_id = post_json(
+        '/api/v1/wallets/', {'name': 'Personal', 'initial_balance': '100.00'}
+    ).json()['id']
+
+    post_json(
+        '/api/v1/transactions/',
+        {'title': 'Zakupy', 'amount': '30.00', 'date': '2026-10-18', 'wallet': wallet_id},
+    )
+
+    wallet = api_client.get(f'/api/v1/wallets/{wallet_id}/').json()
+    assert wallet['balance'] == '70.00'
+    assert wallet['transaction_count'] == 2
+
+
+def test_setting_current_balance_down_records_a_correction(
+    post_json: Any, patch_json: Any, api_client: Any
+) -> None:
+    wallet_id = post_json(
+        '/api/v1/wallets/', {'name': 'Personal', 'initial_balance': '100.00'}
+    ).json()['id']
+    post_json(
+        '/api/v1/transactions/',
+        {'title': 'Zakupy', 'amount': '30.00', 'date': '2026-10-18', 'wallet': wallet_id},
+    )
+
+    response = patch_json(f'/api/v1/wallets/{wallet_id}/', {'current_balance': '50.00'})
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['balance'] == '50.00'
+    transactions = api_client.get(f'/api/v1/transactions/?wallet={wallet_id}').json()
+    correction = next(t for t in transactions if t['title'] == 'Korekta stanu')
+    assert correction['amount'] == '-20.00'
+
+
+def test_setting_current_balance_up_records_a_correction(
+    post_json: Any, patch_json: Any, api_client: Any
+) -> None:
+    wallet_id = post_json(
+        '/api/v1/wallets/', {'name': 'Personal', 'initial_balance': '100.00'}
+    ).json()['id']
+
+    response = patch_json(f'/api/v1/wallets/{wallet_id}/', {'current_balance': '120.00'})
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['balance'] == '120.00'
+    transactions = api_client.get(f'/api/v1/transactions/?wallet={wallet_id}').json()
+    correction = next(t for t in transactions if t['title'] == 'Korekta stanu')
+    assert correction['amount'] == '20.00'
+
+
+def test_setting_current_balance_to_the_same_value_writes_nothing(
+    post_json: Any, patch_json: Any
+) -> None:
+    wallet_id = post_json(
+        '/api/v1/wallets/', {'name': 'Personal', 'initial_balance': '100.00'}
+    ).json()['id']
+
+    response = patch_json(f'/api/v1/wallets/{wallet_id}/', {'current_balance': '100.00'})
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['balance'] == '100.00'
+    assert response.json()['transaction_count'] == 1
+
+
+def test_patch_with_null_current_balance_is_rejected(post_json: Any, patch_json: Any) -> None:
+    wallet_id = post_json('/api/v1/wallets/', {'name': 'Personal'}).json()['id']
+
+    response = patch_json(f'/api/v1/wallets/{wallet_id}/', {'current_balance': None})
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_initial_balance_needs_at_most_two_decimal_places(post_json: Any) -> None:
+    response = post_json(
+        '/api/v1/wallets/', {'name': 'Personal', 'initial_balance': '1.234'}
+    )
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_renaming_keeps_the_balance(post_json: Any, patch_json: Any) -> None:
+    wallet_id = post_json(
+        '/api/v1/wallets/', {'name': 'Old', 'initial_balance': '40.00'}
+    ).json()['id']
+
+    response = patch_json(f'/api/v1/wallets/{wallet_id}/', {'name': 'New'})
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['name'] == 'New'
+    assert response.json()['balance'] == '40.00'
 
 
 def test_wallet_name_is_required_and_cannot_be_blank(post_json: Any) -> None:
@@ -82,13 +200,12 @@ def test_replace_wallet_with_put(post_json: Any, put_json: Any) -> None:
     assert response.json()['name'] == 'Replaced'
 
 
-def test_patch_with_null_name_leaves_wallet_unchanged(post_json: Any, patch_json: Any) -> None:
+def test_patch_with_null_name_is_rejected(post_json: Any, patch_json: Any) -> None:
     created = post_json('/api/v1/wallets/', {'name': 'Kept'})
 
     response = patch_json(f"/api/v1/wallets/{created.json()['id']}/", {'name': None})
 
-    assert response.status_code == HTTPStatus.OK
-    assert response.json()['name'] == 'Kept'
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
 def test_wallet_not_found(api_client: Any) -> None:

@@ -22,6 +22,9 @@ export function CategoryPanel() {
   const [editName, setEditName] = useState("");
   const [renameError, setRenameError] = useState("");
 
+  // The System category holds balance corrections; the user never manages it.
+  const visibleCategories = categories.filter((category) => !category.isSystem);
+
   useEffect(() => {
     void loadCategories();
   }, [loadCategories]);
@@ -113,11 +116,11 @@ export function CategoryPanel() {
         <p className="task-error" role="alert">
           {pageError}
         </p>
-      ) : categories.length === 0 ? (
+      ) : visibleCategories.length === 0 ? (
         <p className="task-empty-state">Brak kategorii.</p>
       ) : (
         <ul className="project-list" aria-label="Lista kategorii">
-          {categories.map((category) => (
+          {visibleCategories.map((category) => (
             <li className="project-row" key={category.id}>
               {editingId === category.id ? (
                 <form

@@ -111,8 +111,8 @@ class CreateTransaction:
 class ReplaceTransaction:
     """Replace a transaction wholesale with the supplied payload (PUT).
 
-    Every field is assigned, so an omitted category clears the old one —
-    unlike PATCH, where ``null`` means "leave it alone" (see ``apply_provided``).
+    Every field is assigned, so an omitted category clears the old one — the
+    same effect as sending ``null`` on a PATCH (see ``apply_provided``).
     """
 
     def __init__(

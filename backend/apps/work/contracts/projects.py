@@ -22,6 +22,14 @@ class _ProjectPayload(BaseModel):
                 raise ValueError('This field may not be blank.')
         return value
 
+    @field_validator('name', 'description', 'position', check_fields=False)
+    @classmethod
+    def reject_null(cls, value: object) -> object:
+        """An explicit ``null`` is not "leave it alone" — it is a 400."""
+        if value is None:
+            raise ValueError('This field may not be null.')
+        return value
+
 
 class ProjectRequest(_ProjectPayload):
     name: str = Field(min_length=1, max_length=100)

@@ -24,6 +24,10 @@ class CategoryRepository:
         """The category with this id for ``user``, or ``None``."""
         return CategoryModel.objects.filter(pk=category_id, user=user).first()
 
+    def find_by_name_key(self, name_key: str, *, user: User) -> CategoryModel | None:
+        """The category carrying this normalized name for ``user``, or ``None``."""
+        return CategoryModel.objects.filter(normalized_name=name_key, user=user).first()
+
     def name_taken(
         self, name_key: str, *, user: User, exclude: CategoryModel | None = None
     ) -> bool:

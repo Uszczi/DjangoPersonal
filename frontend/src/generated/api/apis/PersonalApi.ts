@@ -145,6 +145,11 @@ import {
     UserResponseToJSON,
 } from '../models/UserResponse';
 import {
+    type WalletCreateRequest,
+    WalletCreateRequestFromJSON,
+    WalletCreateRequestToJSON,
+} from '../models/WalletCreateRequest';
+import {
     type WalletRequest,
     WalletRequestFromJSON,
     WalletRequestToJSON,
@@ -405,7 +410,7 @@ export interface WalletsCreateRequest {
     /**
      *
      */
-    walletRequest: WalletRequest;
+    walletCreateRequest: WalletCreateRequest;
 }
 
 export interface WalletsDestroyRequest {
@@ -2266,10 +2271,10 @@ export class PersonalApi extends runtime.BaseAPI {
      * Creates request options for walletsCreate without sending the request
      */
     async walletsCreateRequestOpts(requestParameters: WalletsCreateRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['walletRequest'] == null) {
+        if (requestParameters['walletCreateRequest'] == null) {
             throw new runtime.RequiredError(
-                'walletRequest',
-                'Required parameter "walletRequest" was null or undefined when calling walletsCreate().'
+                'walletCreateRequest',
+                'Required parameter "walletCreateRequest" was null or undefined when calling walletsCreate().'
             );
         }
 
@@ -2295,7 +2300,7 @@ export class PersonalApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: WalletRequestToJSON(requestParameters['walletRequest']),
+            body: WalletCreateRequestToJSON(requestParameters['walletCreateRequest']),
         };
     }
 

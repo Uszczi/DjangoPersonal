@@ -10,11 +10,15 @@ from apps.shared.base import BaseModel
 
 #: Money travels as a string on the wire ("12.50") so nothing ever rounds it
 #: through a float; ``str(Decimal)`` keeps the stored two places verbatim.
+#: Aggregated values (a wallet balance) come back with a variable scale, so the
+#: serializer quantizes before stringifying — money always shows two places.
 #: ``WithJsonSchema`` pins the request schema to that string — validation still
 #: accepts a JSON number, it just is not the documented shape.
 Amount = Annotated[
     Decimal,
-    PlainSerializer(lambda value: str(value), return_type=str),
+    PlainSerializer(
+        lambda value: str(value.quantize(Decimal('0.01'))), return_type=str
+    ),
     WithJsonSchema({'type': 'string', 'title': 'Amount'}),
 ]
 
@@ -34,11 +38,21 @@ class _TransactionPayload(BaseModel):
                 raise ValueError('This field may not be blank.')
         return value
 
+    @field_validator('title', 'amount', 'date', 'description', 'wallet', check_fields=False)
+    @classmethod
+    def reject_null(cls, value: object) -> object:
+        """An explicit ``null`` is not "leave it alone" — it is a 400.
+
+        ``category`` is exempt: its column is nullable, so sending ``null``
+        genuinely uncategorizes the transaction.
+        """
+        if value is None:
+            raise ValueError('This field may not be null.')
+        return value
+
     @field_validator('amount', check_fields=False)
     @classmethod
     def validate_amount(cls, value: Decimal) -> Decimal:
-        if value is None:
-            return value
         if value <= 0:
             raise ValueError('Amount must be positive.')
         if value != value.quantize(Decimal('0.01')):

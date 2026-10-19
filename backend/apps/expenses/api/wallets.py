@@ -5,7 +5,12 @@ from ninja import Router, Status
 from ninja_jwt.authentication import JWTAuth
 
 from apps.expenses import deps, handlers
-from apps.expenses.contracts import PatchedWalletRequest, WalletRequest, WalletResponse
+from apps.expenses.contracts import (
+    PatchedWalletRequest,
+    WalletCreateRequest,
+    WalletRequest,
+    WalletResponse,
+)
 from apps.infra.models import User
 from apps.infra.models import Wallet as WalletModel
 
@@ -28,9 +33,12 @@ def list_wallets(request: HttpRequest) -> QuerySet[WalletModel]:
     auth=JWTAuth(),
     operation_id='wallets_create',
 )
-def create_wallet(request: HttpRequest, payload: WalletRequest) -> Status[WalletModel]:
+def create_wallet(request: HttpRequest, payload: WalletCreateRequest) -> Status[WalletModel]:
     handler = handlers.CreateWallet(
-        deps.wallet_repository(), deps.category_repository(), cast(User, request.user)
+        deps.wallet_repository(),
+        deps.category_repository(),
+        deps.transaction_repository(),
+        cast(User, request.user),
     )
     return Status(201, handler.execute(payload))
 
@@ -63,7 +71,12 @@ def replace_wallet(request: HttpRequest, id: int, payload: WalletRequest) -> Wal
     operation_id='wallets_partial_update',
 )
 def update_wallet(request: HttpRequest, id: int, payload: PatchedWalletRequest) -> WalletModel:
-    handler = handlers.UpdateWallet(deps.wallet_repository(), cast(User, request.user))
+    handler = handlers.UpdateWallet(
+        deps.wallet_repository(),
+        deps.category_repository(),
+        deps.transaction_repository(),
+        cast(User, request.user),
+    )
     return handler.execute(id, payload)
 
 

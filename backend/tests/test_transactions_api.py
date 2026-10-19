@@ -167,9 +167,7 @@ def test_transaction_can_be_edited(post_json: Any, patch_json: Any) -> None:
     assert body['date'] == '2026-10-18'
 
 
-def test_patch_with_null_amount_leaves_transaction_unchanged(
-    post_json: Any, patch_json: Any
-) -> None:
+def test_patch_with_null_amount_is_rejected(post_json: Any, patch_json: Any) -> None:
     wallet_id = post_json('/api/v1/wallets/', {'name': 'Personal'}).json()['id']
     transaction_id = post_json(
         '/api/v1/transactions/',
@@ -178,8 +176,49 @@ def test_patch_with_null_amount_leaves_transaction_unchanged(
 
     response = patch_json(f'/api/v1/transactions/{transaction_id}/', {'amount': None})
 
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_patch_with_null_category_uncategorizes_transaction(
+    post_json: Any, patch_json: Any
+) -> None:
+    wallet_id = post_json('/api/v1/wallets/', {'name': 'Personal'}).json()['id']
+    category_id = post_json('/api/v1/categories/', {'name': 'Hobby'}).json()['id']
+    transaction_id = post_json(
+        '/api/v1/transactions/',
+        {
+            'title': 'Kawa',
+            'amount': '8.00',
+            'date': '2026-10-18',
+            'category': category_id,
+            'wallet': wallet_id,
+        },
+    ).json()['id']
+
+    response = patch_json(f'/api/v1/transactions/{transaction_id}/', {'category': None})
+
     assert response.status_code == HTTPStatus.OK
-    assert response.json()['amount'] == '8.00'
+    assert response.json()['category_id'] is None
+
+
+def test_patch_without_category_leaves_it_alone(post_json: Any, patch_json: Any) -> None:
+    wallet_id = post_json('/api/v1/wallets/', {'name': 'Personal'}).json()['id']
+    category_id = post_json('/api/v1/categories/', {'name': 'Hobby'}).json()['id']
+    transaction_id = post_json(
+        '/api/v1/transactions/',
+        {
+            'title': 'Kawa',
+            'amount': '8.00',
+            'date': '2026-10-18',
+            'category': category_id,
+            'wallet': wallet_id,
+        },
+    ).json()['id']
+
+    response = patch_json(f'/api/v1/transactions/{transaction_id}/', {'title': 'Herbata'})
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['category_id'] == category_id
 
 
 def test_replace_transaction_with_put_clears_category(

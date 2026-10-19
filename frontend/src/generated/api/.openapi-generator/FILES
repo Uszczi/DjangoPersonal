@@ -27,6 +27,7 @@ models/TimerStartRequest.ts
 models/TransactionRequest.ts
 models/TransactionResponse.ts
 models/UserResponse.ts
+models/WalletCreateRequest.ts
 models/WalletRequest.ts
 models/WalletResponse.ts
 models/WhiteboardRequest.ts

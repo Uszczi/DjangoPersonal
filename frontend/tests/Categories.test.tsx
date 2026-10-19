@@ -7,11 +7,12 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { renderApp } from './renderApp'
 
 const inbox = { id: 1, name: 'Inbox', description: '', is_inbox: true }
-const wallet = { id: 1, name: 'Personal', transaction_count: 0 }
+const wallet = { id: 1, name: 'Personal', transaction_count: 0, balance: '0.00' }
 
 // API returns snake_case; the generated client maps it to camelCase.
-const catJedzenie = { id: 1, name: 'Jedzenie' }
-const catTransport = { id: 2, name: 'Transport' }
+const catJedzenie = { id: 1, name: 'Jedzenie', is_system: false }
+const catTransport = { id: 2, name: 'Transport', is_system: false }
+const catSystem = { id: 3, name: 'System', is_system: true }
 
 function jsonResponse(data: unknown, status = 200) {
   return new Response(status === 204 ? null : JSON.stringify(data), {
@@ -73,6 +74,21 @@ describe('Categories', () => {
     expect(within(list).getAllByRole('listitem')).toHaveLength(10)
     expect(within(list).getByText('Jedzenie')).toBeInTheDocument()
     expect(within(list).getByText('Inne')).toBeInTheDocument()
+  })
+
+  test('the System category is hidden from the panel', async () => {
+    const initial = mockInitial([catJedzenie, catSystem])
+    fetchMock
+      .mockResolvedValueOnce(initial.wallets)
+      .mockResolvedValueOnce(initial.projects)
+      .mockResolvedValueOnce(initial.categories)
+
+    renderApp('/expenses')
+
+    const list = await screen.findByRole('list', { name: 'Lista kategorii' })
+    expect(within(list).getByText('Jedzenie')).toBeInTheDocument()
+    expect(within(list).queryByText('System')).not.toBeInTheDocument()
+    expect(within(list).getAllByRole('listitem')).toHaveLength(1)
   })
 
   test('user can create a category inline', async () => {

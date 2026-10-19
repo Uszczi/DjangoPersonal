@@ -1,14 +1,17 @@
 """Wallet contracts: request payloads and the response shape."""
 
+from decimal import Decimal
 
 from apps.shared.base import BaseModel
 from pydantic import Field, field_validator
 
 from apps.infra.models import normalize_wallet_name
 
+from .transactions import Amount
+
 
 class _WalletPayload(BaseModel):
-    """Name trimming shared by the create and the partial payloads.
+    """Name and balance rules shared by the create and the partial payloads.
 
     ``check_fields=False`` because this base declares no fields itself.
     """
@@ -22,13 +25,35 @@ class _WalletPayload(BaseModel):
                 raise ValueError('This field may not be blank.')
         return value
 
+    @field_validator('name', 'initial_balance', 'current_balance', check_fields=False)
+    @classmethod
+    def reject_null(cls, value: object) -> object:
+        """An explicit ``null`` is not "leave it alone" — it is a 400."""
+        if value is None:
+            raise ValueError('This field may not be null.')
+        return value
+
+    @field_validator('initial_balance', 'current_balance', check_fields=False)
+    @classmethod
+    def validate_balance(cls, value: Decimal) -> Decimal:
+        if value != value.quantize(Decimal('0.01')):
+            raise ValueError('Balance must have at most 2 decimal places.')
+        return value
+
 
 class WalletRequest(_WalletPayload):
     name: str = Field(min_length=1, max_length=100)
 
 
+class WalletCreateRequest(WalletRequest):
+    """Create payload: the wallet plus the balance it opens with."""
+
+    initial_balance: Amount | None = None
+
+
 class PatchedWalletRequest(_WalletPayload):
     name: str | None = Field(default=None, min_length=1, max_length=100)
+    current_balance: Amount | None = None
 
 
 class WalletResponse(BaseModel):
@@ -36,4 +61,7 @@ class WalletResponse(BaseModel):
     name: str
     transaction_count: int = Field(
         default=0, json_schema_extra={'readOnly': True}
+    )
+    balance: Amount = Field(
+        default=Decimal('0.00'), json_schema_extra={'readOnly': True}
     )

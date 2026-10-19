@@ -129,6 +129,45 @@ describe('Routing', () => {
     expect(router.state.location.search).toMatchObject({ project: 2 })
   })
 
+  test('the selected ProjectResponse is remembered between sessions', async () => {
+    const user = userEvent.setup()
+
+    // First session: the user picks Planning and the app remembers it.
+    const first = renderApp('/tasks')
+    await screen.findByRole('link', { name: 'Inbox' })
+    await user.click(screen.getByRole('link', { name: 'Planning' }))
+    await waitFor(() =>
+      expect(first.router.state.location.search).toMatchObject({ project: 2 }),
+    )
+    expect(window.localStorage.getItem('lastProject:1')).toBe('2')
+    cleanup()
+
+    // Reopening the bare Tasks URL restores the remembered project.
+    // renderApp clears localStorage, so put the remembered value back before
+    // the project list finishes loading.
+    const second = renderApp('/tasks')
+    window.localStorage.setItem('lastProject:1', '2')
+
+    await waitFor(() =>
+      expect(second.router.state.location.search).toMatchObject({ project: 2 }),
+    )
+    expect(await screen.findByRole('link', { name: 'Planning' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+  })
+
+  test('a remembered ProjectResponse that no longer exists falls back to the default', async () => {
+    const { router } = renderApp('/tasks')
+    window.localStorage.setItem('lastProject:1', '999')
+
+    expect(await screen.findByRole('link', { name: 'Inbox' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+    expect(router.state.location.search).not.toMatchObject({ project: 999 })
+  })
+
   test('sidebar ProjectResponse links and topbar tabs change the URL', async () => {
     const user = userEvent.setup()
     const { router } = renderApp('/tasks')

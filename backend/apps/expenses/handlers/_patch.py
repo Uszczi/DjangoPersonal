@@ -1,10 +1,10 @@
 """Partial-update application shared by the expenses use cases.
 
-Mirrors ``apps.work.handlers._patch``: an explicit ``null`` is skipped, so a
-sent ``None`` means "leave this field alone" rather than clearing it. Keeping
-the two copies identical avoids the drift where a ``PATCH`` carrying
-``{"name": null}`` reached ``Wallet.save()`` and blew up normalising a
-``None`` name.
+Mirrors ``apps.work.handlers._patch``: only fields absent from the payload are
+skipped, while an explicit ``null`` is applied verbatim — clearing nullable
+fields such as a transaction's category. Contracts reject ``null`` for fields
+whose storage cannot hold it, so a ``PATCH`` carrying ``{"name": null}`` never
+reaches ``Wallet.save()``.
 """
 
 from typing import Callable
@@ -21,14 +21,13 @@ def apply_provided(
     """Set the fields the payload carried on ``target``.
 
     Only fields present in ``payload.model_fields_set`` are applied, so an
-    absent field leaves the current value alone — as does an explicit
-    ``None``. A registered ``resolve`` callable turns the raw value into the
-    stored one for fields that do not map one-to-one.
+    absent field leaves the current value alone. An explicit ``None`` is
+    applied verbatim rather than skipped, and bypasses ``resolve`` (clearing
+    needs no translation). A registered ``resolve`` callable turns the raw
+    non-null value into the stored one for fields that do not map one-to-one.
     """
     resolve = resolve or {}
     for field_name in payload.model_fields_set:
         value = getattr(payload, field_name)
-        if value is None:
-            continue
         converter = resolve.get(field_name)
-        setattr(target, field_name, converter(value) if converter else value)
+        setattr(target, field_name, converter(value) if converter and value is not None else value)

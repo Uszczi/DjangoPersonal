@@ -20,6 +20,9 @@ class Category(models.Model):
     )
     name = models.CharField(max_length=100)
     normalized_name = models.CharField(max_length=100, editable=False)
+    #: System categories carry balance corrections; the API protects them
+    #: from rename and delete and the UI hides them from the manager list.
+    is_system = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['normalized_name']

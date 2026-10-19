@@ -81,13 +81,12 @@ def test_replace_category_with_put(post_json: Any, put_json: Any) -> None:
     assert response.json()['name'] == 'Replaced'
 
 
-def test_patch_with_null_name_leaves_category_unchanged(post_json: Any, patch_json: Any) -> None:
+def test_patch_with_null_name_is_rejected(post_json: Any, patch_json: Any) -> None:
     created = post_json('/api/v1/categories/', {'name': 'Kept'})
 
     response = patch_json(f"/api/v1/categories/{created.json()['id']}/", {'name': None})
 
-    assert response.status_code == HTTPStatus.OK
-    assert response.json()['name'] == 'Kept'
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
 def test_category_not_found(api_client: Any) -> None:
@@ -137,16 +136,20 @@ def test_delete_category(post_json: Any, api_client: Any) -> None:
 # test_deleting_category_cascades_to_transactions in test_transactions_api.py.
 
 
-def test_first_wallet_seeds_ten_base_categories(post_json: Any, api_client: Any) -> None:
-    from apps.expenses.handlers.categories import BASE_CATEGORY_NAMES
+def test_first_wallet_seeds_base_categories_and_system(post_json: Any, api_client: Any) -> None:
+    from apps.expenses.handlers.categories import BASE_CATEGORY_NAMES, SYSTEM_CATEGORY_NAME
 
     assert len(BASE_CATEGORY_NAMES) == 10
     post_json('/api/v1/wallets/', {'name': 'Personal'})
 
     listing = api_client.get('/api/v1/categories/').json()
 
-    assert len(listing) == 10
-    assert {c['name'] for c in listing} == set(BASE_CATEGORY_NAMES)
+    assert len(listing) == 11
+    assert {c['name'] for c in listing} == set(BASE_CATEGORY_NAMES) | {SYSTEM_CATEGORY_NAME}
+
+    system = next(c for c in listing if c['name'] == SYSTEM_CATEGORY_NAME)
+    assert system['is_system'] is True
+    assert all(c['is_system'] is False for c in listing if c['name'] != SYSTEM_CATEGORY_NAME)
 
 
 def test_second_wallet_does_not_seed_again(post_json: Any, api_client: Any) -> None:
@@ -155,11 +158,11 @@ def test_second_wallet_does_not_seed_again(post_json: Any, api_client: Any) -> N
 
     listing = api_client.get('/api/v1/categories/').json()
 
-    assert len(listing) == 10
+    assert len(listing) == 11
 
 
 def test_first_wallet_seed_merges_with_existing_categories(post_json: Any, api_client: Any) -> None:
-    from apps.expenses.handlers.categories import BASE_CATEGORY_NAMES
+    from apps.expenses.handlers.categories import BASE_CATEGORY_NAMES, SYSTEM_CATEGORY_NAME
 
     post_json('/api/v1/categories/', {'name': 'Custom'})
     post_json('/api/v1/wallets/', {'name': 'Personal'})
@@ -168,8 +171,34 @@ def test_first_wallet_seed_merges_with_existing_categories(post_json: Any, api_c
 
     # The user keeps their custom label and still receives the full base set.
     assert 'Custom' in names
-    assert names == set(BASE_CATEGORY_NAMES) | {'Custom'}
-    assert len(names) == 11
+    assert names == set(BASE_CATEGORY_NAMES) | {SYSTEM_CATEGORY_NAME, 'Custom'}
+    assert len(names) == 12
+
+
+def test_system_category_cannot_be_renamed(post_json: Any, patch_json: Any, put_json: Any, api_client: Any) -> None:
+    post_json('/api/v1/wallets/', {'name': 'Personal'})
+    system_id = next(
+        c['id'] for c in api_client.get('/api/v1/categories/').json() if c['is_system']
+    )
+
+    patched = patch_json(f'/api/v1/categories/{system_id}/', {'name': 'Inne'})
+    replaced = put_json(f'/api/v1/categories/{system_id}/', {'name': 'Inne'})
+
+    assert patched.status_code == HTTPStatus.BAD_REQUEST
+    assert replaced.status_code == HTTPStatus.BAD_REQUEST
+    assert 'System category' in patched.json()['detail']
+
+
+def test_system_category_cannot_be_deleted(post_json: Any, api_client: Any) -> None:
+    post_json('/api/v1/wallets/', {'name': 'Personal'})
+    system_id = next(
+        c['id'] for c in api_client.get('/api/v1/categories/').json() if c['is_system']
+    )
+
+    response = api_client.delete(f'/api/v1/categories/{system_id}/')
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert any(c['is_system'] for c in api_client.get('/api/v1/categories/').json())
 
 
 def test_openapi_schema_describes_versioned_category_endpoints(api_client: Any) -> None:

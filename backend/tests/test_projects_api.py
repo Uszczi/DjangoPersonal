@@ -61,6 +61,31 @@ def test_project_details_can_be_edited(post_json: Any, patch_json: Any) -> None:
     assert response.json()['description'] == 'Sources'
 
 
+def test_patch_with_null_name_is_rejected(post_json: Any, patch_json: Any) -> None:
+    created = post_json('/api/v1/projects/', {'name': 'Reading', 'description': 'Books'})
+
+    response = patch_json(
+        f"/api/v1/projects/{created.json()['id']}/",
+        {'name': None},
+    )
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_patch_with_omitted_fields_leaves_them_alone(post_json: Any, patch_json: Any) -> None:
+    created = post_json('/api/v1/projects/', {'name': 'Reading', 'description': 'Books'})
+
+    response = patch_json(
+        f"/api/v1/projects/{created.json()['id']}/",
+        {'description': 'Papers'},
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    body = response.json()
+    assert body['name'] == 'Reading'
+    assert body['description'] == 'Papers'
+
+
 def test_project_order_follows_position_updates(api_client: Any, post_json: Any, patch_json: Any) -> None:
     post_json('/api/v1/projects/', {'name': 'Alpha'})
     post_json('/api/v1/projects/', {'name': 'Bravo'})
