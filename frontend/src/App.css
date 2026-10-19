@@ -184,6 +184,11 @@
   font-size: 17px;
 }
 
+.project-symbol svg {
+  display: block;
+  margin: 0 auto;
+}
+
 .project-link-name {
   flex: 1;
   font-size: 13px;

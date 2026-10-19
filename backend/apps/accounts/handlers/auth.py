@@ -5,6 +5,7 @@ from typing import Any, cast
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import transaction
 
 from ninja_jwt.exceptions import TokenError
 from ninja_jwt.tokens import RefreshToken
@@ -17,15 +18,23 @@ from apps.accounts.contracts.auth import (
     RefreshResponse,
     RegisterRequest,
 )
-from apps.infra.repo import DuplicateUsername, UserRepository
+from apps.expenses.handlers.categories import seed_base_categories
+from apps.infra.repo import CategoryRepository, DuplicateUsername, UserRepository
 from apps.shared.errors import DomainError
 
 
 class RegisterUser:
-    """Register a new user and issue a token pair."""
+    """Register a new user and issue a token pair.
 
-    def __init__(self, users: UserRepository):
+    A fresh account also receives the expenses base categories (and the System
+    category), so the expense book is ready the moment the first wallet
+    appears. The whole thing is one transaction: a user never exists without
+    their starting categories.
+    """
+
+    def __init__(self, users: UserRepository, categories: CategoryRepository):
         self.users = users
+        self.categories = categories
 
     def execute(self, data: RegisterRequest) -> AuthResponse:
         if data.password != data.password_confirm:
@@ -38,7 +47,9 @@ class RegisterUser:
             raise DomainError(message, status=400) from error
 
         try:
-            user = self.users.create(username=data.username, password=data.password)
+            with transaction.atomic():
+                user = self.users.create(username=data.username, password=data.password)
+                seed_base_categories(self.categories, user)
         except DuplicateUsername as error:
             raise DomainError('A user with this username already exists.', status=400) from error
 

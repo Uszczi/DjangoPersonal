@@ -21,7 +21,7 @@ from apps.shared.errors import DomainError, NotFound
 
 from ..contracts import PatchedWalletRequest, WalletCreateRequest, WalletRequest
 from ._patch import apply_provided
-from .categories import ensure_system_category, seed_base_categories
+from .categories import ensure_system_category
 
 UserType = AbstractUser
 
@@ -91,10 +91,10 @@ class GetWallet:
 class CreateWallet:
     """Create a wallet from a validated payload.
 
-    A user's very first wallet also seeds their base categories, so they can
-    categorize spending immediately. An opening balance, when given, is
-    written straight away as a System transaction so the wallet's balance is
-    always the sum of its ledger.
+    The account's categories were seeded at registration, so this only has to
+    open the wallet. An opening balance, when given, is written straight away
+    as a System transaction so the wallet's balance is always the sum of its
+    ledger.
     """
 
     def __init__(
@@ -110,14 +110,11 @@ class CreateWallet:
         self.user = user
 
     def execute(self, data: WalletCreateRequest) -> WalletModel:
-        is_first_wallet = self.wallets.count(user=self.user) == 0
         wallet = WalletModel(
             user=self.user,
             name=_validate_name(self.wallets, data.name, user=self.user),
         )
         created = _save(self.wallets, wallet)
-        if is_first_wallet:
-            seed_base_categories(self.categories, self.user)
         if data.initial_balance:
             self._record_opening_balance(created, data.initial_balance)
         # Re-read so the response carries the annotated count and balance the

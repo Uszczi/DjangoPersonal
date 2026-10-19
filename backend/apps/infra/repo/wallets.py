@@ -68,10 +68,6 @@ class WalletRepository:
         )
         return totals['balance'] or Decimal('0.00')
 
-    def count(self, *, user: User) -> int:
-        """How many wallets ``user`` has."""
-        return WalletModel.objects.filter(user=user).count()
-
     def name_taken(
         self, name_key: str, *, user: User, exclude: WalletModel | None = None
     ) -> bool:

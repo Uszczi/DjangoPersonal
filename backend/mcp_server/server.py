@@ -363,7 +363,9 @@ def register_user(username: str, password: str, password_confirm: str) -> dict[s
         payload = RegisterRequest(
             username=username, password=password, password_confirm=password_confirm
         )
-        result = accounts_handlers.RegisterUser(accounts_deps.user_repository()).execute(payload)
+        result = accounts_handlers.RegisterUser(
+            accounts_deps.user_repository(), accounts_deps.category_repository()
+        ).execute(payload)
         return result.model_dump(mode="json")
     except Exception as exc:  # noqa: BLE001
         _raise(exc)

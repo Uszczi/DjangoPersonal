@@ -13,6 +13,7 @@ from django.core.management.base import CommandError
 from django.db import transaction
 from django.utils import timezone
 
+from apps.expenses.handlers.categories import seed_base_categories
 from apps.infra.factories import DEV_PASSWORD
 from apps.infra.factories import ProjectFactory
 from apps.infra.factories import TaskFactory
@@ -22,6 +23,7 @@ from apps.infra.models import Project
 from apps.infra.models import Task
 from apps.infra.models import TimeEntry
 from apps.infra.models import User
+from apps.infra.repo import CategoryRepository
 
 USERS = ('alice', 'bob')
 
@@ -63,9 +65,17 @@ FOURTEEN_DAYS_IN_MINUTES = 14 * 24 * 60
 class Command(BaseCommand):
     help = 'Seed the development database with demo data. Only runs on an empty database.'
 
+    def add_arguments(self, parser: Any) -> None:
+        parser.add_argument(
+            '--seed',
+            type=int,
+            default=None,
+            help='Fix the random seed, so the demo data is reproducible.',
+        )
+
     def handle(self, *args: Any, **options: Any) -> None:
         self._ensure_empty_database()
-        rng = random.Random()
+        rng = random.Random(options['seed'])
         with transaction.atomic():
             stats = self._seed(rng)
         self.stdout.write(
@@ -96,6 +106,9 @@ class Command(BaseCommand):
         for username in USERS:
             user = UserFactory.create(username=username)
             stats['users'] += 1
+            # Demo accounts get the same starting categories a real
+            # registration would create for them.
+            seed_base_categories(CategoryRepository(), user)
             self._seed_user(user, rng, stats)
         return stats
 

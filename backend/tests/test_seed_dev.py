@@ -12,7 +12,8 @@ from apps.infra.models import User
 
 @pytest.mark.django_db
 def test_seed_dev_populates_an_empty_database() -> None:
-    call_command('seed_dev')
+    # A fixed seed keeps the demo data (and this test) reproducible.
+    call_command('seed_dev', seed=1)
 
     users = User.objects.all()
     assert users.count() == 2

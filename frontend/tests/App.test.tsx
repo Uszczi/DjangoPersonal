@@ -116,6 +116,20 @@ describe('Projects', () => {
     )
   })
 
+  test('the Inbox link carries the inbox icon and other projects do not', async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse([inbox, planning]))
+      .mockResolvedValueOnce(jsonResponse([]))
+
+    renderApp('/tasks')
+
+    const inboxLink = await screen.findByRole('link', { name: 'Inbox' })
+    const planningLink = screen.getByRole('link', { name: 'Planning' })
+
+    expect(inboxLink.querySelector('svg')).not.toBeNull()
+    expect(planningLink.querySelector('svg')).toBeNull()
+  })
+
   test('user can edit a ProjectResponse description and name', async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([

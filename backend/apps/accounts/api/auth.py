@@ -23,7 +23,7 @@ router = Router(tags=['personal'])
     operation_id='auth_register',
 )
 def register(request: HttpRequest, payload: RegisterRequest) -> Status[AuthResponse]:
-    handler = handlers.RegisterUser(deps.user_repository())
+    handler = handlers.RegisterUser(deps.user_repository(), deps.category_repository())
     return Status(201, handler.execute(payload))
 
 

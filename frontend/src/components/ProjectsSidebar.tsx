@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
+import { InboxIcon } from "@/components/InboxIcon";
 import { ProjectEditorModal } from "@/components/ProjectEditorModal";
 import { ShowModal } from "@/stores/modal";
 import { useProjectsStore } from "@/stores/projects";
@@ -76,7 +77,7 @@ export function ProjectsSidebar({
                 className={`project-symbol${item.isInbox ? " is-inbox" : ""}`}
                 aria-hidden="true"
               >
-                {item.isInbox ? "↳" : "·"}
+                {item.isInbox ? <InboxIcon /> : "·"}
               </span>
               <span className="project-link-name">{item.name}</span>
             </Link>

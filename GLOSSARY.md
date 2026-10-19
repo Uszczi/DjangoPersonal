@@ -32,7 +32,7 @@ A named purse a user creates to separate money by purpose. Has a required name (
 A record of money spent. Has a required title, a required positive Decimal amount (at most two decimal places), a required date, an optional description, an optional Category, and a required Wallet. Deleting a Wallet cascades to its Transactions. Transactions the system writes against the System category — the opening balance and later balance corrections — may carry a negative amount, since they add to the balance rather than spend from it.
 
 **Category**:
-A per-user label for classifying Transactions. Has a required name (trimmed, unique case-insensitively per user). The system seeds ten base categories plus the System category when the user creates their first Wallet. Deleting a Category cascades to its Transactions.
+A per-user label for classifying Transactions. Has a required name (trimmed, unique case-insensitively per user). The system seeds ten base categories plus the System category when the user registers. Deleting a Category cascades to its Transactions.
 
 **System category**:
 The reserved Category (`is_system`) that holds a Wallet's balance ledger — the opening balance on creation and the difference recorded whenever the current balance is set. It is seeded with the base categories, cannot be renamed or deleted, and the interface keeps it out of the category list.
