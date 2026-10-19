@@ -267,12 +267,14 @@ describe('Projects', () => {
       '/api/v1/projects/',
       '/api/v1/tasks/?project=1',
     ])
-    const taskList = screen.getByRole('list', { name: 'Zadania' })
+    const openList = screen.getByRole('list', { name: 'Todo' })
+    const doneList = screen.getByRole('list', { name: 'Zrobione' })
 
     expect(
-      within(taskList)
-        .getAllByText(/Open note|Completed note/)
-        .map((item) => item.textContent),
+      [
+        ...within(openList).queryAllByText(/Open note|Completed note/),
+        ...within(doneList).queryAllByText(/Open note|Completed note/),
+      ].map((item) => item.textContent),
     ).toEqual(['Open note', 'Completed note'])
   })
 
@@ -369,11 +371,13 @@ describe('Projects', () => {
     await user.click(screen.getByRole('link', { name: 'Planning' }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
     await screen.findByText('Prepare outline')
-    const taskList = screen.getByRole('list', { name: 'Zadania' })
+    const openList = screen.getByRole('list', { name: 'Todo' })
+    const doneList = screen.getByRole('list', { name: 'Zrobione' })
     const listedTaskTitles = () =>
-      within(taskList)
-        .getAllByText(/Prepare outline|Completed note/)
-        .map((task) => task.textContent)
+      [
+        ...within(openList).queryAllByText(/Prepare outline|Completed note/),
+        ...within(doneList).queryAllByText(/Prepare outline|Completed note/),
+      ].map((task) => task.textContent)
 
     await user.click(screen.getByRole('button', { name: 'Oznacz jako ukończone: Prepare outline' }))
     const reopenButton = await screen.findByRole('button', { name: 'Otwórz zadanie: Prepare outline' })

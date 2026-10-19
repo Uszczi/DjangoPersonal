@@ -6,11 +6,15 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { renderApp } from './renderApp'
 
+const DEFAULT_STATUSES = ['Todo', 'Zrobione']
+
 const inbox = {
   id: 1,
   name: 'Inbox',
   description: '',
   is_inbox: true,
+  project_statuses: DEFAULT_STATUSES,
+  terminal_status: 'Zrobione',
 }
 
 const planning = {
@@ -18,6 +22,8 @@ const planning = {
   name: 'Planning',
   description: '',
   is_inbox: false,
+  project_statuses: DEFAULT_STATUSES,
+  terminal_status: 'Zrobione',
 }
 
 function jsonResponse(data: unknown, status = 200) {

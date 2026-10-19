@@ -59,6 +59,9 @@ export function TasksPage() {
     longPressTimer: number | null;
   } | null>(null);
   const [isTouchDragging, setIsTouchDragging] = useState(false);
+  const [collapsedStatuses, setCollapsedStatuses] = useState<
+    ReadonlySet<string>
+  >(new Set());
 
   async function handleTaskDrop(draggedTaskId: number, targetId: number) {
     if (draggedTaskId === targetId || selectedProjectId === null) return;
@@ -134,6 +137,27 @@ export function TasksPage() {
     }
   }
 
+  function expandStatus(status: string) {
+    setCollapsedStatuses((current) => {
+      if (!current.has(status)) return current;
+      const next = new Set(current);
+      next.delete(status);
+      return next;
+    });
+  }
+
+  function toggleStatusSection(status: string) {
+    setCollapsedStatuses((current) => {
+      const next = new Set(current);
+      if (next.has(status)) {
+        next.delete(status);
+      } else {
+        next.add(status);
+      }
+      return next;
+    });
+  }
+
   useEffect(() => {
     if (!isTouchDragging) return;
     function onTouchMove(event: TouchEvent) {
@@ -159,6 +183,86 @@ export function TasksPage() {
       document.removeEventListener("touchcancel", endTouchDrag);
     };
   }, [isTouchDragging]);
+
+  function renderTaskRow(task: TaskResponse) {
+    const isCompleted =
+      terminalStatus != null && task.status === terminalStatus;
+    return (
+      <li
+        className={`task-row${isCompleted ? " is-completed" : ""}${draggedId === task.id ? " is-dragging" : ""}${dragOverId === task.id ? " is-drag-over" : ""}`}
+        key={task.id}
+        data-task-id={task.id}
+        draggable
+        onDragStart={() => setDraggedId(task.id)}
+        onDragOver={(event) => {
+          event.preventDefault();
+          setDragOverId(task.id);
+          dragOverIdRef.current = task.id;
+        }}
+        onDrop={() => void handleTaskDrop(draggedId ?? task.id, task.id)}
+        onDragEnd={() => {
+          setDraggedId(null);
+          setDragOverId(null);
+          dragOverIdRef.current = null;
+        }}
+      >
+        <span
+          className="task-drag-handle"
+          aria-label={`Przeciągnij zadanie: ${task.title}`}
+          title="Przeciągnij"
+          onTouchStart={() => beginLongPress(task.id)}
+          onTouchMove={() => {
+            if (touchDragRef.current && !touchDragRef.current.active) {
+              // Scrolling before the long-press fires — not a drag.
+              cancelTouchDrag();
+            }
+          }}
+        >
+          <span aria-hidden="true">⠿</span>
+        </span>
+        <button
+          className={`task-status-toggle${isCompleted ? " is-completed" : ""}`}
+          type="button"
+          aria-label={`${isCompleted ? "Otwórz zadanie" : "Oznacz jako ukończone"}: ${task.title}`}
+          onClick={() => void toggleTaskStatus(task)}
+        >
+          {isCompleted ? "✓" : ""}
+        </button>
+        <div className="task-copy">
+          <p>{task.title}</p>
+          {task.description && <small>{task.description}</small>}
+        </div>
+        <div className="task-row-actions">
+          <button
+            className="task-timer-button"
+            type="button"
+            aria-label={`Uruchom timer: ${task.title}`}
+            title="Uruchom timer"
+            onClick={() => void startTimer(task)}
+          >
+            <span aria-hidden="true">▶</span>
+          </button>
+          <button
+            className="task-edit-button"
+            type="button"
+            aria-label={`Edytuj zadanie: ${task.title}`}
+            onClick={() => openTaskEditForm(task)}
+          >
+            Edytuj
+          </button>
+          <button
+            className="task-delete-button"
+            type="button"
+            aria-label={`Usuń zadanie: ${task.title}`}
+            onClick={() => openTaskDeleteDialog(task)}
+          >
+            Usuń
+          </button>
+        </div>
+      </li>
+    );
+  }
+
   const tasksError =
     loadError?.projectId === selectedProjectId ? loadError.message : "";
   const isTasksLoading =
@@ -167,6 +271,8 @@ export function TasksPage() {
     loadError?.projectId !== selectedProjectId;
 
   function openTaskForm() {
+    const defaultStatus = selectedProject?.projectStatuses[0];
+    if (defaultStatus) expandStatus(defaultStatus);
     ShowModal(TaskEditorModal, { projectId: selectedProject?.id });
   }
 
@@ -206,6 +312,59 @@ export function TasksPage() {
       </div>
     );
   }
+
+  // Tasks already arrive ordered by status, so grouping them here preserves
+  // the project's status order. Unknown statuses (e.g. removed from the
+  // project) land after the known ones, grouped by first appearance.
+  const statusGroups = new Map<string, TaskResponse[]>();
+  for (const status of selectedProject.projectStatuses) {
+    statusGroups.set(status, []);
+  }
+  for (const task of tasks) {
+    const group = statusGroups.get(task.status);
+    if (group) {
+      group.push(task);
+    } else {
+      statusGroups.set(task.status, [task]);
+    }
+  }
+
+  const statusSections = [...statusGroups].map(
+    ([status, statusTasks], index) => {
+      const isCollapsed = collapsedStatuses.has(status);
+      return (
+        <section className="status-section" key={status}>
+          <div className="status-section-header">
+            <button
+              className="status-section-toggle"
+              type="button"
+              aria-expanded={!isCollapsed}
+              aria-controls={`status-section-panel-${index}`}
+              onClick={() => toggleStatusSection(status)}
+            >
+              <span className="status-section-chevron" aria-hidden="true">
+                {isCollapsed ? "▸" : "▾"}
+              </span>
+              <span className="status-section-name">{status}</span>
+              <span className="status-section-count">
+                {statusTasks.length}
+              </span>
+            </button>
+          </div>
+          {!isCollapsed && (
+            <div id={`status-section-panel-${index}`}>
+              <ul className="task-list" aria-label={status}>
+                {statusTasks.map(renderTaskRow)}
+                {statusTasks.length === 0 && (
+                  <li className="task-empty-state">Brak w tym statusie.</li>
+                )}
+              </ul>
+            </div>
+          )}
+        </section>
+      );
+    },
+  );
 
   return (
     <>
@@ -253,82 +412,7 @@ export function TasksPage() {
           ) : tasks.length === 0 ? (
             <p className="task-empty-state">Nie ma tu jeszcze zadań.</p>
           ) : (
-            <ul className="task-list" aria-label="Zadania">
-              {tasks.map((task) => (
-                <li
-                  className={`task-row${terminalStatus != null && task.status === terminalStatus ? " is-completed" : ""}${draggedId === task.id ? " is-dragging" : ""}${dragOverId === task.id ? " is-drag-over" : ""}`}
-                  key={task.id}
-                  data-task-id={task.id}
-                  draggable
-                  onDragStart={() => setDraggedId(task.id)}
-                  onDragOver={(event) => {
-                    event.preventDefault();
-                    setDragOverId(task.id);
-                    dragOverIdRef.current = task.id;
-                  }}
-                  onDrop={() => void handleTaskDrop(draggedId ?? task.id, task.id)}
-                  onDragEnd={() => {
-                    setDraggedId(null);
-                    setDragOverId(null);
-                    dragOverIdRef.current = null;
-                  }}
-                >
-                  <span
-                    className="task-drag-handle"
-                    aria-label={`Przeciągnij zadanie: ${task.title}`}
-                    title="Przeciągnij"
-                    onTouchStart={() => beginLongPress(task.id)}
-                    onTouchMove={() => {
-                      if (touchDragRef.current && !touchDragRef.current.active) {
-                        // Scrolling before the long-press fires — not a drag.
-                        cancelTouchDrag();
-                      }
-                    }}
-                  >
-                    <span aria-hidden="true">⠿</span>
-                  </span>
-                  <button
-                    className={`task-status-toggle${terminalStatus != null && task.status === terminalStatus ? " is-completed" : ""}`}
-                    type="button"
-                    aria-label={`${terminalStatus != null && task.status === terminalStatus ? "Otwórz zadanie" : "Oznacz jako ukończone"}: ${task.title}`}
-                    onClick={() => void toggleTaskStatus(task)}
-                  >
-                    {terminalStatus != null && task.status === terminalStatus ? "✓" : ""}
-                  </button>
-                  <div className="task-copy">
-                    <p>{task.title}</p>
-                    {task.description && <small>{task.description}</small>}
-                  </div>
-                  <div className="task-row-actions">
-                    <button
-                      className="task-timer-button"
-                      type="button"
-                      aria-label={`Uruchom timer: ${task.title}`}
-                      title="Uruchom timer"
-                      onClick={() => void startTimer(task)}
-                    >
-                      <span aria-hidden="true">▶</span>
-                    </button>
-                    <button
-                      className="task-edit-button"
-                      type="button"
-                      aria-label={`Edytuj zadanie: ${task.title}`}
-                      onClick={() => openTaskEditForm(task)}
-                    >
-                      Edytuj
-                    </button>
-                    <button
-                      className="task-delete-button"
-                      type="button"
-                      aria-label={`Usuń zadanie: ${task.title}`}
-                      onClick={() => openTaskDeleteDialog(task)}
-                    >
-                      Usuń
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            statusSections
           )}
           <div className="list-add-row">
             <button className="quiet-button" onClick={openTaskForm}>
