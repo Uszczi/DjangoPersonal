@@ -8,13 +8,8 @@ export const Route = createFileRoute("/")({
 
 export function MainPage() {
   return (
-    <>
-      <div className="mb-6">
-        <div>
-          <h1 className="font-display text-[28px] font-bold tracking-[-0.02em] text-ink">Start</h1>
-        </div>
-      </div>
+    <div className="p-8">
       <NavTiles />
-    </>
+    </div>
   );
 }
