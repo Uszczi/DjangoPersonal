@@ -105,7 +105,7 @@ export function Navbar() {
       </header>
       {isNavOpen && (
         <div
-          className="fixed inset-0 z-5 flex items-start justify-start bg-[rgb(12_29_33/52%)] p-5"
+          className="fixed inset-0 z-5 flex items-start justify-end bg-[rgb(12_29_33/52%)] p-5"
           onClick={(event) => {
             if (event.target === event.currentTarget) closeNav();
           }}

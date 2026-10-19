@@ -107,7 +107,7 @@ function SortableTaskRow({
           </small>
         )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <button
           className="inline-flex h-[28px] items-center justify-center rounded border border-transparent bg-transparent px-2 text-[16px] text-[#6c8082] transition-colors hover:bg-[#f0f4f1] hover:text-ink cursor-pointer"
           type="button"
@@ -118,20 +118,22 @@ function SortableTaskRow({
           <span aria-hidden="true">▶</span>
         </button>
         <button
-          className="inline-flex min-h-[28px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-transparent px-[10px] text-[12px] font-semibold text-[#6c8082] transition-all hover:bg-[#f0f4f1] hover:text-ink"
+          className="inline-flex h-[28px] w-[28px] cursor-pointer items-center justify-center rounded-[5px] border border-transparent bg-transparent text-[16px] text-[#6c8082] transition-all hover:bg-[#f0f4f1] hover:text-ink"
           type="button"
           aria-label={`Edytuj zadanie: ${task.title}`}
+          title="Edytuj"
           onClick={onEdit}
         >
-          Edytuj
+          <span aria-hidden="true">✎</span>
         </button>
         <button
-          className="inline-flex min-h-[28px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-transparent px-[10px] text-[12px] font-semibold text-[#a23a28] transition-all hover:bg-[#f5e3dc] hover:text-[#872d1e]"
+          className="inline-flex h-[28px] w-[28px] cursor-pointer items-center justify-center rounded-[5px] border border-transparent bg-transparent text-[16px] text-[#a23a28] transition-all hover:bg-[#f5e3dc] hover:text-[#872d1e]"
           type="button"
           aria-label={`Usuń zadanie: ${task.title}`}
+          title="Usuń"
           onClick={onDelete}
         >
-          Usuń
+          <span aria-hidden="true">🗑</span>
         </button>
       </div>
     </li>
@@ -445,7 +447,7 @@ export function TasksPage() {
           onToggleCollapse={toggleSidebar}
         />
         <section className="flex flex-1 flex-col p-8" aria-labelledby="tasks-heading">
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <button
                 className="inline-flex items-center justify-center rounded-md border border-transparent bg-transparent text-[18px] text-[#6c8082] transition-all hover:-translate-y-px cursor-pointer hover:text-ink"
@@ -458,7 +460,7 @@ export function TasksPage() {
                 {selectedProject.name}
               </span>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex w-full items-center justify-between gap-4 sm:w-auto sm:justify-start">
               <span className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">
                 {tasks.length} {tasks.length === 1 ? "ZADANIE" : "ZADAŃ"}
               </span>
@@ -494,7 +496,7 @@ export function TasksPage() {
               {statusSections}
             </DndContext>
           )}
-          <div className="mt-4">
+          <div className="mt-4 flex justify-center">
             <button className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-[#c9d5d2] bg-transparent px-[15px] text-[12px] font-semibold text-[#344d52] transition-all hover:bg-[#f8faf8] hover:border-[#9db0ad] disabled:cursor-wait disabled:opacity-70 whitespace-nowrap" onClick={openTaskForm}>
               <span aria-hidden="true">+</span>
               Nowe zadanie

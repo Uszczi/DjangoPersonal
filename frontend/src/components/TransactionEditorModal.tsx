@@ -107,7 +107,7 @@ export function TransactionEditorModal({
 
   return (
     <div
-      className="fixed inset-0 z-5 flex items-center justify-center bg-[rgb(12_29_33/52%)] p-5"
+      className="fixed inset-0 z-5 flex items-start justify-center bg-[rgb(12_29_33/52%)] px-0 py-4 pt-16 md:px-5 md:py-5 md:pt-5 md:items-center"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) close();
       }}

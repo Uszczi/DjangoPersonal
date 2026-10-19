@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
 import type { TaskResponse } from "@/generated/api";
@@ -36,6 +36,22 @@ export function TaskEditorModal({
   const statuses = targetProject?.projectStatuses ?? [];
 
   const titleId = task ? "task-edit-title" : "task-dialog-title";
+  const titleRef = useRef<HTMLTextAreaElement | null>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
+
+  function resizeTextarea(element: HTMLTextAreaElement | null) {
+    if (!element) return;
+    element.style.height = "auto";
+    element.style.height = `${element.scrollHeight}px`;
+  }
+
+  useEffect(() => {
+    resizeTextarea(titleRef.current);
+  }, [form.title]);
+
+  useEffect(() => {
+    resizeTextarea(descriptionRef.current);
+  }, [form.description]);
 
   function close() {
     if (!isSaving) onClose();
@@ -78,7 +94,7 @@ export function TaskEditorModal({
 
   return (
     <div
-      className="fixed inset-0 z-5 flex items-center justify-center bg-[rgb(12_29_33/52%)] p-5"
+      className="fixed inset-0 z-5 flex items-start justify-center bg-[rgb(12_29_33/52%)] px-0 py-4 pt-16 md:px-5 md:py-5 md:pt-5 md:items-center"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) close();
       }}
@@ -117,10 +133,13 @@ export function TaskEditorModal({
         <form onSubmit={handleSubmit}>
           <label className="mb-[18px] grid gap-2 text-[12px] font-semibold text-[#334d52]">
             <span>Tytuł zadania</span>
-            <input
-              className="w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
+            <textarea
+              ref={titleRef}
+              className="w-full resize-none rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
               autoFocus
+              autoCapitalize="sentences"
               maxLength={200}
+              rows={1}
               value={form.title}
               onChange={(event) =>
                 setForm((current) => ({
@@ -134,15 +153,16 @@ export function TaskEditorModal({
           <label className="mb-[18px] grid gap-2 text-[12px] font-semibold text-[#334d52]">
             <span>Opis (opcjonalnie)</span>
             <textarea
-              className="w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
+              ref={descriptionRef}
+              className="w-full min-h-[80px] resize-none rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
               rows={3}
               value={form.description}
-              onChange={(event) =>
+              onChange={(event) => {
                 setForm((current) => ({
                   ...current,
                   description: event.target.value,
-                }))
-              }
+                }));
+              }}
             />
           </label>
           {task && (
