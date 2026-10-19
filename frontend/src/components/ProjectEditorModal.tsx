@@ -170,7 +170,7 @@ export function ProjectEditorModal({
               {form.statuses.map((status, index) => (
                 <div className="flex gap-2" key={index}>
                   <input
-                    className="flex-1"
+                    className="flex-1 rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
                     value={status}
                     onChange={(event) => updateStatus(index, event.target.value)}
                     aria-label={`Status ${index + 1}`}

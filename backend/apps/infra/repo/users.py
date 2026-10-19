@@ -30,5 +30,16 @@ class UserRepository:
         return UserModel.objects.filter(username=username).first()
 
     def delete(self, user: UserModel) -> None:
-        """Delete the user; related rows cascade via foreign keys."""
-        user.delete()
+        """Delete the user and all of their data in dependency order.
+
+        Several foreign keys are ``PROTECT`` (projects/tasks with children), so a
+        plain ``user.delete()`` would raise ``ProtectedError``. Remove the
+        dependents explicitly first.
+        """
+        from apps.infra.models import Project, Task, TimeEntry
+
+        with transaction.atomic():
+            TimeEntry.objects.filter(user=user).delete()
+            Task.objects.filter(project__user=user).delete()
+            Project.objects.filter(user=user).delete()
+            user.delete()
