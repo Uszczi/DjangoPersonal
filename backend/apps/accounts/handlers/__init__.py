@@ -1,3 +1,3 @@
-from .auth import LoginUser, RefreshAccessToken, RegisterUser
+from .auth import DeleteUser, LoginUser, RefreshAccessToken, RegisterUser
 
-__all__ = ['LoginUser', 'RefreshAccessToken', 'RegisterUser']
+__all__ = ['DeleteUser', 'LoginUser', 'RefreshAccessToken', 'RegisterUser']

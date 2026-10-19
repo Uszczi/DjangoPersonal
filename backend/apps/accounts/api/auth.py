@@ -55,3 +55,14 @@ def refresh(request: HttpRequest, payload: RefreshRequest) -> RefreshResponse:
 )
 def me(request: HttpRequest) -> UserResponse:
     return UserResponse.model_validate(request.user)
+
+
+@router.delete(
+    '/auth/me/',
+    response={204: None},
+    auth=JWTAuth(),
+    operation_id='auth_destroy',
+)
+def destroy(request: HttpRequest) -> Status[None]:
+    handlers.DeleteUser(deps.user_repository()).execute(request.user)
+    return Status(204, None)

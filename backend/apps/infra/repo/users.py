@@ -28,3 +28,7 @@ class UserRepository:
     def get_by_username(self, username: str) -> UserModel | None:
         """The user with this username, or ``None``."""
         return UserModel.objects.filter(username=username).first()
+
+    def delete(self, user: UserModel) -> None:
+        """Delete the user; related rows cascade via foreign keys."""
+        user.delete()

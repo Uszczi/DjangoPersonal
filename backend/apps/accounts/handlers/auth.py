@@ -78,6 +78,16 @@ class LoginUser:
         )
 
 
+class DeleteUser:
+    """Delete the authenticated account and all of its data."""
+
+    def __init__(self, users: UserRepository):
+        self.users = users
+
+    def execute(self, user: Any) -> None:
+        self.users.delete(user)
+
+
 class RefreshAccessToken:
     """Exchange a refresh token for a new access token."""
 

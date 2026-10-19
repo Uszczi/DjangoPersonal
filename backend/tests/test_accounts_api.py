@@ -50,3 +50,27 @@ def test_register_rejects_a_duplicate_username(post_json: Any) -> None:
 
     assert duplicate.status_code == HTTPStatus.BAD_REQUEST
     assert 'already exists' in duplicate.json()['detail']
+
+
+def test_delete_account_removes_user_and_its_data(
+    api_client: Any, post_json: Any
+) -> None:
+    tokens = post_json(
+        '/api/v1/auth/register/',
+        {
+            'username': 'goodbye',
+            'password': 'StrongPass123!',
+            'password_confirm': 'StrongPass123!',
+        },
+    ).json()
+    client = Client(headers={'Authorization': f"Bearer {tokens['access']}"})
+
+    response = client.delete('/api/v1/auth/me/')
+
+    assert response.status_code == HTTPStatus.NO_CONTENT
+
+    login = post_json(
+        '/api/v1/auth/login/',
+        {'username': 'goodbye', 'password': 'StrongPass123!'},
+    )
+    assert login.status_code == HTTPStatus.UNAUTHORIZED

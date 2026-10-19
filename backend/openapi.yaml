@@ -80,6 +80,17 @@ paths:
       - personal
       security:
       - JWTAuth: []
+    delete:
+      operationId: auth_destroy
+      summary: Destroy
+      parameters: []
+      responses:
+        '204':
+          description: No Content
+      tags:
+      - personal
+      security:
+      - JWTAuth: []
   /api/v1/projects/:
     get:
       operationId: projects_list

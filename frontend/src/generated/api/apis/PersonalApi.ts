@@ -487,6 +487,50 @@ export interface WhiteboardsRetrieveRequest {
 export class PersonalApi extends runtime.BaseAPI {
 
     /**
+     * Creates request options for authDestroy without sending the request
+     */
+    async authDestroyRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/auth/me/`;
+
+        return {
+            path: urlPath,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Destroy
+     */
+    async authDestroyRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.authDestroyRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Destroy
+     */
+    async authDestroy(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.authDestroyRaw(initOverrides);
+    }
+
+    /**
      * Creates request options for authLogin without sending the request
      */
     async authLoginRequestOpts(requestParameters: AuthLoginRequest): Promise<runtime.RequestOpts> {

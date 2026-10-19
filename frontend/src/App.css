@@ -803,6 +803,46 @@
   max-width: 470px;
 }
 
+.user-section {
+  max-width: 560px;
+  padding-top: 40px;
+}
+
+.user-heading {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 25px;
+}
+
+.user-heading h1 {
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: clamp(38px, 5vw, 58px);
+  font-weight: 600;
+  letter-spacing: -0.065em;
+  line-height: 1;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.user-actions {
+  padding-top: 25px;
+}
+
+.topbar-user-name {
+  color: #f4f7f4;
+  font-family: var(--utility);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.topbar-user-name:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
 .dialog-backdrop {
   align-items: center;
   background: rgb(12 29 33 / 52%);

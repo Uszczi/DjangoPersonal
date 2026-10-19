@@ -17,6 +17,7 @@ import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as TimerRouteImport } from './routes/timer'
+import { Route as UserRouteImport } from './routes/user'
 import { Route as WhiteboardRouteImport } from './routes/whiteboard'
 import { Route as ExpensesIndexRouteImport } from './routes/expenses/index'
 import { Route as ExpensesWalletIdRouteImport } from './routes/expenses/$walletId'
@@ -63,6 +64,11 @@ const TimerRoute = TimerRouteImport.update({
   path: '/timer',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UserRoute = UserRouteImport.update({
+  id: '/user',
+  path: '/user',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WhiteboardRoute = WhiteboardRouteImport.update({
   id: '/whiteboard',
   path: '/whiteboard',
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/tasks': typeof TasksRoute
   '/timer': typeof TimerRoute
+  '/user': typeof UserRoute
   '/whiteboard': typeof WhiteboardRouteWithChildren
   '/expenses/$walletId': typeof ExpensesWalletIdRoute
   '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/tasks': typeof TasksRoute
   '/timer': typeof TimerRoute
+  '/user': typeof UserRoute
   '/expenses/$walletId': typeof ExpensesWalletIdRoute
   '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
   '/expenses': typeof ExpensesIndexRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/tasks': typeof TasksRoute
   '/timer': typeof TimerRoute
+  '/user': typeof UserRoute
   '/whiteboard': typeof WhiteboardRouteWithChildren
   '/expenses/$walletId': typeof ExpensesWalletIdRoute
   '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/tasks'
     | '/timer'
+    | '/user'
     | '/whiteboard'
     | '/expenses/$walletId'
     | '/whiteboard/$boardId'
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/tasks'
     | '/timer'
+    | '/user'
     | '/expenses/$walletId'
     | '/whiteboard/$boardId'
     | '/expenses'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/tasks'
     | '/timer'
+    | '/user'
     | '/whiteboard'
     | '/expenses/$walletId'
     | '/whiteboard/$boardId'
@@ -188,6 +200,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   TasksRoute: typeof TasksRoute
   TimerRoute: typeof TimerRoute
+  UserRoute: typeof UserRoute
   WhiteboardRoute: typeof WhiteboardRouteWithChildren
 }
 
@@ -247,6 +260,13 @@ declare module '@tanstack/react-router' {
       path: '/timer'
       fullPath: '/timer'
       preLoaderRoute: typeof TimerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/user': {
+      id: '/user'
+      path: '/user'
+      fullPath: '/user'
+      preLoaderRoute: typeof UserRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/whiteboard': {
@@ -324,6 +344,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   TasksRoute: TasksRoute,
   TimerRoute: TimerRoute,
+  UserRoute: UserRoute,
   WhiteboardRoute: WhiteboardRouteWithChildren,
 }
 export const routeTree = rootRouteImport

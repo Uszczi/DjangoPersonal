@@ -87,7 +87,9 @@ export function Navbar() {
         </button>
         {user && (
           <div className="topbar-user">
-            <span>{user.username}</span>
+            <Link className="topbar-user-name" to="/user">
+              {user.username}
+            </Link>
             <button
               type="button"
               className="quiet-button"
@@ -128,7 +130,9 @@ export function Navbar() {
             </div>
             {user && (
               <div className="mobile-nav-user">
-                <span>{user.username}</span>
+                <Link className="topbar-user-name" to="/user" onClick={closeNav}>
+                  {user.username}
+                </Link>
                 <button
                   type="button"
                   className="quiet-button"
