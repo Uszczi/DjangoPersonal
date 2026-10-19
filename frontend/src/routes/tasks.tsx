@@ -3,7 +3,29 @@ import {
   useNavigate,
   useSearch,
 } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type CollisionDetection,
+  type DragEndEvent,
+  type DragOverEvent,
+  type DragStartEvent,
+  rectIntersection,
+  getFirstCollision,
+  pointerWithin,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { useDroppable } from "@dnd-kit/core";
 
 import { DeleteTaskModal } from "@/components/DeleteTaskModal";
 import { ProjectEditorModal } from "@/components/ProjectEditorModal";
@@ -19,6 +41,120 @@ import type { TaskResponse } from "@/generated/api";
 export const Route = createFileRoute("/tasks")({
   component: TasksPage,
 });
+
+function SortableTaskRow({
+  task,
+  isCompleted,
+  onToggleStatus,
+  onStartTimer,
+  onEdit,
+  onDelete,
+}: {
+  task: TaskResponse;
+  isCompleted: boolean;
+  onToggleStatus: () => void;
+  onStartTimer: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id, data: { status: task.status } });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={style}
+      className={`task-row${isCompleted ? " is-completed" : ""}${isDragging ? " is-dragging" : ""}`}
+      data-task-id={task.id}
+    >
+      <span
+        className="task-drag-handle"
+        aria-label={`Przeciągnij zadanie: ${task.title}`}
+        title="Przeciągnij"
+        {...attributes}
+        {...listeners}
+      >
+        <span aria-hidden="true">⠿</span>
+      </span>
+      <button
+        className={`task-status-toggle${isCompleted ? " is-completed" : ""}`}
+        type="button"
+        aria-label={`${isCompleted ? "Otwórz zadanie" : "Oznacz jako ukończone"}: ${task.title}`}
+        onClick={onToggleStatus}
+      >
+        {isCompleted ? "✓" : ""}
+      </button>
+      <div className="task-copy">
+        <p>{task.title}</p>
+        {task.description && <small>{task.description}</small>}
+      </div>
+      <div className="task-row-actions">
+        <button
+          className="task-timer-button"
+          type="button"
+          aria-label={`Uruchom timer: ${task.title}`}
+          title="Uruchom timer"
+          onClick={onStartTimer}
+        >
+          <span aria-hidden="true">▶</span>
+        </button>
+        <button
+          className="task-edit-button"
+          type="button"
+          aria-label={`Edytuj zadanie: ${task.title}`}
+          onClick={onEdit}
+        >
+          Edytuj
+        </button>
+        <button
+          className="task-delete-button"
+          type="button"
+          aria-label={`Usuń zadanie: ${task.title}`}
+          onClick={onDelete}
+        >
+          Usuń
+        </button>
+      </div>
+    </li>
+  );
+}
+
+function DroppableContainer({
+  id,
+  children,
+}: {
+  id: string;
+  children: ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `container-${id}`,
+    data: { status: id },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        minHeight: isOver ? "120px" : undefined,
+        transition: "min-height 0.15s ease",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
 
 export function TasksPage() {
   const { project } = useSearch({ from: "__root__" });
@@ -50,90 +186,104 @@ export function TasksPage() {
   }, [loadTasks, selectedProjectId]);
 
   const tasks = taskList?.projectId === selectedProjectId ? taskList.tasks : [];
-  const [draggedId, setDraggedId] = useState<number | null>(null);
-  const [dragOverId, setDragOverId] = useState<number | null>(null);
-  const dragOverIdRef = useRef<number | null>(null);
-  const touchDragRef = useRef<{
-    taskId: number;
-    active: boolean;
-    longPressTimer: number | null;
-  } | null>(null);
-  const [isTouchDragging, setIsTouchDragging] = useState(false);
   const [collapsedStatuses, setCollapsedStatuses] = useState<
     ReadonlySet<string>
   >(new Set());
 
-  async function handleTaskDrop(draggedTaskId: number, targetId: number) {
-    if (draggedTaskId === targetId || selectedProjectId === null) return;
-    const draggedTask = tasks.find((task) => task.id === draggedTaskId);
-    const targetTask = tasks.find((task) => task.id === targetId);
-    if (
-      !draggedTask ||
-      !targetTask ||
-      draggedTask.status !== targetTask.status
-    )
-      return;
 
-    const siblings = tasks.filter(
-      (task) => task.status === draggedTask.status,
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  // Custom collision detection for multi-container sorting
+  const collisionDetection: CollisionDetection = (args) => {
+    const pointerIntersections = pointerWithin(args);
+    const rectIntersections = rectIntersection(args);
+
+    // First, try pointerWithin for precise detection
+    let collision = getFirstCollision(pointerIntersections, "id");
+    if (collision) return [{ id: collision }];
+
+    // Fall back to rectIntersection
+    collision = getFirstCollision(rectIntersections, "id");
+    if (collision) return [{ id: collision }];
+
+    return [];
+  };
+
+  function handleDragStart(_event: DragStartEvent) {
+    // no-op
+  }
+
+  function handleDragOver(event: DragOverEvent) {
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeData = active.data.current as { status?: string } | undefined;
+    const overData = over.data.current as { status?: string } | undefined;
+
+    const activeStatus = activeData?.status;
+    const overStatus = overData?.status;
+
+    if (!activeStatus || !overStatus || activeStatus === overStatus) return;
+
+    // Move the task to the new container in local state
+    const activeTask = tasks.find((t) => t.id === active.id);
+    if (!activeTask) return;
+
+    // Update local state to reflect the move
+    const updatedTasks = tasks.map((t) =>
+      t.id === active.id ? { ...t, status: overStatus } : t,
     );
-    const targetIndex = siblings.findIndex((task) => task.id === targetId);
+    useTasksStore.setState({
+      taskList: {
+        projectId: selectedProjectId!,
+        tasks: updatedTasks,
+      },
+    });
+  }
 
-    setDraggedId(null);
-    setDragOverId(null);
-    dragOverIdRef.current = null;
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id || selectedProjectId === null) return;
+
+    const draggedTask = tasks.find((task) => task.id === active.id);
+    if (!draggedTask) return;
+
+    const overData = over.data.current as { status?: string } | undefined;
+    const overStatus = overData?.status;
+    if (!overStatus) return;
+
+    const isSameGroup = draggedTask.status === overStatus;
+    const targetGroupTasks = tasks.filter((task) => task.status === overStatus);
+    const overTask = targetGroupTasks.find((task) => task.id === over.id);
+
+    let newIndex: number;
+    if (overTask) {
+      newIndex = targetGroupTasks.findIndex((task) => task.id === over.id);
+    } else {
+      newIndex = targetGroupTasks.length;
+    }
 
     try {
       await api.tasksPartialUpdate({
-        id: draggedTaskId,
-        patchedTaskUpdateRequest: { position: targetIndex },
+        id: Number(active.id),
+        patchedTaskUpdateRequest: {
+          ...(isSameGroup ? {} : { status: overStatus }),
+          position: newIndex,
+        },
       });
       await loadTasks(selectedProjectId);
     } catch {
-      // ignore; loadTasks will restore server order
       await loadTasks(selectedProjectId);
-    }
-  }
-
-  // --- Touch drag & drop (long-press on the handle, then drag) ---
-
-  // Latest version of handleTaskDrop, so the document-level listeners in the
-  // effect below can always call the current closure.
-  const handleTaskDropRef = useRef(handleTaskDrop);
-  useEffect(() => {
-    handleTaskDropRef.current = handleTaskDrop;
-  });
-
-  function beginLongPress(taskId: number) {
-    const timer = window.setTimeout(() => {
-      if (!touchDragRef.current) return;
-      touchDragRef.current.active = true;
-      setIsTouchDragging(true);
-      setDraggedId(taskId);
-    }, 260);
-    touchDragRef.current = { taskId, active: false, longPressTimer: timer };
-  }
-
-  function cancelTouchDrag() {
-    if (touchDragRef.current?.longPressTimer != null) {
-      window.clearTimeout(touchDragRef.current.longPressTimer);
-    }
-    touchDragRef.current = null;
-    setIsTouchDragging(false);
-    setDraggedId(null);
-    dragOverIdRef.current = null;
-    setDragOverId(null);
-  }
-
-  function endTouchDrag() {
-    const state = touchDragRef.current;
-    if (!state) return;
-    const draggedTaskId = state.taskId;
-    const wasActive = state.active;
-    const targetId = dragOverIdRef.current;
-    cancelTouchDrag();
-    if (wasActive && targetId !== null) {
-      void handleTaskDropRef.current(draggedTaskId, targetId);
     }
   }
 
@@ -157,118 +307,6 @@ export function TasksPage() {
       return next;
     });
   }
-
-  useEffect(() => {
-    if (!isTouchDragging) return;
-    function onTouchMove(event: TouchEvent) {
-      if (!touchDragRef.current?.active) return;
-      event.preventDefault();
-      const touch = event.touches[0];
-      if (!touch) return;
-      const element = document.elementFromPoint(touch.clientX, touch.clientY);
-      const row =
-        element instanceof Element ? element.closest("li[data-task-id]") : null;
-      if (!row) return;
-      const targetId = Number(row.getAttribute("data-task-id"));
-      if (!Number.isFinite(targetId)) return;
-      dragOverIdRef.current = targetId;
-      setDragOverId(targetId);
-    }
-    document.addEventListener("touchmove", onTouchMove, { passive: false });
-    document.addEventListener("touchend", endTouchDrag);
-    document.addEventListener("touchcancel", endTouchDrag);
-    return () => {
-      document.removeEventListener("touchmove", onTouchMove);
-      document.removeEventListener("touchend", endTouchDrag);
-      document.removeEventListener("touchcancel", endTouchDrag);
-    };
-  }, [isTouchDragging]);
-
-  function renderTaskRow(task: TaskResponse) {
-    const isCompleted =
-      terminalStatus != null && task.status === terminalStatus;
-    return (
-      <li
-        className={`task-row${isCompleted ? " is-completed" : ""}${draggedId === task.id ? " is-dragging" : ""}${dragOverId === task.id ? " is-drag-over" : ""}`}
-        key={task.id}
-        data-task-id={task.id}
-        draggable
-        onDragStart={() => setDraggedId(task.id)}
-        onDragOver={(event) => {
-          event.preventDefault();
-          setDragOverId(task.id);
-          dragOverIdRef.current = task.id;
-        }}
-        onDrop={() => void handleTaskDrop(draggedId ?? task.id, task.id)}
-        onDragEnd={() => {
-          setDraggedId(null);
-          setDragOverId(null);
-          dragOverIdRef.current = null;
-        }}
-      >
-        <span
-          className="task-drag-handle"
-          aria-label={`Przeciągnij zadanie: ${task.title}`}
-          title="Przeciągnij"
-          onTouchStart={() => beginLongPress(task.id)}
-          onTouchMove={() => {
-            if (touchDragRef.current && !touchDragRef.current.active) {
-              // Scrolling before the long-press fires — not a drag.
-              cancelTouchDrag();
-            }
-          }}
-        >
-          <span aria-hidden="true">⠿</span>
-        </span>
-        <button
-          className={`task-status-toggle${isCompleted ? " is-completed" : ""}`}
-          type="button"
-          aria-label={`${isCompleted ? "Otwórz zadanie" : "Oznacz jako ukończone"}: ${task.title}`}
-          onClick={() => void toggleTaskStatus(task)}
-        >
-          {isCompleted ? "✓" : ""}
-        </button>
-        <div className="task-copy">
-          <p>{task.title}</p>
-          {task.description && <small>{task.description}</small>}
-        </div>
-        <div className="task-row-actions">
-          <button
-            className="task-timer-button"
-            type="button"
-            aria-label={`Uruchom timer: ${task.title}`}
-            title="Uruchom timer"
-            onClick={() => void startTimer(task)}
-          >
-            <span aria-hidden="true">▶</span>
-          </button>
-          <button
-            className="task-edit-button"
-            type="button"
-            aria-label={`Edytuj zadanie: ${task.title}`}
-            onClick={() => openTaskEditForm(task)}
-          >
-            Edytuj
-          </button>
-          <button
-            className="task-delete-button"
-            type="button"
-            aria-label={`Usuń zadanie: ${task.title}`}
-            onClick={() => openTaskDeleteDialog(task)}
-          >
-            Usuń
-          </button>
-        </div>
-      </li>
-    );
-  }
-
-  const tasksError =
-    loadError?.projectId === selectedProjectId ? loadError.message : "";
-  const isTasksLoading =
-    selectedProjectId !== null &&
-    taskList?.projectId !== selectedProjectId &&
-    loadError?.projectId !== selectedProjectId;
 
   function openTaskForm() {
     const defaultStatus = selectedProject?.projectStatuses[0];
@@ -353,18 +391,44 @@ export function TasksPage() {
           </div>
           {!isCollapsed && (
             <div id={`status-section-panel-${index}`}>
-              <ul className="task-list" aria-label={status}>
-                {statusTasks.map(renderTaskRow)}
-                {statusTasks.length === 0 && (
-                  <li className="task-empty-state">Brak w tym statusie.</li>
-                )}
-              </ul>
+              <DroppableContainer id={status}>
+                <ul className="task-list" aria-label={status}>
+                  <SortableContext
+                    items={statusTasks.map((t) => t.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {statusTasks.map((task) => (
+                      <SortableTaskRow
+                        key={task.id}
+                        task={task}
+                        isCompleted={
+                          terminalStatus != null && task.status === terminalStatus
+                        }
+                        onToggleStatus={() => void toggleTaskStatus(task)}
+                        onStartTimer={() => void startTimer(task)}
+                        onEdit={() => openTaskEditForm(task)}
+                        onDelete={() => openTaskDeleteDialog(task)}
+                      />
+                    ))}
+                  </SortableContext>
+                  {statusTasks.length === 0 && (
+                    <li className="task-empty-state">Brak w tym statusie.</li>
+                  )}
+                </ul>
+              </DroppableContainer>
             </div>
           )}
         </section>
       );
     },
   );
+
+  const tasksError =
+    loadError?.projectId === selectedProjectId ? loadError.message : "";
+  const isTasksLoading =
+    selectedProjectId !== null &&
+    taskList?.projectId !== selectedProjectId &&
+    loadError?.projectId !== selectedProjectId;
 
   return (
     <>
@@ -412,7 +476,16 @@ export function TasksPage() {
           ) : tasks.length === 0 ? (
             <p className="task-empty-state">Nie ma tu jeszcze zadań.</p>
           ) : (
-            statusSections
+            <DndContext
+              sensors={sensors}
+              collisionDetection={collisionDetection}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+              onDragCancel={() => {}}
+            >
+              {statusSections}
+            </DndContext>
           )}
           <div className="list-add-row">
             <button className="quiet-button" onClick={openTaskForm}>
