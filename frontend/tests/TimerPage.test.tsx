@@ -240,7 +240,7 @@ describe('Time tracking', () => {
     const summarySection = summaryHeading.closest('section')
     if (!summarySection) throw new Error('summary section not found')
     expect(
-      within(summarySection as HTMLElement).getByText('45 min', { selector: '.summary-total' }),
+      within(summarySection as HTMLElement).getByText('45 min', { selector: 'p.font-display' }),
     ).toBeInTheDocument()
     expect(fetchMock).toHaveBeenNthCalledWith(
       6,
@@ -364,7 +364,7 @@ describe('Time tracking', () => {
     const withinSummary = within(summarySection as HTMLElement)
 
     expect(
-      withinSummary.getByText('1 h 15 min', { selector: '.summary-total' }),
+      withinSummary.getByText('1 h 15 min', { selector: 'p.font-display' }),
     ).toBeInTheDocument()
     expect(withinSummary.getAllByText('1 h 15 min')).toHaveLength(3)
     expect(withinSummary.getByText('Prepare outline')).toBeInTheDocument()

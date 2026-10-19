@@ -56,13 +56,13 @@ function SortableProjectRow({
     <li
       ref={setNodeRef}
       style={style}
-      className={`project-row${isDragging ? " is-dragging" : ""}`}
+      className={`flex min-h-[62px] items-center gap-[13px] border-b border-[#dce5e1] px-[3px] py-[10px]${isDragging ? " opacity-50" : ""}`}
     >
       {project.isInbox ? (
-        <span className="project-drag-handle" aria-hidden="true" />
+        <span className="inline-flex items-center justify-center text-[14px] text-[#9aafaa]" aria-hidden="true" />
       ) : (
         <span
-          className="project-drag-handle"
+          className="inline-flex cursor-grab items-center justify-center text-[14px] text-[#9aafaa] transition-colors hover:text-[#6c8082]"
           aria-label={`Przeciągnij projekt: ${project.name}`}
           title="Przeciągnij"
           {...attributes}
@@ -71,16 +71,18 @@ function SortableProjectRow({
           <span aria-hidden="true">⠿</span>
         </span>
       )}
-      <div className="project-row-copy">
-        <p>{project.name}</p>
-        {project.description && <small>{project.description}</small>}
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[14px] font-medium leading-snug text-ink">{project.name}</p>
+        {project.description && (
+          <small className="mt-0.5 block truncate text-[12px] leading-relaxed text-muted">{project.description}</small>
+        )}
         {project.isInbox && (
-          <span className="project-tag">DOMYŚLNY</span>
+          <span className="mt-1 inline-block rounded-full border border-signal bg-signal-pale px-2 py-0.5 text-[10px] font-semibold tracking-wide text-signal">DOMYŚLNY</span>
         )}
       </div>
-      <div className="project-row-actions">
+      <div className="flex items-center gap-2">
         <button
-          className="task-edit-button"
+          className="inline-flex min-h-[28px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-transparent px-[10px] text-[12px] font-semibold text-[#6c8082] transition-all hover:bg-[#f0f4f1] hover:text-ink"
           type="button"
           aria-label={`Edytuj projekt: ${project.name}`}
           onClick={onEdit}
@@ -89,7 +91,7 @@ function SortableProjectRow({
         </button>
         {!project.isInbox && (
           <button
-            className="task-delete-button"
+            className="inline-flex min-h-[28px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-transparent px-[10px] text-[12px] font-semibold text-[#a23a28] transition-all hover:bg-[#f5e3dc] hover:text-[#872d1e]"
             type="button"
             aria-label={`Usuń projekt: ${project.name}`}
             onClick={onDelete}
@@ -163,7 +165,7 @@ export function ProjectsPage() {
 
   if (isLoading) {
     return (
-      <div className="loading-state" role="status">
+      <div className="pt-[40px] text-muted" role="status">
         Wczytywanie projektów…
       </div>
     );
@@ -171,38 +173,40 @@ export function ProjectsPage() {
 
   return (
     <>
-      <div className="project-heading">
+      <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1>Projekty</h1>
+          <h1 className="font-display text-[28px] font-bold tracking-[-0.02em] text-ink">Projekty</h1>
         </div>
-        <button className="primary-button" onClick={openCreateForm}>
+        <button className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-signal px-[15px] text-[12px] font-semibold text-white transition-all hover:bg-[#b94b31] hover:-translate-y-px disabled:cursor-wait disabled:opacity-70" onClick={openCreateForm}>
           <span aria-hidden="true">+</span>
           Nowy projekt
         </button>
       </div>
 
       {pageError && (
-        <p className="task-error" role="alert">
+        <p className="py-4 text-[13px] text-[#a23a28]" role="alert">
           {pageError}
         </p>
       )}
 
       {projects.length === 0 ? (
-        <p className="task-empty-state">Brak projektów.</p>
+        <p className="py-4 text-[13px] text-muted">Brak projektów.</p>
       ) : (
         <>
-          <ul className="project-list" aria-label="Projekty">
+          <ul className="flex flex-col" aria-label="Projekty">
             {inboxProject && (
-              <li className="project-row" key={inboxProject.id}>
-                <span className="project-drag-handle" aria-hidden="true" />
-                <div className="project-row-copy">
-                  <p>{inboxProject.name}</p>
-                  {inboxProject.description && <small>{inboxProject.description}</small>}
-                  <span className="project-tag">DOMYŚLNY</span>
+              <li className="flex min-h-[62px] items-center gap-[13px] border-b border-[#dce5e1] px-[3px] py-[10px]" key={inboxProject.id}>
+                <span className="inline-flex items-center justify-center text-[14px] text-[#9aafaa]" aria-hidden="true" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[14px] font-medium leading-snug text-ink">{inboxProject.name}</p>
+                  {inboxProject.description && (
+                    <small className="mt-0.5 block truncate text-[12px] leading-relaxed text-muted">{inboxProject.description}</small>
+                  )}
+                  <span className="mt-1 inline-block rounded-full border border-signal bg-signal-pale px-2 py-0.5 text-[10px] font-semibold tracking-wide text-signal">DOMYŚLNY</span>
                 </div>
-                <div className="project-row-actions">
+                <div className="flex items-center gap-2">
                   <button
-                    className="task-edit-button"
+                    className="inline-flex min-h-[28px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-transparent px-[10px] text-[12px] font-semibold text-[#6c8082] transition-all hover:bg-[#f0f4f1] hover:text-ink"
                     type="button"
                     aria-label={`Edytuj projekt: ${inboxProject.name}`}
                     onClick={() => openEditForm(inboxProject)}
@@ -233,8 +237,8 @@ export function ProjectsPage() {
               </SortableContext>
             </DndContext>
           </ul>
-          <div className="list-add-row">
-            <button className="primary-button" onClick={openCreateForm}>
+          <div className="mt-4">
+            <button className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-signal px-[15px] text-[12px] font-semibold text-white transition-all hover:bg-[#b94b31] hover:-translate-y-px disabled:cursor-wait disabled:opacity-70" onClick={openCreateForm}>
               <span aria-hidden="true">+</span>
               Nowy projekt
             </button>

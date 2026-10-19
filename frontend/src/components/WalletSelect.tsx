@@ -18,9 +18,10 @@ export function WalletSelect({ activeWalletId }: WalletSelectProps) {
   if (wallets.length === 0) return null;
 
   return (
-    <label className="form-field wallet-select">
+    <label className="mb-[18px] grid gap-2 text-[12px] font-semibold text-[#334d52]">
       <span>Portfel</span>
       <select
+        className="w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
         aria-label="Wybierz portfel"
         value={activeWalletId != null ? String(activeWalletId) : ""}
         onChange={(event) => {

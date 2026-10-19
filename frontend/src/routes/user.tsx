@@ -16,13 +16,13 @@ export function UserPage() {
   }
 
   return (
-    <section className="user-section" aria-labelledby="user-heading">
-      <div className="user-heading">
-        <p className="eyebrow">KONTO</p>
-        <h1 id="user-heading">{user?.username}</h1>
+    <section className="p-8" aria-labelledby="user-heading">
+      <div className="mb-6">
+        <p className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">KONTO</p>
+        <h1 id="user-heading" className="mt-1 font-display text-[28px] font-bold tracking-[-0.02em] text-ink">{user?.username}</h1>
       </div>
-      <div className="user-actions">
-        <button className="danger-button" type="button" onClick={openDeleteDialog}>
+      <div className="flex items-center gap-4">
+        <button className="inline-flex min-h-[40px] cursor-pointer items-center justify-center rounded-[5px] border border-transparent bg-[#a23a28] px-[15px] text-[12px] font-semibold text-white transition-all hover:bg-[#872d1e] hover:-translate-y-px disabled:cursor-wait disabled:opacity-70" type="button" onClick={openDeleteDialog}>
           Usuń konto
         </button>
       </div>

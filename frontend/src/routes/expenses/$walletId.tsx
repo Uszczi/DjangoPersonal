@@ -82,7 +82,7 @@ export function WalletDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="loading-state" role="status">
+      <div className="pt-[40px] text-muted" role="status">
         Wczytywanie portfela…
       </div>
     );
@@ -90,7 +90,7 @@ export function WalletDetailPage() {
 
   if (pageError) {
     return (
-      <div className="loading-state" role="alert">
+      <div className="pt-[40px] text-muted" role="alert">
         {pageError}
       </div>
     );
@@ -98,7 +98,7 @@ export function WalletDetailPage() {
 
   if (!wallet) {
     return (
-      <div className="loading-state" role="status">
+      <div className="pt-[40px] text-muted" role="status">
         Przekierowywanie…
       </div>
     );
@@ -110,13 +110,13 @@ export function WalletDetailPage() {
 
   return (
     <>
-      <div className="project-heading">
+      <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1>{wallet.name}</h1>
+          <h1 className="font-display text-[28px] font-bold tracking-[-0.02em] text-ink">{wallet.name}</h1>
         </div>
         <WalletSelect activeWalletId={wallet.id} />
         <button
-          className="primary-button"
+          className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-signal px-[15px] text-[12px] font-semibold text-white transition-all hover:bg-[#b94b31] hover:-translate-y-px disabled:cursor-wait disabled:opacity-70"
           onClick={() =>
             ShowModal(TransactionEditorModal, { walletId: wallet.id })
           }
@@ -127,21 +127,21 @@ export function WalletDetailPage() {
       </div>
 
       {transactionLoadError?.walletId === wallet.id && (
-        <p className="task-error" role="alert">
+        <p className="py-4 text-[13px] text-[#a23a28]" role="alert">
           {transactionLoadError.message}
         </p>
       )}
 
       {groups.length === 0 ? (
-        <p className="task-empty-state">Brak transakcji. Dodaj pierwszą transakcję.</p>
+        <p className="py-4 text-[13px] text-muted">Brak transakcji. Dodaj pierwszą transakcję.</p>
       ) : (
         groups.map(([day, dayTransactions]) => (
-          <section className="transaction-day" key={day}>
-            <h2 className="transaction-day-heading">
+          <section className="mb-6" key={day}>
+            <h2 className="mb-2 font-display text-[18px] font-bold tracking-[-0.02em] text-ink">
               {dayFormatter.format(dayTransactions[0].date)}
             </h2>
             <ul
-              className="transaction-list"
+              className="flex flex-col"
               aria-label={`Transakcje z dnia ${dayFormatter.format(dayTransactions[0].date)}`}
             >
               {dayTransactions.map((transaction) => {
@@ -149,18 +149,20 @@ export function WalletDetailPage() {
                   ? categories.find((item) => item.id === transaction.categoryId)
                   : undefined;
                 return (
-                  <li className="transaction-row" key={transaction.id}>
-                    <div className="transaction-row-copy">
-                      <p>{transaction.title}</p>
+                  <li className="flex min-h-[62px] items-center gap-[13px] border-b border-[#dce5e1] px-[3px] py-[10px]" key={transaction.id}>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[14px] font-medium leading-snug text-ink">{transaction.title}</p>
                       {transaction.description && (
-                        <small>{transaction.description}</small>
+                        <small className="mt-0.5 block truncate text-[12px] leading-relaxed text-muted">{transaction.description}</small>
                       )}
-                      {category && <small>{category.name}</small>}
+                      {category && (
+                        <small className="mt-0.5 block truncate text-[12px] leading-relaxed text-muted">{category.name}</small>
+                      )}
                     </div>
-                    <span className="transaction-amount">{transaction.amount}</span>
-                    <div className="project-row-actions">
+                    <span className="font-utility text-[13px] font-semibold text-ink">{transaction.amount}</span>
+                    <div className="flex items-center gap-2">
                       <button
-                        className="task-edit-button"
+                        className="inline-flex min-h-[28px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-transparent px-[10px] text-[12px] font-semibold text-[#6c8082] transition-all hover:bg-[#f0f4f1] hover:text-ink"
                         type="button"
                         aria-label={`Edytuj transakcję: ${transaction.title}`}
                         onClick={() =>
@@ -173,7 +175,7 @@ export function WalletDetailPage() {
                         Edytuj
                       </button>
                       <button
-                        className="task-delete-button"
+                        className="inline-flex min-h-[28px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-transparent px-[10px] text-[12px] font-semibold text-[#a23a28] transition-all hover:bg-[#f5e3dc] hover:text-[#872d1e]"
                         type="button"
                         aria-label={`Usuń transakcję: ${transaction.title}`}
                         onClick={() =>

@@ -432,7 +432,6 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
   return (
     <div
       ref={containerRef}
-      className="whiteboard-canvas"
       data-testid="whiteboard-canvas"
       aria-label="Tablica"
       style={{

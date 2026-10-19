@@ -59,12 +59,16 @@ export function MarkdownHighlightEditor({
   }
 
   return (
-    <div className="md-highlight-editor">
-      <pre ref={preRef} aria-hidden="true">
+    <div className="relative h-[70vh] overflow-hidden rounded-lg border border-[#d1d5db] bg-[#fafafa]">
+      <pre
+        ref={preRef}
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 m-0 overflow-hidden whitespace-pre-wrap break-words p-3 font-mono text-sm leading-relaxed [tab-size:2]"
+      >
         <code dangerouslySetInnerHTML={{ __html: highlightMarkdown(value) }} />
       </pre>
       <textarea
-        className="md-highlight-input"
+        className="absolute inset-0 h-full w-full resize-none border-0 bg-transparent p-3 font-mono text-sm leading-relaxed text-transparent caret-[#344d52] outline-none placeholder:text-[#93a5a2] [scrollbar-width:none] [tab-size:2] [&::-webkit-scrollbar]:hidden"
         value={value}
         placeholder={placeholder}
         spellCheck={false}

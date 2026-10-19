@@ -76,11 +76,11 @@ function SortableTaskRow({
     <li
       ref={setNodeRef}
       style={style}
-      className={`task-row${isCompleted ? " is-completed" : ""}${isDragging ? " is-dragging" : ""}`}
+      className={`grid min-h-[62px] grid-cols-[24px_18px_minmax(0,1fr)_auto] items-center gap-[13px] border-b border-[#dce5e1] px-[3px] py-[10px]${isCompleted ? " opacity-60" : ""}${isDragging ? " opacity-50" : ""}`}
       data-task-id={task.id}
     >
       <span
-        className="task-drag-handle"
+        className="inline-flex cursor-grab items-center justify-center text-[14px] text-[#9aafaa] transition-colors hover:text-[#6c8082]"
         aria-label={`Przeciągnij zadanie: ${task.title}`}
         title="Przeciągnij"
         {...attributes}
@@ -89,20 +89,27 @@ function SortableTaskRow({
         <span aria-hidden="true">⠿</span>
       </span>
       <button
-        className={`task-status-toggle${isCompleted ? " is-completed" : ""}`}
+        className={`inline-flex h-4 w-4 cursor-pointer items-center justify-center rounded border p-0 text-[11px] text-white${isCompleted ? " border-[#668b79] bg-[#668b79]" : " border-[#9aafaa] bg-transparent"}`}
         type="button"
+        data-completed={isCompleted ? true : undefined}
         aria-label={`${isCompleted ? "Otwórz zadanie" : "Oznacz jako ukończone"}: ${task.title}`}
         onClick={onToggleStatus}
       >
         {isCompleted ? "✓" : ""}
       </button>
-      <div className="task-copy">
-        <p>{task.title}</p>
-        {task.description && <small>{task.description}</small>}
+      <div className="min-w-0">
+        <p className={`truncate text-[14px] font-medium leading-snug text-ink ${isCompleted ? "line-through" : ""}`}>
+          {task.title}
+        </p>
+        {task.description && (
+          <small className="mt-0.5 block truncate text-[12px] leading-relaxed text-muted">
+            {task.description}
+          </small>
+        )}
       </div>
-      <div className="task-row-actions">
+      <div className="flex items-center gap-2">
         <button
-          className="task-timer-button"
+          className="inline-flex h-[28px] items-center justify-center rounded border border-transparent bg-transparent px-2 text-[16px] text-[#6c8082] transition-colors hover:bg-[#f0f4f1] hover:text-ink cursor-pointer"
           type="button"
           aria-label={`Uruchom timer: ${task.title}`}
           title="Uruchom timer"
@@ -111,7 +118,7 @@ function SortableTaskRow({
           <span aria-hidden="true">▶</span>
         </button>
         <button
-          className="task-edit-button"
+          className="inline-flex min-h-[28px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-transparent px-[10px] text-[12px] font-semibold text-[#6c8082] transition-all hover:bg-[#f0f4f1] hover:text-ink"
           type="button"
           aria-label={`Edytuj zadanie: ${task.title}`}
           onClick={onEdit}
@@ -119,7 +126,7 @@ function SortableTaskRow({
           Edytuj
         </button>
         <button
-          className="task-delete-button"
+          className="inline-flex min-h-[28px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-transparent px-[10px] text-[12px] font-semibold text-[#a23a28] transition-all hover:bg-[#f5e3dc] hover:text-[#872d1e]"
           type="button"
           aria-label={`Usuń zadanie: ${task.title}`}
           onClick={onDelete}
@@ -189,7 +196,6 @@ export function TasksPage() {
   const [collapsedStatuses, setCollapsedStatuses] = useState<
     ReadonlySet<string>
   >(new Set());
-
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -330,7 +336,7 @@ export function TasksPage() {
 
   if (isProjectsLoading) {
     return (
-      <div className="loading-state" role="status">
+      <div className="pt-[40px] text-muted" role="status">
         Wczytywanie projektów…
       </div>
     );
@@ -338,11 +344,11 @@ export function TasksPage() {
 
   if (!selectedProject) {
     return (
-      <div className="empty-state">
-        <p className="eyebrow">BRAK PROJEKTÓW</p>
-        <h1>Utwórz pierwsze miejsce pracy</h1>
+      <div className="pt-[40px] text-muted">
+        <p className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">BRAK PROJEKTÓW</p>
+        <h1 className="mt-2 font-display text-[28px] font-bold tracking-[-0.02em] text-ink">Utwórz pierwsze miejsce pracy</h1>
         <button
-          className="primary-button"
+          className="mt-5 inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-signal px-[15px] text-[12px] font-semibold text-white transition-all hover:bg-[#b94b31] hover:-translate-y-px disabled:cursor-wait disabled:opacity-70"
           onClick={() => ShowModal(ProjectEditorModal)}
         >
           Nowy projekt
@@ -371,20 +377,20 @@ export function TasksPage() {
     ([status, statusTasks], index) => {
       const isCollapsed = collapsedStatuses.has(status);
       return (
-        <section className="status-section" key={status}>
-          <div className="status-section-header">
+        <section key={status}>
+          <div className="flex items-center justify-between">
             <button
-              className="status-section-toggle"
+              className="flex w-full cursor-pointer items-center gap-2 rounded border border-transparent bg-transparent px-2 py-2 text-left transition-colors hover:bg-[#f0f4f1]"
               type="button"
               aria-expanded={!isCollapsed}
               aria-controls={`status-section-panel-${index}`}
               onClick={() => toggleStatusSection(status)}
             >
-              <span className="status-section-chevron" aria-hidden="true">
+              <span className="text-[10px] text-muted" aria-hidden="true">
                 {isCollapsed ? "▸" : "▾"}
               </span>
-              <span className="status-section-name">{status}</span>
-              <span className="status-section-count">
+              <span className="text-[13px] font-semibold text-ink">{status}</span>
+              <span className="text-[11px] text-muted">
                 {statusTasks.length}
               </span>
             </button>
@@ -392,7 +398,7 @@ export function TasksPage() {
           {!isCollapsed && (
             <div id={`status-section-panel-${index}`}>
               <DroppableContainer id={status}>
-                <ul className="task-list" aria-label={status}>
+                <ul className="flex flex-col" aria-label={status}>
                   <SortableContext
                     items={statusTasks.map((t) => t.id)}
                     strategy={verticalListSortingStrategy}
@@ -412,7 +418,7 @@ export function TasksPage() {
                     ))}
                   </SortableContext>
                   {statusTasks.length === 0 && (
-                    <li className="task-empty-state">Brak w tym statusie.</li>
+                    <li className="py-4 text-center text-[13px] text-muted">Brak w tym statusie.</li>
                   )}
                 </ul>
               </DroppableContainer>
@@ -432,31 +438,32 @@ export function TasksPage() {
 
   return (
     <>
-      <div
-        className={`tasks-layout${isSidebarCollapsed ? " is-sidebar-collapsed" : ""}`}
-      >
+      <div className={`flex flex-1 ${isSidebarCollapsed ? "" : ""}`}>
         <ProjectsSidebar
           selectedProjectId={selectedProjectId}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={toggleSidebar}
         />
-        <section className="tasks-section" aria-labelledby="tasks-heading">
-          <div className="task-section-heading">
-            <div>
-              <button className="sidebar-open-button" onClick={toggleSidebar}>
+        <section className="flex flex-1 flex-col p-8" aria-labelledby="tasks-heading">
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                className="inline-flex items-center justify-center rounded-md border border-transparent bg-transparent text-[18px] text-[#6c8082] transition-all hover:-translate-y-px cursor-pointer hover:text-ink"
+                onClick={toggleSidebar}
+              >
                 <span aria-hidden="true">{isSidebarCollapsed ? "»" : "«"}</span>
               </button>
-              <h2 id="tasks-heading">Zadania</h2>
-              <span className="task-project-name" title="Aktualny projekt">
+              <h2 id="tasks-heading" className="font-display text-[22px] font-bold tracking-[-0.02em] text-ink">Zadania</h2>
+              <span className="text-[13px] text-muted" title="Aktualny projekt">
                 {selectedProject.name}
               </span>
             </div>
-            <div className="task-heading-actions">
-              <span className="task-count">
+            <div className="flex items-center gap-4">
+              <span className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">
                 {tasks.length} {tasks.length === 1 ? "ZADANIE" : "ZADAŃ"}
               </span>
               <button
-                className="primary-button new-task-button"
+                className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-signal px-[15px] text-[12px] font-semibold text-white transition-all hover:bg-[#b94b31] hover:-translate-y-px disabled:cursor-wait disabled:opacity-70"
                 onClick={openTaskForm}
               >
                 <span aria-hidden="true">+</span>
@@ -466,15 +473,15 @@ export function TasksPage() {
           </div>
 
           {isTasksLoading ? (
-            <p className="task-message" role="status">
+            <p className="py-4 text-[13px] text-muted" role="status">
               Wczytywanie zadań…
             </p>
           ) : tasksError ? (
-            <p className="task-error" role="alert">
+            <p className="py-4 text-[13px] text-[#a23a28]" role="alert">
               {tasksError}
             </p>
           ) : tasks.length === 0 ? (
-            <p className="task-empty-state">Nie ma tu jeszcze zadań.</p>
+            <p className="py-4 text-[13px] text-muted">Nie ma tu jeszcze zadań.</p>
           ) : (
             <DndContext
               sensors={sensors}
@@ -487,14 +494,14 @@ export function TasksPage() {
               {statusSections}
             </DndContext>
           )}
-          <div className="list-add-row">
-            <button className="quiet-button" onClick={openTaskForm}>
+          <div className="mt-4">
+            <button className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-[#c9d5d2] bg-transparent px-[15px] text-[12px] font-semibold text-[#344d52] transition-all hover:bg-[#f8faf8] hover:border-[#9db0ad] disabled:cursor-wait disabled:opacity-70 whitespace-nowrap" onClick={openTaskForm}>
               <span aria-hidden="true">+</span>
               Nowe zadanie
             </button>
           </div>
           {actionError && (
-            <p className="task-error" role="alert">
+            <p className="py-4 text-[13px] text-[#a23a28]" role="alert">
               {actionError}
             </p>
           )}

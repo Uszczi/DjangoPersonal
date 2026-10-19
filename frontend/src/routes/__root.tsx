@@ -15,7 +15,6 @@ import { useAuthStore } from "@/stores/auth";
 import { authGuard } from "@/guards/auth";
 import { rememberedProjectId, rememberProject } from "@/lastProject";
 import { useProjectsStore } from "@/stores/projects";
-import "@/App.css";
 
 export const Route = createRootRoute({
   validateSearch: (search: Record<string, unknown>): { project?: number } => ({
@@ -78,11 +77,11 @@ function App() {
     !projects.some((item) => item.id === project);
 
   return (
-    <div className="app-shell">
+    <div className="flex min-h-screen flex-col bg-canvas">
       <Navbar />
 
-      <div className="workspace">
-        <main className={location.pathname.startsWith("/whiteboard") ? "main-panel whiteboard-main" : "main-panel"}>
+      <div className="flex flex-1 overflow-hidden">
+        <main className={`flex-1 overflow-y-auto ${location.pathname.startsWith("/whiteboard") ? "bg-paper" : ""}`}>
           {projectNotFound ? <NotFoundPage /> : <Outlet />}
         </main>
       </div>

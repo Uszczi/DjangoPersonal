@@ -21,10 +21,10 @@ export function ProjectsSidebar({
 
   if (isCollapsed) {
     return (
-      <aside className="sidebar is-collapsed" aria-label="Nawigacja projektów">
-        <div className="sidebar-heading">
+      <aside className="flex flex-col max-md:hidden bg-deep-ink p-[12px_11px] text-[#edf3f0]" aria-label="Nawigacja projektów">
+        <div className="flex items-end justify-between gap-4">
           <button
-            className="icon-button sidebar-expand"
+            className="inline-flex h-[33px] w-[33px] items-center justify-center rounded-md border border-transparent bg-transparent text-[23px] leading-none text-[#f3f7f3] transition-all hover:-translate-y-px cursor-pointer hover:bg-[#29474d] hover:border-[#6e8b8d]"
             onClick={onToggleCollapse}
             aria-label="Rozwiń panel projektów"
             title="Rozwiń panel projektów"
@@ -37,10 +37,10 @@ export function ProjectsSidebar({
   }
 
   return (
-    <aside className="sidebar" aria-label="Nawigacja projektów">
-      <div className="sidebar-heading">
+    <aside className="flex flex-col bg-deep-ink p-[42px_20px_25px] text-[#edf3f0]" aria-label="Nawigacja projektów">
+      <div className="flex items-end justify-between gap-4">
         <button
-          className="icon-button sidebar-collapse"
+          className="inline-flex h-[33px] w-[33px] items-center justify-center rounded-md border border-transparent bg-transparent text-[23px] leading-none text-[#f3f7f3] transition-all hover:-translate-y-px cursor-pointer hover:bg-[#29474d] hover:border-[#6e8b8d]"
           onClick={onToggleCollapse}
           aria-label="Zwiń panel projektów"
           title="Zwiń panel projektów"
@@ -48,10 +48,10 @@ export function ProjectsSidebar({
           <span aria-hidden="true">«</span>
         </button>
         <div>
-          <h2>Projekty</h2>
+          <h2 className="font-display text-[18px] font-bold tracking-[-0.02em] text-white">Projekty</h2>
         </div>
         <button
-          className="icon-button add-project"
+          className="inline-flex h-[33px] w-[33px] items-center justify-center rounded-md border border-[#456066] bg-transparent text-[23px] leading-none text-[#f3f7f3] transition-all hover:-translate-y-px cursor-pointer hover:bg-[#29474d] hover:border-[#6e8b8d]"
           onClick={() => ShowModal(ProjectEditorModal)}
           aria-label="Nowy projekt"
           title="Nowy projekt"
@@ -60,13 +60,13 @@ export function ProjectsSidebar({
         </button>
       </div>
 
-      <nav className="project-navigation" aria-label="Projekty">
+      <nav className="mt-5 flex flex-col gap-1" aria-label="Projekty">
         {isLoading ? (
-          <p className="sidebar-message">Wczytywanie…</p>
+          <p className="pt-[40px] text-muted">Wczytywanie…</p>
         ) : (
           projects.map((item) => (
             <Link
-              className={`project-link${item.id === selectedProjectId ? " is-selected" : ""}`}
+              className="relative flex min-h-[43px] w-full items-center gap-3 rounded-md bg-transparent px-[10px] text-left font-inherit text-[#c2d0ce] transition-colors hover:bg-[#203f45] hover:text-white aria-[current]:bg-[#28474c] aria-[current]:text-white"
               key={item.id}
               to="/tasks"
               search={{ project: item.id }}
@@ -74,12 +74,12 @@ export function ProjectsSidebar({
               aria-label={item.name}
             >
               <span
-                className={`project-symbol${item.isInbox ? " is-inbox" : ""}`}
+                className={`inline-flex h-[22px] w-[22px] items-center justify-center rounded-full border text-[11px] font-semibold ${item.isInbox ? "border-signal bg-signal text-white" : "border-[#456066] text-[#8fa5a5]"}`}
                 aria-hidden="true"
               >
                 {item.isInbox ? <InboxIcon /> : "·"}
               </span>
-              <span className="project-link-name">{item.name}</span>
+              <span className="truncate text-[13px] font-medium">{item.name}</span>
             </Link>
           ))
         )}
@@ -87,7 +87,7 @@ export function ProjectsSidebar({
 
       <button
         type="button"
-        className="icon-button sidebar-close"
+        className="mt-auto inline-flex h-[33px] w-[33px] items-center justify-center rounded-md border border-transparent bg-transparent text-[23px] leading-none text-[#f3f7f3] transition-all hover:-translate-y-px cursor-pointer hover:bg-[#29474d] hover:border-[#6e8b8d]"
         onClick={onToggleCollapse}
         aria-label="Zamknij panel projektów"
         title="Zamknij panel"
