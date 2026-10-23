@@ -5,6 +5,8 @@ import { DeleteTransactionModal } from "@/components/modals/DeleteTransactionMod
 import { Button, ErrorAlert, Field, Modal, ModalFooter, Select, TextInput } from "@/design-system";
 import { ShowModal } from "@/stores/modal";
 import type { TransactionResponse } from "@/generated/api";
+import { DEFAULT_CATEGORY_ICON } from "@/categoryIcons";
+import { CategoryIcon } from "@/components/CategoryIcon";
 import { useCategoriesStore } from "@/stores/categories";
 import {
   useTransactionsStore,
@@ -64,6 +66,7 @@ export function TransactionEditorModal({
     wallet: String(transaction?.walletId ?? walletId),
   });
   const [formError, setFormError] = useState("");
+  const selectedCategory = categories.find((item) => String(item.id) === form.category);
   const [isSaving, setIsSaving] = useState(false);
 
   function close() {
@@ -162,28 +165,34 @@ export function TransactionEditorModal({
           />
         </Field>
         <Field label="Kategoria">
-          <Select
-            value={form.category}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                category: event.target.value,
-              }))
-            }
-          >
-            <option value="">Bez kategorii</option>
-            {categories
-              .filter(
-                (category) =>
-                  !category.isSystem ||
-                  category.id === transaction?.categoryId,
-              )
-              .map((category) => (
-                <option key={category.id} value={String(category.id)}>
-                  {category.name}
-                </option>
-              ))}
-          </Select>
+          {/* A native select cannot draw icons in its options, so the chosen
+              category's icon sits beside it. */}
+          <div className="flex items-center gap-[10px]">
+            <CategoryIcon icon={selectedCategory?.icon ?? DEFAULT_CATEGORY_ICON} className="size-5 text-ink-soft" />
+            <Select
+              className="flex-1"
+              value={form.category}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  category: event.target.value,
+                }))
+              }
+            >
+              <option value="">Bez kategorii</option>
+              {categories
+                .filter(
+                  (category) =>
+                    !category.isSystem ||
+                    category.id === transaction?.categoryId,
+                )
+                .map((category) => (
+                  <option key={category.id} value={String(category.id)}>
+                    {category.name}
+                  </option>
+                ))}
+            </Select>
+          </div>
         </Field>
         <Field label="Portfel">
           <Select

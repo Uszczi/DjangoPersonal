@@ -31,6 +31,8 @@ class Wallet(Base):
     color: Mapped[str] = mapped_column(
         String(7), default=DEFAULT_WALLET_COLOR, server_default=DEFAULT_WALLET_COLOR
     )
+    #: An optional lucide icon name, shown instead of the colour dot.
+    icon: Mapped[str | None] = mapped_column(String(64), default=None)
 
     user: Mapped[User] = relationship()
 

@@ -301,6 +301,70 @@ describe('Wallets', () => {
     expect(await screen.findByText('Brak portfeli. Utwórz pierwszy portfel.')).toBeInTheDocument()
   })
 
+  test('user can give a new wallet an optional icon', async () => {
+    fetchMock.mockImplementation(
+      routeByUrl({
+        wallets: [],
+        written: { ...personalWalletApi, icon: 'piggy-bank' },
+      }),
+    )
+    const user = userEvent.setup()
+
+    renderApp('/expenses')
+    await screen.findByText('Brak portfeli. Utwórz pierwszy portfel.')
+
+    await user.click(screen.getByRole('button', { name: 'Nowy portfel' }))
+    await user.type(await screen.findByLabelText('Nazwa portfela'), 'Personal')
+    await user.click(screen.getByRole('button', { name: 'Ikona portfela: Bez ikony' }))
+    const popup = await screen.findByRole('group', { name: 'Ikona portfela' })
+    expect(within(popup).getByRole('button', { name: 'Bez ikony' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    await user.click(within(popup).getByRole('button', { name: 'Oszczędności' }))
+    await user.click(screen.getByRole('button', { name: 'Utwórz portfel' }))
+
+    await screen.findByRole('region', { name: 'Portfel: Personal' })
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/wallets/',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ name: 'Personal', color: '#477c7c', icon: 'piggy-bank' }),
+      }),
+    )
+    // The icon stands in for the colour dot next to the wallet's name.
+    await waitFor(() =>
+      expect(switcher().querySelector('svg.lucide-piggy-bank')).not.toBeNull(),
+    )
+  })
+
+  test('user can remove a wallet icon', async () => {
+    fetchMock.mockImplementation(
+      routeByUrl({
+        wallets: [{ ...personalWalletApi, icon: 'piggy-bank' }],
+        written: { ...personalWalletApi, icon: null },
+      }),
+    )
+    const user = userEvent.setup()
+
+    renderApp('/expenses')
+    await user.click(await screen.findByRole('button', { name: 'Edytuj portfel: Personal' }))
+    await user.click(await screen.findByRole('button', { name: 'Ikona portfela: Oszczędności' }))
+    await user.click(await screen.findByRole('button', { name: 'Bez ikony' }))
+    expect(screen.getByRole('button', { name: 'Ikona portfela: Bez ikony' })).toHaveFocus()
+    await user.click(screen.getByRole('button', { name: 'Zapisz zmiany' }))
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/v1/wallets/1/',
+        expect.objectContaining({
+          method: 'PATCH',
+          body: JSON.stringify({ name: 'Personal', icon: null }),
+        }),
+      ),
+    )
+  })
+
   test('the wallet switcher lists every wallet and opens the chosen one', async () => {
     fetchMock.mockImplementation(
       routeByUrl({ wallets: [personalWalletApi, businessWalletApi] }),

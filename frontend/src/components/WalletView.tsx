@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 
+import { CategoryIcon } from "@/components/CategoryIcon";
 import { TransactionEditorModal } from "@/components/modals/TransactionEditorModal";
 import { WalletEditModal } from "@/components/modals/WalletEditModal";
-import { WalletColorDot } from "@/components/WalletColorDot";
+import { WalletMark } from "@/components/WalletMark";
 import { WalletSelect } from "@/components/WalletSelect";
 import { Button, ListRow, ListRowButton, ListRowSubtitle, ListRowTitle } from "@/design-system";
 import { type TransactionResponse, type WalletResponse } from "@/generated/api";
@@ -66,7 +67,7 @@ export function WalletView({ wallet }: { wallet: WalletResponse }) {
           onClick={() => ShowModal(WalletEditModal, { wallet })}
           className="flex min-w-0 items-center gap-2 rounded px-1 text-left hover:bg-wash"
         >
-          <WalletColorDot color={wallet.color} />
+          <WalletMark wallet={wallet} />
           <h2 className="font-display text-[22px] font-bold tracking-[-0.02em] text-ink">
             {wallet.name}
           </h2>
@@ -125,7 +126,14 @@ export function WalletView({ wallet }: { wallet: WalletResponse }) {
                         {transaction.description && (
                           <ListRowSubtitle>{transaction.description}</ListRowSubtitle>
                         )}
-                        {category && <ListRowSubtitle>{category.name}</ListRowSubtitle>}
+                        {category && (
+                          <ListRowSubtitle>
+                            <span className="inline-flex items-center gap-1">
+                              <CategoryIcon icon={category.icon} className="size-3.5" />
+                              {category.name}
+                            </span>
+                          </ListRowSubtitle>
+                        )}
                       </div>
                     </ListRowButton>
                     <span className="font-utility text-[13px] font-semibold text-ink">

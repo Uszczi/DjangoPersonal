@@ -24,6 +24,10 @@ export interface PatchedCategoryRequest {
      *
      */
     name?: string | null;
+    /**
+     *
+     */
+    icon?: string | null;
 }
 
 /**
@@ -44,6 +48,7 @@ export function PatchedCategoryRequestFromJSONTyped(json: any, ignoreDiscriminat
     return {
 
         'name': json['name'] === undefined ? undefined : json['name'] === null ? null : json['name'],
+        'icon': json['icon'] === undefined ? undefined : json['icon'] === null ? null : json['icon'],
     };
 }
 
@@ -59,6 +64,7 @@ export function PatchedCategoryRequestToJSONTyped(value?: PatchedCategoryRequest
     return {
 
         'name': value['name'],
+        'icon': value['icon'],
     };
 }
 

@@ -31,6 +31,10 @@ export interface CategoryResponse {
     /**
      *
      */
+    icon: string;
+    /**
+     *
+     */
     readonly isSystem?: boolean;
 }
 
@@ -40,6 +44,7 @@ export interface CategoryResponse {
 export function instanceOfCategoryResponse(value: object): value is CategoryResponse {
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
+    if (!('icon' in value) || value['icon'] === undefined) return false;
     return true;
 }
 
@@ -55,6 +60,7 @@ export function CategoryResponseFromJSONTyped(json: any, ignoreDiscriminator: bo
 
         'id': json['id'],
         'name': json['name'],
+        'icon': json['icon'],
         'isSystem': json['is_system'] == null ? undefined : json['is_system'],
     };
 }
@@ -71,6 +77,7 @@ export function CategoryResponseToJSONTyped(value?: Omit<CategoryResponse, 'id'|
     return {
 
         'name': value['name'],
+        'icon': value['icon'],
     };
 }
 

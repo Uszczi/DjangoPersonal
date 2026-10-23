@@ -5,6 +5,7 @@ import { Button, ErrorAlert, Field, Modal, ModalFooter, TextInput } from "@/desi
 import type { WalletResponse } from "@/generated/api";
 import { DeleteWalletModal } from "@/components/modals/DeleteWalletModal";
 import { WalletColorPicker } from "@/components/WalletColorPicker";
+import { WalletIconPicker } from "@/components/WalletIconPicker";
 import { balanceError } from "@/money";
 import { ShowModal } from "@/stores/modal";
 import { useWalletsStore } from "@/stores/wallets";
@@ -15,7 +16,7 @@ type WalletEditModalProps = {
 };
 
 /**
- * The edit modal: rename or recolour the wallet and/or state the balance it now holds.
+ * The edit modal: rename, recolour or re-icon the wallet and/or state the balance it now holds.
  * Changing the balance writes a System correction, so the ledger keeps
  * summing to what the user says they have.
  */
@@ -24,6 +25,7 @@ export function WalletEditModal({ wallet, onClose }: WalletEditModalProps) {
 
   const [name, setName] = useState(wallet.name);
   const [color, setColor] = useState(wallet.color);
+  const [icon, setIcon] = useState<string | null>(wallet.icon ?? null);
   const [currentBalance, setCurrentBalance] = useState(wallet.balance ?? "0.00");
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -52,6 +54,7 @@ export function WalletEditModal({ wallet, onClose }: WalletEditModalProps) {
       await updateWallet(wallet, {
         name: trimmedName,
         color,
+        icon,
         currentBalance: currentBalance.trim(),
       });
       onClose();
@@ -80,6 +83,7 @@ export function WalletEditModal({ wallet, onClose }: WalletEditModalProps) {
           />
         </Field>
         <WalletColorPicker value={color} onChange={setColor} />
+        <WalletIconPicker value={icon} onChange={setIcon} />
         <Field label="Stan aktualny">
           <TextInput
             inputMode="decimal"

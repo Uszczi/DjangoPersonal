@@ -11,23 +11,25 @@ from apps.shared.errors import DomainError, NotFound
 from ..contracts import CategoryRequest, PatchedCategoryRequest
 from ._patch import apply_provided
 
-#: The labels every new user starts with, created with their first wallet.
-BASE_CATEGORY_NAMES = [
-    'Jedzenie',
-    'Mieszkanie',
-    'Transport',
-    'Zdrowie',
-    'Rozrywka',
-    'Zakupy',
-    'Rachunki',
-    'Edukacja',
-    'Podróże',
-    'Inne',
-]
+#: The labels every new user starts with, created with their first wallet,
+#: each with its icon.
+BASE_CATEGORIES: dict[str, str] = {
+    'Jedzenie': 'utensils',
+    'Mieszkanie': 'house',
+    'Transport': 'car',
+    'Zdrowie': 'heart-pulse',
+    'Rozrywka': 'gamepad-2',
+    'Zakupy': 'shopping-cart',
+    'Rachunki': 'receipt',
+    'Edukacja': 'graduation-cap',
+    'Podróże': 'plane',
+    'Inne': 'tag',
+}
 
 #: The category balance corrections are filed under: an initial balance on
 #: wallet creation and the difference when the current balance is adjusted.
 SYSTEM_CATEGORY_NAME = 'System'
+SYSTEM_CATEGORY_ICON = 'settings'
 
 
 def seed_base_categories(repository: CategoryRepository, user: User) -> None:
@@ -38,10 +40,10 @@ def seed_base_categories(repository: CategoryRepository, user: User) -> None:
     a category before their first wallet still ends up with the full base set,
     and no seeded name can clash with one they already made.
     """
-    for name in BASE_CATEGORY_NAMES:
+    for name, icon in BASE_CATEGORIES.items():
         if repository.name_taken(category_name_key(name), user=user):
             continue
-        repository.save(CategoryModel(user=user, name=name))
+        repository.save(CategoryModel(user=user, name=name, icon=icon))
     ensure_system_category(repository, user)
 
 
@@ -55,10 +57,13 @@ def ensure_system_category(repository: CategoryRepository, user: User) -> Catego
     system = repository.find_by_name_key(category_name_key(SYSTEM_CATEGORY_NAME), user=user)
     if system is None:
         return repository.save(
-            CategoryModel(user=user, name=SYSTEM_CATEGORY_NAME, is_system=True)
+            CategoryModel(
+                user=user, name=SYSTEM_CATEGORY_NAME, icon=SYSTEM_CATEGORY_ICON, is_system=True
+            )
         )
     if not system.is_system:
         system.is_system = True
+        system.icon = SYSTEM_CATEGORY_ICON
         return repository.save(system)
     return system
 
@@ -137,6 +142,7 @@ class CreateCategory:
         category = CategoryModel(
             user=self.user,
             name=_validate_name(self.categories, data.name, user=self.user),
+            icon=data.icon,
         )
         return _save(self.categories, category)
 

@@ -31,6 +31,10 @@ export interface WalletCreateRequest {
     /**
      *
      */
+    icon?: string | null;
+    /**
+     *
+     */
     initialBalance?: string | null;
 }
 
@@ -54,6 +58,7 @@ export function WalletCreateRequestFromJSONTyped(json: any, ignoreDiscriminator:
 
         'name': json['name'],
         'color': json['color'] == null ? undefined : json['color'],
+        'icon': json['icon'] === undefined ? undefined : json['icon'] === null ? null : json['icon'],
         'initialBalance': json['initial_balance'] === undefined ? undefined : json['initial_balance'] === null ? null : json['initial_balance'],
     };
 }
@@ -71,6 +76,7 @@ export function WalletCreateRequestToJSONTyped(value?: WalletCreateRequest | nul
 
         'name': value['name'],
         'color': value['color'],
+        'icon': value['icon'],
         'initial_balance': value['initialBalance'],
     };
 }

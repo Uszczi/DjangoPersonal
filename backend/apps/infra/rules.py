@@ -98,6 +98,12 @@ def wallet_name_key(name: str) -> str:
     return normalize_wallet_name(name).casefold()
 
 
+#: The icon a category gets when none is chosen (and the one existing
+#: categories were given when the column was added). Icons are lucide icon
+#: names, which the frontend renders from ``lucide-react``.
+DEFAULT_CATEGORY_ICON = 'tag'
+
+
 def normalize_category_name(name: str) -> str:
     return name.strip()
 

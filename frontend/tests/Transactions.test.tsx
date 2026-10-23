@@ -1,6 +1,6 @@
 /** User-visible Transaction flow tests, with HTTP mocked at the network boundary. */
 
-import { cleanup, screen, within } from '@testing-library/react'
+import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
@@ -9,7 +9,7 @@ import { renderApp } from './renderApp'
 // API returns snake_case; the generated client maps it to camelCase.
 const personalWalletApi = { id: 1, name: 'Personal', color: '#477c7c', transaction_count: 2 }
 
-const categoriesApi = [{ id: 5, name: 'Jedzenie' }]
+const categoriesApi = [{ id: 5, name: 'Jedzenie', icon: 'utensils' }]
 
 const coffeeTransactionApi = {
   id: 10,
@@ -100,6 +100,8 @@ describe('Transactions', () => {
     expect(within(firstDay).getByText('8.00')).toBeInTheDocument()
     expect(within(firstDay).getByText('Na rynku')).toBeInTheDocument()
     expect(within(firstDay).getByText('Jedzenie')).toBeInTheDocument()
+    // The category's icon is decorative (and loads lazily), so it is found by lucide's class name.
+    await waitFor(() => expect(firstDay.querySelector('svg.lucide-utensils')).not.toBeNull())
 
     const secondDay = screen.getByRole('list', { name: 'Transakcje z dnia 18 października 2026' })
     expect(within(secondDay).getByText('Obiad')).toBeInTheDocument()
@@ -281,4 +283,5 @@ describe('Transactions', () => {
       expect.objectContaining({ method: 'DELETE' }),
     )
   })
+
 })

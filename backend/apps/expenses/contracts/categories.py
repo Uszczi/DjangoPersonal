@@ -4,7 +4,9 @@
 from apps.shared.base import BaseModel
 from pydantic import Field, field_validator
 
-from apps.infra.rules import normalize_category_name
+from apps.infra.rules import DEFAULT_CATEGORY_ICON, normalize_category_name
+
+from .icons import IconName
 
 
 class _CategoryPayload(BaseModel):
@@ -22,7 +24,7 @@ class _CategoryPayload(BaseModel):
                 raise ValueError('This field may not be blank.')
         return value
 
-    @field_validator('name', check_fields=False)
+    @field_validator('name', 'icon', check_fields=False)
     @classmethod
     def reject_null(cls, value: object) -> object:
         """An explicit ``null`` is not "leave it alone" — it is a 400."""
@@ -33,13 +35,16 @@ class _CategoryPayload(BaseModel):
 
 class CategoryRequest(_CategoryPayload):
     name: str = Field(min_length=1, max_length=100)
+    icon: IconName = DEFAULT_CATEGORY_ICON
 
 
 class PatchedCategoryRequest(_CategoryPayload):
     name: str | None = Field(default=None, min_length=1, max_length=100)
+    icon: IconName | None = None
 
 
 class CategoryResponse(BaseModel):
     id: int = Field(..., json_schema_extra={'readOnly': True})
     name: str
+    icon: str
     is_system: bool = Field(default=False, json_schema_extra={'readOnly': True})

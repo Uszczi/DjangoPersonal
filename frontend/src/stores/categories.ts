@@ -4,7 +4,8 @@ import { api } from "@/api";
 import { type CategoryResponse } from "@/generated/api";
 import { createLoadGuard } from "@/stores/loadGuard";
 
-export type CategoryInput = { name: string };
+/** What the panel's create and edit forms collect. */
+export type CategoryInput = { name: string; icon: string };
 
 /**
  * One comparator for optimistic ordering, so create and rename leave the list
@@ -24,7 +25,7 @@ type CategoriesState = {
   pageError: string;
   loadCategories: () => Promise<void>;
   createCategory: (input: CategoryInput) => Promise<CategoryResponse>;
-  renameCategory: (
+  updateCategory: (
     category: CategoryResponse,
     input: CategoryInput,
   ) => Promise<CategoryResponse>;
@@ -74,7 +75,7 @@ export const useCategoriesStore = create<CategoriesState>((set) => ({
     return created;
   },
 
-  renameCategory: async (category, input) => {
+  updateCategory: async (category, input) => {
     const updated = await api.categoriesPartialUpdate({
       id: category.id,
       patchedCategoryRequest: input,

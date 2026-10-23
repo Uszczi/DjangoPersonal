@@ -9,9 +9,9 @@ import { renderApp } from './renderApp'
 const inbox = { id: 1, name: 'Inbox', description: '', is_inbox: true }
 
 // API returns snake_case; the generated client maps it to camelCase.
-const catJedzenie = { id: 1, name: 'Jedzenie', is_system: false }
-const catTransport = { id: 2, name: 'Transport', is_system: false }
-const catSystem = { id: 3, name: 'System', is_system: true }
+const catJedzenie = { id: 1, name: 'Jedzenie', icon: 'utensils', is_system: false }
+const catTransport = { id: 2, name: 'Transport', icon: 'car', is_system: false }
+const catSystem = { id: 3, name: 'System', icon: 'settings', is_system: true }
 
 function jsonResponse(data: unknown, status = 200) {
   return new Response(status === 204 ? null : JSON.stringify(data), {
@@ -99,7 +99,7 @@ describe('Categories', () => {
       .mockResolvedValueOnce(initial.wallets)
       .mockResolvedValueOnce(initial.projects)
       .mockResolvedValueOnce(initial.categories)
-      .mockResolvedValueOnce(jsonResponse({ id: 9, name: 'Rachunki' }, 201))
+      .mockResolvedValueOnce(jsonResponse({ id: 9, name: 'Rachunki', icon: 'tag' }, 201))
     const user = userEvent.setup()
 
     renderApp('/expenses')
@@ -114,7 +114,7 @@ describe('Categories', () => {
       '/api/v1/categories/',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ name: 'Rachunki' }),
+        body: JSON.stringify({ name: 'Rachunki', icon: 'tag' }),
       }),
     )
   })
@@ -147,7 +147,7 @@ describe('Categories', () => {
       .mockResolvedValueOnce(initial.wallets)
       .mockResolvedValueOnce(initial.projects)
       .mockResolvedValueOnce(initial.categories)
-      .mockResolvedValueOnce(jsonResponse({ id: 1, name: 'Żywność' }))
+      .mockResolvedValueOnce(jsonResponse({ id: 1, name: 'Żywność', icon: 'utensils' }))
     const user = userEvent.setup()
 
     renderApp('/expenses')
@@ -167,7 +167,7 @@ describe('Categories', () => {
       '/api/v1/categories/1/',
       expect.objectContaining({
         method: 'PATCH',
-        body: JSON.stringify({ name: 'Żywność' }),
+        body: JSON.stringify({ name: 'Żywność', icon: 'utensils' }),
       }),
     )
   })
@@ -197,5 +197,145 @@ describe('Categories', () => {
         expect.objectContaining({ method: 'DELETE' }),
       ),
     )
+  })
+
+  test('user can pick a suggested icon for a new category', async () => {
+    const initial = mockInitial([catJedzenie])
+    fetchMock
+      .mockResolvedValueOnce(initial.wallets)
+      .mockResolvedValueOnce(initial.projects)
+      .mockResolvedValueOnce(initial.categories)
+      .mockResolvedValueOnce(jsonResponse({ id: 9, name: 'Kawa', icon: 'coffee' }, 201))
+    const user = userEvent.setup()
+
+    renderApp('/expenses')
+    await screen.findByRole('list', { name: 'Lista kategorii' })
+
+    const trigger = screen.getByRole('button', { name: 'Ikona kategorii: Etykieta' })
+    expect(trigger).toHaveAttribute('aria-expanded', 'false')
+    await user.click(trigger)
+    const popup = await screen.findByRole('group', { name: 'Ikona kategorii' })
+    expect(within(popup).getByRole('button', { name: 'Etykieta' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    await user.click(within(popup).getByRole('button', { name: 'Kawa' }))
+
+    expect(screen.queryByRole('group', { name: 'Ikona kategorii' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ikona kategorii: Kawa' })).toBeInTheDocument()
+
+    await user.type(screen.getByLabelText('Nowa kategoria'), 'Kawa')
+    await user.click(screen.getByRole('button', { name: 'Dodaj' }))
+
+    // The form resets to the default icon for the next category.
+    expect(
+      await screen.findByRole('button', { name: 'Ikona kategorii: Etykieta' }),
+    ).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
+      '/api/v1/categories/',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ name: 'Kawa', icon: 'coffee' }),
+      }),
+    )
+  })
+
+  test('the icon search reaches every lucide icon, by Polish label or English name', async () => {
+    const initial = mockInitial([catJedzenie])
+    fetchMock
+      .mockResolvedValueOnce(initial.wallets)
+      .mockResolvedValueOnce(initial.projects)
+      .mockResolvedValueOnce(initial.categories)
+    const user = userEvent.setup()
+
+    renderApp('/expenses')
+    await screen.findByRole('list', { name: 'Lista kategorii' })
+    await user.click(screen.getByRole('button', { name: 'Ikona kategorii: Etykieta' }))
+    const popup = await screen.findByRole('group', { name: 'Ikona kategorii' })
+    const search = within(popup).getByLabelText('Szukaj ikony')
+    expect(search).toHaveFocus()
+
+    // A Polish suggestion label, typed without diacritics.
+    await user.type(search, 'zwierzeta')
+    expect(within(popup).getByRole('button', { name: 'Zwierzęta' })).toBeInTheDocument()
+
+    // An icon outside the suggestions, by its lucide name.
+    await user.clear(search)
+    await user.type(search, 'rocket')
+    expect(within(popup).getByRole('button', { name: 'rocket' })).toBeInTheDocument()
+
+    await user.clear(search)
+    await user.type(search, 'qqqq')
+    expect(within(popup).getByText('Brak ikon dla „qqqq”.')).toBeInTheDocument()
+  })
+
+  test('Enter in the icon search takes the first hit without submitting the form', async () => {
+    const initial = mockInitial([catJedzenie])
+    fetchMock
+      .mockResolvedValueOnce(initial.wallets)
+      .mockResolvedValueOnce(initial.projects)
+      .mockResolvedValueOnce(initial.categories)
+    const user = userEvent.setup()
+
+    renderApp('/expenses')
+    await screen.findByRole('list', { name: 'Lista kategorii' })
+    await user.type(screen.getByLabelText('Nowa kategoria'), 'Rakiety')
+    await user.click(screen.getByRole('button', { name: 'Ikona kategorii: Etykieta' }))
+    await user.type(await screen.findByLabelText('Szukaj ikony'), 'rocket{Enter}')
+
+    expect(screen.getByRole('button', { name: 'Ikona kategorii: rocket' })).toHaveFocus()
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+  })
+
+  test('user can change a category icon while editing', async () => {
+    const initial = mockInitial([catJedzenie])
+    fetchMock
+      .mockResolvedValueOnce(initial.wallets)
+      .mockResolvedValueOnce(initial.projects)
+      .mockResolvedValueOnce(initial.categories)
+      .mockResolvedValueOnce(jsonResponse({ ...catJedzenie, icon: 'rocket' }))
+    const user = userEvent.setup()
+
+    renderApp('/expenses')
+    await user.click(
+      await screen.findByRole('button', { name: 'Zmień nazwę kategorii: Jedzenie' }),
+    )
+    await user.click(screen.getByRole('button', { name: 'Ikona kategorii: Jedzenie' }))
+    await user.type(await screen.findByLabelText('Szukaj ikony'), 'rocket')
+    await user.click(screen.getByRole('button', { name: 'rocket' }))
+    await user.click(screen.getByRole('button', { name: 'Zapisz' }))
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        4,
+        '/api/v1/categories/1/',
+        expect.objectContaining({
+          method: 'PATCH',
+          body: JSON.stringify({ name: 'Jedzenie', icon: 'rocket' }),
+        }),
+      ),
+    )
+  })
+
+  test('Escape folds the icon popup without cancelling the edit', async () => {
+    const initial = mockInitial([catJedzenie])
+    fetchMock
+      .mockResolvedValueOnce(initial.wallets)
+      .mockResolvedValueOnce(initial.projects)
+      .mockResolvedValueOnce(initial.categories)
+    const user = userEvent.setup()
+
+    renderApp('/expenses')
+    await user.click(
+      await screen.findByRole('button', { name: 'Zmień nazwę kategorii: Jedzenie' }),
+    )
+    await user.click(screen.getByRole('button', { name: 'Ikona kategorii: Jedzenie' }))
+    await screen.findByLabelText('Szukaj ikony')
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByRole('group', { name: 'Ikona kategorii' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ikona kategorii: Jedzenie' })).toHaveFocus()
+    expect(screen.getByLabelText('Nazwa kategorii')).toBeInTheDocument()
   })
 })

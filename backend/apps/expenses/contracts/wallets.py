@@ -8,6 +8,7 @@ from pydantic import Field, field_validator
 
 from apps.infra.rules import DEFAULT_WALLET_COLOR, normalize_wallet_name
 
+from .icons import IconName
 from .transactions import Amount
 
 
@@ -51,6 +52,8 @@ class _WalletPayload(BaseModel):
 class WalletRequest(_WalletPayload):
     name: str = Field(min_length=1, max_length=100)
     color: WalletColor = DEFAULT_WALLET_COLOR
+    #: Optional; without one the UI shows the wallet's colour dot.
+    icon: IconName | None = None
 
 
 class WalletCreateRequest(WalletRequest):
@@ -62,6 +65,8 @@ class WalletCreateRequest(WalletRequest):
 class PatchedWalletRequest(_WalletPayload):
     name: str | None = Field(default=None, min_length=1, max_length=100)
     color: WalletColor | None = None
+    #: An explicit ``null`` removes the icon; leaving it out keeps it.
+    icon: IconName | None = None
     current_balance: Amount | None = None
 
 
@@ -69,6 +74,7 @@ class WalletResponse(BaseModel):
     id: int = Field(..., json_schema_extra={'readOnly': True})
     name: str
     color: str
+    icon: str | None = None
     transaction_count: int = Field(
         default=0, json_schema_extra={'readOnly': True}
     )

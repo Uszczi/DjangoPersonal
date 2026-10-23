@@ -24,6 +24,10 @@ export interface CategoryRequest {
      *
      */
     name: string;
+    /**
+     *
+     */
+    icon?: string;
 }
 
 /**
@@ -45,6 +49,7 @@ export function CategoryRequestFromJSONTyped(json: any, ignoreDiscriminator: boo
     return {
 
         'name': json['name'],
+        'icon': json['icon'] == null ? undefined : json['icon'],
     };
 }
 
@@ -60,6 +65,7 @@ export function CategoryRequestToJSONTyped(value?: CategoryRequest | null, ignor
     return {
 
         'name': value['name'],
+        'icon': value['icon'],
     };
 }
 

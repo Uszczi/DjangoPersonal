@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
-import { WalletColorDot } from "@/components/WalletColorDot";
+import { WalletMark } from "@/components/WalletMark";
 import { useWalletsStore } from "@/stores/wallets";
 
 type WalletSelectProps = {
@@ -28,7 +28,7 @@ export function WalletSelect({ activeWalletId }: WalletSelectProps) {
           aria-current={wallet.id === activeWalletId ? "page" : undefined}
           className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded px-[11px] py-[6px] text-sm text-ink-soft no-underline transition-colors hover:bg-wash hover:text-ink aria-[current]:bg-wash aria-[current]:font-semibold aria-[current]:text-ink"
         >
-          <WalletColorDot color={wallet.color} />
+          <WalletMark wallet={wallet} />
           <span>{wallet.name}</span>
         </Link>
       ))}

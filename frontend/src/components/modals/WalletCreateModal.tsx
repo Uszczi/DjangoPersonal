@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { apiErrorMessage } from "@/apiErrorMessage";
 import { Button, ErrorAlert, Field, Modal, ModalFooter, TextInput } from "@/design-system";
 import { WalletColorPicker } from "@/components/WalletColorPicker";
+import { WalletIconPicker } from "@/components/WalletIconPicker";
 import { balanceError } from "@/money";
 import { useWalletsStore } from "@/stores/wallets";
 import { DEFAULT_WALLET_COLOR } from "@/walletColors";
@@ -17,6 +18,7 @@ export function WalletCreateModal({ onClose }: WalletCreateModalProps) {
 
   const [name, setName] = useState("");
   const [color, setColor] = useState<string>(DEFAULT_WALLET_COLOR);
+  const [icon, setIcon] = useState<string | null>(null);
   const [initialBalance, setInitialBalance] = useState("");
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -42,7 +44,7 @@ export function WalletCreateModal({ onClose }: WalletCreateModalProps) {
     setFormError("");
 
     try {
-      await createWallet({ name: trimmedName, color, initialBalance });
+      await createWallet({ name: trimmedName, color, icon, initialBalance });
       onClose();
     } catch (error) {
       setFormError(await apiErrorMessage(error));
@@ -69,6 +71,7 @@ export function WalletCreateModal({ onClose }: WalletCreateModalProps) {
           />
         </Field>
         <WalletColorPicker value={color} onChange={setColor} />
+        <WalletIconPicker value={icon} onChange={setIcon} />
         <Field label="Stan początkowy">
           <TextInput
             inputMode="decimal"

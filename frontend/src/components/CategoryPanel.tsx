@@ -4,30 +4,35 @@ import { apiErrorMessage } from "@/apiErrorMessage";
 import {
   Button,
   ErrorAlert,
+  IconPicker,
   ListRow,
   ListRowButton,
   ListRowTitle,
   TextInput,
 } from "@/design-system";
+import { CATEGORY_ICON_SUGGESTIONS, DEFAULT_CATEGORY_ICON } from "@/categoryIcons";
+import { CategoryIcon } from "@/components/CategoryIcon";
 import { DeleteCategoryModal } from "@/components/modals/DeleteCategoryModal";
 import { ShowModal } from "@/stores/modal";
 import { useCategoriesStore, type CategoryInput } from "@/stores/categories";
 import type { CategoryResponse } from "@/generated/api";
 
-/** Sidebar panel below the wallets list: inline create, rename, and delete. */
+/** Panel below the wallet: inline create, edit (name and icon), and delete. */
 export function CategoryPanel() {
   const categories = useCategoriesStore((state) => state.categories);
   const isLoading = useCategoriesStore((state) => state.isLoading);
   const pageError = useCategoriesStore((state) => state.pageError);
   const loadCategories = useCategoriesStore((state) => state.loadCategories);
   const createCategory = useCategoriesStore((state) => state.createCategory);
-  const renameCategory = useCategoriesStore((state) => state.renameCategory);
+  const updateCategory = useCategoriesStore((state) => state.updateCategory);
 
   const [newName, setNewName] = useState("");
+  const [newIcon, setNewIcon] = useState(DEFAULT_CATEGORY_ICON);
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
+  const [editIcon, setEditIcon] = useState(DEFAULT_CATEGORY_ICON);
   const [renameError, setRenameError] = useState("");
 
   // The System category holds balance corrections; the user never manages it.
@@ -43,7 +48,7 @@ export function CategoryPanel() {
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const input: CategoryInput = { name: newName.trim() };
+    const input: CategoryInput = { name: newName.trim(), icon: newIcon };
     if (!input.name) return;
 
     setIsCreating(true);
@@ -51,6 +56,7 @@ export function CategoryPanel() {
     try {
       await createCategory(input);
       setNewName("");
+      setNewIcon(DEFAULT_CATEGORY_ICON);
     } catch (error) {
       setCreateError(await apiErrorMessage(error));
     } finally {
@@ -61,6 +67,7 @@ export function CategoryPanel() {
   function startEditing(category: CategoryResponse) {
     setEditingId(category.id);
     setEditName(category.name);
+    setEditIcon(category.icon);
     setRenameError("");
   }
 
@@ -74,11 +81,11 @@ export function CategoryPanel() {
     event: FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
-    const input: CategoryInput = { name: editName.trim() };
+    const input: CategoryInput = { name: editName.trim(), icon: editIcon };
     if (!input.name) return;
 
     try {
-      await renameCategory(category, input);
+      await updateCategory(category, input);
       setEditingId(null);
       setRenameError("");
     } catch (error) {
@@ -103,6 +110,12 @@ export function CategoryPanel() {
         className="mt-4 flex gap-[10px]"
         onSubmit={handleCreate}
       >
+        <IconPicker
+          label="Ikona kategorii"
+          value={newIcon}
+          onChange={setNewIcon}
+          suggestions={CATEGORY_ICON_SUGGESTIONS}
+        />
         <input
           className="min-w-0 flex-1 rounded border border-control-border bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none focus:border-accent focus:ring-[3px] focus:ring-accent/15"
           placeholder="Nowa kategoria"
@@ -148,16 +161,24 @@ export function CategoryPanel() {
                   className="min-w-0 flex-1"
                   onSubmit={(event) => void handleRename(category, event)}
                 >
-                  <TextInput
-                    autoFocus
-                    aria-label="Nazwa kategorii"
-                    maxLength={100}
-                    value={editName}
-                    onChange={(event) => setEditName(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Escape") cancelEditing();
-                    }}
-                  />
+                  <div className="flex gap-[10px]">
+                    <IconPicker
+                      label="Ikona kategorii"
+                      value={editIcon}
+                      onChange={setEditIcon}
+                      suggestions={CATEGORY_ICON_SUGGESTIONS}
+                    />
+                    <TextInput
+                      autoFocus
+                      aria-label="Nazwa kategorii"
+                      maxLength={100}
+                      value={editName}
+                      onChange={(event) => setEditName(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Escape") cancelEditing();
+                      }}
+                    />
+                  </div>
                   {renameError && <ErrorAlert>{renameError}</ErrorAlert>}
                 </form>
               ) : (
@@ -165,6 +186,7 @@ export function CategoryPanel() {
                   aria-label={`Zmień nazwę kategorii: ${category.name}`}
                   onClick={() => startEditing(category)}
                 >
+                  <CategoryIcon icon={category.icon} className="text-ink-soft" />
                   <ListRowTitle>{category.name}</ListRowTitle>
                 </ListRowButton>
               )}

@@ -3,7 +3,7 @@ from typing import Any
 from sqlalchemy import ForeignKey, String, UniqueConstraint, event
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from apps.infra.rules import category_name_key, normalize_category_name
+from apps.infra.rules import DEFAULT_CATEGORY_ICON, category_name_key, normalize_category_name
 
 from .base import Base
 from .user import User
@@ -24,6 +24,11 @@ class Category(Base):
     #: System categories carry balance corrections; the API protects them
     #: from rename and delete and the UI hides them from the manager list.
     is_system: Mapped[bool] = mapped_column(default=False)
+    #: A lucide icon name (``house``, ``heart-pulse``), shown next to the
+    #: category's name.
+    icon: Mapped[str] = mapped_column(
+        String(64), default=DEFAULT_CATEGORY_ICON, server_default=DEFAULT_CATEGORY_ICON
+    )
 
     user: Mapped[User] = relationship()
 

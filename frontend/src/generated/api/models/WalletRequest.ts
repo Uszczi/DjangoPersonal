@@ -28,6 +28,10 @@ export interface WalletRequest {
      *
      */
     color?: string;
+    /**
+     *
+     */
+    icon?: string | null;
 }
 
 /**
@@ -50,6 +54,7 @@ export function WalletRequestFromJSONTyped(json: any, ignoreDiscriminator: boole
 
         'name': json['name'],
         'color': json['color'] == null ? undefined : json['color'],
+        'icon': json['icon'] === undefined ? undefined : json['icon'] === null ? null : json['icon'],
     };
 }
 
@@ -66,6 +71,7 @@ export function WalletRequestToJSONTyped(value?: WalletRequest | null, ignoreDis
 
         'name': value['name'],
         'color': value['color'],
+        'icon': value['icon'],
     };
 }
 

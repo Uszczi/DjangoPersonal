@@ -4,11 +4,21 @@ import { api } from "@/api";
 import { type WalletResponse } from "@/generated/api";
 import { createLoadGuard } from "@/stores/loadGuard";
 
-/** What the create modal collects: a name, a colour and, optionally, an opening balance. */
-export type WalletCreateInput = { name: string; color: string; initialBalance: string };
+/** What the create modal collects: a name, a colour and, optionally, an icon and an opening balance. */
+export type WalletCreateInput = {
+  name: string;
+  color: string;
+  icon: string | null;
+  initialBalance: string;
+};
 
-/** What the edit modal collects: a name, a colour and the balance the wallet now holds. */
-export type WalletUpdateInput = { name: string; color: string; currentBalance: string };
+/** What the edit modal collects: a name, a colour, an icon (`null` for none) and the balance the wallet now holds. */
+export type WalletUpdateInput = {
+  name: string;
+  color: string;
+  icon: string | null;
+  currentBalance: string;
+};
 
 type WalletsState = {
   wallets: WalletResponse[];
@@ -70,11 +80,12 @@ export const useWalletsStore = create<WalletsState>((set) => ({
     }
   },
 
-  createWallet: async ({ name, color, initialBalance }) => {
+  createWallet: async ({ name, color, icon, initialBalance }) => {
     const createdWallet = await api.walletsCreate({
       walletCreateRequest: {
         name,
         color,
+        icon: icon ?? undefined,
         // Omitted when blank, so a wallet without an opening balance sends
         // exactly the name it always did.
         initialBalance: initialBalance.trim() || undefined,
@@ -91,12 +102,14 @@ export const useWalletsStore = create<WalletsState>((set) => ({
     return createdWallet;
   },
 
-  updateWallet: async (wallet, { name, color, currentBalance }) => {
+  updateWallet: async (wallet, { name, color, icon, currentBalance }) => {
     const updatedWallet = await api.walletsPartialUpdate({
       id: wallet.id,
       patchedWalletRequest: {
         name,
         color: color === wallet.color ? undefined : color,
+        // Unchanged is left out; a removed icon is sent as an explicit null.
+        icon: icon === (wallet.icon ?? null) ? undefined : icon,
         // Only send the balance when it actually changed, so a plain rename
         // never writes a System correction.
         currentBalance:

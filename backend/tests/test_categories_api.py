@@ -3,6 +3,8 @@
 from typing import Any
 from http import HTTPStatus
 
+import pytest
+
 from sqlalchemy.orm import Session
 
 from apps.infra.factories import CategoryFactory
@@ -103,6 +105,52 @@ def test_patch_with_null_name_is_rejected(post_json: Any, patch_json: Any) -> No
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
+def test_category_gets_the_default_icon_when_none_is_chosen(post_json: Any) -> None:
+    response = post_json('/api/v1/categories/', {'name': 'Plain'})
+
+    assert response.json()['icon'] == 'tag'
+
+
+def test_category_can_be_created_with_an_icon(post_json: Any) -> None:
+    response = post_json('/api/v1/categories/', {'name': 'Kawa', 'icon': 'coffee'})
+
+    assert response.status_code == HTTPStatus.CREATED
+    assert response.json()['icon'] == 'coffee'
+
+
+def test_category_icon_can_be_changed_alone(post_json: Any, patch_json: Any) -> None:
+    created = post_json('/api/v1/categories/', {'name': 'Kawa'}).json()
+
+    response = patch_json(f"/api/v1/categories/{created['id']}/", {'icon': 'coffee'})
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {**created, 'icon': 'coffee'}
+
+
+def test_any_lucide_shaped_icon_name_is_accepted(post_json: Any) -> None:
+    response = post_json(
+        '/api/v1/categories/', {'name': 'Rakiety', 'icon': 'triangles-centerline-dashed-horizontal'}
+    )
+
+    assert response.status_code == HTTPStatus.CREATED
+    assert response.json()['icon'] == 'triangles-centerline-dashed-horizontal'
+
+
+@pytest.mark.parametrize('icon', ['', 'Rocket', 'rocket ship', 'rocket--ship', '-rocket', 'x' * 65])
+def test_malformed_category_icon_is_rejected(post_json: Any, icon: str) -> None:
+    response = post_json('/api/v1/categories/', {'name': 'Kawa', 'icon': icon})
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_null_category_icon_is_rejected(post_json: Any, patch_json: Any) -> None:
+    created = post_json('/api/v1/categories/', {'name': 'Kept'})
+
+    response = patch_json(f"/api/v1/categories/{created.json()['id']}/", {'icon': None})
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
 def test_category_not_found(api_client: Any) -> None:
     response = api_client.get('/api/v1/categories/9999/')
 
@@ -145,15 +193,23 @@ def test_delete_category(post_json: Any, api_client: Any) -> None:
 
 
 def test_registering_seeds_base_categories_and_system(post_json: Any, anon_client: Any) -> None:
-    from apps.expenses.handlers.categories import BASE_CATEGORY_NAMES, SYSTEM_CATEGORY_NAME
+    from apps.expenses.handlers.categories import (
+        BASE_CATEGORIES,
+        SYSTEM_CATEGORY_ICON,
+        SYSTEM_CATEGORY_NAME,
+    )
 
-    assert len(BASE_CATEGORY_NAMES) == 10
+    assert len(BASE_CATEGORIES) == 10
     client = _register(anon_client)
 
     listing = client.get('/api/v1/categories/').json()
 
     assert len(listing) == 11
-    assert {c['name'] for c in listing} == set(BASE_CATEGORY_NAMES) | {SYSTEM_CATEGORY_NAME}
+    assert {c['name'] for c in listing} == set(BASE_CATEGORIES) | {SYSTEM_CATEGORY_NAME}
+    assert {c['name']: c['icon'] for c in listing} == {
+        **BASE_CATEGORIES,
+        SYSTEM_CATEGORY_NAME: SYSTEM_CATEGORY_ICON,
+    }
 
     system = next(c for c in listing if c['name'] == SYSTEM_CATEGORY_NAME)
     assert system['is_system'] is True

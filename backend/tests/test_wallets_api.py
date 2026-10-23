@@ -253,6 +253,39 @@ def test_wallet_color_must_be_a_hex_color(post_json: Any, patch_json: Any) -> No
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
+def test_new_wallet_has_no_icon(post_json: Any) -> None:
+    response = post_json('/api/v1/wallets/', {'name': 'Personal'})
+
+    assert response.json()['icon'] is None
+
+
+def test_create_wallet_with_icon(post_json: Any) -> None:
+    response = post_json('/api/v1/wallets/', {'name': 'Personal', 'icon': 'piggy-bank'})
+
+    assert response.status_code == HTTPStatus.CREATED
+    assert response.json()['icon'] == 'piggy-bank'
+
+
+def test_wallet_icon_can_be_set_kept_and_removed(post_json: Any, patch_json: Any) -> None:
+    wallet_id = post_json('/api/v1/wallets/', {'name': 'Personal'}).json()['id']
+    url = f'/api/v1/wallets/{wallet_id}/'
+
+    set_icon = patch_json(url, {'icon': 'wallet'})
+    renamed = patch_json(url, {'name': 'Renamed'})
+    removed = patch_json(url, {'icon': None})
+
+    assert set_icon.json()['icon'] == 'wallet'
+    assert renamed.json()['icon'] == 'wallet'
+    assert removed.status_code == HTTPStatus.OK
+    assert removed.json()['icon'] is None
+
+
+def test_wallet_icon_must_be_an_icon_name(post_json: Any) -> None:
+    for icon in ['', 'Wallet', 'piggy bank', 'x' * 65]:
+        response = post_json('/api/v1/wallets/', {'name': f'Bad {icon}', 'icon': icon})
+        assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, icon
+
+
 def test_wallet_not_found(api_client: Any) -> None:
     response = api_client.get('/api/v1/wallets/9999/')
 
