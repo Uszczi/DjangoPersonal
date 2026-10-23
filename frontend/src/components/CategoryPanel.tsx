@@ -9,7 +9,7 @@ import {
   ListRowTitle,
   TextInput,
 } from "@/design-system";
-import { DeleteCategoryModal } from "@/components/DeleteCategoryModal";
+import { DeleteCategoryModal } from "@/components/modals/DeleteCategoryModal";
 import { ShowModal } from "@/stores/modal";
 import { useCategoriesStore, type CategoryInput } from "@/stores/categories";
 import type { CategoryResponse } from "@/generated/api";

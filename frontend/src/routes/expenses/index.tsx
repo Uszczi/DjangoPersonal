@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 
-import { WalletCreateModal } from "@/components/WalletCreateModal";
+import { WalletCreateModal } from "@/components/modals/WalletCreateModal";
 import { Button } from "@/design-system";
 import { WalletList } from "@/components/WalletList";
 import { WalletSelect } from "@/components/WalletSelect";

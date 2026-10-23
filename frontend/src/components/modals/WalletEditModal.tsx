@@ -3,7 +3,7 @@ import { useState, type FormEvent } from "react";
 import { apiErrorMessage } from "@/apiErrorMessage";
 import { Button, ErrorAlert, Field, Modal, ModalFooter, TextInput } from "@/design-system";
 import type { WalletResponse } from "@/generated/api";
-import { DeleteWalletModal } from "@/components/DeleteWalletModal";
+import { DeleteWalletModal } from "@/components/modals/DeleteWalletModal";
 import { WalletColorPicker } from "@/components/WalletColorPicker";
 import { balanceError } from "@/money";
 import { ShowModal } from "@/stores/modal";

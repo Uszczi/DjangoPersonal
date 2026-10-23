@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
-import { DeleteProjectModal } from "@/components/DeleteProjectModal";
+import { DeleteProjectModal } from "@/components/modals/DeleteProjectModal";
 import { Button, ErrorAlert, Field, Modal, ModalFooter, Select, TextArea, TextInput } from "@/design-system";
 import type { ProjectResponse } from "@/generated/api";
 import { ShowModal } from "@/stores/modal";

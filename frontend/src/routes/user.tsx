@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { Button } from "@/design-system";
-import { DeleteAccountModal } from "@/components/DeleteAccountModal";
+import { DeleteAccountModal } from "@/components/modals/DeleteAccountModal";
 import { useAuthStore } from "@/stores/auth";
 import { ShowModal } from "@/stores/modal";
 

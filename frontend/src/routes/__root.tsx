@@ -1,7 +1,7 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { useEffect } from "react";
 
-import { ModalHost } from "@/components/ModalHost";
+import { ModalHost } from "@/components/modals/ModalHost";
 import { Navbar } from "@/components/Navbar";
 import { authGuard } from "@/guards/auth";
 import { useAuthStore } from "@/stores/auth";

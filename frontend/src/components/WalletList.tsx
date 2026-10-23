@@ -1,5 +1,5 @@
 import { WalletColorDot } from "@/components/WalletColorDot";
-import { WalletEditModal } from "@/components/WalletEditModal";
+import { WalletEditModal } from "@/components/modals/WalletEditModal";
 import { ListRow, ListRowButton, ListRowSubtitle, ListRowTitle } from "@/design-system";
 import type { WalletResponse } from "@/generated/api";
 import { ShowModal } from "@/stores/modal";

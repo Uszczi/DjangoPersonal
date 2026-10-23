@@ -5,6 +5,7 @@ export { Drawer } from "./components/Drawer";
 export { ErrorAlert } from "./components/ErrorAlert";
 export { Field } from "./components/Field";
 export { IconButton } from "./components/IconButton";
+export { InboxIcon } from "./icons/InboxIcon";
 export { ListRow, ListRowButton, ListRowSubtitle, ListRowTitle } from "./components/ListRow";
 export { Modal, ModalFooter } from "./components/Modal";
 export { DeleteButton } from "./components/DeleteButton";

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
-import { DeleteTaskModal } from "@/components/DeleteTaskModal";
+import { DeleteTaskModal } from "@/components/modals/DeleteTaskModal";
 import { Button, ErrorAlert, Field, Modal, ModalFooter, Select, TextArea } from "@/design-system";
 import { ShowModal } from "@/stores/modal";
 import type { TaskResponse } from "@/generated/api";

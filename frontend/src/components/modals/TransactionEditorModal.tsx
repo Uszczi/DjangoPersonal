@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
-import { DeleteTransactionModal } from "@/components/DeleteTransactionModal";
+import { DeleteTransactionModal } from "@/components/modals/DeleteTransactionModal";
 import { Button, ErrorAlert, Field, Modal, ModalFooter, Select, TextInput } from "@/design-system";
 import { ShowModal } from "@/stores/modal";
 import type { TransactionResponse } from "@/generated/api";

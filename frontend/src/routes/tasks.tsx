@@ -36,9 +36,9 @@ import {
   ListRowSubtitle,
   ListRowTitle,
 } from "@/design-system";
-import { ProjectEditorModal } from "@/components/ProjectEditorModal";
+import { ProjectEditorModal } from "@/components/modals/ProjectEditorModal";
 import { ProjectNavList, ProjectsSidebar } from "@/components/ProjectsSidebar";
-import { TaskEditorModal } from "@/components/TaskEditorModal";
+import { TaskEditorModal } from "@/components/modals/TaskEditorModal";
 import { rememberedProjectId, rememberProject } from "@/lastProject";
 import { validateProjectSearch } from "@/projectSearch";
 import { useAuthStore } from "@/stores/auth";

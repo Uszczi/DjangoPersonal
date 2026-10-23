@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 
-import { InboxIcon } from "@/components/InboxIcon";
-import { ProjectEditorModal } from "@/components/ProjectEditorModal";
+import { ProjectEditorModal } from "@/components/modals/ProjectEditorModal";
+import { InboxIcon } from "@/design-system";
 import { ShowModal } from "@/stores/modal";
 import { useProjectsStore } from "@/stores/projects";
 

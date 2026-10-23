@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { useEffect } from "react";
 
-import { TransactionEditorModal } from "@/components/TransactionEditorModal";
+import { TransactionEditorModal } from "@/components/modals/TransactionEditorModal";
 import { Button, ListRow, ListRowButton, ListRowSubtitle, ListRowTitle } from "@/design-system";
 import { WalletSelect } from "@/components/WalletSelect";
 import { type TransactionResponse } from "@/generated/api";

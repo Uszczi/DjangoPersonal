@@ -25,7 +25,7 @@ import {
   ListRowSubtitle,
   ListRowTitle,
 } from "@/design-system";
-import { ProjectEditorModal } from "@/components/ProjectEditorModal";
+import { ProjectEditorModal } from "@/components/modals/ProjectEditorModal";
 import { ShowModal } from "@/stores/modal";
 import { useProjectsStore } from "@/stores/projects";
 import { api } from "@/api";
