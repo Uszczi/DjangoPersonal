@@ -82,7 +82,9 @@ function App() {
 
       <div className="flex flex-1 overflow-hidden">
         <main className={`flex-1 overflow-y-auto ${location.pathname.startsWith("/whiteboard") ? "bg-paper" : ""}`}>
-          {projectNotFound ? <NotFoundPage /> : <Outlet />}
+          <div className="mx-auto w-full max-w-app">
+            {projectNotFound ? <NotFoundPage /> : <Outlet />}
+          </div>
         </main>
       </div>
 
