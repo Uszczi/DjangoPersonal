@@ -1,1168 +1,1066 @@
 openapi: 3.1.0
 info:
   title: DjangoPersonal API
-  version: 1.0.0
   description: API for DjangoPersonal projects, tasks, and expenses.
+  version: 1.0.0
 paths:
   /api/v1/auth/register/:
     post:
-      operationId: auth_register
-      summary: Register
-      parameters: []
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthResponse'
       tags:
       - personal
+      summary: Register
+      operationId: auth_register
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/RegisterRequest'
         required: true
-  /api/v1/auth/login/:
-    post:
-      operationId: auth_login
-      summary: Login
-      parameters: []
       responses:
-        '200':
-          description: OK
+        '201':
+          description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LoginResponse'
+                $ref: '#/components/schemas/AuthResponse'
+  /api/v1/auth/login/:
+    post:
       tags:
       - personal
+      summary: Login
+      operationId: auth_login
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/LoginRequest'
         required: true
-  /api/v1/auth/refresh/:
-    post:
-      operationId: auth_refresh
-      summary: Refresh
-      parameters: []
       responses:
         '200':
-          description: OK
+          description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RefreshResponse'
+                $ref: '#/components/schemas/LoginResponse'
+  /api/v1/auth/refresh/:
+    post:
       tags:
       - personal
+      summary: Refresh
+      operationId: auth_refresh
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/RefreshRequest'
         required: true
-  /api/v1/auth/me/:
-    get:
-      operationId: auth_me
-      summary: Me
-      parameters: []
       responses:
         '200':
-          description: OK
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+  /api/v1/auth/me/:
+    get:
+      tags:
+      - personal
+      summary: Me
+      operationId: auth_me
+      responses:
+        '200':
+          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserResponse'
-      tags:
-      - personal
       security:
       - JWTAuth: []
     delete:
-      operationId: auth_destroy
-      summary: Destroy
-      parameters: []
-      responses:
-        '204':
-          description: No Content
       tags:
       - personal
+      summary: Destroy
+      operationId: auth_destroy
+      responses:
+        '204':
+          description: Successful Response
       security:
       - JWTAuth: []
   /api/v1/projects/:
     get:
-      operationId: projects_list
+      tags:
+      - personal
       summary: List Projects
-      parameters: []
+      operationId: projects_list
       responses:
         '200':
-          description: OK
+          description: Successful Response
           content:
             application/json:
               schema:
                 items:
                   $ref: '#/components/schemas/ProjectResponse'
-                title: Response
                 type: array
-      tags:
-      - personal
+                title: Response Projects List
       security:
       - JWTAuth: []
     post:
-      operationId: projects_create
-      summary: Create Project
-      parameters: []
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProjectResponse'
       tags:
       - personal
+      summary: Create Project
+      operationId: projects_create
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ProjectRequest'
         required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
       security:
       - JWTAuth: []
   /api/v1/projects/{id}/:
     get:
-      operationId: projects_retrieve
-      summary: Get Project
-      parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
-        required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProjectResponse'
       tags:
       - personal
+      summary: Get Project
+      operationId: projects_retrieve
       security:
       - JWTAuth: []
-    put:
-      operationId: projects_update
-      summary: Replace Project
       parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
+      - name: id
+        in: path
         required: true
+        schema:
+          type: integer
+          title: Id
       responses:
         '200':
-          description: OK
+          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProjectResponse'
+    put:
       tags:
       - personal
+      summary: Replace Project
+      operationId: projects_update
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ProjectRequest'
-        required: true
-      security:
-      - JWTAuth: []
-    patch:
-      operationId: projects_partial_update
-      summary: Update Project
-      parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
-        required: true
       responses:
         '200':
-          description: OK
+          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProjectResponse'
+    patch:
       tags:
       - personal
+      summary: Update Project
+      operationId: projects_partial_update
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/PatchedProjectRequest'
-        required: true
-      security:
-      - JWTAuth: []
-    delete:
-      operationId: projects_destroy
-      summary: Delete Project
-      parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
-        required: true
       responses:
-        '204':
-          description: No Content
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
+    delete:
       tags:
       - personal
+      summary: Delete Project
+      operationId: projects_destroy
       security:
       - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      responses:
+        '204':
+          description: Successful Response
   /api/v1/tasks/:
     get:
-      operationId: tasks_list
+      tags:
+      - personal
       summary: List Tasks
+      operationId: tasks_list
+      security:
+      - JWTAuth: []
       parameters:
-      - in: query
-        name: project
+      - name: project
+        in: query
+        required: false
         schema:
           anyOf:
           - type: integer
           - type: 'null'
           title: Project
+      - name: all
+        in: query
         required: false
-      - in: query
-        name: all
         schema:
+          type: boolean
           default: false
           title: All
-          type: boolean
-        required: false
       responses:
         '200':
-          description: OK
+          description: Successful Response
           content:
             application/json:
               schema:
+                type: array
                 items:
                   $ref: '#/components/schemas/TaskResponse'
-                title: Response
-                type: array
+                title: Response Tasks List
+    post:
       tags:
       - personal
+      summary: Create Task
+      operationId: tasks_create
       security:
       - JWTAuth: []
-    post:
-      operationId: tasks_create
-      summary: Create Task
-      parameters: []
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TaskResponse'
-      tags:
-      - personal
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/TaskCreateRequest'
-        required: true
-      security:
-      - JWTAuth: []
-  /api/v1/tasks/{id}/:
-    patch:
-      operationId: tasks_partial_update
-      summary: Update Task
-      parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
-        required: true
       responses:
-        '200':
-          description: OK
+        '201':
+          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TaskResponse'
+  /api/v1/tasks/{id}/:
+    patch:
       tags:
       - personal
+      summary: Update Task
+      operationId: tasks_partial_update
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/PatchedTaskUpdateRequest'
-        required: true
-      security:
-      - JWTAuth: []
-    delete:
-      operationId: tasks_destroy
-      summary: Delete Task
-      parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
-        required: true
       responses:
-        '204':
-          description: No Content
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+    delete:
       tags:
       - personal
+      summary: Delete Task
+      operationId: tasks_destroy
       security:
       - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      responses:
+        '204':
+          description: Successful Response
   /api/v1/time-entries/:
     get:
-      operationId: time_entries_list
+      tags:
+      - personal
       summary: List Time Entries
+      operationId: time_entries_list
+      security:
+      - JWTAuth: []
       parameters:
-      - in: query
-        name: task
+      - name: task
+        in: query
+        required: false
         schema:
           anyOf:
           - type: integer
           - type: 'null'
           title: Task
+      - name: date
+        in: query
         required: false
-      - in: query
-        name: date
         schema:
           anyOf:
-          - format: date
-            type: string
+          - type: string
+            format: date
           - type: 'null'
           title: Date
-        required: false
       responses:
         '200':
-          description: OK
+          description: Successful Response
           content:
             application/json:
               schema:
+                type: array
                 items:
                   $ref: '#/components/schemas/TimeEntryResponse'
-                title: Response
-                type: array
+                title: Response Time Entries List
+    post:
       tags:
       - personal
+      summary: Create Time Entry
+      operationId: time_entries_create
       security:
       - JWTAuth: []
-    post:
-      operationId: time_entries_create
-      summary: Create Time Entry
-      parameters: []
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TimeEntryResponse'
-      tags:
-      - personal
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/TimeEntryCreateRequest'
-        required: true
-      security:
-      - JWTAuth: []
-  /api/v1/time-entries/{id}/:
-    patch:
-      operationId: time_entries_partial_update
-      summary: Update Time Entry
-      parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
-        required: true
       responses:
-        '200':
-          description: OK
+        '201':
+          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TimeEntryResponse'
+  /api/v1/time-entries/{id}/:
+    patch:
       tags:
       - personal
+      summary: Update Time Entry
+      operationId: time_entries_partial_update
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/PatchedTimeEntryRequest'
-        required: true
-      security:
-      - JWTAuth: []
-    delete:
-      operationId: time_entries_destroy
-      summary: Delete Time Entry
-      parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
-        required: true
-      responses:
-        '204':
-          description: No Content
-      tags:
-      - personal
-      security:
-      - JWTAuth: []
-  /api/v1/timer/start/:
-    post:
-      operationId: timer_start
-      summary: Start Timer
-      parameters: []
       responses:
         '200':
-          description: OK
+          description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TimerResponse'
+                $ref: '#/components/schemas/TimeEntryResponse'
+    delete:
       tags:
       - personal
+      summary: Delete Time Entry
+      operationId: time_entries_destroy
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      responses:
+        '204':
+          description: Successful Response
+  /api/v1/timer/start/:
+    post:
+      tags:
+      - personal
+      summary: Start Timer
+      operationId: timer_start
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/TimerStartRequest'
         required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimerResponse'
       security:
       - JWTAuth: []
   /api/v1/timer/:
     get:
-      operationId: timer_retrieve
+      tags:
+      - personal
       summary: Get Timer
-      parameters: []
+      operationId: timer_retrieve
       responses:
         '200':
-          description: OK
+          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TimerResponse'
-      tags:
-      - personal
       security:
       - JWTAuth: []
   /api/v1/timer/stop/:
     post:
-      operationId: timer_stop
+      tags:
+      - personal
       summary: Stop Timer
-      parameters: []
+      operationId: timer_stop
       responses:
         '200':
-          description: OK
+          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TimerResponse'
-      tags:
-      - personal
       security:
       - JWTAuth: []
   /api/v1/whiteboards/:
     get:
-      operationId: whiteboards_list
+      tags:
+      - personal
       summary: List Whiteboards
-      parameters: []
+      operationId: whiteboards_list
       responses:
         '200':
-          description: OK
+          description: Successful Response
           content:
             application/json:
               schema:
                 items:
                   $ref: '#/components/schemas/WhiteboardResponse'
-                title: Response
                 type: array
-      tags:
-      - personal
+                title: Response Whiteboards List
       security:
       - JWTAuth: []
     post:
-      operationId: whiteboards_create
-      summary: Create Whiteboard
-      parameters: []
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WhiteboardResponse'
       tags:
       - personal
+      summary: Create Whiteboard
+      operationId: whiteboards_create
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/WhiteboardRequest'
         required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WhiteboardResponse'
       security:
       - JWTAuth: []
   /api/v1/whiteboards/{id}/:
     get:
-      operationId: whiteboards_retrieve
-      summary: Get Whiteboard
-      parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
-        required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WhiteboardResponse'
       tags:
       - personal
+      summary: Get Whiteboard
+      operationId: whiteboards_retrieve
       security:
       - JWTAuth: []
-    patch:
-      operationId: whiteboards_partial_update
-      summary: Update Whiteboard
       parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
+      - name: id
+        in: path
         required: true
+        schema:
+          type: integer
+          title: Id
       responses:
         '200':
-          description: OK
+          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/WhiteboardResponse'
+    patch:
       tags:
       - personal
+      summary: Update Whiteboard
+      operationId: whiteboards_partial_update
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/PatchedWhiteboardRequest'
-        required: true
-      security:
-      - JWTAuth: []
-    delete:
-      operationId: whiteboards_destroy
-      summary: Delete Whiteboard
-      parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
-        required: true
-      responses:
-        '204':
-          description: No Content
-      tags:
-      - personal
-      security:
-      - JWTAuth: []
-  /api/v1/wallets/:
-    get:
-      operationId: wallets_list
-      summary: List Wallets
-      parameters: []
       responses:
         '200':
-          description: OK
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WhiteboardResponse'
+    delete:
+      tags:
+      - personal
+      summary: Delete Whiteboard
+      operationId: whiteboards_destroy
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      responses:
+        '204':
+          description: Successful Response
+  /api/v1/wallets/:
+    get:
+      tags:
+      - personal
+      summary: List Wallets
+      operationId: wallets_list
+      responses:
+        '200':
+          description: Successful Response
           content:
             application/json:
               schema:
                 items:
                   $ref: '#/components/schemas/WalletResponse'
-                title: Response
                 type: array
-      tags:
-      - personal
+                title: Response Wallets List
       security:
       - JWTAuth: []
     post:
-      operationId: wallets_create
-      summary: Create Wallet
-      parameters: []
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WalletResponse'
       tags:
       - personal
+      summary: Create Wallet
+      operationId: wallets_create
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/WalletCreateRequest'
         required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletResponse'
       security:
       - JWTAuth: []
   /api/v1/wallets/{id}/:
     get:
-      operationId: wallets_retrieve
-      summary: Get Wallet
-      parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
-        required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WalletResponse'
       tags:
       - personal
+      summary: Get Wallet
+      operationId: wallets_retrieve
       security:
       - JWTAuth: []
-    put:
-      operationId: wallets_update
-      summary: Replace Wallet
       parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
+      - name: id
+        in: path
         required: true
+        schema:
+          type: integer
+          title: Id
       responses:
         '200':
-          description: OK
+          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/WalletResponse'
+    put:
       tags:
       - personal
+      summary: Replace Wallet
+      operationId: wallets_update
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/WalletRequest'
-        required: true
-      security:
-      - JWTAuth: []
-    patch:
-      operationId: wallets_partial_update
-      summary: Update Wallet
-      parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
-        required: true
       responses:
         '200':
-          description: OK
+          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/WalletResponse'
+    patch:
       tags:
       - personal
+      summary: Update Wallet
+      operationId: wallets_partial_update
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/PatchedWalletRequest'
-        required: true
-      security:
-      - JWTAuth: []
-    delete:
-      operationId: wallets_destroy
-      summary: Delete Wallet
-      parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
-        required: true
-      responses:
-        '204':
-          description: No Content
-      tags:
-      - personal
-      security:
-      - JWTAuth: []
-  /api/v1/categories/:
-    get:
-      operationId: categories_list
-      summary: List Categories
-      parameters: []
       responses:
         '200':
-          description: OK
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletResponse'
+    delete:
+      tags:
+      - personal
+      summary: Delete Wallet
+      operationId: wallets_destroy
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      responses:
+        '204':
+          description: Successful Response
+  /api/v1/categories/:
+    get:
+      tags:
+      - personal
+      summary: List Categories
+      operationId: categories_list
+      responses:
+        '200':
+          description: Successful Response
           content:
             application/json:
               schema:
                 items:
                   $ref: '#/components/schemas/CategoryResponse'
-                title: Response
                 type: array
-      tags:
-      - personal
+                title: Response Categories List
       security:
       - JWTAuth: []
     post:
-      operationId: categories_create
-      summary: Create Category
-      parameters: []
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CategoryResponse'
       tags:
       - personal
+      summary: Create Category
+      operationId: categories_create
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CategoryRequest'
         required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
       security:
       - JWTAuth: []
   /api/v1/categories/{id}/:
     get:
-      operationId: categories_retrieve
-      summary: Get Category
-      parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
-        required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CategoryResponse'
       tags:
       - personal
+      summary: Get Category
+      operationId: categories_retrieve
       security:
       - JWTAuth: []
-    put:
-      operationId: categories_update
-      summary: Replace Category
       parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
+      - name: id
+        in: path
         required: true
+        schema:
+          type: integer
+          title: Id
       responses:
         '200':
-          description: OK
+          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CategoryResponse'
+    put:
       tags:
       - personal
+      summary: Replace Category
+      operationId: categories_update
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CategoryRequest'
-        required: true
-      security:
-      - JWTAuth: []
-    patch:
-      operationId: categories_partial_update
-      summary: Update Category
-      parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
-        required: true
       responses:
         '200':
-          description: OK
+          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CategoryResponse'
+    patch:
       tags:
       - personal
+      summary: Update Category
+      operationId: categories_partial_update
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/PatchedCategoryRequest'
-        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+    delete:
+      tags:
+      - personal
+      summary: Delete Category
+      operationId: categories_destroy
       security:
       - JWTAuth: []
-    delete:
-      operationId: categories_destroy
-      summary: Delete Category
       parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
+      - name: id
+        in: path
         required: true
+        schema:
+          type: integer
+          title: Id
       responses:
         '204':
-          description: No Content
-      tags:
-      - personal
-      security:
-      - JWTAuth: []
+          description: Successful Response
   /api/v1/transactions/:
     get:
-      operationId: transactions_list
+      tags:
+      - personal
       summary: List Transactions
+      operationId: transactions_list
+      security:
+      - JWTAuth: []
       parameters:
-      - in: query
-        name: wallet
-        schema:
-          title: Wallet
-          type: integer
+      - name: wallet
+        in: query
         required: true
+        schema:
+          type: integer
+          title: Wallet
       responses:
         '200':
-          description: OK
+          description: Successful Response
           content:
             application/json:
               schema:
+                type: array
                 items:
                   $ref: '#/components/schemas/TransactionResponse'
-                title: Response
-                type: array
+                title: Response Transactions List
+    post:
       tags:
       - personal
+      summary: Create Transaction
+      operationId: transactions_create
       security:
       - JWTAuth: []
-    post:
-      operationId: transactions_create
-      summary: Create Transaction
-      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
       responses:
         '201':
-          description: Created
+          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TransactionResponse'
-      tags:
-      - personal
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TransactionRequest'
-        required: true
-      security:
-      - JWTAuth: []
   /api/v1/transactions/{id}/:
     get:
-      operationId: transactions_retrieve
-      summary: Get Transaction
-      parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
-        required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TransactionResponse'
       tags:
       - personal
+      summary: Get Transaction
+      operationId: transactions_retrieve
       security:
       - JWTAuth: []
-    put:
-      operationId: transactions_update
-      summary: Replace Transaction
       parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
+      - name: id
+        in: path
         required: true
+        schema:
+          type: integer
+          title: Id
       responses:
         '200':
-          description: OK
+          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TransactionResponse'
+    put:
       tags:
       - personal
+      summary: Replace Transaction
+      operationId: transactions_update
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/TransactionRequest'
-        required: true
-      security:
-      - JWTAuth: []
-    patch:
-      operationId: transactions_partial_update
-      summary: Update Transaction
-      parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
-        required: true
       responses:
         '200':
-          description: OK
+          description: Successful Response
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TransactionResponse'
+    patch:
       tags:
       - personal
+      summary: Update Transaction
+      operationId: transactions_partial_update
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/PatchedTransactionRequest'
-        required: true
-      security:
-      - JWTAuth: []
-    delete:
-      operationId: transactions_destroy
-      summary: Delete Transaction
-      parameters:
-      - in: path
-        name: id
-        schema:
-          title: Id
-          type: integer
-        required: true
       responses:
-        '204':
-          description: No Content
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+    delete:
       tags:
       - personal
+      summary: Delete Transaction
+      operationId: transactions_destroy
       security:
       - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      responses:
+        '204':
+          description: Successful Response
 components:
   schemas:
     AuthResponse:
       properties:
         access:
+          type: string
           title: Access
-          type: string
         refresh:
-          title: Refresh
           type: string
+          title: Refresh
+      type: object
       required:
       - access
       - refresh
       title: AuthResponse
-      type: object
-    RegisterRequest:
+    CategoryRequest:
       properties:
-        username:
-          maxLength: 150
-          minLength: 1
-          title: Username
+        name:
           type: string
-        password:
+          maxLength: 100
           minLength: 1
-          title: Password
-          type: string
-        password_confirm:
-          minLength: 1
-          title: Password Confirm
-          type: string
-      required:
-      - username
-      - password
-      - password_confirm
-      title: RegisterRequest
+          title: Name
       type: object
-    LoginResponse:
+      required:
+      - name
+      title: CategoryRequest
+    CategoryResponse:
       properties:
-        access:
-          title: Access
+        id:
+          type: integer
+          title: Id
+          readOnly: true
+        name:
           type: string
-        refresh:
-          title: Refresh
-          type: string
-      required:
-      - access
-      - refresh
-      title: LoginResponse
+          title: Name
+        is_system:
+          type: boolean
+          title: Is System
+          default: false
+          readOnly: true
       type: object
+      required:
+      - id
+      - name
+      title: CategoryResponse
     LoginRequest:
       properties:
         username:
+          type: string
           title: Username
-          type: string
         password:
-          title: Password
           type: string
+          title: Password
+      type: object
       required:
       - username
       - password
       title: LoginRequest
-      type: object
-    RefreshResponse:
+    LoginResponse:
       properties:
         access:
-          title: Access
           type: string
+          title: Access
+        refresh:
+          type: string
+          title: Refresh
+      type: object
       required:
       - access
-      title: RefreshResponse
-      type: object
-    RefreshRequest:
-      properties:
-        refresh:
-          title: Refresh
-          type: string
-      required:
       - refresh
-      title: RefreshRequest
-      type: object
-    UserResponse:
-      properties:
-        id:
-          title: Id
-          type: integer
-        username:
-          title: Username
-          type: string
-      required:
-      - id
-      - username
-      title: UserResponse
-      type: object
-    ProjectResponse:
-      properties:
-        id:
-          readOnly: true
-          title: Id
-          type: integer
-        name:
-          title: Name
-          type: string
-        description:
-          title: Description
-          type: string
-        is_inbox:
-          readOnly: true
-          title: Is Inbox
-          type: boolean
-        position:
-          default: 0
-          readOnly: true
-          title: Position
-          type: integer
-        project_statuses:
-          items:
-            type: string
-          readOnly: true
-          title: Project Statuses
-          type: array
-        terminal_status:
-          readOnly: true
-          title: Terminal Status
-          type: string
-      required:
-      - id
-      - name
-      - description
-      - is_inbox
-      - project_statuses
-      - terminal_status
-      title: ProjectResponse
-      type: object
-    ProjectRequest:
+      title: LoginResponse
+    PatchedCategoryRequest:
       properties:
         name:
-          maxLength: 100
-          minLength: 1
-          title: Name
-          type: string
-        description:
-          default: ''
-          title: Description
-          type: string
-        position:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Position
-        project_statuses:
-          anyOf:
-          - items:
-              type: string
-            type: array
-          - type: 'null'
-          title: Project Statuses
-        terminal_status:
           anyOf:
           - type: string
+            maxLength: 100
+            minLength: 1
           - type: 'null'
-          title: Terminal Status
-      required:
-      - name
-      title: ProjectRequest
+          title: Name
       type: object
+      title: PatchedCategoryRequest
     PatchedProjectRequest:
       properties:
         name:
           anyOf:
-          - maxLength: 100
+          - type: string
+            maxLength: 100
             minLength: 1
-            type: string
           - type: 'null'
           title: Name
         description:
@@ -1187,78 +1085,15 @@ components:
           - type: string
           - type: 'null'
           title: Terminal Status
+      type: object
       title: PatchedProjectRequest
-      type: object
-    TaskResponse:
-      properties:
-        id:
-          readOnly: true
-          title: Id
-          type: integer
-        title:
-          title: Title
-          type: string
-        description:
-          title: Description
-          type: string
-        project_id:
-          readOnly: true
-          title: Project Id
-          type: integer
-        status:
-          readOnly: true
-          title: Status
-          type: string
-        position:
-          default: 0
-          readOnly: true
-          title: Position
-          type: integer
-      required:
-      - id
-      - title
-      - description
-      - project_id
-      - status
-      title: TaskResponse
-      type: object
-    TaskCreateRequest:
-      properties:
-        title:
-          maxLength: 200
-          minLength: 1
-          title: Title
-          type: string
-        description:
-          default: ''
-          title: Description
-          type: string
-        project:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Project
-        status:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Status
-        position:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Position
-      required:
-      - title
-      title: TaskCreateRequest
-      type: object
     PatchedTaskUpdateRequest:
       properties:
         title:
           anyOf:
-          - maxLength: 200
+          - type: string
+            maxLength: 200
             minLength: 1
-            type: string
           - type: 'null'
           title: Title
         description:
@@ -1281,66 +1116,8 @@ components:
           - type: integer
           - type: 'null'
           title: Position
+      type: object
       title: PatchedTaskUpdateRequest
-      type: object
-    TimeEntryResponse:
-      properties:
-        id:
-          readOnly: true
-          title: Id
-          type: integer
-        task_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          readOnly: true
-          title: Task Id
-        title:
-          readOnly: true
-          title: Title
-          type: string
-        start:
-          format: date-time
-          title: Start
-          type: string
-        end:
-          anyOf:
-          - format: date-time
-            type: string
-          - type: 'null'
-          title: End
-      required:
-      - id
-      - task_id
-      - title
-      - start
-      title: TimeEntryResponse
-      type: object
-    TimeEntryCreateRequest:
-      properties:
-        task:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Task
-        title:
-          default: ''
-          title: Title
-          type: string
-        date:
-          format: date
-          title: Date
-          type: string
-        duration_minutes:
-          maximum: 1440
-          minimum: 1
-          title: Duration Minutes
-          type: integer
-      required:
-      - date
-      - duration_minutes
-      title: TimeEntryCreateRequest
-      type: object
     PatchedTimeEntryRequest:
       properties:
         task:
@@ -1355,328 +1132,38 @@ components:
           title: Title
         date:
           anyOf:
-          - format: date
-            type: string
+          - type: string
+            format: date
           - type: 'null'
           title: Date
         duration_minutes:
           anyOf:
-          - maximum: 1440
-            minimum: 1
-            type: integer
+          - type: integer
+            maximum: 1440.0
+            minimum: 1.0
           - type: 'null'
           title: Duration Minutes
+      type: object
       title: PatchedTimeEntryRequest
-      type: object
-    TimerResponse:
-      properties:
-        entry:
-          anyOf:
-          - $ref: '#/components/schemas/TimeEntryResponse'
-          - type: 'null'
-        server_now:
-          format: date-time
-          title: Server Now
-          type: string
-      required:
-      - server_now
-      title: TimerResponse
-      type: object
-    TimerStartRequest:
-      properties:
-        task:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Task
-        title:
-          default: ''
-          title: Title
-          type: string
-      title: TimerStartRequest
-      type: object
-    WhiteboardResponse:
-      properties:
-        id:
-          readOnly: true
-          title: Id
-          type: integer
-        kind:
-          readOnly: true
-          title: Kind
-          type: string
-        name:
-          title: Name
-          type: string
-        content:
-          additionalProperties: true
-          title: Content
-          type: object
-        created_at:
-          format: date-time
-          readOnly: true
-          title: Created At
-          type: string
-        updated_at:
-          format: date-time
-          readOnly: true
-          title: Updated At
-          type: string
-      required:
-      - id
-      - kind
-      - name
-      - content
-      - created_at
-      - updated_at
-      title: WhiteboardResponse
-      type: object
-    WhiteboardRequest:
-      properties:
-        kind:
-          default: whiteboard
-          pattern: ^(whiteboard|markdown)$
-          title: Kind
-          type: string
-        name:
-          default: Bez tytułu
-          maxLength: 200
-          minLength: 1
-          title: Name
-          type: string
-        content:
-          anyOf:
-          - additionalProperties: true
-            type: object
-          - type: 'null'
-          title: Content
-      title: WhiteboardRequest
-      type: object
-    PatchedWhiteboardRequest:
-      properties:
-        kind:
-          anyOf:
-          - pattern: ^(whiteboard|markdown)$
-            type: string
-          - type: 'null'
-          title: Kind
-        name:
-          anyOf:
-          - maxLength: 200
-            minLength: 1
-            type: string
-          - type: 'null'
-          title: Name
-        content:
-          anyOf:
-          - additionalProperties: true
-            type: object
-          - type: 'null'
-          title: Content
-      title: PatchedWhiteboardRequest
-      type: object
-    WalletResponse:
-      properties:
-        id:
-          readOnly: true
-          title: Id
-          type: integer
-        name:
-          title: Name
-          type: string
-        transaction_count:
-          default: 0
-          readOnly: true
-          title: Transaction Count
-          type: integer
-        balance:
-          default: '0.00'
-          readOnly: true
-          title: Amount
-          type: string
-      required:
-      - id
-      - name
-      title: WalletResponse
-      type: object
-    WalletCreateRequest:
-      description: 'Create payload: the wallet plus the balance it opens with.'
-      properties:
-        name:
-          maxLength: 100
-          minLength: 1
-          title: Name
-          type: string
-        initial_balance:
-          anyOf:
-          - title: Amount
-            type: string
-          - type: 'null'
-          title: Initial Balance
-      required:
-      - name
-      title: WalletCreateRequest
-      type: object
-    WalletRequest:
-      properties:
-        name:
-          maxLength: 100
-          minLength: 1
-          title: Name
-          type: string
-      required:
-      - name
-      title: WalletRequest
-      type: object
-    PatchedWalletRequest:
-      properties:
-        name:
-          anyOf:
-          - maxLength: 100
-            minLength: 1
-            type: string
-          - type: 'null'
-          title: Name
-        current_balance:
-          anyOf:
-          - title: Amount
-            type: string
-          - type: 'null'
-          title: Current Balance
-      title: PatchedWalletRequest
-      type: object
-    CategoryResponse:
-      properties:
-        id:
-          readOnly: true
-          title: Id
-          type: integer
-        name:
-          title: Name
-          type: string
-        is_system:
-          default: false
-          readOnly: true
-          title: Is System
-          type: boolean
-      required:
-      - id
-      - name
-      title: CategoryResponse
-      type: object
-    CategoryRequest:
-      properties:
-        name:
-          maxLength: 100
-          minLength: 1
-          title: Name
-          type: string
-      required:
-      - name
-      title: CategoryRequest
-      type: object
-    PatchedCategoryRequest:
-      properties:
-        name:
-          anyOf:
-          - maxLength: 100
-            minLength: 1
-            type: string
-          - type: 'null'
-          title: Name
-      title: PatchedCategoryRequest
-      type: object
-    TransactionResponse:
-      properties:
-        id:
-          readOnly: true
-          title: Id
-          type: integer
-        title:
-          title: Title
-          type: string
-        amount:
-          title: Amount
-          type: string
-        date:
-          format: date
-          title: Date
-          type: string
-        description:
-          title: Description
-          type: string
-        category_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          readOnly: true
-          title: Category Id
-        wallet_id:
-          readOnly: true
-          title: Wallet Id
-          type: integer
-      required:
-      - id
-      - title
-      - amount
-      - date
-      - description
-      - category_id
-      - wallet_id
-      title: TransactionResponse
-      type: object
-    TransactionRequest:
-      properties:
-        title:
-          maxLength: 200
-          minLength: 1
-          title: Title
-          type: string
-        amount:
-          title: Amount
-          type: string
-        date:
-          format: date
-          title: Date
-          type: string
-        description:
-          default: ''
-          title: Description
-          type: string
-        category:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Category
-        wallet:
-          title: Wallet
-          type: integer
-      required:
-      - title
-      - amount
-      - date
-      - wallet
-      title: TransactionRequest
-      type: object
     PatchedTransactionRequest:
       properties:
         title:
           anyOf:
-          - maxLength: 200
+          - type: string
+            maxLength: 200
             minLength: 1
-            type: string
           - type: 'null'
           title: Title
         amount:
           anyOf:
-          - title: Amount
-            type: string
+          - type: string
+            title: Amount
           - type: 'null'
           title: Amount
         date:
           anyOf:
-          - format: date
-            type: string
+          - type: string
+            format: date
           - type: 'null'
           title: Date
         description:
@@ -1694,10 +1181,503 @@ components:
           - type: integer
           - type: 'null'
           title: Wallet
-      title: PatchedTransactionRequest
       type: object
+      title: PatchedTransactionRequest
+    PatchedWalletRequest:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 100
+            minLength: 1
+          - type: 'null'
+          title: Name
+        current_balance:
+          anyOf:
+          - type: string
+            title: Amount
+          - type: 'null'
+          title: Current Balance
+      type: object
+      title: PatchedWalletRequest
+    PatchedWhiteboardRequest:
+      properties:
+        kind:
+          anyOf:
+          - type: string
+            pattern: ^(whiteboard|markdown)$
+          - type: 'null'
+          title: Kind
+        name:
+          anyOf:
+          - type: string
+            maxLength: 200
+            minLength: 1
+          - type: 'null'
+          title: Name
+        content:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Content
+      type: object
+      title: PatchedWhiteboardRequest
+    ProjectRequest:
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          minLength: 1
+          title: Name
+        description:
+          type: string
+          title: Description
+          default: ''
+        position:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Position
+        project_statuses:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Project Statuses
+        terminal_status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Terminal Status
+      type: object
+      required:
+      - name
+      title: ProjectRequest
+    ProjectResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+          readOnly: true
+        name:
+          type: string
+          title: Name
+        description:
+          type: string
+          title: Description
+        is_inbox:
+          type: boolean
+          title: Is Inbox
+          readOnly: true
+        position:
+          type: integer
+          title: Position
+          default: 0
+          readOnly: true
+        project_statuses:
+          items:
+            type: string
+          type: array
+          title: Project Statuses
+          readOnly: true
+        terminal_status:
+          type: string
+          title: Terminal Status
+          readOnly: true
+      type: object
+      required:
+      - id
+      - name
+      - description
+      - is_inbox
+      - project_statuses
+      - terminal_status
+      title: ProjectResponse
+    RefreshRequest:
+      properties:
+        refresh:
+          type: string
+          title: Refresh
+      type: object
+      required:
+      - refresh
+      title: RefreshRequest
+    RefreshResponse:
+      properties:
+        access:
+          type: string
+          title: Access
+      type: object
+      required:
+      - access
+      title: RefreshResponse
+    RegisterRequest:
+      properties:
+        username:
+          type: string
+          maxLength: 150
+          minLength: 1
+          title: Username
+        password:
+          type: string
+          minLength: 1
+          title: Password
+        password_confirm:
+          type: string
+          minLength: 1
+          title: Password Confirm
+      type: object
+      required:
+      - username
+      - password
+      - password_confirm
+      title: RegisterRequest
+    TaskCreateRequest:
+      properties:
+        title:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Title
+        description:
+          type: string
+          title: Description
+          default: ''
+        project:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Project
+        status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+        position:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Position
+      type: object
+      required:
+      - title
+      title: TaskCreateRequest
+    TaskResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+          readOnly: true
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+        project_id:
+          type: integer
+          title: Project Id
+          readOnly: true
+        status:
+          type: string
+          title: Status
+          readOnly: true
+        position:
+          type: integer
+          title: Position
+          default: 0
+          readOnly: true
+      type: object
+      required:
+      - id
+      - title
+      - description
+      - project_id
+      - status
+      title: TaskResponse
+    TimeEntryCreateRequest:
+      properties:
+        task:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Task
+        title:
+          type: string
+          title: Title
+          default: ''
+        date:
+          type: string
+          format: date
+          title: Date
+        duration_minutes:
+          type: integer
+          maximum: 1440.0
+          minimum: 1.0
+          title: Duration Minutes
+      type: object
+      required:
+      - date
+      - duration_minutes
+      title: TimeEntryCreateRequest
+    TimeEntryResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+          readOnly: true
+        task_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Task Id
+          readOnly: true
+        title:
+          type: string
+          title: Title
+          readOnly: true
+        start:
+          type: string
+          format: date-time
+          title: Start
+        end:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: End
+      type: object
+      required:
+      - id
+      - task_id
+      - title
+      - start
+      title: TimeEntryResponse
+    TimerResponse:
+      properties:
+        entry:
+          anyOf:
+          - $ref: '#/components/schemas/TimeEntryResponse'
+          - type: 'null'
+        server_now:
+          type: string
+          format: date-time
+          title: Server Now
+      type: object
+      required:
+      - server_now
+      title: TimerResponse
+    TimerStartRequest:
+      properties:
+        task:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Task
+        title:
+          type: string
+          title: Title
+          default: ''
+      type: object
+      title: TimerStartRequest
+    TransactionRequest:
+      properties:
+        title:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Title
+        amount:
+          type: string
+          title: Amount
+        date:
+          type: string
+          format: date
+          title: Date
+        description:
+          type: string
+          title: Description
+          default: ''
+        category:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Category
+        wallet:
+          type: integer
+          title: Wallet
+      type: object
+      required:
+      - title
+      - amount
+      - date
+      - wallet
+      title: TransactionRequest
+    TransactionResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+          readOnly: true
+        title:
+          type: string
+          title: Title
+        amount:
+          type: string
+          title: Amount
+        date:
+          type: string
+          format: date
+          title: Date
+        description:
+          type: string
+          title: Description
+        category_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Category Id
+          readOnly: true
+        wallet_id:
+          type: integer
+          title: Wallet Id
+          readOnly: true
+      type: object
+      required:
+      - id
+      - title
+      - amount
+      - date
+      - description
+      - category_id
+      - wallet_id
+      title: TransactionResponse
+    UserResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        username:
+          type: string
+          title: Username
+      type: object
+      required:
+      - id
+      - username
+      title: UserResponse
+    WalletCreateRequest:
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          minLength: 1
+          title: Name
+        initial_balance:
+          anyOf:
+          - type: string
+            title: Amount
+          - type: 'null'
+          title: Initial Balance
+      type: object
+      required:
+      - name
+      title: WalletCreateRequest
+      description: 'Create payload: the wallet plus the balance it opens with.'
+    WalletRequest:
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          minLength: 1
+          title: Name
+      type: object
+      required:
+      - name
+      title: WalletRequest
+    WalletResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+          readOnly: true
+        name:
+          type: string
+          title: Name
+        transaction_count:
+          type: integer
+          title: Transaction Count
+          default: 0
+          readOnly: true
+        balance:
+          type: string
+          title: Amount
+          default: '0.00'
+          readOnly: true
+      type: object
+      required:
+      - id
+      - name
+      title: WalletResponse
+    WhiteboardRequest:
+      properties:
+        kind:
+          type: string
+          pattern: ^(whiteboard|markdown)$
+          title: Kind
+          default: whiteboard
+        name:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Name
+          default: Bez tytułu
+        content:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Content
+      type: object
+      title: WhiteboardRequest
+    WhiteboardResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+          readOnly: true
+        kind:
+          type: string
+          title: Kind
+          readOnly: true
+        name:
+          type: string
+          title: Name
+        content:
+          additionalProperties: true
+          type: object
+          title: Content
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+          readOnly: true
+      type: object
+      required:
+      - id
+      - kind
+      - name
+      - content
+      - created_at
+      - updated_at
+      title: WhiteboardResponse
   securitySchemes:
     JWTAuth:
       type: http
       scheme: bearer
-servers: []

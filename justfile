@@ -27,7 +27,7 @@ generate-api:
     cd frontend && npm run generate:api
 
 # Regenerate the TypeScript client and fail if it differs from the committed one
-# (the API contract baseline; the routers return in migration stages 05-08).
+# (the API contract baseline).
 check-api-client: generate-api
     git diff --exit-code --stat -- frontend/src/generated/api
 

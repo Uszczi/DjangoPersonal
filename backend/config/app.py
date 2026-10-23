@@ -2,7 +2,7 @@
 
 It carries the shared infrastructure - settings, the request-scoped database
 session, error handling, health checks, metrics and logging - and the domain
-routers, which return feature by feature during the migration (stages 05-08).
+routers (accounts, work, whiteboard, expenses), all under ``/api/v1``.
 ``just backend`` serves it on :8000 through :func:`create_served_app`.
 
 The OpenAPI schema is served at ``/api/v1/schema/`` (3.1) with no interactive
@@ -18,6 +18,7 @@ from fastapi import FastAPI
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from apps.accounts.api import router as accounts_router
+from apps.expenses.api import router as expenses_router
 from apps.shared.http_errors import register_fastapi_error_handlers
 from apps.whiteboard.api import router as whiteboard_router
 from apps.work.api import router as work_router
@@ -106,6 +107,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(accounts_router, prefix=API_PREFIX)
     app.include_router(work_router, prefix=API_PREFIX)
     app.include_router(whiteboard_router, prefix=API_PREFIX)
+    app.include_router(expenses_router, prefix=API_PREFIX)
 
     app.add_middleware(ops.MetricsMiddleware)
     # Added last, so it runs first: the allowed-hosts check. Requests for

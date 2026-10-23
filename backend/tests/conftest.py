@@ -4,10 +4,6 @@ Every test gets a throwaway SQLite database with the full schema:
 ``session`` for repository-level tests, and an app (``transport``) on the same
 database for API tests. Users come from :func:`make_user`, other rows from the
 factories in ``apps.infra.factories`` (bound to the test's session).
-
-The HTTP API returns feature by feature during the migration off Django
-(``.scratch/fastapi-migration``); the API test modules listed in
-:data:`AWAITING_PORT` are skipped until the stage that serves them lands.
 """
 
 from collections.abc import Callable, Iterator
@@ -30,15 +26,6 @@ from .harness import ApiClient, FastAPITransport, Response, Transport
 
 DEFAULT_PASSWORD = 'StrongPass123!'
 
-#: API test modules whose endpoints are not served yet, and the stage that ports them.
-AWAITING_PORT = {
-    'test_wallets_api.py': '08',
-    'test_categories_api.py': '08',
-    'test_transactions_api.py': '08',
-    'test_api_contract.py': '08',
-}
-
-
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
         '--snapshot-update',
@@ -46,13 +33,6 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default=False,
         help='Rewrite the API contract snapshot instead of comparing against it.',
     )
-
-
-def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    for item in items:
-        stage = AWAITING_PORT.get(item.path.name)
-        if stage is not None:
-            item.add_marker(pytest.mark.skip(reason=f'Served again from migration stage {stage}'))
 
 
 @pytest.fixture

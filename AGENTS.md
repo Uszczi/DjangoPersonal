@@ -4,7 +4,7 @@ Guidance for AI coding agents working in this repository. The reader is assumed 
 
 ## Project overview
 
-> **Migration in progress (Django → FastAPI + SQLAlchemy, `.scratch/fastapi-migration/`).** Since stage 04 the backend has no Django: models and repositories are SQLAlchemy (`apps/infra/models`, `apps/infra/repo`), the schema is owned by Alembic (`backend/alembic/`), and the HTTP routers return feature by feature in stages 05–08 (until then `/api/v1/` serves only the schema, and the MCP server does not run). Sections below that still describe Django are rewritten in stage 11. Work on a branch: a push to `master` deploys.
+> **Migration in progress (Django → FastAPI + SQLAlchemy, `.scratch/fastapi-migration/`).** Since stage 04 the backend has no Django: models and repositories are SQLAlchemy (`apps/infra/models`, `apps/infra/repo`), the schema is owned by Alembic (`backend/alembic/`), and since stage 08 every HTTP router is served by FastAPI under `/api/v1/` (the MCP server does not run until stage 09). Sections below that still describe Django are rewritten in stage 11. Work on a branch: a push to `master` deploys.
 
 DjangoPersonal is a personal work organizer: it groups a person's work into **Projects** and their **Tasks**, tracks time with **Time entries** and a single **Running timer**, provides freeform **Whiteboards** (and Markdown-based **Notatki**/notes), and tracks **expenses** through **Wallets**, **Transactions**, and **Categories**. Domain vocabulary is defined precisely in `GLOSSARY.md` — use those terms in issues, tests, and code.
 
@@ -114,7 +114,7 @@ A FastMCP server that re-exposes the same handlers/deps as HTTP tools over strea
 
 ## Testing
 
-- **Backend** (`backend/tests/`, pytest, config in `pyproject.toml`): every test gets a throwaway SQLite database. Repository tests use the `session` fixture; API tests go through FastAPI's `TestClient` (`tests/harness.py`) with the fixtures `api_client`, `post_json`/`patch_json`/`put_json`, `auth_headers`, `make_user`. Factories come from `apps.infra.factories` (bound to the test session). API test modules whose routers are not ported yet are skipped (`AWAITING_PORT` in `tests/conftest.py`). Run: `cd backend && uv run pytest` (or `just check`).
+- **Backend** (`backend/tests/`, pytest, config in `pyproject.toml`): every test gets a throwaway SQLite database. Repository tests use the `session` fixture; API tests go through FastAPI's `TestClient` (`tests/harness.py`) with the fixtures `api_client`, `post_json`/`patch_json`/`put_json`, `auth_headers`, `make_user`. Factories come from `apps.infra.factories` (bound to the test session). Run: `cd backend && uv run pytest` (or `just check`).
 - **Frontend** (`frontend/tests/`, Vitest + jsdom + Testing Library): render the whole app through a memory-history router via the `renderApp()` helper, which resets every Zustand store first. Run: `cd frontend && npm test`.
 - **Type checking**: `just typecheck` (mypy strict; migrations and staticfiles excluded; `apps.infra.factories` relaxed because factory_boy constructors are untyped).
 - Note: as of 2026-10-19, `frontend` has 4 failing tests (`tests/Auth.test.tsx` — 2, `tests/Routing.test.tsx` — 2, all ~1 s timeouts in jsdom) and oxlint reports 7 warnings. Backend suite is green.
