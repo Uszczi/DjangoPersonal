@@ -4,7 +4,7 @@ Guidance for AI coding agents working in this repository. The reader is assumed 
 
 ## Project overview
 
-> **Migration in progress (Django → FastAPI + SQLAlchemy, `.scratch/fastapi-migration/`).** Since stage 04 the backend has no Django: models and repositories are SQLAlchemy (`apps/infra/models`, `apps/infra/repo`), the schema is owned by Alembic (`backend/alembic/`), and since stage 08 every HTTP router is served by FastAPI under `/api/v1/` (the MCP server does not run until stage 09). Sections below that still describe Django are rewritten in stage 11. Work on a branch: a push to `master` deploys.
+> **Migration in progress (Django → FastAPI + SQLAlchemy, `.scratch/fastapi-migration/`).** Since stage 04 the backend has no Django: models and repositories are SQLAlchemy (`apps/infra/models`, `apps/infra/repo`), the schema is owned by Alembic (`backend/alembic/`), and since stage 08 every HTTP router is served by FastAPI under `/api/v1/`; since stage 09 the MCP server runs on the same SQLAlchemy stack. Sections below that still describe Django are rewritten in stage 11. Work on a branch: a push to `master` deploys.
 
 DjangoPersonal is a personal work organizer: it groups a person's work into **Projects** and their **Tasks**, tracks time with **Time entries** and a single **Running timer**, provides freeform **Whiteboards** (and Markdown-based **Notatki**/notes), and tracks **expenses** through **Wallets**, **Transactions**, and **Categories**. Domain vocabulary is defined precisely in `GLOSSARY.md` — use those terms in issues, tests, and code.
 
@@ -59,7 +59,7 @@ just storybook        # Storybook component workshop on :6006 (build via npm run
 just makemigrations "msg"  # Alembic revision from model changes
 just migrate          # alembic upgrade head
 just seed             # seed the dev DB with demo data (refuses if DB not empty)
-just typecheck        # mypy (strict) over backend/ (mcp_server excluded until stage 09)
+just typecheck        # mypy (strict) over backend/
 just check            # full gate: mypy + pytest + npm test + lint + build
 just generate-api     # regenerate backend/openapi.yaml + the TypeScript client
 just backend-cpp      # build + run the C++ backend on :8080
@@ -100,7 +100,7 @@ The API is served under `/api/v1/` with the OpenAPI schema at `/api/v1/schema/`.
 
 ## MCP server (`backend/mcp_server/`)
 
-A FastMCP server that re-exposes the same handlers/deps as HTTP tools over streamable HTTP on port 8001 (`just mcp` / `python -m mcp_server`), with OAuth (dynamic client registration, custom `/login` routes, issuer/public host from `MCP_ISSUER_URL`/`MCP_PUBLIC_HOST`). User resolution (`auth.py`) prefers the OAuth token, falls back to a Django JWT bearer header, then to `MCP_DEFAULT_USER_ID` (stdio). Tool functions are thin wrappers: build a contract, call the handler, serialize.
+A FastMCP server that re-exposes the same handlers/deps as HTTP tools over streamable HTTP on port 8001 (`just mcp` / `python -m mcp_server`), with OAuth (dynamic client registration, custom `/login` routes, issuer/public host from `MCP_ISSUER_URL`/`MCP_PUBLIC_HOST`). It is a separate service (own container), not mounted into the API app. `runtime.py` holds the process-wide settings, `Database` and auth adapters; every tool call is one transaction (`Database.transaction()`), run in a worker thread. User resolution (`auth.py`) prefers the OAuth token, falls back to an API JWT bearer header (`TokenService`), then to `MCP_DEFAULT_USER_ID` (stdio). The `/login` page checks credentials with the `AuthenticateUser` use case and only issues codes to a registered client's own redirect URI. Tool functions are thin wrappers: build a contract (partial updates forward only the arguments given), call the handler, serialize. Tests: `tests/test_mcp_server.py`.
 
 ## Frontend architecture (`frontend/`)
 

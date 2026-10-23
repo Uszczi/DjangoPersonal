@@ -2,7 +2,9 @@
 
 One request is one transaction: :func:`get_session` opens a session, commits it
 after the endpoint returns, and rolls it back if anything raised - this is what
-replaces ``transaction.atomic()`` in the handlers. The commit runs *before* the
+replaces ``transaction.atomic()`` in the handlers. :meth:`Database.transaction`
+is that unit of work on its own, for callers outside a request (one MCP tool
+call). The commit runs *before* the
 response is sent (``scope='function'``), so a failed commit becomes an error
 response instead of a 2xx for work that was never stored.
 
@@ -11,6 +13,7 @@ tied to FastAPI, so the MCP server can share it later.
 """
 
 from collections.abc import Iterator
+from contextlib import contextmanager
 from typing import Annotated, Any
 
 from fastapi import Depends, Request
@@ -64,18 +67,24 @@ class Database:
     def dispose(self) -> None:
         self.engine.dispose()
 
+    @contextmanager
+    def transaction(self) -> Iterator[Session]:
+        """A session committed when the block ends, rolled back if it raised."""
+        session = self.session_factory()
+        try:
+            yield session
+            session.commit()
+        except BaseException:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
 
 def get_session(request: Request) -> Iterator[Session]:
     database: Database = request.app.state.database
-    session = database.session_factory()
-    try:
+    with database.transaction() as session:
         yield session
-        session.commit()
-    except BaseException:
-        session.rollback()
-        raise
-    finally:
-        session.close()
 
 
 SessionDep = Annotated[Session, Depends(get_session, scope='function')]

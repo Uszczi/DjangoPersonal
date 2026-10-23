@@ -1,64 +1,63 @@
-"""Resolve the current Django user from an MCP request context."""
+"""Resolve the user an MCP tool call acts for.
 
-import os
+Three ways in, tried in order:
+
+1. the OAuth access token the MCP auth middleware established (``oauth.py``);
+2. an API access token (``Authorization: Bearer <jwt>``), checked by the same
+   :class:`~apps.accounts.ports.TokenService` the HTTP API uses;
+3. no HTTP request at all (stdio transport): ``MCP_DEFAULT_USER_ID``.
+"""
+
 from typing import Any
 
 from mcp.server.auth.middleware.auth_context import get_access_token
+from sqlalchemy.orm import Session
+
+from apps.accounts.deps import authenticate
+from apps.accounts.ports import InvalidToken, TokenService
+from apps.infra.models import User
+from apps.infra.repo import UserRepository
 
 
-def get_request(ctx: Any) -> Any:
+def _request(ctx: Any) -> Any:
     try:
         return ctx.request_context.request
-    except Exception:
+    except (AttributeError, LookupError, ValueError):
         return None
 
 
-def get_current_user(ctx: Any) -> Any:
-    """Return the authenticated Django user for this MCP call.
+def _active_user(session: Session, user_id: int) -> User:
+    user = UserRepository(session).find(user_id)
+    if user is None or not user.is_active:
+        raise PermissionError('User not found or inactive.')
+    return user
 
-    Prefers the OAuth access token established by the MCP auth middleware.
-    Falls back to a Django JWT in the ``Authorization`` header, and finally to
-    ``MCP_DEFAULT_USER_ID`` for stdio transport.
-    """
-    # OAuth path
-    access = None
-    try:
-        access = get_access_token()
-    except Exception:
-        access = None
-    if access is not None and getattr(access, "subject", None) is not None:
-        from django.contrib.auth import get_user_model
 
-        User = get_user_model()
-        return User.objects.get(pk=int(str(access.subject)))
+def get_current_user(
+    ctx: Any,
+    *,
+    session: Session,
+    tokens: TokenService,
+    default_user_id: int | None,
+) -> User:
+    """The active user for this tool call, or raise :class:`PermissionError`."""
+    access = get_access_token()
+    if access is not None and access.subject is not None:
+        return _active_user(session, int(access.subject))
 
-    request = get_request(ctx)
+    request = _request(ctx)
     if request is None:
-        default_id = os.environ.get("MCP_DEFAULT_USER_ID")
-        if default_id:
-            from django.contrib.auth import get_user_model
-
-            User = get_user_model()
-            return User.objects.get(pk=int(default_id))
+        if default_user_id is not None:
+            return _active_user(session, default_user_id)
         raise PermissionError(
-            "No HTTP request context; set MCP_DEFAULT_USER_ID for stdio transport."
+            'No HTTP request context; set MCP_DEFAULT_USER_ID for stdio transport.'
         )
 
-    auth_header = None
+    header = str(request.headers.get('authorization') or '')
+    scheme, _, token = header.partition(' ')
+    if scheme.lower() != 'bearer' or not token.strip():
+        raise PermissionError('Missing or invalid Authorization: Bearer <token> header.')
     try:
-        auth_header = request.headers.get("authorization")
-    except Exception:
-        try:
-            auth_header = request.headers.get("Authorization")
-        except Exception:
-            auth_header = None
-
-    if not auth_header or not str(auth_header).lower().startswith("bearer "):
-        raise PermissionError("Missing or invalid Authorization: Bearer <token> header.")
-
-    token = str(auth_header).split(" ", 1)[1].strip()
-    from ninja_jwt.authentication import JWTBaseAuthentication
-
-    auth = JWTBaseAuthentication()
-    validated = auth.get_validated_token(token)
-    return auth.get_user(validated)
+        return authenticate(token.strip(), tokens=tokens, session=session)
+    except InvalidToken as error:
+        raise PermissionError(str(error)) from error

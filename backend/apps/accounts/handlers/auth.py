@@ -58,21 +58,20 @@ class RegisterUser:
         return AuthResponse(access=tokens.access, refresh=tokens.refresh)
 
 
-class LoginUser:
-    """Authenticate a user and issue a token pair.
+class AuthenticateUser:
+    """Check a username and password, returning the user they belong to.
 
-    Inactive users cannot log in, an unknown
-    username still pays for one hash (so response time does not reveal which
-    usernames exist), and a hash with outdated parameters is upgraded on a
-    successful login.
+    Inactive users are refused, an unknown username still pays for one hash
+    (so response time does not reveal which usernames exist), and a hash with
+    outdated parameters is upgraded on success. Shared by the API login and the
+    MCP server's OAuth login page.
     """
 
-    def __init__(self, users: UserRepository, hasher: PasswordHasher, tokens: TokenService):
+    def __init__(self, users: UserRepository, hasher: PasswordHasher):
         self.users = users
         self.hasher = hasher
-        self.tokens = tokens
 
-    def execute(self, data: LoginRequest) -> LoginResponse:
+    def execute(self, data: LoginRequest) -> User:
         user = self.users.get_by_username(data.username)
         if user is None:
             self.hasher.hash(data.password)
@@ -82,8 +81,18 @@ class LoginUser:
 
         if self.hasher.needs_rehash(user.password):
             self.users.set_password_hash(user, self.hasher.hash(data.password))
+        return user
 
-        tokens = self.tokens.issue(user)
+
+class LoginUser:
+    """Authenticate a user (see :class:`AuthenticateUser`) and issue a token pair."""
+
+    def __init__(self, users: UserRepository, hasher: PasswordHasher, tokens: TokenService):
+        self.authenticate = AuthenticateUser(users, hasher)
+        self.tokens = tokens
+
+    def execute(self, data: LoginRequest) -> LoginResponse:
+        tokens = self.tokens.issue(self.authenticate.execute(data))
         return LoginResponse(access=tokens.access, refresh=tokens.refresh)
 
 

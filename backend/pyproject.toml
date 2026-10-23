@@ -34,8 +34,6 @@ addopts = "-n auto"
 [tool.mypy]
 python_version = "3.14"
 mypy_path = "."
-# mcp_server still runs on Django; it comes back under mypy in migration stage 09.
-exclude = ["^mcp_server/"]
 strict = true
 show_error_codes = true
 

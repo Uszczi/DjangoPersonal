@@ -1,8 +1,11 @@
-"""Helpers to convert Django ORM objects into MCP-friendly dicts."""
+"""Shape use-case results as JSON-ready dicts, through the API's response contracts."""
 
+from collections.abc import Iterable
 from datetime import date as date_type
+from datetime import datetime
 from typing import Any
 
+from apps.infra.models import Project, Task, TimeEntry
 from apps.work.contracts import (
     ProjectResponse,
     TaskResponse,
@@ -11,35 +14,39 @@ from apps.work.contracts import (
 )
 
 
-def project(obj: Any) -> dict[str, Any]:
-    return ProjectResponse.model_validate(obj).model_dump(mode="json")
+def project(obj: Project) -> dict[str, Any]:
+    return ProjectResponse.model_validate(obj).model_dump(mode='json')
 
 
-def projects(qs: Any) -> list[dict[str, Any]]:
-    return [project(o) for o in qs]
+def projects(objs: Iterable[Project]) -> list[dict[str, Any]]:
+    return [project(o) for o in objs]
 
 
-def task(obj: Any) -> dict[str, Any]:
-    return TaskResponse.model_validate(obj).model_dump(mode="json")
+def task(obj: Task) -> dict[str, Any]:
+    return TaskResponse.model_validate(obj).model_dump(mode='json')
 
 
-def tasks(qs: Any) -> list[dict[str, Any]]:
-    return [task(o) for o in qs]
+def tasks(objs: Iterable[Task]) -> list[dict[str, Any]]:
+    return [task(o) for o in objs]
 
 
-def time_entry(obj: Any) -> dict[str, Any]:
-    return TimeEntryResponse.model_validate(obj).model_dump(mode="json")
+def time_entry(obj: TimeEntry) -> dict[str, Any]:
+    return TimeEntryResponse.model_validate(obj).model_dump(mode='json')
 
 
-def time_entries(qs: Any) -> list[dict[str, Any]]:
-    return [time_entry(o) for o in qs]
+def time_entries(objs: Iterable[TimeEntry]) -> list[dict[str, Any]]:
+    return [time_entry(o) for o in objs]
 
 
-def timer(entry: Any, server_now: Any) -> dict[str, Any]:
-    return TimerResponse(entry=entry, server_now=server_now).model_dump(mode="json")
+def timer(entry: TimeEntry | None, server_now: datetime) -> dict[str, Any]:
+    state = TimerResponse(
+        entry=None if entry is None else TimeEntryResponse.model_validate(entry),
+        server_now=server_now,
+    )
+    return state.model_dump(mode='json')
 
 
-def parse_date(value: str | None) -> Any:
+def parse_date(value: str | None) -> date_type | None:
     if value is None:
         return None
     return date_type.fromisoformat(value)

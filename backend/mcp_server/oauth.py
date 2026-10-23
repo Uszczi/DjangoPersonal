@@ -2,18 +2,18 @@
 
 Implements ``OAuthAuthorizationServerProvider`` so OpenCode can drive the full
 OAuth flow (``opencode mcp auth``) instead of requiring a hand-managed JWT.
-Authentication of the resource owner is delegated to Django's user database.
+The resource owner signs in on ``/login`` with their account's username and
+password, checked by the same use case as the API login.
 """
 
 import secrets
 import time
-from typing import Any
-from asgiref.sync import sync_to_async
-from urllib.parse import quote, urlencode
+from html import escape
+from urllib.parse import urlencode
 
-from django.contrib.auth import authenticate
+import anyio.to_thread
 from starlette.requests import Request
-from starlette.responses import HTMLResponse, RedirectResponse
+from starlette.responses import HTMLResponse, RedirectResponse, Response
 
 from mcp.server.auth.provider import (
     AccessToken,
@@ -23,6 +23,13 @@ from mcp.server.auth.provider import (
     RefreshToken,
 )
 from mcp.shared.auth import OAuthClientInformationFull, OAuthToken
+
+from apps.accounts import handlers as accounts_handlers
+from apps.accounts.contracts.auth import LoginRequest
+from apps.infra.repo import UserRepository
+from apps.shared.errors import DomainError
+
+from . import runtime
 
 
 _CLIENTS: dict[str, OAuthClientInformationFull] = {}
@@ -35,8 +42,11 @@ def _now() -> float:
     return time.time()
 
 
-class DjangoOAuthProvider:
-    """OAuth provider backed by Django users."""
+class InMemoryOAuthProvider:
+    """OAuth provider keeping clients, codes and tokens in process memory.
+
+    A restart forgets them, so clients go through ``/login`` again.
+    """
 
     async def get_client(self, client_id: str) -> OAuthClientInformationFull | None:
         return _CLIENTS.get(client_id)
@@ -163,7 +173,7 @@ class DjangoOAuthProvider:
             _REFRESH_TOKENS.pop(token.token, None)
 
 
-provider = DjangoOAuthProvider()
+provider = InMemoryOAuthProvider()
 
 
 # ---------------------------------------------------------------------------
@@ -193,18 +203,34 @@ _LOGIN_HTML = """<!doctype html>
 """
 
 
+_FORM_FIELDS = ("client_id", "redirect_uri", "state", "code_challenge", "scope", "resource")
+
+
+def _login_page(fields: dict[str, str], *, error: str = "") -> str:
+    """The login form carrying the OAuth parameters through as hidden fields.
+
+    The values come from the request, so they are escaped for HTML.
+    """
+    values = {name: escape(fields.get(name, ""), quote=True) for name in _FORM_FIELDS}
+    return _LOGIN_HTML.format(error=error, **values)
+
+
 async def login_get(request: Request) -> HTMLResponse:
-    params = request.query_params
-    html = _LOGIN_HTML.format(
-        error="",
-        client_id=params.get("client_id", ""),
-        redirect_uri=params.get("redirect_uri", ""),
-        state=params.get("state", ""),
-        code_challenge=params.get("code_challenge", ""),
-        scope=params.get("scope", ""),
-        resource=params.get("resource", ""),
-    )
-    return HTMLResponse(html)
+    return HTMLResponse(_login_page(dict(request.query_params)))
+
+
+def _authenticated_user_id(username: str, password: str) -> int | None:
+    """The id of the account these credentials sign in to, or ``None``."""
+    with runtime.database.transaction() as session:
+        handler = accounts_handlers.AuthenticateUser(UserRepository(session), runtime.hasher)
+        try:
+            return handler.execute(LoginRequest(username=username, password=password)).id
+        except DomainError:
+            return None
+
+
+def _is_registered_redirect(client: OAuthClientInformationFull, redirect_uri: str) -> bool:
+    return any(str(uri) == redirect_uri for uri in client.redirect_uris or [])
 
 
 def _login_sync(data: dict[str, str]) -> tuple[str, str, int]:
@@ -217,17 +243,15 @@ def _login_sync(data: dict[str, str]) -> tuple[str, str, int]:
     scope = data.get("scope", "")
     resource = data.get("resource", "") or None
 
-    user = authenticate(username=username, password=password)
-    if user is None:
-        html = _LOGIN_HTML.format(
-            error="<p style='color:red'>Invalid credentials.</p>",
-            client_id=client_id,
-            redirect_uri=redirect_uri,
-            state=state,
-            code_challenge=code_challenge,
-            scope=scope,
-            resource=resource or "",
-        )
+    client = _CLIENTS.get(client_id)
+    if client is None or not _is_registered_redirect(client, redirect_uri):
+        # The form is user-supplied: only a registered client's own redirect
+        # URI may receive a code, or a crafted link could send it elsewhere.
+        return ("html", _login_page(data, error="<p style='color:red'>Unknown client.</p>"), 400)
+
+    user_id = _authenticated_user_id(username, password)
+    if user_id is None:
+        html = _login_page(data, error="<p style='color:red'>Invalid credentials.</p>")
         return ("html", html, 401)
 
     code = secrets.token_urlsafe(48)
@@ -240,7 +264,7 @@ def _login_sync(data: dict[str, str]) -> tuple[str, str, int]:
         redirect_uri=redirect_uri,  # type: ignore[arg-type]
         redirect_uri_provided_explicitly=True,
         resource=resource,
-        subject=str(user.pk),
+        subject=str(user_id),
     )
 
     redirect = redirect_uri
@@ -251,10 +275,10 @@ def _login_sync(data: dict[str, str]) -> tuple[str, str, int]:
     return ("redirect", f"{redirect}{sep}{urlencode(params)}", 302)
 
 
-async def login_post(request: Request) -> Any:
+async def login_post(request: Request) -> Response:
     form = await request.form()
     data = {str(k): str(v) for k, v in form.items()}
-    kind, payload, status = await sync_to_async(_login_sync)(data)
+    kind, payload, status = await anyio.to_thread.run_sync(_login_sync, data)
     if kind == "html":
         return HTMLResponse(payload, status_code=status)
     return RedirectResponse(url=payload, status_code=status)
