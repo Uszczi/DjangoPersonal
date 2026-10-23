@@ -7,7 +7,6 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { renderApp } from './renderApp'
 
 const inbox = { id: 1, name: 'Inbox', description: '', is_inbox: true }
-const wallet = { id: 1, name: 'Personal', color: '#477c7c', transaction_count: 0, balance: '0.00' }
 
 // API returns snake_case; the generated client maps it to camelCase.
 const catJedzenie = { id: 1, name: 'Jedzenie', is_system: false }
@@ -21,10 +20,13 @@ function jsonResponse(data: unknown, status = 200) {
   })
 }
 
-/** The panel mounts only after the wallets finish loading: wallets, projects, categories. */
+/**
+ * The panel mounts only after the wallets finish loading: wallets, projects, categories.
+ * No wallets, so no wallet view joins in with its own transaction/category fetches.
+ */
 function mockInitial(categories: unknown[]) {
   return {
-    wallets: jsonResponse([wallet]),
+    wallets: jsonResponse([]),
     projects: jsonResponse([inbox]),
     categories: jsonResponse(categories),
   }

@@ -14,6 +14,9 @@ type WalletsState = {
   wallets: WalletResponse[];
   isLoading: boolean;
   pageError: string;
+  /** The wallet `/expenses` shows: the last one opened, else the first. */
+  selectedWalletId: number | null;
+  selectWallet: (walletId: number) => void;
   loadWallets: () => Promise<void>;
   createWallet: (input: WalletCreateInput) => Promise<WalletResponse>;
   updateWallet: (
@@ -30,10 +33,19 @@ function sortKey(name: string) {
   return name.trim().toLocaleLowerCase();
 }
 
+/** Keep the selection if that wallet still exists, else fall back to the first one. */
+function validSelection(wallets: WalletResponse[], selectedWalletId: number | null) {
+  if (wallets.some((wallet) => wallet.id === selectedWalletId)) return selectedWalletId;
+  return wallets[0]?.id ?? null;
+}
+
 export const useWalletsStore = create<WalletsState>((set) => ({
   wallets: [],
   isLoading: true,
   pageError: "",
+  selectedWalletId: null,
+
+  selectWallet: (walletId) => set({ selectedWalletId: walletId }),
 
   loadWallets: async () => {
     const requestId = loadGuard.nextRequestId();
@@ -41,7 +53,11 @@ export const useWalletsStore = create<WalletsState>((set) => ({
     try {
       const loadedWallets = await api.walletsList();
       if (!loadGuard.isLatest(requestId)) return;
-      set({ wallets: loadedWallets, pageError: "" });
+      set((state) => ({
+        wallets: loadedWallets,
+        pageError: "",
+        selectedWalletId: validSelection(loadedWallets, state.selectedWalletId),
+      }));
     } catch {
       if (loadGuard.isLatest(requestId)) {
         set({
@@ -70,7 +86,7 @@ export const useWalletsStore = create<WalletsState>((set) => ({
       );
       const wallets = [...state.wallets];
       wallets.splice(insertAt === -1 ? wallets.length : insertAt, 0, createdWallet);
-      return { wallets };
+      return { wallets, selectedWalletId: createdWallet.id };
     });
     return createdWallet;
   },
@@ -100,8 +116,12 @@ export const useWalletsStore = create<WalletsState>((set) => ({
   confirmWalletDelete: async (wallet) => {
     await api.walletsDestroy({ id: wallet.id });
 
-    set((state) => ({
-      wallets: state.wallets.filter((item) => item.id !== wallet.id),
-    }));
+    set((state) => {
+      const wallets = state.wallets.filter((item) => item.id !== wallet.id);
+      return {
+        wallets,
+        selectedWalletId: validSelection(wallets, state.selectedWalletId),
+      };
+    });
   },
 }));

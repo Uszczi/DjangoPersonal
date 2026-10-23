@@ -31,7 +31,7 @@ Add an expenses domain to the existing React interface and Django Ninja API, as 
 17. As the user, I want to edit a transaction in a modal, so that I can correct mistakes.
 18. As the user, I want to delete a transaction, so that I can remove wrong entries.
 19. As the user, I want the selected wallet in the URL, so that a wallet view is bookmarkable and survives a reload.
-20. As the user, I want an unknown or deleted wallet URL to redirect to the wallet list, so that stale links do not dead-end.
+20. As the user, I want an unknown or deleted wallet URL to redirect to the expenses page, so that stale links do not dead-end.
 21. As the user, I want browser back/forward to move between wallets, so that navigation feels native.
 
 ## Implementation Decisions
@@ -46,7 +46,7 @@ Add an expenses domain to the existing React interface and Django Ninja API, as 
 - A Transaction has a required title, a required amount (Decimal, positive, at most 2 decimal places), a required date, an optional description, an optional Category (nullable), and a required Wallet.
 - Deleting a wallet cascades to its transactions; deleting a category also cascades to its transactions. Both operations require confirmation in the UI.
 - A transaction belongs to the calendar day its date falls on; overnight entries are reported on the day they began.
-- The expenses view lives at `/expenses` (wallet list) and `/expenses/$walletId` (a wallet's transactions). The selected wallet is part of the main URL path; category is internal view state only. Browser back/forward moves between wallets. A URL naming a deleted or unknown wallet redirects to `/expenses`.
+- The expenses view lives at `/expenses` and `/expenses/$walletId`; both show one wallet's transactions. `/expenses/$walletId` shows the wallet it names and records it as the selected wallet in the wallets store; `/expenses` shows that selected wallet (the first wallet until one is chosen). The selected wallet is part of the main URL path; category is internal view state only. Browser back/forward moves between wallets. A URL naming a deleted or unknown wallet redirects to `/expenses`.
 - The transaction list is grouped by date; there is no pagination in v1.
 - The UI follows existing patterns: a new "Wydatki" tab in the navbar, a header select to switch wallets, a sidebar panel below the wallets list for category management, and modals for wallet and transaction create/edit.
 
