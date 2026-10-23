@@ -32,9 +32,6 @@ DEFAULT_PASSWORD = 'StrongPass123!'
 
 #: API test modules whose endpoints are not served yet, and the stage that ports them.
 AWAITING_PORT = {
-    'test_projects_api.py': '06',
-    'test_tasks_api.py': '06',
-    'test_time_tracking_api.py': '06',
     'test_whiteboards_api.py': '07',
     'test_wallets_api.py': '08',
     'test_categories_api.py': '08',
