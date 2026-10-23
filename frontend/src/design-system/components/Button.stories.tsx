@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 
 import { Button } from "./Button";
-import { buttonVariants } from "./buttonVariants";
+import { buttonVariants } from "./Button.variants";
 
 const meta = {
   title: "Design System/Button",
