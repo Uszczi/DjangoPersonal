@@ -269,7 +269,8 @@ describe('Transactions', () => {
     renderApp('/expenses/1')
     await screen.findByRole('list', { name: 'Transakcje z dnia 16 października 2026' })
 
-    await user.click(screen.getByRole('button', { name: 'Usuń transakcję: Kawa' }))
+    await user.click(screen.getByRole('button', { name: 'Edytuj transakcję: Kawa' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Usuń' }))
 
     expect(await screen.findByText(/zostanie trwale usunięta/)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Usuń transakcję' }))

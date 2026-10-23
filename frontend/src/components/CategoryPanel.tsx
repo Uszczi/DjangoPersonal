@@ -3,10 +3,9 @@ import { useEffect, useState, type FormEvent } from "react";
 import { apiErrorMessage } from "@/apiErrorMessage";
 import {
   Button,
-  DeleteButton,
-  EditButton,
   ErrorAlert,
   ListRow,
+  ListRowButton,
   ListRowTitle,
   TextInput,
 } from "@/design-system";
@@ -162,7 +161,12 @@ export function CategoryPanel() {
                   {renameError && <ErrorAlert>{renameError}</ErrorAlert>}
                 </form>
               ) : (
-                <ListRowTitle>{category.name}</ListRowTitle>
+                <ListRowButton
+                  aria-label={`Zmień nazwę kategorii: ${category.name}`}
+                  onClick={() => startEditing(category)}
+                >
+                  <ListRowTitle>{category.name}</ListRowTitle>
+                </ListRowButton>
               )}
               {editingId === category.id ? (
                 <div className="flex items-center gap-[13px]">
@@ -176,20 +180,18 @@ export function CategoryPanel() {
                   <Button variant="secondary" onClick={cancelEditing}>
                     Anuluj
                   </Button>
-                </div>
-              ) : (
-                <>
-                  <EditButton
-                    aria-label={`Zmień nazwę kategorii: ${category.name}`}
-                    title="Zmień nazwę"
-                    onClick={() => startEditing(category)}
-                  />
-                  <DeleteButton
+                  <Button
+                    variant="ghostDanger"
                     aria-label={`Usuń kategorię: ${category.name}`}
-                    onClick={() => openDeleteDialog(category)}
-                  />
-                </>
-              )}
+                    onClick={() => {
+                      cancelEditing();
+                      openDeleteDialog(category);
+                    }}
+                  >
+                    Usuń
+                  </Button>
+                </div>
+              ) : null}
             </ListRow>
           ))}
         </ul>

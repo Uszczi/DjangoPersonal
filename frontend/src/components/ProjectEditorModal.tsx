@@ -2,8 +2,10 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
+import { DeleteProjectModal } from "@/components/DeleteProjectModal";
 import { Button, ErrorAlert, Field, Modal, ModalFooter, Select, TextArea, TextInput } from "@/design-system";
 import type { ProjectResponse } from "@/generated/api";
+import { ShowModal } from "@/stores/modal";
 import { useProjectsStore, type ProjectInput } from "@/stores/projects";
 
 type ProjectEditorModalProps = {
@@ -181,6 +183,19 @@ export function ProjectEditorModal({
         </Field>
         {formError && <ErrorAlert>{formError}</ErrorAlert>}
         <ModalFooter>
+          {project && !project.isInbox && (
+            <Button
+              variant="ghostDanger"
+              className="mr-auto"
+              onClick={() => {
+                onClose();
+                ShowModal(DeleteProjectModal, { project });
+              }}
+              disabled={isSaving}
+            >
+              Usuń
+            </Button>
+          )}
           <Button
             variant="secondary"
             onClick={close}

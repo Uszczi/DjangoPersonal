@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
+import { DeleteTransactionModal } from "@/components/DeleteTransactionModal";
 import { Button, ErrorAlert, Field, Modal, ModalFooter, Select, TextInput } from "@/design-system";
+import { ShowModal } from "@/stores/modal";
 import type { TransactionResponse } from "@/generated/api";
 import { useCategoriesStore } from "@/stores/categories";
 import {
@@ -199,6 +201,19 @@ export function TransactionEditorModal({
         </Field>
         {formError && <ErrorAlert>{formError}</ErrorAlert>}
         <ModalFooter>
+          {transaction && (
+            <Button
+              variant="ghostDanger"
+              className="mr-auto"
+              onClick={() => {
+                onClose();
+                ShowModal(DeleteTransactionModal, { transaction });
+              }}
+              disabled={isSaving}
+            >
+              Usuń
+            </Button>
+          )}
           <Button
             variant="secondary"
             onClick={close}

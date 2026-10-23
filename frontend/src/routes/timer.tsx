@@ -6,11 +6,10 @@ import { apiErrorMessage } from "@/apiErrorMessage";
 import { validateProjectSearch } from "@/projectSearch";
 import {
   Button,
-  DeleteButton,
-  EditButton,
   ErrorAlert,
   Field,
   ListRow,
+  ListRowButton,
   ListRowTitle,
   Modal,
   ModalFooter,
@@ -628,26 +627,19 @@ export function TimerPage() {
           <ul className="flex flex-col" aria-label="Ostatnie wpisy">
             {recentEntries.map((entry) => (
               <ListRow key={entry.id}>
-                <>
+                <ListRowButton
+                  aria-label={`Edytuj wpis: ${taskTitle(entry)}`}
+                  onClick={() => openEntryEditForm(entry)}
+                >
                   <span className="shrink-0 font-utility text-[11px] text-muted">
                     {formatClock(entry.start)}–
                     {entry.end ? formatClock(entry.end) : "…"}
                   </span>
                   <ListRowTitle>{taskTitle(entry)}</ListRowTitle>
-                </>
-                <>
-                  <span className="mr-2 font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">
-                    {formatDuration(entryMinutes(entry)).toUpperCase()}
-                  </span>
-                  <EditButton
-                    aria-label={`Edytuj wpis: ${taskTitle(entry)}`}
-                    onClick={() => openEntryEditForm(entry)}
-                  />
-                  <DeleteButton
-                    aria-label={`Usuń wpis: ${taskTitle(entry)}`}
-                    onClick={() => void deleteEntryAction(entry)}
-                  />
-                </>
+                </ListRowButton>
+                <span className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">
+                  {formatDuration(entryMinutes(entry)).toUpperCase()}
+                </span>
               </ListRow>
             ))}
           </ul>
@@ -780,6 +772,17 @@ export function TimerPage() {
             </Field>
             {editError && <ErrorAlert>{editError}</ErrorAlert>}
             <ModalFooter>
+              <Button
+                variant="ghostDanger"
+                className="mr-auto"
+                onClick={() => {
+                  const entry = editingEntry;
+                  closeEntryEditor();
+                  void deleteEntryAction(entry);
+                }}
+              >
+                Usuń
+              </Button>
               <Button variant="secondary" onClick={closeEntryEditor}>
                 Anuluj
               </Button>

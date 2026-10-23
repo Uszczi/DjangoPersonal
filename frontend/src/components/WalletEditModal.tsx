@@ -3,8 +3,10 @@ import { useState, type FormEvent } from "react";
 import { apiErrorMessage } from "@/apiErrorMessage";
 import { Button, ErrorAlert, Field, Modal, ModalFooter, TextInput } from "@/design-system";
 import type { WalletResponse } from "@/generated/api";
+import { DeleteWalletModal } from "@/components/DeleteWalletModal";
 import { WalletColorPicker } from "@/components/WalletColorPicker";
 import { balanceError } from "@/money";
+import { ShowModal } from "@/stores/modal";
 import { useWalletsStore } from "@/stores/wallets";
 
 type WalletEditModalProps = {
@@ -88,6 +90,17 @@ export function WalletEditModal({ wallet, onClose }: WalletEditModalProps) {
         </Field>
         {formError && <ErrorAlert>{formError}</ErrorAlert>}
         <ModalFooter>
+          <Button
+            variant="ghostDanger"
+            className="mr-auto"
+            onClick={() => {
+              onClose();
+              ShowModal(DeleteWalletModal, { wallet });
+            }}
+            disabled={isSaving}
+          >
+            Usuń
+          </Button>
           <Button
             variant="secondary"
             onClick={close}

@@ -1,4 +1,4 @@
-import type { LiHTMLAttributes, ReactNode, Ref } from "react";
+import type { ButtonHTMLAttributes, LiHTMLAttributes, ReactNode, Ref } from "react";
 
 type ListRowProps = Omit<LiHTMLAttributes<HTMLLIElement>, "children"> & {
   ref?: Ref<HTMLLIElement>;
@@ -47,5 +47,25 @@ export function ListRowSubtitle({ children }: { children: ReactNode }) {
     <small className="mt-0.5 block truncate text-[12px] leading-relaxed text-muted">
       {children}
     </small>
+  );
+}
+
+type ListRowButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  /** Says what the click does to which item, e.g. "Edytuj portfel: Personal". */
+  "aria-label": string;
+};
+
+/**
+ * The clickable body of a row: wrap the title (and whatever sits next to it,
+ * like a colour dot) to open the item's editor. Drag handles and checkboxes
+ * stay outside it, since buttons cannot nest.
+ */
+export function ListRowButton({ className = "", type = "button", ...props }: ListRowButtonProps) {
+  return (
+    <button
+      type={type}
+      className={`-my-1 flex min-w-0 flex-1 cursor-pointer items-center gap-[13px] rounded border-0 bg-transparent px-2 py-1 text-left font-inherit transition-colors hover:bg-wash focus-visible:outline-2 focus-visible:outline-accent ${className}`.trim()}
+      {...props}
+    />
   );
 }

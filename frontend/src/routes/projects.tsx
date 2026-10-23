@@ -18,12 +18,10 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-import { DeleteProjectModal } from "@/components/DeleteProjectModal";
 import {
   Button,
-  DeleteButton,
-  EditButton,
   ListRow,
+  ListRowButton,
   ListRowSubtitle,
   ListRowTitle,
 } from "@/design-system";
@@ -46,13 +44,11 @@ type ProjectRowProject = {
 type ProjectRowProps = {
   project: ProjectRowProject;
   onEdit: () => void;
-  /** Absent for the Inbox, which cannot be deleted. */
-  onDelete?: () => void;
   /** The drag handle's dnd-kit props; the Inbox, which never moves, has none. */
   dragHandle?: HTMLAttributes<HTMLSpanElement>;
 } & Pick<ComponentProps<typeof ListRow>, "ref" | "style">;
 
-function ProjectRow({ project, onEdit, onDelete, dragHandle, ref, style }: ProjectRowProps) {
+function ProjectRow({ project, onEdit, dragHandle, ref, style }: ProjectRowProps) {
   return (
     <ListRow ref={ref} style={style}>
       <>
@@ -68,22 +64,19 @@ function ProjectRow({ project, onEdit, onDelete, dragHandle, ref, style }: Proje
         ) : (
           <span className="inline-block w-[14px]" aria-hidden="true" />
         )}
-        <div className="min-w-0">
-          <ListRowTitle>{project.name}</ListRowTitle>
-          {project.description && <ListRowSubtitle>{project.description}</ListRowSubtitle>}
-          {project.isInbox && (
-            <span className="mt-1 inline-block rounded-full border border-signal bg-signal-pale px-2 py-0.5 text-[10px] font-semibold tracking-wide text-signal">
-              DOMYŚLNY
-            </span>
-          )}
-        </div>
+        <ListRowButton aria-label={`Edytuj projekt: ${project.name}`} onClick={onEdit}>
+          <div className="min-w-0">
+            <ListRowTitle>{project.name}</ListRowTitle>
+            {project.description && <ListRowSubtitle>{project.description}</ListRowSubtitle>}
+            {project.isInbox && (
+              <span className="mt-1 inline-block rounded-full border border-signal bg-signal-pale px-2 py-0.5 text-[10px] font-semibold tracking-wide text-signal">
+                DOMYŚLNY
+              </span>
+            )}
+          </div>
+        </ListRowButton>
       </>
-      <>
-        <EditButton aria-label={`Edytuj projekt: ${project.name}`} onClick={onEdit} />
-        {onDelete && (
-          <DeleteButton aria-label={`Usuń projekt: ${project.name}`} onClick={onDelete} />
-        )}
-      </>
+      {null}
     </ListRow>
   );
 }
@@ -167,10 +160,6 @@ export function ProjectsPage() {
     ShowModal(ProjectEditorModal, { project });
   }
 
-  function openDeleteDialog(project: (typeof projects)[number]) {
-    ShowModal(DeleteProjectModal, { project });
-  }
-
   if (isLoading) {
     return (
       <div className="pt-[40px] text-muted" role="status">
@@ -228,7 +217,6 @@ export function ProjectsPage() {
                     key={project.id}
                     project={project}
                     onEdit={() => openEditForm(project)}
-                    onDelete={() => openDeleteDialog(project)}
                   />
                 ))}
               </SortableContext>

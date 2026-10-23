@@ -260,7 +260,8 @@ describe('Wallets', () => {
     const list = await screen.findByRole('list', { name: 'Portfele' })
     expect(within(list).getByText('Personal')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Usuń portfel: Personal' }))
+    await user.click(screen.getByRole('button', { name: 'Edytuj portfel: Personal' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Usuń' }))
 
     expect(await screen.findByText(/zostanie trwale usunięty/)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Usuń portfel' }))

@@ -38,7 +38,7 @@ export function Modal({
     <dialog
       {...dialogProps}
       aria-labelledby={titleId}
-      className="fixed inset-0 m-0 h-full max-h-none w-full max-w-none items-start justify-center overflow-y-auto border-0 bg-overlay px-0 py-4 pt-16 text-ink backdrop:bg-transparent open:flex md:items-center md:px-5 md:py-5 md:pt-5"
+      className="fixed inset-0 m-0 h-full max-h-none w-full max-w-none items-start justify-center overflow-y-auto border-0 bg-overlay px-0 py-4 pt-16 text-ink backdrop:bg-transparent open:flex md:px-5 md:py-5 md:pt-[4vh]"
     >
       <section
         className={`w-full ${sectionClasses[size]} rounded-lg border border-line bg-paper p-[29px] shadow-dialog animate-dialog-enter`}

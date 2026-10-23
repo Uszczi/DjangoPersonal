@@ -1,7 +1,6 @@
-import { DeleteWalletModal } from "@/components/DeleteWalletModal";
 import { WalletColorDot } from "@/components/WalletColorDot";
 import { WalletEditModal } from "@/components/WalletEditModal";
-import { DeleteButton, EditButton, ListRow, ListRowSubtitle, ListRowTitle } from "@/design-system";
+import { ListRow, ListRowButton, ListRowSubtitle, ListRowTitle } from "@/design-system";
 import type { WalletResponse } from "@/generated/api";
 import { ShowModal } from "@/stores/modal";
 
@@ -31,7 +30,10 @@ function WalletRow({ wallet }: { wallet: WalletResponse }) {
 
   return (
     <ListRow>
-      <>
+      <ListRowButton
+        aria-label={`Edytuj portfel: ${wallet.name}`}
+        onClick={() => ShowModal(WalletEditModal, { wallet })}
+      >
         <WalletColorDot color={wallet.color} />
         <div className="min-w-0">
           <ListRowTitle>{wallet.name}</ListRowTitle>
@@ -39,17 +41,8 @@ function WalletRow({ wallet }: { wallet: WalletResponse }) {
             {transactionCount} {transactionCountLabel(transactionCount)}
           </ListRowSubtitle>
         </div>
-      </>
-      <>
-        <EditButton
-          aria-label={`Edytuj portfel: ${wallet.name}`}
-          onClick={() => ShowModal(WalletEditModal, { wallet })}
-        />
-        <DeleteButton
-          aria-label={`Usuń portfel: ${wallet.name}`}
-          onClick={() => ShowModal(DeleteWalletModal, { wallet })}
-        />
-      </>
+      </ListRowButton>
+      {null}
     </ListRow>
   );
 }

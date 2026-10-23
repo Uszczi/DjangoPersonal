@@ -296,7 +296,8 @@ describe('Time tracking', () => {
       }),
     )
 
-    await user.click(screen.getByRole('button', { name: 'Usuń wpis: Prepare outline' }))
+    await user.click(screen.getByRole('button', { name: 'Edytuj wpis: Prepare outline' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Usuń' }))
 
     await screen.findByText('Brak wpisów na dziś.')
     expect(fetchMock).toHaveBeenNthCalledWith(

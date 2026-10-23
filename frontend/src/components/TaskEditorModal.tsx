@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
+import { DeleteTaskModal } from "@/components/DeleteTaskModal";
 import { Button, ErrorAlert, Field, Modal, ModalFooter, Select, TextArea } from "@/design-system";
+import { ShowModal } from "@/stores/modal";
 import type { TaskResponse } from "@/generated/api";
 import { useProjectsStore } from "@/stores/projects";
 import { useTasksStore, type TaskInput } from "@/stores/tasks";
@@ -181,6 +183,19 @@ export function TaskEditorModal({
         )}
         {formError && <ErrorAlert>{formError}</ErrorAlert>}
         <ModalFooter>
+          {task && (
+            <Button
+              variant="ghostDanger"
+              className="mr-auto"
+              onClick={() => {
+                onClose();
+                ShowModal(DeleteTaskModal, { task });
+              }}
+              disabled={isSaving}
+            >
+              Usuń
+            </Button>
+          )}
           <Button
             variant="secondary"
             onClick={close}

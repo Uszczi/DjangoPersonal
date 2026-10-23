@@ -182,6 +182,7 @@ describe('Categories', () => {
     renderApp('/expenses')
     await screen.findByRole('list', { name: 'Lista kategorii' })
 
+    await user.click(screen.getByRole('button', { name: 'Zmień nazwę kategorii: Jedzenie' }))
     await user.click(screen.getByRole('button', { name: 'Usuń kategorię: Jedzenie' }))
     expect(await screen.findByText(/zostanie trwale usunięta/)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Usuń kategorię' }))

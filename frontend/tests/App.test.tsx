@@ -627,7 +627,8 @@ describe('Deleting tasks and projects', () => {
 
     renderApp('/tasks')
     await screen.findByText('Prepare outline')
-    await user.click(screen.getByRole('button', { name: 'Usuń zadanie: Prepare outline' }))
+    await user.click(screen.getByRole('button', { name: 'Edytuj zadanie: Prepare outline' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Usuń' }))
 
     expect(
       screen.getByRole('heading', { name: 'Usunąć zadanie?' }),
@@ -644,7 +645,8 @@ describe('Deleting tasks and projects', () => {
       expect.objectContaining({ method: 'DELETE' }),
     )
 
-    await user.click(screen.getByRole('button', { name: 'Usuń zadanie: Prepare outline' }))
+    await user.click(screen.getByRole('button', { name: 'Edytuj zadanie: Prepare outline' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Usuń' }))
     await user.click(screen.getByRole('button', { name: 'Usuń zadanie' }))
 
     await waitFor(() =>
@@ -669,7 +671,8 @@ describe('Deleting tasks and projects', () => {
 
     renderApp('/tasks')
     await screen.findByText('Prepare outline')
-    await user.click(screen.getByRole('button', { name: 'Usuń zadanie: Prepare outline' }))
+    await user.click(screen.getByRole('button', { name: 'Edytuj zadanie: Prepare outline' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Usuń' }))
     await user.click(screen.getByRole('button', { name: 'Usuń zadanie' }))
 
     expect(

@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import { api } from "@/api";
-import { Button, DeleteButton, EditButton, ListRow, TextInput } from "@/design-system";
+import { Button, DeleteButton, ListRow, ListRowButton, ListRowTitle } from "@/design-system";
 import { useWhiteboardsStore } from "@/stores/whiteboards";
 
 export const Route = createFileRoute("/whiteboard/")({
@@ -14,13 +14,9 @@ function WhiteboardsPage() {
   const isLoading = useWhiteboardsStore((s) => s.isLoading);
   const pageError = useWhiteboardsStore((s) => s.pageError);
   const load = useWhiteboardsStore((s) => s.loadWhiteboards);
-  const rename = useWhiteboardsStore((s) => s.renameWhiteboard);
   const remove = useWhiteboardsStore((s) => s.deleteWhiteboard);
 
   const navigate = useNavigate();
-
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editingName, setEditingName] = useState("");
 
   useEffect(() => {
     void load();
@@ -36,16 +32,6 @@ function WhiteboardsPage() {
     } catch {
       // ignore
     }
-  }
-
-  async function handleRename(id: number) {
-    const name = editingName.trim();
-    if (!name) {
-      setEditingId(null);
-      return;
-    }
-    await rename(id, name);
-    setEditingId(null);
   }
 
   async function handleDelete(id: number) {
@@ -101,43 +87,21 @@ function WhiteboardsPage() {
           <ul className="flex flex-col" aria-label="Tablice">
             {whiteboards.map((wb) => (
               <ListRow key={wb.id}>
-                {editingId === wb.id ? (
-                  <TextInput
-                    aria-label="Nazwa tablicy"
-                    value={editingName}
-                    autoFocus
-                    onChange={(e) => setEditingName(e.target.value)}
-                    onBlur={() => void handleRename(wb.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") void handleRename(wb.id);
-                      if (e.key === "Escape") setEditingId(null);
-                    }}
-                  />
-                ) : (
-                  <button
-                    className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded border border-transparent bg-transparent px-2 py-1 text-left transition-colors hover:bg-wash"
-                    onClick={() =>
-                      navigate({ to: "/whiteboard/$boardId", params: { boardId: String(wb.id) } })
-                    }
-                  >
-                    <span className="text-[16px]" aria-hidden="true">
-                      {wb.kind === "markdown" ? "📝" : "🎨"}
-                    </span>
-                    <span className="truncate text-[14px] font-medium text-ink">{wb.name}</span>
-                  </button>
-                )}
+                <ListRowButton
+                  aria-label={`Otwórz ${wb.kind === "markdown" ? "notatkę" : "tablicę"}: ${wb.name}`}
+                  onClick={() =>
+                    navigate({ to: "/whiteboard/$boardId", params: { boardId: String(wb.id) } })
+                  }
+                >
+                  <span className="text-[16px]" aria-hidden="true">
+                    {wb.kind === "markdown" ? "📝" : "🎨"}
+                  </span>
+                  <ListRowTitle>{wb.name}</ListRowTitle>
+                </ListRowButton>
                 <>
                   <span className="mr-2 text-[12px] text-muted">
                     {new Date(wb.updatedAt).toLocaleDateString("pl-PL")}
                   </span>
-                  <EditButton
-                    aria-label={`Zmień nazwę tablicy: ${wb.name}`}
-                    title="Zmień nazwę"
-                    onClick={() => {
-                      setEditingId(wb.id);
-                      setEditingName(wb.name);
-                    }}
-                  />
                   <DeleteButton
                     aria-label={`Usuń tablicę: ${wb.name}`}
                     onClick={() => void handleDelete(wb.id)}

@@ -27,14 +27,12 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useDroppable } from "@dnd-kit/core";
 
-import { DeleteTaskModal } from "@/components/DeleteTaskModal";
 import {
   Button,
-  DeleteButton,
   Drawer,
-  EditButton,
   IconButton,
   ListRow,
+  ListRowButton,
   ListRowSubtitle,
   ListRowTitle,
 } from "@/design-system";
@@ -113,14 +111,12 @@ function SortableTaskRow({
   onToggleStatus,
   onStartTimer,
   onEdit,
-  onDelete,
 }: {
   task: TaskResponse;
   isCompleted: boolean;
   onToggleStatus: () => void;
   onStartTimer: () => void;
   onEdit: () => void;
-  onDelete: () => void;
 }) {
   const {
     attributes,
@@ -163,10 +159,12 @@ function SortableTaskRow({
         >
           {isCompleted ? "✓" : ""}
         </button>
-        <div className="min-w-0">
-          <ListRowTitle className={isCompleted ? "line-through" : ""}>{task.title}</ListRowTitle>
-          {task.description && <ListRowSubtitle>{task.description}</ListRowSubtitle>}
-        </div>
+        <ListRowButton aria-label={`Edytuj zadanie: ${task.title}`} onClick={onEdit}>
+          <div className="min-w-0">
+            <ListRowTitle className={isCompleted ? "line-through" : ""}>{task.title}</ListRowTitle>
+            {task.description && <ListRowSubtitle>{task.description}</ListRowSubtitle>}
+          </div>
+        </ListRowButton>
       </>
       <>
         <IconButton
@@ -177,8 +175,6 @@ function SortableTaskRow({
         >
           <span aria-hidden="true">▶</span>
         </IconButton>
-        <EditButton aria-label={`Edytuj zadanie: ${task.title}`} onClick={onEdit} />
-        <DeleteButton aria-label={`Usuń zadanie: ${task.title}`} onClick={onDelete} />
       </>
     </ListRow>
   );
@@ -372,10 +368,6 @@ export function TasksPage() {
     ShowModal(TaskEditorModal, { task });
   }
 
-  function openTaskDeleteDialog(task: TaskResponse) {
-    ShowModal(DeleteTaskModal, { task });
-  }
-
   async function startTimer(task: TaskResponse) {
     if (await startTaskTimer(task)) {
       navigate({ to: "/timer", search: { project: selectedProjectId ?? undefined } });
@@ -462,7 +454,6 @@ export function TasksPage() {
                         onToggleStatus={() => void toggleTaskStatus(task)}
                         onStartTimer={() => void startTimer(task)}
                         onEdit={() => openTaskEditForm(task)}
-                        onDelete={() => openTaskDeleteDialog(task)}
                       />
                     ))}
                   </SortableContext>

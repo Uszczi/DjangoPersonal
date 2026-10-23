@@ -3,8 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { TransactionEditorModal } from "@/components/TransactionEditorModal";
-import { DeleteTransactionModal } from "@/components/DeleteTransactionModal";
-import { Button, DeleteButton, EditButton, ListRow, ListRowSubtitle, ListRowTitle } from "@/design-system";
+import { Button, ListRow, ListRowButton, ListRowSubtitle, ListRowTitle } from "@/design-system";
 import { WalletSelect } from "@/components/WalletSelect";
 import { type TransactionResponse } from "@/generated/api";
 import { ShowModal } from "@/stores/modal";
@@ -151,33 +150,26 @@ export function WalletDetailPage() {
                   : undefined;
                 return (
                   <ListRow key={transaction.id}>
-                    <div className="min-w-0">
-                      <ListRowTitle>{transaction.title}</ListRowTitle>
-                      {transaction.description && (
-                        <ListRowSubtitle>{transaction.description}</ListRowSubtitle>
-                      )}
-                      {category && <ListRowSubtitle>{category.name}</ListRowSubtitle>}
-                    </div>
-                    <>
-                      <span className="mr-2 font-utility text-[13px] font-semibold text-ink">
-                        {transaction.amount}
-                      </span>
-                      <EditButton
-                        aria-label={`Edytuj transakcję: ${transaction.title}`}
-                        onClick={() =>
-                          ShowModal(TransactionEditorModal, {
-                            walletId: wallet.id,
-                            transaction,
-                          })
-                        }
-                      />
-                      <DeleteButton
-                        aria-label={`Usuń transakcję: ${transaction.title}`}
-                        onClick={() =>
-                          ShowModal(DeleteTransactionModal, { transaction })
-                        }
-                      />
-                    </>
+                    <ListRowButton
+                      aria-label={`Edytuj transakcję: ${transaction.title}`}
+                      onClick={() =>
+                        ShowModal(TransactionEditorModal, {
+                          walletId: wallet.id,
+                          transaction,
+                        })
+                      }
+                    >
+                      <div className="min-w-0">
+                        <ListRowTitle>{transaction.title}</ListRowTitle>
+                        {transaction.description && (
+                          <ListRowSubtitle>{transaction.description}</ListRowSubtitle>
+                        )}
+                        {category && <ListRowSubtitle>{category.name}</ListRowSubtitle>}
+                      </div>
+                    </ListRowButton>
+                    <span className="font-utility text-[13px] font-semibold text-ink">
+                      {transaction.amount}
+                    </span>
                   </ListRow>
                 );
               })}
