@@ -6,9 +6,29 @@
   --color-deep-ink: #18343b;
   --color-ink: #1b3439;
   --color-muted: #6c8082;
+  --color-hint: #718487;
   --color-line: #d2ddda;
   --color-signal: #d45b3e;
   --color-signal-pale: #f5e3dc;
+  --color-signal-strong: #b94b31;
+
+  /* Semantic tokens shared by the design system (src/design-system). */
+  --color-ink-soft: #344d52;
+  --color-accent: #477c7c;
+  --color-surface: #f8faf8;
+  --color-wash: #f0f4f1;
+  --color-line-soft: #e1e8e3;
+  --color-control-border: #cbd7d3;
+  --color-control-border-hover: #9db0ad;
+  --color-icon: #64797c;
+  --color-icon-wash: #eaf0ed;
+  --color-danger: #a23a28;
+  --color-danger-strong: #872d1e;
+  --color-danger-pale: #fff0eb;
+  --color-danger-ink: #873b2b;
+  --color-overlay: rgb(12 29 33 / 52%);
+
+  --shadow-dialog: 0 24px 80px rgb(9 24 28 / 25%);
 
   --font-sans: 'Segoe UI', system-ui, sans-serif;
   --font-display: 'Trebuchet MS', 'Segoe UI', sans-serif;

@@ -68,7 +68,7 @@ export function MarkdownHighlightEditor({
         <code dangerouslySetInnerHTML={{ __html: highlightMarkdown(value) }} />
       </pre>
       <textarea
-        className="absolute inset-0 h-full w-full resize-none border-0 bg-transparent p-3 font-mono text-sm leading-relaxed text-transparent caret-[#344d52] outline-none placeholder:text-[#93a5a2] [scrollbar-width:none] [tab-size:2] [&::-webkit-scrollbar]:hidden"
+        className="absolute inset-0 h-full w-full resize-none border-0 bg-transparent p-3 font-mono text-sm leading-relaxed text-transparent caret-ink-soft outline-none placeholder:text-[#93a5a2] [scrollbar-width:none] [tab-size:2] [&::-webkit-scrollbar]:hidden"
         value={value}
         placeholder={placeholder}
         spellCheck={false}

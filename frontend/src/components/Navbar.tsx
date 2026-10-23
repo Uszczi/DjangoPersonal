@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 
 import { useEffect, useState } from "react";
 
+import { Button } from "@/design-system";
 import { useAuthStore } from "@/stores/auth";
 
 type TopTabPath = "/" | "/tasks" | "/projects" | "/timer" | "/whiteboard" | "/expenses";
@@ -90,28 +91,27 @@ export function Navbar() {
             <Link className="text-[13px] font-medium text-[#b5c6c6] no-underline transition-colors hover:text-white" to="/user">
               {user.username}
             </Link>
-            <button
-              type="button"
-              className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-[#c9d5d2] bg-transparent px-[15px] text-[12px] font-semibold text-[#344d52] transition-all hover:bg-[#f8faf8] hover:border-[#9db0ad] disabled:cursor-wait disabled:opacity-70 whitespace-nowrap"
+            <Button
+              variant="secondary"
               onClick={() => {
                 logout();
                 navigate({ to: "/login" });
               }}
             >
               Wyloguj
-            </button>
+            </Button>
           </div>
         )}
       </header>
       {isNavOpen && (
         <div
-          className="fixed inset-0 z-5 flex items-start justify-end bg-[rgb(12_29_33/52%)] p-5"
+          className="fixed inset-0 z-5 flex items-start justify-end bg-overlay p-5"
           onClick={(event) => {
             if (event.target === event.currentTarget) closeNav();
           }}
         >
           <nav
-            className="flex min-h-[200px] w-full max-w-[320px] flex-col gap-5 rounded-lg border border-[#d4dfda] bg-paper p-[29px] shadow-[0_24px_80px_rgb(9_24_28/25%)] animate-nav-enter"
+            className="flex min-h-[200px] w-full max-w-[320px] flex-col gap-5 rounded-lg border border-line bg-paper p-[29px] shadow-dialog animate-nav-enter"
             aria-label="Nawigacja widoków"
             id="mobile-nav"
           >
@@ -133,9 +133,8 @@ export function Navbar() {
                 <Link className="text-[13px] font-medium text-[#b5c6c6] no-underline transition-colors hover:text-white" to="/user" onClick={closeNav}>
                   {user.username}
                 </Link>
-                <button
-                  type="button"
-                  className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-[#c9d5d2] bg-transparent px-[15px] text-[12px] font-semibold text-[#344d52] transition-all hover:bg-[#f8faf8] hover:border-[#9db0ad] disabled:cursor-wait disabled:opacity-70 whitespace-nowrap"
+                <Button
+                  variant="secondary"
                   onClick={() => {
                     closeNav();
                     logout();
@@ -143,7 +142,7 @@ export function Navbar() {
                   }}
                 >
                   Wyloguj
-                </button>
+                </Button>
               </div>
             )}
           </nav>

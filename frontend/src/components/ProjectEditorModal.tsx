@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
+import { Button, ErrorAlert, Field, Modal, ModalFooter, Select, TextArea, TextInput } from "@/design-system";
 import type { ProjectResponse } from "@/generated/api";
 import { useProjectsStore, type ProjectInput } from "@/stores/projects";
 
@@ -94,157 +95,112 @@ export function ProjectEditorModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-5 flex items-start justify-center bg-[rgb(12_29_33/52%)] px-0 py-4 pt-16 md:px-5 md:py-5 md:pt-5 md:items-center"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) close();
-      }}
+    <Modal
+      kicker={project ? "ZMIANA SZCZEGÓŁÓW" : "NOWE MIEJSCE"}
+      title={project ? "Edytuj projekt" : "Nowy projekt"}
+      titleId="dialog-title"
+      onClose={close}
+      size="lg"
     >
-      <section
-        className="w-full max-w-[480px] rounded-lg border border-[#d4dfda] bg-paper p-[29px] shadow-[0_24px_80px_rgb(9_24_28/25%)] animate-dialog-enter"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="dialog-title"
-      >
-        <div className="mb-[27px] flex items-start justify-between">
-          <div>
-            <p className="mb-[9px] font-utility text-[10px] font-bold leading-[1.4] tracking-[0.14em] text-signal">
-              {project ? "ZMIANA SZCZEGÓŁÓW" : "NOWE MIEJSCE"}
-            </p>
-            <h2
-              id="dialog-title"
-              className="m-0 font-display text-[28px] leading-[1.1] tracking-[-0.05em] text-ink"
-            >
-              {project ? "Edytuj projekt" : "Nowy projekt"}
-            </h2>
+      <form onSubmit={handleSubmit}>
+        <Field
+          label="Nazwa projektu"
+          hint={project?.isInbox ? "Nazwa Inbox jest stała." : undefined}
+        >
+          <TextInput
+            maxLength={100}
+            value={form.name}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                name: event.target.value,
+              }))
+            }
+            readOnly={Boolean(project?.isInbox)}
+            required
+          />
+        </Field>
+        <Field label="Opis (opcjonalnie)">
+          <TextArea
+            rows={3}
+            value={form.description}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                description: event.target.value,
+              }))
+            }
+          />
+        </Field>
+        <Field label="Statusy (w kolejności wyświetlania)">
+          <div className="grid gap-2">
+            {form.statuses.map((status, index) => (
+              <div className="flex gap-2" key={index}>
+                <input
+                  className="flex-1 rounded border border-control-border bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-accent focus:ring-[3px] focus:ring-accent/15"
+                  value={status}
+                  onChange={(event) => updateStatus(index, event.target.value)}
+                  aria-label={`Status ${index + 1}`}
+                />
+                <button
+                  type="button"
+                  className="inline-flex h-[38px] w-[34px] flex-none items-center justify-center rounded-md border border-transparent bg-transparent text-[18px] text-icon transition-all hover:-translate-y-px disabled:opacity-40 cursor-pointer"
+                  onClick={() => removeStatus(index)}
+                  disabled={form.statuses.length <= 1}
+                  aria-label={`Usuń status ${index + 1}`}
+                >
+                  <span aria-hidden="true">×</span>
+                </button>
+              </div>
+            ))}
           </div>
-          <button
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-transparent bg-transparent text-[23px] text-[#64797c] transition-all hover:-translate-y-px hover:bg-[#eaf0ed] cursor-pointer"
-            onClick={close}
-            aria-label="Zamknij"
+          <Button
+            variant="secondary"
+            className="w-full"
+            onClick={addStatus}
           >
-            <span aria-hidden="true">×</span>
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          <label className="mb-[18px] grid gap-2 text-[12px] font-semibold text-[#334d52]">
-            <span>Nazwa projektu</span>
-            <input
-              className="w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
-              autoFocus
-              maxLength={100}
-              value={form.name}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  name: event.target.value,
-                }))
-              }
-              readOnly={Boolean(project?.isInbox)}
-              required
-            />
-            {project?.isInbox && (
-              <small className="text-[11px] font-normal text-[#718487]">
-                Nazwa Inbox jest stała.
-              </small>
-            )}
-          </label>
-          <label className="mb-[18px] grid gap-2 text-[12px] font-semibold text-[#334d52]">
-            <span>Opis (opcjonalnie)</span>
-            <textarea
-              className="w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
-              rows={3}
-              value={form.description}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  description: event.target.value,
-                }))
-              }
-            />
-          </label>
-          <div className="mb-[18px] grid gap-2 text-[12px] font-semibold text-[#334d52]">
-            <span>Statusy (w kolejności wyświetlania)</span>
-            <div className="grid gap-2">
-              {form.statuses.map((status, index) => (
-                <div className="flex gap-2" key={index}>
-                  <input
-                    className="flex-1 rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
-                    value={status}
-                    onChange={(event) => updateStatus(index, event.target.value)}
-                    aria-label={`Status ${index + 1}`}
-                  />
-                  <button
-                    type="button"
-                    className="inline-flex h-[38px] w-[34px] flex-none items-center justify-center rounded-md border border-transparent bg-transparent text-[18px] text-[#64797c] transition-all hover:-translate-y-px disabled:opacity-40 cursor-pointer"
-                    onClick={() => removeStatus(index)}
-                    disabled={form.statuses.length <= 1}
-                    aria-label={`Usuń status ${index + 1}`}
-                  >
-                    <span aria-hidden="true">×</span>
-                  </button>
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              className="inline-flex min-h-[40px] w-full cursor-pointer items-center justify-center gap-3 whitespace-nowrap rounded-[5px] border border-[#c9d5d2] bg-transparent px-[15px] text-[12px] font-semibold text-[#344d52] transition-all hover:border-[#9db0ad] hover:bg-[#f8faf8] disabled:cursor-wait disabled:opacity-70"
-              onClick={addStatus}
-            >
-              <span aria-hidden="true">+</span> Dodaj status
-            </button>
-          </div>
-          <label className="mb-[18px] grid gap-2 text-[12px] font-semibold text-[#334d52]">
-            <span>Status końcowy („zrobione")</span>
-            <select
-              className="w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
-              value={form.terminalStatus}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  terminalStatus: event.target.value,
-                }))
-              }
-            >
-              {form.statuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </label>
-          {formError && (
-            <p
-              className="mb-[17px] border-l-[3px] border-signal bg-[#fff0eb] px-[11px] py-[9px] text-[12px] leading-relaxed text-[#873b2b]"
-              role="alert"
-            >
-              {formError}
-            </p>
-          )}
-          <div className="mt-[26px] flex justify-end gap-[9px] border-t border-[#e1e8e3] pt-[18px]">
-            <button
-              className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 whitespace-nowrap rounded-[5px] border border-[#c9d5d2] bg-transparent px-[15px] text-[12px] font-semibold text-[#344d52] transition-all hover:border-[#9db0ad] hover:bg-[#f8faf8] disabled:cursor-wait disabled:opacity-70"
-              type="button"
-              onClick={close}
-              disabled={isSaving}
-            >
-              Anuluj
-            </button>
-            <button
-              className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-signal px-[15px] text-[12px] font-semibold text-white transition-all hover:-translate-y-px hover:bg-[#b94b31] disabled:cursor-wait disabled:opacity-70"
-              type="submit"
-              disabled={isSaving}
-            >
-              {isSaving
-                ? "Zapisywanie…"
-                : project
-                  ? "Zapisz zmiany"
-                  : "Utwórz projekt"}
-            </button>
-          </div>
-        </form>
-      </section>
-    </div>
+            <span aria-hidden="true">+</span> Dodaj status
+          </Button>
+        </Field>
+        <Field label={'Status końcowy („zrobione")'}>
+          <Select
+            value={form.terminalStatus}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                terminalStatus: event.target.value,
+              }))
+            }
+          >
+            {form.statuses.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        {formError && <ErrorAlert>{formError}</ErrorAlert>}
+        <ModalFooter>
+          <Button
+            variant="secondary"
+            onClick={close}
+            disabled={isSaving}
+          >
+            Anuluj
+          </Button>
+          <Button
+            variant="primary"
+            type="submit"
+            disabled={isSaving}
+          >
+            {isSaving
+              ? "Zapisywanie…"
+              : project
+                ? "Zapisz zmiany"
+                : "Utwórz projekt"}
+          </Button>
+        </ModalFooter>
+      </form>
+    </Modal>
   );
 }

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 import { TransactionEditorModal } from "@/components/TransactionEditorModal";
 import { DeleteTransactionModal } from "@/components/DeleteTransactionModal";
+import { Button } from "@/design-system";
 import { WalletSelect } from "@/components/WalletSelect";
 import { type TransactionResponse } from "@/generated/api";
 import { ShowModal } from "@/stores/modal";
@@ -115,19 +116,19 @@ export function WalletDetailPage() {
           <h1 className="font-display text-[28px] font-bold tracking-[-0.02em] text-ink">{wallet.name}</h1>
         </div>
         <WalletSelect activeWalletId={wallet.id} />
-        <button
-          className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-signal px-[15px] text-[12px] font-semibold text-white transition-all hover:bg-[#b94b31] hover:-translate-y-px disabled:cursor-wait disabled:opacity-70"
+        <Button
+          variant="primary"
           onClick={() =>
             ShowModal(TransactionEditorModal, { walletId: wallet.id })
           }
         >
           <span aria-hidden="true">+</span>
           Nowa transakcja
-        </button>
+        </Button>
       </div>
 
       {transactionLoadError?.walletId === wallet.id && (
-        <p className="py-4 text-[13px] text-[#a23a28]" role="alert">
+        <p className="py-4 text-[13px] text-danger" role="alert">
           {transactionLoadError.message}
         </p>
       )}
@@ -161,9 +162,8 @@ export function WalletDetailPage() {
                     </div>
                     <span className="font-utility text-[13px] font-semibold text-ink">{transaction.amount}</span>
                     <div className="flex items-center gap-2">
-                      <button
-                        className="inline-flex min-h-[28px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-transparent px-[10px] text-[12px] font-semibold text-[#6c8082] transition-all hover:bg-[#f0f4f1] hover:text-ink"
-                        type="button"
+                      <Button
+                        variant="ghost"
                         aria-label={`Edytuj transakcję: ${transaction.title}`}
                         onClick={() =>
                           ShowModal(TransactionEditorModal, {
@@ -173,17 +173,16 @@ export function WalletDetailPage() {
                         }
                       >
                         Edytuj
-                      </button>
-                      <button
-                        className="inline-flex min-h-[28px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-transparent px-[10px] text-[12px] font-semibold text-[#a23a28] transition-all hover:bg-[#f5e3dc] hover:text-[#872d1e]"
-                        type="button"
+                      </Button>
+                      <Button
+                        variant="ghostDanger"
                         aria-label={`Usuń transakcję: ${transaction.title}`}
                         onClick={() =>
                           ShowModal(DeleteTransactionModal, { transaction })
                         }
                       >
                         Usuń
-                      </button>
+                      </Button>
                     </div>
                   </li>
                 );

@@ -28,6 +28,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { useDroppable } from "@dnd-kit/core";
 
 import { DeleteTaskModal } from "@/components/DeleteTaskModal";
+import { Button } from "@/design-system";
 import { ProjectEditorModal } from "@/components/ProjectEditorModal";
 import { ProjectsSidebar } from "@/components/ProjectsSidebar";
 import { TaskEditorModal } from "@/components/TaskEditorModal";
@@ -80,7 +81,7 @@ function SortableTaskRow({
       data-task-id={task.id}
     >
       <span
-        className="inline-flex cursor-grab items-center justify-center text-[14px] text-[#9aafaa] transition-colors hover:text-[#6c8082]"
+        className="inline-flex cursor-grab items-center justify-center text-[14px] text-[#9aafaa] transition-colors hover:text-muted"
         aria-label={`Przeciągnij zadanie: ${task.title}`}
         title="Przeciągnij"
         {...attributes}
@@ -109,7 +110,7 @@ function SortableTaskRow({
       </div>
       <div className="flex items-center gap-1">
         <button
-          className="inline-flex h-[28px] items-center justify-center rounded border border-transparent bg-transparent px-2 text-[16px] text-[#6c8082] transition-colors hover:bg-[#f0f4f1] hover:text-ink cursor-pointer"
+          className="inline-flex h-[28px] items-center justify-center rounded border border-transparent bg-transparent px-2 text-[16px] text-muted transition-colors hover:bg-wash hover:text-ink cursor-pointer"
           type="button"
           aria-label={`Uruchom timer: ${task.title}`}
           title="Uruchom timer"
@@ -118,7 +119,7 @@ function SortableTaskRow({
           <span aria-hidden="true">▶</span>
         </button>
         <button
-          className="inline-flex h-[28px] w-[28px] cursor-pointer items-center justify-center rounded-[5px] border border-transparent bg-transparent text-[16px] text-[#6c8082] transition-all hover:bg-[#f0f4f1] hover:text-ink"
+          className="inline-flex h-[28px] w-[28px] cursor-pointer items-center justify-center rounded-[5px] border border-transparent bg-transparent text-[16px] text-muted transition-all hover:bg-wash hover:text-ink"
           type="button"
           aria-label={`Edytuj zadanie: ${task.title}`}
           title="Edytuj"
@@ -127,7 +128,7 @@ function SortableTaskRow({
           <span aria-hidden="true">✎</span>
         </button>
         <button
-          className="inline-flex h-[28px] w-[28px] cursor-pointer items-center justify-center rounded-[5px] border border-transparent bg-transparent text-[16px] text-[#a23a28] transition-all hover:bg-[#f5e3dc] hover:text-[#872d1e]"
+          className="inline-flex h-[28px] w-[28px] cursor-pointer items-center justify-center rounded-[5px] border border-transparent bg-transparent text-[16px] text-danger transition-all hover:bg-signal-pale hover:text-danger-strong"
           type="button"
           aria-label={`Usuń zadanie: ${task.title}`}
           title="Usuń"
@@ -349,12 +350,13 @@ export function TasksPage() {
       <div className="pt-[40px] text-muted">
         <p className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">BRAK PROJEKTÓW</p>
         <h1 className="mt-2 font-display text-[28px] font-bold tracking-[-0.02em] text-ink">Utwórz pierwsze miejsce pracy</h1>
-        <button
-          className="mt-5 inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-signal px-[15px] text-[12px] font-semibold text-white transition-all hover:bg-[#b94b31] hover:-translate-y-px disabled:cursor-wait disabled:opacity-70"
+        <Button
+          variant="primary"
+          className="mt-5"
           onClick={() => ShowModal(ProjectEditorModal)}
         >
           Nowy projekt
-        </button>
+        </Button>
       </div>
     );
   }
@@ -382,7 +384,7 @@ export function TasksPage() {
         <section key={status}>
           <div className="flex items-center justify-between">
             <button
-              className="flex w-full cursor-pointer items-center gap-2 rounded border border-transparent bg-transparent px-2 py-2 text-left transition-colors hover:bg-[#f0f4f1]"
+              className="flex w-full cursor-pointer items-center gap-2 rounded border border-transparent bg-transparent px-2 py-2 text-left transition-colors hover:bg-wash"
               type="button"
               aria-expanded={!isCollapsed}
               aria-controls={`status-section-panel-${index}`}
@@ -450,7 +452,7 @@ export function TasksPage() {
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <button
-                className="inline-flex items-center justify-center rounded-md border border-transparent bg-transparent text-[18px] text-[#6c8082] transition-all hover:-translate-y-px cursor-pointer hover:text-ink"
+                className="inline-flex items-center justify-center rounded-md border border-transparent bg-transparent text-[18px] text-muted transition-all hover:-translate-y-px cursor-pointer hover:text-ink"
                 onClick={toggleSidebar}
               >
                 <span aria-hidden="true">{isSidebarCollapsed ? "»" : "«"}</span>
@@ -464,13 +466,13 @@ export function TasksPage() {
               <span className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">
                 {tasks.length} {tasks.length === 1 ? "ZADANIE" : "ZADAŃ"}
               </span>
-              <button
-                className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-signal px-[15px] text-[12px] font-semibold text-white transition-all hover:bg-[#b94b31] hover:-translate-y-px disabled:cursor-wait disabled:opacity-70"
+              <Button
+                variant="primary"
                 onClick={openTaskForm}
               >
                 <span aria-hidden="true">+</span>
                 Nowe zadanie
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -479,7 +481,7 @@ export function TasksPage() {
               Wczytywanie zadań…
             </p>
           ) : tasksError ? (
-            <p className="py-4 text-[13px] text-[#a23a28]" role="alert">
+            <p className="py-4 text-[13px] text-danger" role="alert">
               {tasksError}
             </p>
           ) : tasks.length === 0 ? (
@@ -497,13 +499,13 @@ export function TasksPage() {
             </DndContext>
           )}
           <div className="mt-4 flex justify-center">
-            <button className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-[#c9d5d2] bg-transparent px-[15px] text-[12px] font-semibold text-[#344d52] transition-all hover:bg-[#f8faf8] hover:border-[#9db0ad] disabled:cursor-wait disabled:opacity-70 whitespace-nowrap" onClick={openTaskForm}>
+            <Button variant="secondary" onClick={openTaskForm}>
               <span aria-hidden="true">+</span>
               Nowe zadanie
-            </button>
+            </Button>
           </div>
           {actionError && (
-            <p className="py-4 text-[13px] text-[#a23a28]" role="alert">
+            <p className="py-4 text-[13px] text-danger" role="alert">
               {actionError}
             </p>
           )}

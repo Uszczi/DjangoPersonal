@@ -30,6 +30,10 @@ generate-api:
 frontend:
     cd frontend && npm run dev
 
+# Run Storybook (component workshop) on port 6006.
+storybook:
+    cd frontend && npm run storybook
+
 # Build the C++ (Oat++) backend.
 backend-cpp-build:
     cd cpp_backend && cmake --build build

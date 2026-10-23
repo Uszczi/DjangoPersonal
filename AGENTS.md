@@ -53,6 +53,7 @@ Everything goes through the `justfile`:
 just backend          # Django dev server on :8000 (SQLite)
 just mcp              # MCP server (streamable HTTP) on :8001
 just frontend         # Vite dev server; proxies /api to Django on :8000
+just storybook        # Storybook component workshop on :6006 (build via npm run build-storybook)
 just makemigrations   # create migration files after model changes
 just migrate          # apply migrations
 just seed             # seed the dev DB with demo data (refuses if DB not empty)
@@ -103,6 +104,7 @@ A FastMCP server that re-exposes the same handlers/deps as HTTP tools over strea
 
 - **Routing**: TanStack Router, file-based — routes are files in `src/routes/` (`routeTree.gen.ts` is generated; never hand-edit it). See `docs/adr/0001-client-side-routing.md`.
 - **State**: Zustand stores in `src/stores/` (one per domain: auth, projects, tasks, timer, wallets, …). Components fetch after mount; the router handles navigation only.
+- **Design system**: presentational components (`Button`, `IconButton`, `Modal`, `Field`, `TextInput`, `TextArea`, `Select`, `ErrorAlert`, …) live in `src/design-system/components/`, each with a colocated Storybook story (`*.stories.tsx`). Import them only through the barrel `@/design-system`. Colors come from semantic tokens in the `@theme` block of `src/index.css` (`text-danger`, `border-control-border`, `bg-overlay`, …) — add a token instead of a new `[#hex]`. `Field` takes `hint`/`error` and wires `aria-describedby`/`aria-invalid` into the control inside it; `Modal` is a native `<dialog>` opened with `showModal()` (polyfilled for jsdom in `tests/setup.ts`), rendered only while open. Stories are discovered from `src/**/*.stories.*`; the Tailwind theme comes from `src/index.css` via `.storybook/preview.ts`.
 - **API**: a single generated `PersonalApi` client in `src/generated/api/` (created by `just generate-api` from `backend/openapi.yaml`, post-processed by `scripts/postprocess-openapi.mjs`). **Never hand-edit generated files.** `src/api.ts` instantiates it with `basePath: ""` (requests stay relative so the Vite proxy applies) plus a middleware that attaches the JWT and transparently refreshes on 401.
 - **Path alias**: `@/` → `src/` (also in tests).
 - Dev proxy: `/api` → `http://127.0.0.1:8000` (Django), override with `VITE_PROXY_TARGET` (e.g. the C++ backend on :8080 via `just frontend-cpp`).

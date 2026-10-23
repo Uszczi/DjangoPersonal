@@ -2,6 +2,7 @@ import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { api } from "@/api";
+import { Button, TextArea, TextInput } from "@/design-system";
 import { WhiteboardCanvas } from "@/components/WhiteboardCanvas";
 import { MarkdownHighlightEditor } from "@/components/MarkdownHighlightEditor";
 import { apiErrorMessage } from "@/apiErrorMessage";
@@ -198,7 +199,7 @@ function WhiteboardEditorPage() {
   if (notFound) return <NotFoundPage />;
 
   if (loadError) {
-    return <p className="py-4 text-[13px] text-[#a23a28]" role="alert">{loadError}</p>;
+    return <p className="py-4 text-[13px] text-danger" role="alert">{loadError}</p>;
   }
 
   if (!board) {
@@ -217,8 +218,7 @@ function WhiteboardEditorPage() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           {editingName ? (
-            <input
-              className="w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
+            <TextInput
               autoFocus
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -245,15 +245,14 @@ function WhiteboardEditorPage() {
         <span className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted" role="status" aria-live="polite">
           {saveLabel}
         </span>
-        <button
-          className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-[#c9d5d2] bg-transparent px-[15px] text-[12px] font-semibold text-[#344d52] transition-all hover:bg-[#f8faf8] hover:border-[#9db0ad] disabled:cursor-wait disabled:opacity-70 whitespace-nowrap"
-          type="button"
+        <Button
+          variant="secondary"
           onClick={() => {
             void flush();
           }}
         >
           Zapisz
-        </button>
+        </Button>
       </div>
       {kind === "markdown" ? (
         <>
@@ -263,37 +262,32 @@ function WhiteboardEditorPage() {
             aria-label="Tryb widoku notatki"
           >
             {MARKDOWN_MODES.map((mode) => (
-              <button
+              <Button
                 key={mode}
-                type="button"
-                className={
-                  markdownMode === mode
-                    ? "inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-signal px-[15px] text-[12px] font-semibold text-white transition-all hover:bg-[#b94b31] hover:-translate-y-px disabled:cursor-wait disabled:opacity-70"
-                    : "inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-[#c9d5d2] bg-transparent px-[15px] text-[12px] font-semibold text-[#344d52] transition-all hover:bg-[#f8faf8] hover:border-[#9db0ad] disabled:cursor-wait disabled:opacity-70 whitespace-nowrap"
-                }
+                variant={markdownMode === mode ? "primary" : "secondary"}
                 aria-pressed={markdownMode === mode}
                 onClick={() => setMarkdownMode(mode)}
               >
                 {MARKDOWN_MODE_LABELS[mode]}
-              </button>
+              </Button>
             ))}
           </div>
           {markdownMode === "split" && (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <textarea
-                className="min-h-[300px] w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-mono text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
+              <TextArea
+                className="min-h-[300px] font-mono"
                 value={markdownText}
                 onChange={(e) => handleMarkdownChange(e.target.value)}
                 placeholder="Napisz notatkę w Markdown…"
               />
-              <div className="min-h-[300px] rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] text-sm leading-relaxed text-ink">
+              <div className="min-h-[300px] rounded border border-control-border bg-white px-[11px] py-[10px] text-sm leading-relaxed text-ink">
                 <div dangerouslySetInnerHTML={{ __html: renderMarkdown(markdownText) }} />
               </div>
             </div>
           )}
           {markdownMode === "edit" && (
-            <textarea
-              className="min-h-[400px] w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-mono text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
+            <TextArea
+              className="min-h-[400px] font-mono"
               value={markdownText}
               onChange={(e) => handleMarkdownChange(e.target.value)}
               placeholder="Napisz notatkę w Markdown…"
@@ -311,25 +305,20 @@ function WhiteboardEditorPage() {
         <>
           <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
             {(["select", "pen", "eraser", "rectangle", "ellipse", "line", "arrow", "text", "note"] as Tool[]).map((t) => (
-              <button
+              <Button
                 key={t}
-                type="button"
-                className={
-                  tool === t
-                    ? "inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-signal px-[15px] text-[12px] font-semibold text-white transition-all hover:bg-[#b94b31] hover:-translate-y-px disabled:cursor-wait disabled:opacity-70"
-                    : "inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-[#c9d5d2] bg-transparent px-[15px] text-[12px] font-semibold text-[#344d52] transition-all hover:bg-[#f8faf8] hover:border-[#9db0ad] disabled:cursor-wait disabled:opacity-70 whitespace-nowrap"
-                }
+                variant={tool === t ? "primary" : "secondary"}
                 onClick={() => setTool(t)}
               >
                 {t}
-              </button>
+              </Button>
             ))}
-            <button type="button" className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-[#c9d5d2] bg-transparent px-[15px] text-[12px] font-semibold text-[#344d52] transition-all hover:bg-[#f8faf8] hover:border-[#9db0ad] disabled:cursor-wait disabled:opacity-70 whitespace-nowrap" onClick={handleUndo} disabled={!history || !canUndo(history)}>
+            <Button variant="secondary" onClick={handleUndo} disabled={!history || !canUndo(history)}>
               Cofnij
-            </button>
-            <button type="button" className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-[#c9d5d2] bg-transparent px-[15px] text-[12px] font-semibold text-[#344d52] transition-all hover:bg-[#f8faf8] hover:border-[#9db0ad] disabled:cursor-wait disabled:opacity-70 whitespace-nowrap" onClick={handleRedo} disabled={!history || !canRedo(history)}>
+            </Button>
+            <Button variant="secondary" onClick={handleRedo} disabled={!history || !canRedo(history)}>
               Ponów
-            </button>
+            </Button>
           </div>
           <WhiteboardCanvas board={board!} onChange={handleChange} tool={tool} />
         </>

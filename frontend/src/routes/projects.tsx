@@ -19,6 +19,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 import { DeleteProjectModal } from "@/components/DeleteProjectModal";
+import { Button } from "@/design-system";
 import { ProjectEditorModal } from "@/components/ProjectEditorModal";
 import { ShowModal } from "@/stores/modal";
 import { useProjectsStore } from "@/stores/projects";
@@ -65,7 +66,7 @@ function SortableProjectRow({
         />
       ) : (
         <span
-          className="inline-flex cursor-grab items-center justify-center text-[14px] text-[#9aafaa] transition-colors hover:text-[#6c8082]"
+          className="inline-flex cursor-grab items-center justify-center text-[14px] text-[#9aafaa] transition-colors hover:text-muted"
           aria-label={`Przeciągnij projekt: ${project.name}`}
           title="Przeciągnij"
           {...attributes}
@@ -90,23 +91,21 @@ function SortableProjectRow({
         )}
       </div>
       <div className="flex items-center gap-2">
-        <button
-          className="inline-flex min-h-[28px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-transparent px-[10px] text-[12px] font-semibold text-[#6c8082] transition-all hover:bg-[#f0f4f1] hover:text-ink"
-          type="button"
+        <Button
+          variant="ghost"
           aria-label={`Edytuj projekt: ${project.name}`}
           onClick={onEdit}
         >
           Edytuj
-        </button>
+        </Button>
         {!project.isInbox && (
-          <button
-            className="inline-flex min-h-[28px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-transparent px-[10px] text-[12px] font-semibold text-[#a23a28] transition-all hover:bg-[#f5e3dc] hover:text-[#872d1e]"
-            type="button"
+          <Button
+            variant="ghostDanger"
             aria-label={`Usuń projekt: ${project.name}`}
             onClick={onDelete}
           >
             Usuń
-          </button>
+          </Button>
         )}
       </div>
     </li>
@@ -188,17 +187,17 @@ export function ProjectsPage() {
             Projekty
           </h1>
         </div>
-        <button
-          className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-signal px-[15px] text-[12px] font-semibold text-white transition-all hover:bg-[#b94b31] hover:-translate-y-px disabled:cursor-wait disabled:opacity-70"
+        <Button
+          variant="primary"
           onClick={openCreateForm}
         >
           <span aria-hidden="true">+</span>
           Nowy projekt
-        </button>
+        </Button>
       </div>
 
       {pageError && (
-        <p className="py-4 text-[13px] text-[#a23a28]" role="alert">
+        <p className="py-4 text-[13px] text-danger" role="alert">
           {pageError}
         </p>
       )}
@@ -228,14 +227,13 @@ export function ProjectsPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
-                    className="inline-flex min-h-[28px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-transparent px-[10px] text-[12px] font-semibold text-[#6c8082] transition-all hover:bg-[#f0f4f1] hover:text-ink"
-                    type="button"
+                  <Button
+                    variant="ghost"
                     aria-label={`Edytuj projekt: ${inboxProject.name}`}
                     onClick={() => openEditForm(inboxProject)}
                   >
                     Edytuj
-                  </button>
+                  </Button>
                 </div>
               </li>
             )}
@@ -261,13 +259,13 @@ export function ProjectsPage() {
             </DndContext>
           </ul>
           <div className="mt-4 flex justify-center">
-            <button
-              className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-signal px-[15px] text-[12px] font-semibold text-white transition-all hover:bg-[#b94b31] hover:-translate-y-px disabled:cursor-wait disabled:opacity-70"
+            <Button
+              variant="primary"
               onClick={openCreateForm}
             >
               <span aria-hidden="true">+</span>
               Nowy projekt
-            </button>
+            </Button>
           </div>
         </>
       )}

@@ -3,6 +3,7 @@ import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
+import { Button, Select, TextInput } from "@/design-system";
 import { defaultProject, useProjectsStore } from "@/stores/projects";
 import { useTimerStore } from "@/stores/timer";
 import type { TimeEntryResponse } from "@/generated/api";
@@ -41,8 +42,8 @@ function TaskTitleInput({
 
   return (
     <div className="relative">
-      <input
-        className="w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)] pr-8"
+      <TextInput
+        className="pr-8"
         ref={inputRef}
         type="text"
         list={listId}
@@ -328,7 +329,7 @@ export function TimerPage() {
 
   if (pageError) {
     return (
-      <p className="py-4 text-[13px] text-[#a23a28]" role="alert">
+      <p className="py-4 text-[13px] text-danger" role="alert">
         {pageError}
       </p>
     );
@@ -352,20 +353,18 @@ export function TimerPage() {
               {formatElapsed(correctedNow - runningEntry.start.getTime())}
             </p>
             <div className="mt-4 flex items-center gap-3">
-              <button
-                className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-signal px-[15px] text-[12px] font-semibold text-white transition-all hover:bg-[#b94b31] hover:-translate-y-px disabled:cursor-wait disabled:opacity-70"
-                type="button"
+              <Button
+                variant="primary"
                 onClick={() => void stopTimer()}
               >
                 Zatrzymaj timer
-              </button>
-              <button
-                className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-[#c9d5d2] bg-transparent px-[15px] text-[12px] font-semibold text-[#344d52] transition-all hover:bg-[#f8faf8] hover:border-[#9db0ad] disabled:cursor-wait disabled:opacity-70 whitespace-nowrap"
-                type="button"
+              </Button>
+              <Button
+                variant="secondary"
                 onClick={() => void discardTimer()}
               >
                 Odrzuć timer
-              </button>
+              </Button>
             </div>
           </>
         ) : (
@@ -373,9 +372,8 @@ export function TimerPage() {
             <p className="mb-4 text-[14px] text-muted">Brak aktywnego timera. Wybierz projekt i zadanie, aby go uruchomić.</p>
             <form className="flex flex-col gap-4" onSubmit={startTimer}>
               <label className="block">
-                <span className="mb-1 block text-[12px] font-semibold text-[#344d52]">Projekt</span>
-                <select
-                  className="w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
+                <span className="mb-1 block text-[12px] font-semibold text-ink-soft">Projekt</span>
+                <Select
                   value={startProjectId}
                   onChange={(event) =>
                     setStartForm({
@@ -393,10 +391,10 @@ export function TimerPage() {
                       {item.name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </label>
               <label className="block">
-                <span className="mb-1 block text-[12px] font-semibold text-[#344d52]">Zadanie</span>
+                <span className="mb-1 block text-[12px] font-semibold text-ink-soft">Zadanie</span>
                 <TaskTitleInput
                   listId="start-task-titles"
                   value={startForm.title}
@@ -410,12 +408,12 @@ export function TimerPage() {
                   ))}
                 </datalist>
               </label>
-              <button className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-signal px-[15px] text-[12px] font-semibold text-white transition-all hover:bg-[#b94b31] hover:-translate-y-px disabled:cursor-wait disabled:opacity-70" type="submit">
+              <Button variant="primary" type="submit">
                 Rozpocznij timer
-              </button>
+              </Button>
             </form>
             {startError && (
-              <p className="mt-4 text-[13px] text-[#a23a28]" role="alert">
+              <p className="mt-4 text-[13px] text-danger" role="alert">
                 {startError}
               </p>
             )}
@@ -431,9 +429,8 @@ export function TimerPage() {
         </div>
         <form className="flex flex-col gap-4" onSubmit={addManualEntry}>
           <label className="block">
-            <span className="mb-1 block text-[12px] font-semibold text-[#344d52]">Data</span>
-            <input
-              className="w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
+            <span className="mb-1 block text-[12px] font-semibold text-ink-soft">Data</span>
+            <TextInput
               type="date"
               value={manualForm.date}
               onChange={(event) =>
@@ -446,9 +443,8 @@ export function TimerPage() {
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-[12px] font-semibold text-[#344d52]">Projekt</span>
-            <select
-              className="w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
+            <span className="mb-1 block text-[12px] font-semibold text-ink-soft">Projekt</span>
+            <Select
               value={manualProjectId}
               onChange={(event) =>
                 setManualForm((current) => ({
@@ -467,10 +463,10 @@ export function TimerPage() {
                   {item.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="block">
-            <span className="mb-1 block text-[12px] font-semibold text-[#344d52]">Zadanie</span>
+            <span className="mb-1 block text-[12px] font-semibold text-ink-soft">Zadanie</span>
             <TaskTitleInput
               listId="manual-task-titles"
               value={manualForm.title}
@@ -485,9 +481,8 @@ export function TimerPage() {
             </datalist>
           </label>
           <label className="block">
-            <span className="mb-1 block text-[12px] font-semibold text-[#344d52]">Czas (minuty)</span>
-            <input
-              className="w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
+            <span className="mb-1 block text-[12px] font-semibold text-ink-soft">Czas (minuty)</span>
+            <TextInput
               type="number"
               min={1}
               max={1440}
@@ -501,12 +496,12 @@ export function TimerPage() {
               required
             />
           </label>
-          <button className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-signal px-[15px] text-[12px] font-semibold text-white transition-all hover:bg-[#b94b31] hover:-translate-y-px disabled:cursor-wait disabled:opacity-70" type="submit">
+          <Button variant="primary" type="submit">
             Dodaj wpis
-          </button>
+          </Button>
         </form>
         {manualError && (
-          <p className="mt-4 text-[13px] text-[#a23a28]" role="alert">
+          <p className="mt-4 text-[13px] text-danger" role="alert">
             {manualError}
           </p>
         )}
@@ -522,7 +517,7 @@ export function TimerPage() {
             <h2 id="recent-entries-heading" className="font-display text-[22px] font-bold tracking-[-0.02em] text-ink">Ostatnie wpisy</h2>
           </div>
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 text-[12px] font-semibold text-[#344d52]">
+            <label className="flex items-center gap-2 text-[12px] font-semibold text-ink-soft">
               <span>Zakres</span>
               <label
                 htmlFor="entry-range"
@@ -561,7 +556,7 @@ export function TimerPage() {
                 Zakres dat
               </label>
               <select
-                className="rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
+                className="rounded border border-control-border bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-accent focus:ring-[3px] focus:ring-accent/15"
                 id="entry-range"
                 aria-label="Zakres"
                 value={entryRange}
@@ -604,29 +599,27 @@ export function TimerPage() {
                   <span className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">
                     {formatDuration(entryMinutes(entry)).toUpperCase()}
                   </span>
-                  <button
-                    className="inline-flex min-h-[28px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-transparent px-[10px] text-[12px] font-semibold text-[#6c8082] transition-all hover:bg-[#f0f4f1] hover:text-ink"
-                    type="button"
+                  <Button
+                    variant="ghost"
                     aria-label={`Edytuj wpis: ${taskTitle(entry)}`}
                     onClick={() => openEntryEditForm(entry)}
                   >
                     Edytuj
-                  </button>
-                  <button
-                    className="inline-flex min-h-[28px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-transparent px-[10px] text-[12px] font-semibold text-[#a23a28] transition-all hover:bg-[#f5e3dc] hover:text-[#872d1e]"
-                    type="button"
+                  </Button>
+                  <Button
+                    variant="ghostDanger"
                     aria-label={`Usuń wpis: ${taskTitle(entry)}`}
                     onClick={() => void deleteEntryAction(entry)}
                   >
                     Usuń
-                  </button>
+                  </Button>
                 </div>
               </li>
             ))}
           </ul>
         )}
         {actionError && (
-          <p className="py-4 text-[13px] text-[#a23a28]" role="alert">
+          <p className="py-4 text-[13px] text-danger" role="alert">
             {actionError}
           </p>
         )}
@@ -639,11 +632,11 @@ export function TimerPage() {
           </div>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="rounded border border-[#dce4df] bg-[#f8faf8] p-4">
+          <div className="rounded border border-[#dce4df] bg-surface p-4">
             <h3 className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">Dziś łącznie</h3>
             <p className="mt-2 font-display text-[24px] font-bold text-ink">{formatDuration(todaysMinutes)}</p>
           </div>
-          <div className="rounded border border-[#dce4df] bg-[#f8faf8] p-4">
+          <div className="rounded border border-[#dce4df] bg-surface p-4">
             <h3 className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">Według zadania (dziś)</h3>
             {perTaskMinutes.size === 0 ? (
               <p className="mt-2 text-[13px] text-muted">Brak wpisów.</p>
@@ -658,7 +651,7 @@ export function TimerPage() {
               </ul>
             )}
           </div>
-          <div className="rounded border border-[#dce4df] bg-[#f8faf8] p-4">
+          <div className="rounded border border-[#dce4df] bg-surface p-4">
             <h3 className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">Ostatnie 7 dni</h3>
             <ul className="mt-2 flex flex-col gap-1">
               {dayKeys.map((key) => (
@@ -674,13 +667,13 @@ export function TimerPage() {
 
       {editingEntry && (
         <div
-          className="fixed inset-0 z-5 flex items-center justify-center bg-[rgb(12_29_33/52%)] p-5"
+          className="fixed inset-0 z-5 flex items-center justify-center bg-overlay p-5"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) closeEntryEditor();
           }}
         >
           <section
-            className="w-full max-w-[480px] rounded-lg border border-[#d4dfda] bg-paper p-[29px] shadow-[0_24px_80px_rgb(9_24_28/25%)] animate-dialog-enter"
+            className="w-full max-w-[480px] rounded-lg border border-line bg-paper p-[29px] shadow-dialog animate-dialog-enter"
             role="dialog"
             aria-modal="true"
             aria-labelledby="entry-edit-title"
@@ -701,9 +694,8 @@ export function TimerPage() {
 
             <form onSubmit={saveEntryEdit}>
               <label className="mb-4 block">
-                <span className="mb-1 block text-[12px] font-semibold text-[#344d52]">Data</span>
-                <input
-                  className="w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
+                <span className="mb-1 block text-[12px] font-semibold text-ink-soft">Data</span>
+                <TextInput
                   type="date"
                   value={editForm.date}
                   onChange={(event) =>
@@ -716,7 +708,7 @@ export function TimerPage() {
                 />
               </label>
               <label className="mb-4 block">
-                <span className="mb-1 block text-[12px] font-semibold text-[#344d52]">Zadanie</span>
+                <span className="mb-1 block text-[12px] font-semibold text-ink-soft">Zadanie</span>
                 <TaskTitleInput
                   listId="edit-task-titles"
                   value={editForm.title}
@@ -731,9 +723,8 @@ export function TimerPage() {
                 </datalist>
               </label>
               <label className="mb-4 block">
-                <span className="mb-1 block text-[12px] font-semibold text-[#344d52]">Czas (minuty)</span>
-                <input
-                  className="w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
+                <span className="mb-1 block text-[12px] font-semibold text-ink-soft">Czas (minuty)</span>
+                <TextInput
                   type="number"
                   min={1}
                   max={1440}
@@ -748,21 +739,20 @@ export function TimerPage() {
                 />
               </label>
               {editError && (
-                <p className="mb-4 text-[13px] text-[#a23a28]" role="alert">
+                <p className="mb-4 text-[13px] text-danger" role="alert">
                   {editError}
                 </p>
               )}
               <div className="flex items-center gap-3">
-                <button
-                  className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-[#c9d5d2] bg-transparent px-[15px] text-[12px] font-semibold text-[#344d52] transition-all hover:bg-[#f8faf8] hover:border-[#9db0ad] disabled:cursor-wait disabled:opacity-70 whitespace-nowrap"
-                  type="button"
+                <Button
+                  variant="secondary"
                   onClick={closeEntryEditor}
                 >
                   Anuluj
-                </button>
-                <button className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-signal px-[15px] text-[12px] font-semibold text-white transition-all hover:bg-[#b94b31] hover:-translate-y-px disabled:cursor-wait disabled:opacity-70" type="submit">
+                </Button>
+                <Button variant="primary" type="submit">
                   Zapisz zmiany
-                </button>
+                </Button>
               </div>
             </form>
           </section>

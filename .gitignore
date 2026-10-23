@@ -13,4 +13,5 @@ backend/staticfiles/*
 # Node
 node_modules/
 frontend/dist/
+frontend/storybook-static/
 vue/dist/

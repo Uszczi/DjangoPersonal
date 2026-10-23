@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { Button } from "@/design-system";
 import { DeleteAccountModal } from "@/components/DeleteAccountModal";
 import { useAuthStore } from "@/stores/auth";
 import { ShowModal } from "@/stores/modal";
@@ -22,9 +23,9 @@ export function UserPage() {
         <h1 id="user-heading" className="mt-1 font-display text-[28px] font-bold tracking-[-0.02em] text-ink">{user?.username}</h1>
       </div>
       <div className="flex items-center gap-4">
-        <button className="inline-flex min-h-[40px] cursor-pointer items-center justify-center rounded-[5px] border border-transparent bg-[#a23a28] px-[15px] text-[12px] font-semibold text-white transition-all hover:bg-[#872d1e] hover:-translate-y-px disabled:cursor-wait disabled:opacity-70" type="button" onClick={openDeleteDialog}>
+        <Button variant="danger" onClick={openDeleteDialog}>
           Usuń konto
-        </button>
+        </Button>
       </div>
     </section>
   );

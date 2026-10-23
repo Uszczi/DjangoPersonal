@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
+import { Button, ErrorAlert, TextInput } from "@/design-system";
 import { DeleteCategoryModal } from "@/components/DeleteCategoryModal";
 import { ShowModal } from "@/stores/modal";
 import { useCategoriesStore, type CategoryInput } from "@/stores/categories";
@@ -96,28 +97,23 @@ export function CategoryPanel() {
         onSubmit={handleCreate}
       >
         <input
-          className="min-w-0 flex-1 rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
+          className="min-w-0 flex-1 rounded border border-control-border bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none focus:border-accent focus:ring-[3px] focus:ring-accent/15"
           placeholder="Nowa kategoria"
           aria-label="Nowa kategoria"
           maxLength={100}
           value={newName}
           onChange={(event) => setNewName(event.target.value)}
         />
-        <button
-          className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-signal px-[15px] text-[12px] font-semibold text-white transition-all hover:-translate-y-px hover:bg-[#b94b31] disabled:cursor-wait disabled:opacity-70"
+        <Button
+          variant="primary"
           type="submit"
           disabled={isCreating || !newName.trim()}
         >
           {isCreating ? "Dodawanie…" : "Dodaj"}
-        </button>
+        </Button>
       </form>
       {createError && (
-        <p
-          className="mb-[17px] border-l-[3px] border-signal bg-[#fff0eb] px-[11px] py-[9px] text-[12px] leading-relaxed text-[#873b2b]"
-          role="alert"
-        >
-          {createError}
-        </p>
+        <ErrorAlert>{createError}</ErrorAlert>
       )}
 
       {isLoading ? (
@@ -126,13 +122,13 @@ export function CategoryPanel() {
         </p>
       ) : pageError ? (
         <p
-          className="m-0 px-2 py-6 text-[13px] text-[#873b2b]"
+          className="m-0 px-2 py-6 text-[13px] text-danger-ink"
           role="alert"
         >
           {pageError}
         </p>
       ) : visibleCategories.length === 0 ? (
-        <p className="m-0 border-b border-dashed border-[#ccd8d4] px-2 py-6 text-[13px] text-[#718487]">
+        <p className="m-0 border-b border-dashed border-[#ccd8d4] px-2 py-6 text-[13px] text-hint">
           Brak kategorii.
         </p>
       ) : (
@@ -147,8 +143,7 @@ export function CategoryPanel() {
                   className="contents"
                   onSubmit={(event) => void handleRename(category, event)}
                 >
-                  <input
-                    className="w-full rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
+                  <TextInput
                     autoFocus
                     aria-label="Nazwa kategorii"
                     maxLength={100}
@@ -159,25 +154,24 @@ export function CategoryPanel() {
                     }}
                   />
                   <div className="flex items-center gap-[13px]">
-                    <button
-                      className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-signal px-[15px] text-[12px] font-semibold text-white transition-all hover:-translate-y-px hover:bg-[#b94b31] disabled:cursor-wait disabled:opacity-70"
+                    <Button
+                      variant="primary"
                       type="submit"
                     >
                       Zapisz
-                    </button>
-                    <button
-                      className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 whitespace-nowrap rounded-[5px] border border-[#c9d5d2] bg-transparent px-[15px] text-[12px] font-semibold text-[#344d52] transition-all hover:border-[#9db0ad] hover:bg-[#f8faf8] disabled:cursor-wait disabled:opacity-70"
-                      type="button"
+                    </Button>
+                    <Button
+                      variant="secondary"
                       onClick={cancelEditing}
                     >
                       Anuluj
-                    </button>
+                    </Button>
                   </div>
                 </form>
               ) : (
                 <>
                   <div className="min-w-0">
-                    <p className="m-0 overflow-wrap-anywhere text-[13px] leading-[1.45] text-[#344d52]">
+                    <p className="m-0 overflow-wrap-anywhere text-[13px] leading-[1.45] text-ink-soft">
                       {category.name}
                     </p>
                   </div>
@@ -191,7 +185,7 @@ export function CategoryPanel() {
                       Zmień
                     </button>
                     <button
-                      className="cursor-pointer bg-transparent p-0 text-[11px] text-[#8a5648] underline decoration-[#d3b8b0] underline-offset-[3px] hover:text-[#a23a28]"
+                      className="cursor-pointer bg-transparent p-0 text-[11px] text-[#8a5648] underline decoration-[#d3b8b0] underline-offset-[3px] hover:text-danger"
                       type="button"
                       aria-label={`Usuń kategorię: ${category.name}`}
                       onClick={() => openDeleteDialog(category)}
@@ -202,12 +196,7 @@ export function CategoryPanel() {
                 </>
               )}
               {renameError && editingId === category.id && (
-                <p
-                  className="mb-[17px] border-l-[3px] border-signal bg-[#fff0eb] px-[11px] py-[9px] text-[12px] leading-relaxed text-[#873b2b]"
-                  role="alert"
-                >
-                  {renameError}
-                </p>
+                <ErrorAlert>{renameError}</ErrorAlert>
               )}
             </li>
           ))}

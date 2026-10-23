@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
+import { Button, ErrorAlert, Field, Modal, ModalFooter, Select, TextInput } from "@/design-system";
 import type { TransactionResponse } from "@/generated/api";
 import { useCategoriesStore } from "@/stores/categories";
 import {
@@ -106,166 +107,118 @@ export function TransactionEditorModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-5 flex items-start justify-center bg-[rgb(12_29_33/52%)] px-0 py-4 pt-16 md:px-5 md:py-5 md:pt-5 md:items-center"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) close();
-      }}
+    <Modal
+      kicker={transaction ? "ZMIANA SZCZEGÓŁÓW" : "NOWY WYDATEK"}
+      title={transaction ? "Edytuj transakcję" : "Nowa transakcja"}
+      titleId="transaction-dialog-title"
+      onClose={close}
+      size="lg"
     >
-      <section
-        className="w-full max-w-[480px] rounded-lg border border-[#d4dfda] bg-paper p-[29px] shadow-[0_24px_80px_rgb(9_24_28/25%)] animate-dialog-enter"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="transaction-dialog-title"
-      >
-        <div className="mb-[27px] flex items-start justify-between">
-          <div>
-            <p className="mb-[9px] font-utility text-[10px] font-bold leading-[1.4] tracking-[0.14em] text-signal">
-              {transaction ? "ZMIANA SZCZEGÓŁÓW" : "NOWY WYDATEK"}
-            </p>
-            <h2
-              id="transaction-dialog-title"
-              className="m-0 font-display text-[28px] leading-[1.1] tracking-[-0.05em] text-ink"
-            >
-              {transaction ? "Edytuj transakcję" : "Nowa transakcja"}
-            </h2>
-          </div>
-          <button
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-transparent bg-transparent text-[23px] text-[#64797c] transition-all hover:-translate-y-px hover:bg-[#eaf0ed] cursor-pointer"
-            onClick={close}
-            aria-label="Zamknij"
+      {/* noValidate: the JS checks below own validation, so the browser never
+          blocks submit (e.g. a decimal amount is not a multiple of step). */}
+      <form onSubmit={handleSubmit} noValidate>
+        <Field label="Tytuł">
+          <TextInput
+            maxLength={200}
+            value={form.title}
+            onChange={(event) =>
+              setForm((current) => ({ ...current, title: event.target.value }))
+            }
+            required
+          />
+        </Field>
+        <Field label="Kwota">
+          <TextInput
+            inputMode="decimal"
+            autoComplete="off"
+            value={form.amount}
+            onChange={(event) =>
+              setForm((current) => ({ ...current, amount: event.target.value }))
+            }
+            required
+          />
+        </Field>
+        <Field label="Data">
+          <TextInput
+            type="date"
+            value={form.date}
+            onChange={(event) =>
+              setForm((current) => ({ ...current, date: event.target.value }))
+            }
+            required
+          />
+        </Field>
+        <Field label="Opis">
+          <TextInput
+            value={form.description}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                description: event.target.value,
+              }))
+            }
+          />
+        </Field>
+        <Field label="Kategoria">
+          <Select
+            value={form.category}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                category: event.target.value,
+              }))
+            }
           >
-            <span aria-hidden="true">×</span>
-          </button>
-        </div>
-
-        {/* noValidate: the JS checks below own validation, so the browser never
-            blocks submit (e.g. a decimal amount is not a multiple of step). */}
-        <form onSubmit={handleSubmit} noValidate>
-          <label className="mb-[18px] grid gap-2 text-[12px] font-semibold text-[#334d52]">
-            <span>Tytuł</span>
-            <input
-              className="w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
-              autoFocus
-              maxLength={200}
-              value={form.title}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, title: event.target.value }))
-              }
-              required
-            />
-          </label>
-          <label className="mb-[18px] grid gap-2 text-[12px] font-semibold text-[#334d52]">
-            <span>Kwota</span>
-            <input
-              className="w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
-              inputMode="decimal"
-              autoComplete="off"
-              value={form.amount}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, amount: event.target.value }))
-              }
-              required
-            />
-          </label>
-          <label className="mb-[18px] grid gap-2 text-[12px] font-semibold text-[#334d52]">
-            <span>Data</span>
-            <input
-              className="w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
-              type="date"
-              value={form.date}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, date: event.target.value }))
-              }
-              required
-            />
-          </label>
-          <label className="mb-[18px] grid gap-2 text-[12px] font-semibold text-[#334d52]">
-            <span>Opis</span>
-            <input
-              className="w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
-              value={form.description}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  description: event.target.value,
-                }))
-              }
-            />
-          </label>
-          <label className="mb-[18px] grid gap-2 text-[12px] font-semibold text-[#334d52]">
-            <span>Kategoria</span>
-            <select
-              className="w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
-              value={form.category}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  category: event.target.value,
-                }))
-              }
-            >
-              <option value="">Bez kategorii</option>
-              {categories
-                .filter(
-                  (category) =>
-                    !category.isSystem ||
-                    category.id === transaction?.categoryId,
-                )
-                .map((category) => (
-                  <option key={category.id} value={String(category.id)}>
-                    {category.name}
-                  </option>
-                ))}
-            </select>
-          </label>
-          <label className="mb-[18px] grid gap-2 text-[12px] font-semibold text-[#334d52]">
-            <span>Portfel</span>
-            <select
-              className="w-full resize-y rounded border border-[#cbd7d3] bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-[#477c7c] focus:ring-[3px] focus:ring-[rgb(71_124_124/15%)]"
-              value={form.wallet}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, wallet: event.target.value }))
-              }
-            >
-              {wallets.map((wallet) => (
-                <option key={wallet.id} value={String(wallet.id)}>
-                  {wallet.name}
+            <option value="">Bez kategorii</option>
+            {categories
+              .filter(
+                (category) =>
+                  !category.isSystem ||
+                  category.id === transaction?.categoryId,
+              )
+              .map((category) => (
+                <option key={category.id} value={String(category.id)}>
+                  {category.name}
                 </option>
               ))}
-            </select>
-          </label>
-          {formError && (
-            <p
-              className="mb-[17px] border-l-[3px] border-signal bg-[#fff0eb] px-[11px] py-[9px] text-[12px] leading-relaxed text-[#873b2b]"
-              role="alert"
-            >
-              {formError}
-            </p>
-          )}
-          <div className="mt-[26px] flex justify-end gap-[9px] border-t border-[#e1e8e3] pt-[18px]">
-            <button
-              className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 whitespace-nowrap rounded-[5px] border border-[#c9d5d2] bg-transparent px-[15px] text-[12px] font-semibold text-[#344d52] transition-all hover:border-[#9db0ad] hover:bg-[#f8faf8] disabled:cursor-wait disabled:opacity-70"
-              type="button"
-              onClick={close}
-              disabled={isSaving}
-            >
-              Anuluj
-            </button>
-            <button
-              className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-3 rounded-[5px] border border-transparent bg-signal px-[15px] text-[12px] font-semibold text-white transition-all hover:-translate-y-px hover:bg-[#b94b31] disabled:cursor-wait disabled:opacity-70"
-              type="submit"
-              disabled={isSaving}
-            >
-              {isSaving
-                ? "Zapisywanie…"
-                : transaction
-                  ? "Zapisz zmiany"
-                  : "Dodaj transakcję"}
-            </button>
-          </div>
-        </form>
-      </section>
-    </div>
+          </Select>
+        </Field>
+        <Field label="Portfel">
+          <Select
+            value={form.wallet}
+            onChange={(event) =>
+              setForm((current) => ({ ...current, wallet: event.target.value }))
+            }
+          >
+            {wallets.map((wallet) => (
+              <option key={wallet.id} value={String(wallet.id)}>
+                {wallet.name}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        {formError && <ErrorAlert>{formError}</ErrorAlert>}
+        <ModalFooter>
+          <Button
+            variant="secondary"
+            onClick={close}
+            disabled={isSaving}
+          >
+            Anuluj
+          </Button>
+          <Button
+            variant="primary"
+            type="submit"
+            disabled={isSaving}
+          >
+            {isSaving
+              ? "Zapisywanie…"
+              : transaction
+                ? "Zapisz zmiany"
+                : "Dodaj transakcję"}
+          </Button>
+        </ModalFooter>
+      </form>
+    </Modal>
   );
 }
