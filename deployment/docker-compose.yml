@@ -53,6 +53,27 @@ services:
         condition: service_healthy
     command: ["sh", "-c", "exec python -m mcp_server"]
 
+  # Admin panel (sqladmin). Published on the host's loopback only: reach it
+  # through an SSH tunnel (ssh -L 8002:127.0.0.1:8002 <vps>), not via nginx.
+  admin:
+    build:
+      context: ..
+      dockerfile: ./deployment/Dockerfile
+    container_name: djangopersonal-admin
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8002:8002"
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["sh", "-c", "exec uvicorn --factory admin_panel.app:create_served_app --host 0.0.0.0 --port 8002 --proxy-headers --forwarded-allow-ips '*'"]
+
   frontend:
     build:
       context: ..

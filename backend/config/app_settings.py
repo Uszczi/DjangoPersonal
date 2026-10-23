@@ -14,8 +14,10 @@ from sqlalchemy import URL
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Development only; production always sets ``SECRET_KEY`` (``deploy.sh`` checks).
+# Development only; production always sets ``SECRET_KEY`` and ``ADMIN_SECRET_KEY``
+# (``deploy.sh`` checks).
 INSECURE_DEV_SECRET_KEY = 'django-insecure-fx*-*3#p(4zly%b^+pep($1i%5=9(-lkuli@k9g8nfmp9#sr)p'
+INSECURE_DEV_ADMIN_SECRET_KEY = 'insecure-dev-admin-session-key'
 
 
 def _env_bool(value: object) -> object:
@@ -41,6 +43,10 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(extra='ignore', populate_by_name=True)
 
     secret_key: str = Field(default=INSECURE_DEV_SECRET_KEY, validation_alias='SECRET_KEY')
+    #: Signs the admin panel's session cookie; separate from the JWT key.
+    admin_secret_key: str = Field(
+        default=INSECURE_DEV_ADMIN_SECRET_KEY, validation_alias='ADMIN_SECRET_KEY'
+    )
     debug: EnvBool = Field(default=False, validation_alias='DEBUG')
     allowed_hosts: EnvList = Field(
         default_factory=lambda: ['localhost', '127.0.0.1'],

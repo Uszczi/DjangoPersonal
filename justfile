@@ -9,6 +9,14 @@ backend:
 mcp:
     cd backend && uv run python -m mcp_server
 
+# Run the admin panel (sqladmin) on port 8002; open http://localhost:8002/admin/.
+admin:
+    cd backend && uv run uvicorn --factory admin_panel.app:create_served_app --reload --port 8002
+
+# Create a staff account for the admin panel, or promote an existing one.
+createsuperuser username *flags:
+    cd backend && uv run python -m admin_panel.create_superuser {{username}} {{flags}}
+
 # Create an Alembic revision from model changes, e.g. `just makemigrations "add due dates"`.
 makemigrations message:
     cd backend && uv run alembic revision --autogenerate -m "{{message}}"
@@ -86,6 +94,10 @@ deploy-restart:
 # Follow logs from the deployment stack (optionally for one service).
 deploy-logs service="":
     {{compose}} logs --follow {{service}}
+
+# Create or promote an admin-panel staff account inside the app container.
+deploy-createsuperuser username:
+    {{compose}} run --rm app python -m admin_panel.create_superuser {{username}}
 
 # Apply the Alembic migrations inside the app container.
 deploy-migrate:

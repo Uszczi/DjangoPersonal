@@ -54,6 +54,8 @@ Everything goes through the `justfile`:
 ```bash
 just backend          # FastAPI app on :8000 (SQLite unless POSTGRES_HOST is set)
 just mcp              # MCP server (streamable HTTP) on :8001
+just admin            # admin panel (sqladmin) on :8002/admin/
+just createsuperuser NAME  # create or promote a staff account for the admin panel
 just frontend         # Vite dev server; proxies /api to Django on :8000
 just storybook        # Storybook component workshop on :6006 (build via npm run build-storybook)
 just makemigrations "msg"  # Alembic revision from model changes
@@ -71,6 +73,7 @@ Deployment stacks:
 ```bash
 just deploy-build / deploy-up / deploy-down / deploy-logs [service]
 just deploy-migrate   # run migrations inside the app container
+just deploy-createsuperuser NAME  # staff account on the deployed stack
 just deploy           # full VPS flow: ./deployment/deploy.sh
 just local-up         # whole stack locally behind a throwaway nginx on :80
 just local-down / local-status / local-logs / local-migrate
@@ -101,6 +104,10 @@ The API is served under `/api/v1/` with the OpenAPI schema at `/api/v1/schema/`.
 ## MCP server (`backend/mcp_server/`)
 
 A FastMCP server that re-exposes the same handlers/deps as HTTP tools over streamable HTTP on port 8001 (`just mcp` / `python -m mcp_server`), with OAuth (dynamic client registration, custom `/login` routes, issuer/public host from `MCP_ISSUER_URL`/`MCP_PUBLIC_HOST`). It is a separate service (own container), not mounted into the API app. `runtime.py` holds the process-wide settings, `Database` and auth adapters; every tool call is one transaction (`Database.transaction()`), run in a worker thread. User resolution (`auth.py`) prefers the OAuth token, falls back to an API JWT bearer header (`TokenService`), then to `MCP_DEFAULT_USER_ID` (stdio). The `/login` page checks credentials with the `AuthenticateUser` use case and only issues codes to a registered client's own redirect URI. Tool functions are thin wrappers: build a contract (partial updates forward only the arguments given), call the handler, serialize. Tests: `tests/test_mcp_server.py`.
+
+## Admin panel (`backend/admin_panel/`)
+
+A separate `sqladmin` service (`admin` container, :8002, published on the host's loopback only — reach it through an SSH tunnel; nginx does not expose it). `views.py` declares one `ModelView` per model: nothing is created from the panel, edits are limited to plain fields the mapper-event invariants cover, and user/project deletes go through their repositories (the Inbox cannot be deleted). `auth.py` signs in active `is_staff` users with the `AuthenticateUser` use case into a session cookie signed with `ADMIN_SECRET_KEY`; every request re-checks the user. `create_superuser.py` (`just createsuperuser`) registers a staff account like the API does, or promotes an existing one. Tests: `tests/test_admin_panel.py`.
 
 ## Frontend architecture (`frontend/`)
 
