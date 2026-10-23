@@ -9,6 +9,8 @@ from apps.infra.models import Task
 from apps.infra.models import TimeEntry
 from apps.infra.models import User
 
+pytestmark = pytest.mark.django_only
+
 
 @pytest.mark.django_db
 def test_seed_dev_populates_an_empty_database() -> None:

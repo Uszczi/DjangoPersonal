@@ -3,12 +3,11 @@
 from typing import Any
 from http import HTTPStatus
 
+from apps.infra.factories import WalletFactory
 
-def test_list_wallets_returns_only_own(api_client: Any, auth_headers: Any) -> None:
-    from apps.infra.models import User, Wallet
 
-    other = User.objects.create_user(username='other', password='StrongPass123!')
-    Wallet.objects.create(user=other, name='Foreign')
+def test_list_wallets_returns_only_own(api_client: Any, make_user: Any) -> None:
+    WalletFactory.create(user=make_user('other'), name='Foreign')
 
     response = api_client.get('/api/v1/wallets/')
 
@@ -214,11 +213,8 @@ def test_wallet_not_found(api_client: Any) -> None:
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 
-def test_wallet_not_visible_to_other_users(api_client: Any, auth_headers: Any) -> None:
-    from apps.infra.models import User, Wallet
-
-    other = User.objects.create_user(username='someone', password='StrongPass123!')
-    wallet = Wallet.objects.create(user=other, name='Private')
+def test_wallet_not_visible_to_other_users(api_client: Any, make_user: Any) -> None:
+    wallet = WalletFactory.create(user=make_user('someone'), name='Private')
 
     response = api_client.get(f'/api/v1/wallets/{wallet.id}/')
 
@@ -226,12 +222,9 @@ def test_wallet_not_visible_to_other_users(api_client: Any, auth_headers: Any) -
 
 
 def test_mutations_not_visible_to_other_users(
-    api_client: Any, patch_json: Any, put_json: Any
+    api_client: Any, patch_json: Any, put_json: Any, make_user: Any
 ) -> None:
-    from apps.infra.models import User, Wallet
-
-    other = User.objects.create_user(username='someone', password='StrongPass123!')
-    wallet = Wallet.objects.create(user=other, name='Private')
+    wallet = WalletFactory.create(user=make_user('someone'), name='Private')
 
     patch = patch_json(f'/api/v1/wallets/{wallet.id}/', {'name': 'Hijacked'})
     replace = put_json(f'/api/v1/wallets/{wallet.id}/', {'name': 'Hijacked'})

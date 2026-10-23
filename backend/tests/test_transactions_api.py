@@ -3,6 +3,8 @@
 from typing import Any
 from http import HTTPStatus
 
+from apps.infra.factories import CategoryFactory, TransactionFactory, WalletFactory
+
 
 def test_create_transaction(post_json: Any, api_client: Any) -> None:
     wallet_id = post_json('/api/v1/wallets/', {'name': 'Personal'}).json()['id']
@@ -278,12 +280,10 @@ def test_delete_transaction(post_json: Any, api_client: Any) -> None:
     assert api_client.get(f'/api/v1/transactions/?wallet={wallet_id}').json() == []
 
 
-def test_foreign_wallet_and_category_are_rejected(post_json: Any, auth_headers: Any) -> None:
-    from apps.infra.models import User, Wallet, Category
-
-    other = User.objects.create_user(username='someone', password='StrongPass123!')
-    foreign_wallet = Wallet.objects.create(user=other, name='Foreign')
-    foreign_category = Category.objects.create(user=other, name='Foreign')
+def test_foreign_wallet_and_category_are_rejected(post_json: Any, make_user: Any) -> None:
+    other = make_user('someone')
+    foreign_wallet = WalletFactory.create(user=other, name='Foreign')
+    foreign_category = CategoryFactory.create(user=other, name='Foreign')
 
     bad_wallet = post_json(
         '/api/v1/transactions/',
@@ -311,19 +311,10 @@ def test_foreign_wallet_and_category_are_rejected(post_json: Any, auth_headers: 
 
 
 def test_transaction_not_visible_to_other_users(
-    api_client: Any, post_json: Any, patch_json: Any, put_json: Any
+    api_client: Any, post_json: Any, patch_json: Any, put_json: Any, make_user: Any
 ) -> None:
-    from apps.infra.models import User, Wallet, Transaction
-
-    other = User.objects.create_user(username='someone', password='StrongPass123!')
-    foreign_wallet = Wallet.objects.create(user=other, name='Foreign')
-    foreign = Transaction.objects.create(
-        user=other,
-        wallet=foreign_wallet,
-        title='Secret',
-        amount='99.00',
-        date='2026-10-18',
-    )
+    foreign_wallet = WalletFactory.create(user=make_user('someone'), name='Foreign')
+    foreign = TransactionFactory.create(wallet=foreign_wallet, title='Secret', amount='99.00')
 
     assert api_client.get(f'/api/v1/transactions/{foreign.id}/').status_code == HTTPStatus.NOT_FOUND
     assert (
@@ -344,19 +335,10 @@ def test_transaction_not_visible_to_other_users(
 
 
 def test_other_users_wallet_lists_no_transactions(
-    api_client: Any, auth_headers: Any
+    api_client: Any, make_user: Any
 ) -> None:
-    from apps.infra.models import User, Wallet, Transaction
-
-    other = User.objects.create_user(username='someone', password='StrongPass123!')
-    foreign_wallet = Wallet.objects.create(user=other, name='Foreign')
-    Transaction.objects.create(
-        user=other,
-        wallet=foreign_wallet,
-        title='Secret',
-        amount='99.00',
-        date='2026-10-18',
-    )
+    foreign_wallet = WalletFactory.create(user=make_user('someone'), name='Foreign')
+    TransactionFactory.create(wallet=foreign_wallet, title='Secret', amount='99.00')
 
     response = api_client.get(f'/api/v1/transactions/?wallet={foreign_wallet.id}')
 
@@ -364,23 +346,22 @@ def test_other_users_wallet_lists_no_transactions(
 
 
 def test_deleting_wallet_cascades_to_transactions(post_json: Any, api_client: Any) -> None:
-    from apps.infra.models import Transaction
-
     wallet_id = post_json('/api/v1/wallets/', {'name': 'Personal'}).json()['id']
-    post_json(
+    transaction_id = post_json(
         '/api/v1/transactions/',
         {'title': 'Kawa', 'amount': '8.00', 'date': '2026-10-18', 'wallet': wallet_id},
-    )
+    ).json()['id']
 
     response = api_client.delete(f'/api/v1/wallets/{wallet_id}/')
 
     assert response.status_code == HTTPStatus.NO_CONTENT
-    assert Transaction.objects.count() == 0
+    assert (
+        api_client.get(f'/api/v1/transactions/{transaction_id}/').status_code
+        == HTTPStatus.NOT_FOUND
+    )
 
 
 def test_deleting_category_cascades_to_transactions(post_json: Any, api_client: Any) -> None:
-    from apps.infra.models import Transaction
-
     wallet_id = post_json('/api/v1/wallets/', {'name': 'Personal'}).json()['id']
     category_id = post_json('/api/v1/categories/', {'name': 'Hobby'}).json()['id']
     post_json(
@@ -397,7 +378,7 @@ def test_deleting_category_cascades_to_transactions(post_json: Any, api_client: 
     response = api_client.delete(f'/api/v1/categories/{category_id}/')
 
     assert response.status_code == HTTPStatus.NO_CONTENT
-    assert Transaction.objects.count() == 0
+    assert api_client.get(f'/api/v1/transactions/?wallet={wallet_id}').json() == []
 
 
 def test_wallet_list_reports_real_transaction_count(post_json: Any, api_client: Any) -> None:

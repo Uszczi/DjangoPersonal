@@ -1,35 +1,26 @@
 """API behavior tests for the Categories boundary."""
 
-import json
 from typing import Any
 from http import HTTPStatus
 
-from django.test import Client
+from apps.infra.factories import CategoryFactory
+
+from .harness import ApiClient
 
 
-def _register(post_json: Any, username: str = 'fresh') -> Client:
+def _register(anon_client: ApiClient, username: str = 'fresh') -> ApiClient:
     """Register a user through the API, returning a client authenticated as them."""
     password = 'StrongPass123!'
-    response = post_json(
+    response = anon_client.post(
         '/api/v1/auth/register/',
         {'username': username, 'password': password, 'password_confirm': password},
     )
-    assert response.status_code == HTTPStatus.CREATED, response.content
-    return Client(headers={'Authorization': f"Bearer {response.json()['access']}"})
+    assert response.status_code == HTTPStatus.CREATED, response.text
+    return anon_client.authenticated(response.json()['access'])
 
 
-def _send(client: Client, method: str, path: str, payload: Any) -> Any:
-    """Issue a JSON request as ``client`` (patch/put/delete share this shape)."""
-    return getattr(client, method)(
-        path, data=json.dumps(payload), content_type='application/json'
-    )
-
-
-def test_list_categories_returns_only_own(api_client: Any, auth_headers: Any) -> None:
-    from apps.infra.models import Category, User
-
-    other = User.objects.create_user(username='other', password='StrongPass123!')
-    Category.objects.create(user=other, name='Foreign')
+def test_list_categories_returns_only_own(api_client: Any, make_user: Any) -> None:
+    CategoryFactory.create(user=make_user('other'), name='Foreign')
 
     response = api_client.get('/api/v1/categories/')
 
@@ -116,11 +107,8 @@ def test_category_not_found(api_client: Any) -> None:
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 
-def test_category_not_visible_to_other_users(api_client: Any) -> None:
-    from apps.infra.models import Category, User
-
-    other = User.objects.create_user(username='someone', password='StrongPass123!')
-    category = Category.objects.create(user=other, name='Private')
+def test_category_not_visible_to_other_users(api_client: Any, make_user: Any) -> None:
+    category = CategoryFactory.create(user=make_user('someone'), name='Private')
 
     response = api_client.get(f'/api/v1/categories/{category.id}/')
 
@@ -128,12 +116,9 @@ def test_category_not_visible_to_other_users(api_client: Any) -> None:
 
 
 def test_mutations_not_visible_to_other_users(
-    api_client: Any, patch_json: Any, put_json: Any
+    api_client: Any, patch_json: Any, put_json: Any, make_user: Any
 ) -> None:
-    from apps.infra.models import Category, User
-
-    other = User.objects.create_user(username='someone', password='StrongPass123!')
-    category = Category.objects.create(user=other, name='Private')
+    category = CategoryFactory.create(user=make_user('someone'), name='Private')
 
     patch = patch_json(f'/api/v1/categories/{category.id}/', {'name': 'Hijacked'})
     replace = put_json(f'/api/v1/categories/{category.id}/', {'name': 'Hijacked'})
@@ -157,11 +142,11 @@ def test_delete_category(post_json: Any, api_client: Any) -> None:
 # test_deleting_category_cascades_to_transactions in test_transactions_api.py.
 
 
-def test_registering_seeds_base_categories_and_system(post_json: Any) -> None:
+def test_registering_seeds_base_categories_and_system(post_json: Any, anon_client: Any) -> None:
     from apps.expenses.handlers.categories import BASE_CATEGORY_NAMES, SYSTEM_CATEGORY_NAME
 
     assert len(BASE_CATEGORY_NAMES) == 10
-    client = _register(post_json)
+    client = _register(anon_client)
 
     listing = client.get('/api/v1/categories/').json()
 
@@ -173,8 +158,8 @@ def test_registering_seeds_base_categories_and_system(post_json: Any) -> None:
     assert all(c['is_system'] is False for c in listing if c['name'] != SYSTEM_CATEGORY_NAME)
 
 
-def test_creating_a_wallet_does_not_seed_categories(post_json: Any) -> None:
-    client = _register(post_json)
+def test_creating_a_wallet_does_not_seed_categories(post_json: Any, anon_client: Any) -> None:
+    client = _register(anon_client)
 
     post_json('/api/v1/wallets/', {'name': 'Personal'})
     post_json('/api/v1/wallets/', {'name': 'Business'})
@@ -183,13 +168,13 @@ def test_creating_a_wallet_does_not_seed_categories(post_json: Any) -> None:
     assert len(client.get('/api/v1/categories/').json()) == 11
 
 
-def test_seeding_categories_is_idempotent(post_json: Any) -> None:
+def test_seeding_categories_is_idempotent(post_json: Any, anon_client: Any) -> None:
     from apps.expenses.handlers.categories import seed_base_categories
-    from apps.infra.models import User
-    from apps.infra.repo import CategoryRepository
+    from apps.infra.repo import CategoryRepository, UserRepository
 
-    client = _register(post_json)
-    user = User.objects.get(username='fresh')
+    client = _register(anon_client)
+    user = UserRepository().get_by_username('fresh')
+    assert user is not None
 
     # A second seed for the same user adds nothing.
     seed_base_categories(CategoryRepository(), user)
@@ -197,22 +182,22 @@ def test_seeding_categories_is_idempotent(post_json: Any) -> None:
     assert len(client.get('/api/v1/categories/').json()) == 11
 
 
-def test_system_category_cannot_be_renamed(post_json: Any) -> None:
-    client = _register(post_json)
+def test_system_category_cannot_be_renamed(post_json: Any, anon_client: Any) -> None:
+    client = _register(anon_client)
     system_id = next(
         c['id'] for c in client.get('/api/v1/categories/').json() if c['is_system']
     )
 
-    patched = _send(client, 'patch', f'/api/v1/categories/{system_id}/', {'name': 'Inne'})
-    replaced = _send(client, 'put', f'/api/v1/categories/{system_id}/', {'name': 'Inne'})
+    patched = client.patch(f'/api/v1/categories/{system_id}/', {'name': 'Inne'})
+    replaced = client.put(f'/api/v1/categories/{system_id}/', {'name': 'Inne'})
 
     assert patched.status_code == HTTPStatus.BAD_REQUEST
     assert replaced.status_code == HTTPStatus.BAD_REQUEST
     assert 'System category' in patched.json()['detail']
 
 
-def test_system_category_cannot_be_deleted(post_json: Any) -> None:
-    client = _register(post_json)
+def test_system_category_cannot_be_deleted(post_json: Any, anon_client: Any) -> None:
+    client = _register(anon_client)
     system_id = next(
         c['id'] for c in client.get('/api/v1/categories/').json() if c['is_system']
     )

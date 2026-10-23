@@ -1,0 +1,362 @@
+[
+  {
+    "method": "POST",
+    "path": "/api/v1/auth/login/",
+    "operation_id": "auth_login",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/auth/me/",
+    "operation_id": "auth_destroy",
+    "status_codes": [
+      "204"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/auth/me/",
+    "operation_id": "auth_me",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/auth/refresh/",
+    "operation_id": "auth_refresh",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/auth/register/",
+    "operation_id": "auth_register",
+    "status_codes": [
+      "201"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/categories/",
+    "operation_id": "categories_list",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/categories/",
+    "operation_id": "categories_create",
+    "status_codes": [
+      "201"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/categories/{id}/",
+    "operation_id": "categories_destroy",
+    "status_codes": [
+      "204"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/categories/{id}/",
+    "operation_id": "categories_retrieve",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/categories/{id}/",
+    "operation_id": "categories_partial_update",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/categories/{id}/",
+    "operation_id": "categories_update",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/projects/",
+    "operation_id": "projects_list",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/projects/",
+    "operation_id": "projects_create",
+    "status_codes": [
+      "201"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/projects/{id}/",
+    "operation_id": "projects_destroy",
+    "status_codes": [
+      "204"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/projects/{id}/",
+    "operation_id": "projects_retrieve",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/projects/{id}/",
+    "operation_id": "projects_partial_update",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/projects/{id}/",
+    "operation_id": "projects_update",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/tasks/",
+    "operation_id": "tasks_list",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/tasks/",
+    "operation_id": "tasks_create",
+    "status_codes": [
+      "201"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/tasks/{id}/",
+    "operation_id": "tasks_destroy",
+    "status_codes": [
+      "204"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/tasks/{id}/",
+    "operation_id": "tasks_partial_update",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/time-entries/",
+    "operation_id": "time_entries_list",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/time-entries/",
+    "operation_id": "time_entries_create",
+    "status_codes": [
+      "201"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/time-entries/{id}/",
+    "operation_id": "time_entries_destroy",
+    "status_codes": [
+      "204"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/time-entries/{id}/",
+    "operation_id": "time_entries_partial_update",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/timer/",
+    "operation_id": "timer_retrieve",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/timer/start/",
+    "operation_id": "timer_start",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/timer/stop/",
+    "operation_id": "timer_stop",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/transactions/",
+    "operation_id": "transactions_list",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/transactions/",
+    "operation_id": "transactions_create",
+    "status_codes": [
+      "201"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/transactions/{id}/",
+    "operation_id": "transactions_destroy",
+    "status_codes": [
+      "204"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/transactions/{id}/",
+    "operation_id": "transactions_retrieve",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/transactions/{id}/",
+    "operation_id": "transactions_partial_update",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/transactions/{id}/",
+    "operation_id": "transactions_update",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/wallets/",
+    "operation_id": "wallets_list",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/wallets/",
+    "operation_id": "wallets_create",
+    "status_codes": [
+      "201"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/wallets/{id}/",
+    "operation_id": "wallets_destroy",
+    "status_codes": [
+      "204"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/wallets/{id}/",
+    "operation_id": "wallets_retrieve",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/wallets/{id}/",
+    "operation_id": "wallets_partial_update",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/wallets/{id}/",
+    "operation_id": "wallets_update",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/whiteboards/",
+    "operation_id": "whiteboards_list",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/whiteboards/",
+    "operation_id": "whiteboards_create",
+    "status_codes": [
+      "201"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/whiteboards/{id}/",
+    "operation_id": "whiteboards_destroy",
+    "status_codes": [
+      "204"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/whiteboards/{id}/",
+    "operation_id": "whiteboards_retrieve",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/whiteboards/{id}/",
+    "operation_id": "whiteboards_partial_update",
+    "status_codes": [
+      "200"
+    ]
+  }
+]

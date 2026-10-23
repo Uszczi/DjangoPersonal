@@ -1,8 +1,10 @@
-"""factory_boy factories for building demo data (see the ``seed_dev`` command)."""
+"""factory_boy factories for demo data (the ``seed_dev`` command) and test rows."""
 
 import random
 from datetime import UTC
+from datetime import date
 from datetime import timedelta
+from decimal import Decimal
 
 from django.contrib.auth.hashers import make_password
 from factory.declarations import LazyAttribute
@@ -13,9 +15,12 @@ from factory.django import DjangoModelFactory
 from factory.faker import Faker
 
 from apps.infra.models import DEFAULT_PROJECT_STATUSES, Project
+from apps.infra.models import Category
 from apps.infra.models import Task
 from apps.infra.models import TimeEntry
+from apps.infra.models import Transaction
 from apps.infra.models import User
+from apps.infra.models import Wallet
 
 DEV_PASSWORD = 'devpass123'
 
@@ -56,3 +61,30 @@ class TimeEntryFactory(DjangoModelFactory[TimeEntry]):
     end = LazyAttribute(
         lambda entry: entry.start + timedelta(minutes=random.randint(15, 180))
     )
+
+
+class WalletFactory(DjangoModelFactory[Wallet]):
+    class Meta:
+        model = Wallet
+
+    user = SubFactory(UserFactory)
+    name = Sequence(lambda n: f'Wallet {n}')
+
+
+class CategoryFactory(DjangoModelFactory[Category]):
+    class Meta:
+        model = Category
+
+    user = SubFactory(UserFactory)
+    name = Sequence(lambda n: f'Category {n}')
+
+
+class TransactionFactory(DjangoModelFactory[Transaction]):
+    class Meta:
+        model = Transaction
+
+    wallet = SubFactory(WalletFactory)
+    user = LazyAttribute(lambda transaction: transaction.wallet.user)
+    title = Faker('sentence', nb_words=3, locale='pl_PL')
+    amount = Decimal('10.00')
+    date = LazyFunction(date.today)

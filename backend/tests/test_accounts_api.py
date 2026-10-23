@@ -3,8 +3,6 @@
 from typing import Any
 from http import HTTPStatus
 
-from django.test import Client
-
 
 def test_failed_login_returns_unauthorized_with_detail_body(
     api_client: Any, post_json: Any
@@ -18,7 +16,9 @@ def test_failed_login_returns_unauthorized_with_detail_body(
     assert response.json() == {'detail': 'Invalid username or password.'}
 
 
-def test_register_creates_an_account_and_issues_tokens(post_json: Any) -> None:
+def test_register_creates_an_account_and_issues_tokens(
+    post_json: Any, anon_client: Any
+) -> None:
     response = post_json(
         '/api/v1/auth/register/',
         {
@@ -32,7 +32,7 @@ def test_register_creates_an_account_and_issues_tokens(post_json: Any) -> None:
     tokens = response.json()
     assert tokens['access'] and tokens['refresh']
 
-    client = Client(headers={'Authorization': f"Bearer {tokens['access']}"})
+    client = anon_client.authenticated(tokens['access'])
     me = client.get('/api/v1/auth/me/')
     assert me.status_code == HTTPStatus.OK
     assert me.json()['username'] == 'newcomer'
@@ -53,7 +53,7 @@ def test_register_rejects_a_duplicate_username(post_json: Any) -> None:
 
 
 def test_delete_account_removes_user_and_its_data(
-    api_client: Any, post_json: Any
+    post_json: Any, anon_client: Any
 ) -> None:
     tokens = post_json(
         '/api/v1/auth/register/',
@@ -63,7 +63,7 @@ def test_delete_account_removes_user_and_its_data(
             'password_confirm': 'StrongPass123!',
         },
     ).json()
-    client = Client(headers={'Authorization': f"Bearer {tokens['access']}"})
+    client = anon_client.authenticated(tokens['access'])
 
     response = client.delete('/api/v1/auth/me/')
 

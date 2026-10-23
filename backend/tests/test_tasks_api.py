@@ -1,8 +1,6 @@
 from typing import Any
 from http import HTTPStatus
 
-from apps.infra.models import Task
-
 
 def test_user_can_create_and_browse_tasks_in_a_project(post_json: Any, api_client: Any) -> None:
     project_response = post_json('/api/v1/projects/', {'name': 'Planning'})
@@ -109,10 +107,9 @@ def test_task_list_is_scoped_to_a_project_and_shows_open_tasks_first(api_client:
         '/api/v1/tasks/',
         {'title': 'Find sources', 'project': other_project_id},
     )
-    Task.objects.create(
-        title='Archive old notes',
-        project_id=project_id,
-        status='Zrobione',
+    post_json(
+        '/api/v1/tasks/',
+        {'title': 'Archive old notes', 'project': project_id, 'status': 'Zrobione'},
     )
 
     response = api_client.get(f'/api/v1/tasks/?project={project_id}')
@@ -241,12 +238,11 @@ def test_new_task_lands_after_the_last_open_task(api_client: Any, post_json: Any
     open_task = post_json(
         '/api/v1/tasks/', {'title': 'Open', 'project': project_id}
     ).json()
-    Task.objects.create(
-        title='Done A', project_id=project_id, status='Zrobione', position=3
-    )
-    Task.objects.create(
-        title='Done B', project_id=project_id, status='Zrobione', position=4
-    )
+    for title, position in (('Done A', 3), ('Done B', 4)):
+        post_json(
+            '/api/v1/tasks/',
+            {'title': title, 'project': project_id, 'status': 'Zrobione', 'position': position},
+        )
 
     created = post_json('/api/v1/tasks/', {'title': 'Fresh', 'project': project_id})
 

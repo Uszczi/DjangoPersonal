@@ -5,6 +5,9 @@ import pytest
 from apps.infra.models import Project, Task, User
 from apps.infra.repo import ProjectRepository, TaskRepository
 
+# Repository internals; stage 04 rewrites these against SQLAlchemy.
+pytestmark = pytest.mark.django_only
+
 
 @pytest.fixture
 def user(db: Any) -> User:
