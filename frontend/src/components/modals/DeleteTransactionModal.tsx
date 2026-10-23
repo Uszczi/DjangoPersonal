@@ -4,6 +4,7 @@ import { apiErrorMessage } from "@/apiErrorMessage";
 import { Button, ErrorAlert, Modal, ModalFooter } from "@/design-system";
 import type { TransactionResponse } from "@/generated/api";
 import { useTransactionsStore } from "@/stores/transactions";
+import { useWalletsStore } from "@/stores/wallets";
 
 type DeleteTransactionModalProps = {
   transaction: TransactionResponse;
@@ -17,6 +18,7 @@ export function DeleteTransactionModal({
   const confirmTransactionDelete = useTransactionsStore(
     (state) => state.confirmTransactionDelete,
   );
+  const refreshWallets = useWalletsStore((state) => state.refreshWallets);
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -31,6 +33,8 @@ export function DeleteTransactionModal({
 
     try {
       await confirmTransactionDelete(transaction);
+      // The wallet's balance and count are computed from the ledger.
+      void refreshWallets([transaction.walletId]);
       onClose();
     } catch (error) {
       setDeleteError(await apiErrorMessage(error));

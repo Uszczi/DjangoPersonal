@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { api } from "@/api";
 import { type WalletResponse } from "@/generated/api";
 import { createLoadGuard } from "@/stores/loadGuard";
+import { useTransactionsStore } from "@/stores/transactions";
 
 /** What the create modal collects: a name, a colour and, optionally, an icon and an opening balance. */
 export type WalletCreateInput = {
@@ -34,6 +35,8 @@ type WalletsState = {
     input: WalletUpdateInput,
   ) => Promise<WalletResponse>;
   confirmWalletDelete: (wallet: WalletResponse) => Promise<void>;
+  /** Re-read these wallets, so balances and counts follow a transaction write. */
+  refreshWallets: (walletIds: number[]) => Promise<void>;
 };
 
 const loadGuard = createLoadGuard();
@@ -103,6 +106,10 @@ export const useWalletsStore = create<WalletsState>((set) => ({
   },
 
   updateWallet: async (wallet, { name, color, icon, currentBalance }) => {
+    // Only send the balance when it actually changed, so a plain rename
+    // never writes a System correction.
+    const newBalance =
+      currentBalance === (wallet.balance ?? "") ? undefined : currentBalance.trim() || undefined;
     const updatedWallet = await api.walletsPartialUpdate({
       id: wallet.id,
       patchedWalletRequest: {
@@ -110,12 +117,7 @@ export const useWalletsStore = create<WalletsState>((set) => ({
         color: color === wallet.color ? undefined : color,
         // Unchanged is left out; a removed icon is sent as an explicit null.
         icon: icon === (wallet.icon ?? null) ? undefined : icon,
-        // Only send the balance when it actually changed, so a plain rename
-        // never writes a System correction.
-        currentBalance:
-          currentBalance === (wallet.balance ?? "")
-            ? undefined
-            : currentBalance.trim() || undefined,
+        currentBalance: newBalance,
       },
     });
     set((state) => ({
@@ -123,7 +125,29 @@ export const useWalletsStore = create<WalletsState>((set) => ({
         item.id === updatedWallet.id ? updatedWallet : item,
       ),
     }));
+    // A new balance is recorded as a System "Korekta stanu" transaction on the
+    // server; reload the shown list so it appears without a page refresh.
+    const transactions = useTransactionsStore.getState();
+    if (newBalance !== undefined && transactions.transactionList?.walletId === wallet.id) {
+      await transactions.loadTransactions(wallet.id);
+    }
     return updatedWallet;
+  },
+
+  refreshWallets: async (walletIds) => {
+    const results = await Promise.allSettled(
+      [...new Set(walletIds)].map((id) => api.walletsRetrieve({ id })),
+    );
+    // A failed refresh only leaves a stale balance; the write itself succeeded.
+    const fresh = new Map(
+      results
+        .filter((result) => result.status === "fulfilled")
+        .map(({ value }) => [value.id, value]),
+    );
+    if (fresh.size === 0) return;
+    set((state) => ({
+      wallets: state.wallets.map((item) => fresh.get(item.id) ?? item),
+    }));
   },
 
   confirmWalletDelete: async (wallet) => {

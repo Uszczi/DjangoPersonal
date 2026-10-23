@@ -55,6 +55,7 @@ export function TransactionEditorModal({
     (state) => state.saveTransaction,
   );
   const wallets = useWalletsStore((state) => state.wallets);
+  const refreshWallets = useWalletsStore((state) => state.refreshWallets);
   const categories = useCategoriesStore((state) => state.categories);
 
   const [form, setForm] = useState({
@@ -103,6 +104,11 @@ export function TransactionEditorModal({
 
     try {
       await saveTransaction(input, transaction);
+      // The balance is computed from the ledger: refresh the wallet the
+      // transaction is in and, when it moved, the one it left.
+      void refreshWallets(
+        transaction ? [transaction.walletId, input.wallet] : [input.wallet],
+      );
       onClose();
     } catch (error) {
       setFormError(await apiErrorMessage(error));

@@ -7,7 +7,13 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { renderApp } from './renderApp'
 
 // API returns snake_case; the generated client maps it to camelCase.
-const personalWalletApi = { id: 1, name: 'Personal', color: '#477c7c', transaction_count: 2 }
+const personalWalletApi = {
+  id: 1,
+  name: 'Personal',
+  color: '#477c7c',
+  transaction_count: 2,
+  balance: '-53.99',
+}
 
 const categoriesApi = [{ id: 5, name: 'Jedzenie', icon: 'utensils' }]
 
@@ -44,11 +50,14 @@ function routeByUrl({
   created,
   patched,
   categories = categoriesApi,
+  wallet = () => personalWalletApi,
 }: {
   transactions?: unknown[]
   created?: unknown
   patched?: unknown
   categories?: unknown[]
+  /** The wallet as the server has it now, asked for on every request. */
+  wallet?: () => unknown
 } = {}) {
   return (url: string | URL | Request, init?: RequestInit): Promise<Response> => {
     const path = String(url)
@@ -67,8 +76,11 @@ function routeByUrl({
     if (path.includes('/categories/')) {
       return Promise.resolve(jsonResponse(categories))
     }
+    if (/\/wallets\/\d+\/$/.test(path)) {
+      return Promise.resolve(jsonResponse(wallet()))
+    }
     if (path.includes('/wallets/')) {
-      return Promise.resolve(jsonResponse([personalWalletApi]))
+      return Promise.resolve(jsonResponse([wallet()]))
     }
     if (path.includes('/projects/')) {
       return Promise.resolve(jsonResponse([{ id: 1, name: 'Inbox', description: '', is_inbox: true }]))
@@ -284,4 +296,51 @@ describe('Transactions', () => {
     )
   })
 
+  test('the wallet balance follows an added transaction', async () => {
+    let balance = '-45.99'
+    fetchMock.mockImplementation(
+      routeByUrl({
+        transactions: [lunchTransactionApi],
+        created: { ...coffeeTransactionApi, id: 12 },
+        wallet: () => ({ ...personalWalletApi, balance }),
+      }),
+    )
+    const user = userEvent.setup()
+
+    renderApp('/expenses/1')
+    const header = await screen.findByRole('button', { name: 'Edytuj portfel: Personal' })
+    expect(header).toHaveTextContent('-45.99')
+
+    await user.click(screen.getByRole('button', { name: 'Nowa transakcja' }))
+    await user.type(await screen.findByLabelText('Tytuł'), 'Kawa')
+    await user.type(screen.getByLabelText('Kwota'), '8.00')
+    // The server's balance moves once it has stored the transaction.
+    balance = '-53.99'
+    await user.click(screen.getByRole('button', { name: 'Dodaj transakcję' }))
+
+    await waitFor(() => expect(header).toHaveTextContent('-53.99'))
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/wallets/1/', expect.anything())
+  })
+
+  test('the wallet balance follows a deleted transaction', async () => {
+    let balance = '-8.00'
+    fetchMock.mockImplementation(
+      routeByUrl({
+        transactions: [coffeeTransactionApi],
+        wallet: () => ({ ...personalWalletApi, balance }),
+      }),
+    )
+    const user = userEvent.setup()
+
+    renderApp('/expenses/1')
+    const header = await screen.findByRole('button', { name: 'Edytuj portfel: Personal' })
+    expect(header).toHaveTextContent('-8.00')
+
+    await user.click(screen.getByRole('button', { name: 'Edytuj transakcję: Kawa' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Usuń' }))
+    balance = '0.00'
+    await user.click(await screen.findByRole('button', { name: 'Usuń transakcję' }))
+
+    await waitFor(() => expect(header).toHaveTextContent('0.00'))
+  })
 })

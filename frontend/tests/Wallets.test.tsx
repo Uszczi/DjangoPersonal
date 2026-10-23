@@ -39,11 +39,14 @@ function routeByUrl({
   wallets = [personalWalletApi],
   written,
   walletsStatus = 200,
+  transactions = () => [],
 }: {
   wallets?: unknown[]
   /** The body answered to a wallet POST/PATCH. */
   written?: unknown
   walletsStatus?: number
+  /** The transaction list, asked for on every request (so it can change mid-test). */
+  transactions?: () => unknown[]
 } = {}) {
   return (url: string | URL | Request, init?: RequestInit): Promise<Response> => {
     const path = String(url)
@@ -56,9 +59,8 @@ function routeByUrl({
       )
     }
     if (path.includes('/projects/')) return Promise.resolve(jsonResponse([inbox]))
-    if (path.includes('/transactions/') || path.includes('/categories/')) {
-      return Promise.resolve(jsonResponse([]))
-    }
+    if (path.includes('/transactions/')) return Promise.resolve(jsonResponse(transactions()))
+    if (path.includes('/categories/')) return Promise.resolve(jsonResponse([]))
     return Promise.resolve(jsonResponse({ detail: 'Not found' }, 404))
   }
 }
@@ -193,6 +195,60 @@ describe('Wallets', () => {
         }),
       ),
     )
+  })
+
+  test('a new balance shows up as a correction transaction straight away', async () => {
+    const correctionApi = {
+      id: 50,
+      title: 'Korekta stanu',
+      amount: '75.00',
+      date: '2026-10-24',
+      description: '',
+      category_id: null,
+      wallet_id: 1,
+    }
+    let ledger: unknown[] = []
+    fetchMock.mockImplementation(
+      routeByUrl({
+        written: { ...personalWalletApi, transaction_count: 1, balance: '75.00' },
+        transactions: () => ledger,
+      }),
+    )
+    const user = userEvent.setup()
+
+    renderApp('/expenses')
+    expect(await screen.findByText('Brak transakcji. Dodaj pierwszą transakcję.')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Edytuj portfel: Personal' }))
+    const balanceInput = await screen.findByLabelText('Stan aktualny')
+    await user.clear(balanceInput)
+    await user.type(balanceInput, '75')
+    // The server writes the correction while handling the PATCH.
+    ledger = [correctionApi]
+    await user.click(screen.getByRole('button', { name: 'Zapisz zmiany' }))
+
+    expect(await screen.findByText('Korekta stanu')).toBeInTheDocument()
+  })
+
+  test('a plain rename does not reload the transactions', async () => {
+    fetchMock.mockImplementation(
+      routeByUrl({ written: { ...personalWalletApi, name: 'Renamed' } }),
+    )
+    const user = userEvent.setup()
+
+    renderApp('/expenses')
+    await user.click(await screen.findByRole('button', { name: 'Edytuj portfel: Personal' }))
+    await screen.findByText('Brak transakcji. Dodaj pierwszą transakcję.')
+    const transactionLoads = () =>
+      fetchMock.mock.calls.filter(([url]) => String(url).includes('/transactions/')).length
+    const before = transactionLoads()
+
+    await user.clear(await screen.findByLabelText('Nazwa portfela'))
+    await user.type(screen.getByLabelText('Nazwa portfela'), 'Renamed')
+    await user.click(screen.getByRole('button', { name: 'Zapisz zmiany' }))
+
+    await screen.findByRole('region', { name: 'Portfel: Renamed' })
+    expect(transactionLoads()).toBe(before)
   })
 
   test('user can rename a wallet', async () => {
