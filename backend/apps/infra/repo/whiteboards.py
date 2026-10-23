@@ -3,7 +3,7 @@ from typing import Any
 
 from apps.infra.models import User
 from apps.infra.models import Whiteboard as WhiteboardModel
-from apps.infra.models.whiteboard import default_board_content
+from apps.infra.rules import default_board_content
 
 
 class WhiteboardRepository:

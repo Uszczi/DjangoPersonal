@@ -3,13 +3,7 @@ from typing import Any
 from django.conf import settings
 from django.db import models
 
-
-def normalize_wallet_name(name: str) -> str:
-    return name.strip()
-
-
-def wallet_name_key(name: str) -> str:
-    return normalize_wallet_name(name).casefold()
+from apps.infra.rules import normalize_wallet_name, wallet_name_key
 
 
 class Wallet(models.Model):

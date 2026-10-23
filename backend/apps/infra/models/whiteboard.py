@@ -1,9 +1,7 @@
 from django.conf import settings
 from django.db import models
 
-
-def default_board_content() -> dict[str, object]:
-    return {'version': 1, 'elements': [], 'viewport': {'x': 0, 'y': 0, 'zoom': 1}}
+from apps.infra.rules import default_board_content
 
 
 class Whiteboard(models.Model):

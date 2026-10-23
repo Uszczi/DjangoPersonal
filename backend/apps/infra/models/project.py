@@ -1,4 +1,3 @@
-
 from typing import Any, cast
 
 from django.conf import settings
@@ -6,40 +5,29 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 
-DEFAULT_PROJECT_STATUSES: tuple[str, ...] = ("Todo", "Zrobione")
-DEFAULT_TERMINAL_STATUS = DEFAULT_PROJECT_STATUSES[-1]
-MAX_STATUSES = 20
-MAX_STATUS_LENGTH = 50
+from apps.infra.rules import (
+    DEFAULT_PROJECT_STATUSES,
+    DEFAULT_TERMINAL_STATUS,
+    MAX_STATUS_LENGTH,
+    MAX_STATUSES,
+    consistent_statuses,
+    default_project_statuses,
+    normalize_project_name,
+    normalize_project_statuses,
+    project_name_key,
+)
 
-
-def default_project_statuses() -> list[str]:
-    return list(DEFAULT_PROJECT_STATUSES)
-
-
-def normalize_project_statuses(statuses: Any) -> list[str]:
-    """Trim, drop blanks and de-duplicate, preserving the given order.
-
-    Returns an empty list when nothing usable remains; callers decide whether
-    that means "fall back to the defaults" or "reject the payload".
-    """
-    if not isinstance(statuses, (list, tuple)):
-        return []
-    normalized: list[str] = []
-    for status in statuses:
-        if not isinstance(status, str):
-            continue
-        status = status.strip()
-        if status and status not in normalized:
-            normalized.append(status)
-    return normalized
-
-
-def normalize_project_name(name: str) -> str:
-    return name.strip()
-
-
-def project_name_key(name: str) -> str:
-    return normalize_project_name(name).casefold()
+__all__ = [
+    "DEFAULT_PROJECT_STATUSES",
+    "DEFAULT_TERMINAL_STATUS",
+    "MAX_STATUS_LENGTH",
+    "MAX_STATUSES",
+    "Project",
+    "default_project_statuses",
+    "normalize_project_name",
+    "normalize_project_statuses",
+    "project_name_key",
+]
 
 
 class Project(models.Model):
@@ -94,19 +82,9 @@ class Project(models.Model):
         super().save(*args, **kwargs)
 
     def _normalize_statuses(self) -> None:
-        """Keep the status list and the terminal status consistent.
-
-        A project always keeps at least the default statuses, and the terminal
-        status always names one of them. This is the invariant the API contract
-        enforces too; the model repeats it so direct construction cannot leave
-        the database inconsistent.
-        """
-        statuses = normalize_project_statuses(self.project_statuses) or list(
-            DEFAULT_PROJECT_STATUSES
+        self.project_statuses, self.terminal_status = consistent_statuses(
+            self.project_statuses, self.terminal_status
         )
-        self.project_statuses = statuses
-        if self.terminal_status not in statuses:
-            self.terminal_status = statuses[-1]
 
     @property
     def first_status(self) -> str:

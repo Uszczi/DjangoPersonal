@@ -3,13 +3,7 @@ from typing import Any
 from django.conf import settings
 from django.db import models
 
-
-def normalize_category_name(name: str) -> str:
-    return name.strip()
-
-
-def category_name_key(name: str) -> str:
-    return normalize_category_name(name).casefold()
+from apps.infra.rules import category_name_key, normalize_category_name
 
 
 class Category(models.Model):

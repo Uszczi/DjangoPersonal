@@ -1,4 +1,11 @@
-from .category import Category, category_name_key, normalize_category_name
+from apps.infra.rules import (
+    category_name_key,
+    normalize_category_name,
+    normalize_wallet_name,
+    wallet_name_key,
+)
+
+from .category import Category
 from .task import Task
 from .project import (
     DEFAULT_PROJECT_STATUSES,
@@ -13,7 +20,7 @@ from .project import (
 from .timeentry import TimeEntry
 from .transaction import Transaction
 from .user import User
-from .wallet import Wallet, normalize_wallet_name, wallet_name_key
+from .wallet import Wallet
 from .whiteboard import Whiteboard
 
 __all__ = [
