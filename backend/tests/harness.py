@@ -2,11 +2,9 @@
 
 The suite talks to the API only through :class:`ApiClient`, which sends JSON and
 hands back a :class:`Response` with ``status_code``, ``json()`` and ``text``.
-What actually serves the request is a :class:`Transport`: Django's test client
-today, FastAPI's ``TestClient`` once the port lands. Tests must not reach past
-this module for anything framework-specific (``content_type=``,
-``response.content``, ``HTTP_*`` headers, ...), so the same suite can be run
-against either backend with ``--backend``.
+What actually serves the request is a :class:`Transport` (FastAPI's
+``TestClient``). Tests do not reach past this module for anything
+framework-specific, so the suite describes the HTTP contract and nothing else.
 """
 
 import json as jsonlib
@@ -84,29 +82,6 @@ class ApiClient:
 
     def delete(self, path: str, *, headers: dict[str, str] | None = None) -> Response:
         return self.request('DELETE', path, headers=headers)
-
-
-class DjangoTransport:
-    """Serves requests through ``django.test.Client``."""
-
-    def __init__(self) -> None:
-        from django.test import Client
-
-        self.client = Client()
-
-    def request(
-        self, method: str, path: str, *, body: bytes | None, headers: dict[str, str]
-    ) -> Response:
-        headers = dict(headers)
-        content_type = headers.pop('Content-Type', 'application/json')
-        response = self.client.generic(
-            method,
-            path,
-            data=body or b'',
-            content_type=content_type,
-            headers=headers,
-        )
-        return Response(status_code=response.status_code, body=response.content)
 
 
 class FastAPITransport:

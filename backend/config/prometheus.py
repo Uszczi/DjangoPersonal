@@ -1,9 +1,7 @@
-"""Framework-free Prometheus metrics shared by the Django and FastAPI apps.
+"""Framework-free Prometheus metrics, recorded by the middleware in ``config.ops``.
 
-Both apps record into the same collectors (each framework has its own
-middleware: ``config.metrics`` for Django, ``config.ops`` for FastAPI). The
-metric names keep their ``django_`` prefix after the FastAPI cutover so the
-Grafana dashboards and their history carry over unchanged.
+The metric names keep their ``django_`` prefix so the Grafana dashboards and
+their history carry over unchanged (see migration stage 11).
 
 Multiple workers: when ``PROMETHEUS_MULTIPROC_DIR`` is set, prometheus-client
 aggregates counters from every worker process, so the app can run with as many
@@ -30,7 +28,7 @@ UNMETERED_PATHS = ('/metrics', '/health', '/health/ready')
 
 REQUEST_COUNT = Counter(
     'django_http_requests_total',
-    'Total HTTP requests handled by the Django app.',
+    'Total HTTP requests handled by the app.',
     ['method', 'route', 'status'],
 )
 

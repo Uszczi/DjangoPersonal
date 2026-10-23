@@ -1,9 +1,8 @@
 """What the accounts use cases need from the outside world, as interfaces.
 
-Hashing, password rules and token issuing are framework services today
-(Django's auth and ``ninja_jwt``). The handlers depend on these protocols
-instead, and ``apps.accounts.deps`` injects the concrete implementations from
-``apps.accounts.adapters``, so the use cases never import a framework.
+Hashing, password rules and token issuing are infrastructure. The handlers
+depend on these protocols instead, and ``apps.accounts.deps`` injects the
+concrete implementations, so the use cases never import a library for them.
 """
 
 from typing import NamedTuple, Protocol

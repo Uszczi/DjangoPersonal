@@ -1,6 +1,16 @@
-"""Storage-independent invariants shared by the Django and SQLAlchemy models."""
+"""Storage-independent invariants of the models.
 
+Plain functions, so the mapper events in :mod:`apps.infra.models` apply the
+same rules no matter who writes a row (a repository, the seed, a factory) and
+tests can exercise them without a database.
+"""
+
+import unicodedata
+from datetime import UTC, datetime, time
+from datetime import date as date_type
 from typing import Any
+
+from apps.infra.errors import InboxProtected
 
 DEFAULT_PROJECT_STATUSES: tuple[str, ...] = ("Todo", "Zrobione")
 DEFAULT_TERMINAL_STATUS = DEFAULT_PROJECT_STATUSES[-1]
@@ -8,6 +18,7 @@ MAX_STATUSES = 20
 MAX_STATUS_LENGTH = 50
 
 INBOX_NAME = "Inbox"
+INBOX_NAME_KEY = "inbox"
 
 
 def default_project_statuses() -> list[str]:
@@ -16,6 +27,11 @@ def default_project_statuses() -> list[str]:
 
 def default_board_content() -> dict[str, object]:
     return {'version': 1, 'elements': [], 'viewport': {'x': 0, 'y': 0, 'zoom': 1}}
+
+
+def normalize_username(username: str) -> str:
+    """Compatibility-normalize a username, so look-alike spellings collide."""
+    return unicodedata.normalize('NFKC', username)
 
 
 def normalize_project_statuses(statuses: Any) -> list[str]:
@@ -52,6 +68,18 @@ def project_name_key(name: str) -> str:
     return normalize_project_name(name).casefold()
 
 
+def ensure_inbox_keeps_its_name(*, is_inbox: bool, name: str) -> None:
+    """The Inbox is always called :data:`INBOX_NAME`; renaming it is refused."""
+    if is_inbox and name != INBOX_NAME:
+        raise InboxProtected('Inbox cannot be renamed.')
+
+
+def ensure_not_inbox(*, is_inbox: bool) -> None:
+    """The Inbox is permanent; deleting it is refused."""
+    if is_inbox:
+        raise InboxProtected('Inbox cannot be deleted.')
+
+
 def normalize_wallet_name(name: str) -> str:
     return name.strip()
 
@@ -66,3 +94,13 @@ def normalize_category_name(name: str) -> str:
 
 def category_name_key(name: str) -> str:
     return normalize_category_name(name).casefold()
+
+
+def day_start(day: date_type) -> datetime:
+    """Midnight UTC on the given calendar day.
+
+    A manual entry starts at ``day_start`` of the date it was logged for, and a
+    day filter covers ``[day_start(day), day_start(day + 1))``; both sides of
+    that convention live here so they cannot drift apart.
+    """
+    return datetime.combine(day, time.min, tzinfo=UTC)

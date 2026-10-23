@@ -1,35 +1,36 @@
-from django.conf import settings
-from django.db import models
+from datetime import date as date_type
+from decimal import Decimal
 
-from apps.infra.models.category import Category
-from apps.infra.models.wallet import Wallet
+from sqlalchemy import ForeignKey, Numeric, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from .base import Base
+from .category import Category
+from .user import User
+from .wallet import Wallet
 
 
-class Transaction(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='transactions',
+class Transaction(Base):
+    """One entry in a wallet's ledger (see ``WalletRepository`` for the balance rule)."""
+
+    __tablename__ = 'transactions'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
+    wallet_id: Mapped[int] = mapped_column(
+        ForeignKey('wallets.id', ondelete='CASCADE'), index=True
     )
-    wallet = models.ForeignKey(
-        Wallet,
-        on_delete=models.CASCADE,
-        related_name='transactions',
+    category_id: Mapped[int | None] = mapped_column(
+        ForeignKey('categories.id', ondelete='CASCADE'), index=True
     )
-    category = models.ForeignKey(
-        Category,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name='transactions',
-    )
-    title = models.CharField(max_length=200)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    date = models.DateField()
-    description = models.TextField(blank=True, default='')
+    title: Mapped[str] = mapped_column(String(200))
+    amount: Mapped[Decimal] = mapped_column(Numeric(10, 2))
+    date: Mapped[date_type]
+    description: Mapped[str] = mapped_column(Text, default='')
 
-    class Meta:
-        ordering = ['-date', '-id']
+    user: Mapped[User] = relationship()
+    wallet: Mapped[Wallet] = relationship()
+    category: Mapped[Category | None] = relationship()
 
-    def __str__(self) -> str:
-        return self.title
+    def __repr__(self) -> str:
+        return f'<Transaction {self.id} {self.title!r}>'

@@ -3,6 +3,7 @@
 from apps.infra.models import User
 from apps.infra.models import Whiteboard as WhiteboardModel
 from apps.infra.repo import WhiteboardRepository
+from apps.infra.rules import default_board_content
 from apps.shared.errors import DomainError, NotFound
 from apps.whiteboard.contracts import (
     PatchedWhiteboardRequest,
@@ -51,8 +52,6 @@ class CreateWhiteboard:
             if kind == 'markdown':
                 content = {'markdown': ''}
             else:
-                from apps.infra.models.whiteboard import default_board_content
-
                 content = default_board_content()
         whiteboard = self.whiteboards.create(
             user=self.user, name=name, content=content

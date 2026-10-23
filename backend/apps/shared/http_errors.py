@@ -3,16 +3,12 @@
 This is the only place that knows a :class:`~apps.shared.errors.DomainError`
 becomes a status code, so the use cases stay transport-agnostic.
 
-It serves both HTTP apps during the FastAPI migration: Django Ninja through
-:func:`register_error_handlers`, FastAPI through
-:func:`register_fastapi_error_handlers`. The FastAPI handlers also reproduce
-Ninja's request-validation responses, which are part of the API contract.
-Django and Ninja are imported for type checking only, so the FastAPI app can
-import this module without configuring Django.
+The validation handler keeps the request-validation response shape the API
+was first published with (Django Ninja's), since the frontend reads it.
 """
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -20,10 +16,6 @@ from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 
 from apps.shared.errors import DomainError, NotFound
-
-if TYPE_CHECKING:
-    from django.http import HttpRequest
-    from ninja import NinjaAPI
 
 STATUS_BY_CODE = {
     DomainError.code: 400,
@@ -39,16 +31,6 @@ def status_for(error: DomainError) -> int:
     return STATUS_BY_CODE.get(error.code, 400)
 
 
-def register_error_handlers(api: 'NinjaAPI') -> None:
-    @api.exception_handler(DomainError)
-    def _handle_domain_error(request: 'HttpRequest', error: DomainError) -> object:
-        return api.create_response(
-            request,
-            {'detail': error.message},
-            status=status_for(error),
-        )
-
-
 def register_fastapi_error_handlers(app: FastAPI) -> None:
     app.add_exception_handler(DomainError, _handle_domain_error)
     app.add_exception_handler(RequestValidationError, _handle_validation_error)
@@ -60,7 +42,7 @@ async def _handle_domain_error(request: Request, error: Exception) -> JSONRespon
 
 
 async def _handle_validation_error(request: Request, error: Exception) -> JSONResponse:
-    """Answer the way Django Ninja does.
+    """Answer in the API's published validation-error shape.
 
     - malformed JSON is a 400 with a plain message, not a validation error;
     - every other error is a 422 listing ``type``/``loc``/``msg`` (+ ``ctx``),
@@ -74,7 +56,7 @@ async def _handle_validation_error(request: Request, error: Exception) -> JSONRe
         return JSONResponse({'detail': UNPARSABLE_BODY_DETAIL}, status_code=400)
 
     body_name = _unembedded_body_name(request)
-    detail = [_ninja_error(item, body_name) for item in errors]
+    detail = [_shaped_error(item, body_name) for item in errors]
     return JSONResponse({'detail': detail}, status_code=422)
 
 
@@ -93,7 +75,7 @@ def _unembedded_body_name(request: Request) -> str | None:
     return route.body_field.name
 
 
-def _ninja_error(item: Any, body_name: str | None) -> dict[str, Any]:
+def _shaped_error(item: Any, body_name: str | None) -> dict[str, Any]:
     loc = list(item['loc'])
     if body_name is not None and loc[:1] == ['body']:
         loc.insert(1, body_name)
@@ -105,7 +87,7 @@ def _ninja_error(item: Any, body_name: str | None) -> dict[str, Any]:
 
 def _json_scalar(value: object) -> object:
     # ``ctx`` may hold the raised exception (``{'error': ValueError(...)}``);
-    # Ninja serializes it as its message.
+    # The published shape carries its message.
     if value is None or isinstance(value, str | int | float | bool):
         return value
     return str(value)

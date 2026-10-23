@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from apps.infra.models import normalize_project_name, project_name_key
+from apps.infra.rules import normalize_project_name, project_name_key
 
 
 def test_project_names_are_trimmed() -> None:

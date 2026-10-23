@@ -1,33 +1,36 @@
 """Repository layer for the ``infra`` app.
 
 Repositories are the only place that touches the ORM. Each aggregates the
-queries, writes, transactions and storage errors for one entity, and returns
-model instances (or ``None`` when a lookup misses) for the use cases in
-``apps.work.handlers`` to reason about. Because the direction of dependency is
-``work`` -> ``infra``, nothing here imports ``apps.work``; failures a caller can
-fix are raised as the errors in :mod:`.errors`.
+queries, writes and storage errors for one entity, and returns model instances
+(or ``None`` when a lookup misses) for the use cases to reason about. Because
+the direction of dependency is feature app -> ``infra``, nothing here imports a
+feature app; failures a caller can fix are raised as the errors in
+:mod:`.errors`.
 
-Repositories are stateless: they hold no request data and read connections from
-Django's per-thread handler, so one instance is safe to reuse. Use cases still
-receive a fresh instance each time from ``apps.work.deps``, which keeps that an
-accident that cannot happen rather than a rule to remember.
+A repository works on the ``Session`` it is built with. The session is one
+transaction - one HTTP request or one MCP tool call - committed by whoever
+opened it, so repositories only *flush*: a write is visible to later queries
+in the same transaction and becomes permanent when the caller commits. The
+composition roots (``apps.*.deps``) build a fresh repository per use case.
 """
 
+from apps.infra.rules import day_start
+
+from .categories import CategoryRepository
 from .errors import (
     DuplicateCategoryName,
     DuplicateProjectName,
     DuplicateUsername,
     DuplicateWalletName,
+    InboxProtected,
     ProjectHasTimeEntries,
     RepositoryError,
     TaskHasTimeEntries,
 )
-from .categories import CategoryRepository
 from .projects import ProjectRepository
 from .tasks import TaskRepository
-from .time_entries import TimeEntryRepository, day_start
+from .time_entries import TimeEntryRepository
 from .transactions import TransactionRepository
-from .unit_of_work import unit_of_work
 from .users import UserRepository
 from .wallets import WalletRepository
 from .whiteboards import WhiteboardRepository
@@ -38,6 +41,7 @@ __all__ = [
     'DuplicateProjectName',
     'DuplicateUsername',
     'DuplicateWalletName',
+    'InboxProtected',
     'ProjectHasTimeEntries',
     'ProjectRepository',
     'RepositoryError',
@@ -49,5 +53,4 @@ __all__ = [
     'WalletRepository',
     'WhiteboardRepository',
     'day_start',
-    'unit_of_work',
 ]

@@ -1,27 +1,24 @@
 """Composition root: builds the repositories use cases run against.
 
-The HTTP layer (``apps.work.api``) is the only adapter today; it asks this
-module for the repositories it hands to a use case and nothing else needs to
-know which storage backs them.
-
-Every call returns a *fresh* repository. They are stateless as written — the
-methods are only queries and writes, and Django hands out database connections
-per thread — so sharing one instance would work too, but a fresh instance per
-use case makes it impossible for a repository that later grows a field to leak
-state between requests. It is also the single place to swap the concrete
-storage: a fake in a unit test, a caching wrapper in production.
+Callers (the HTTP routers, the MCP server) hand over the ``Session`` of the
+current unit of work - one request or one tool call - and get repositories on
+it. Every call returns a *fresh* repository, so one that later grows state
+cannot leak it between requests. This is also the single place to swap the
+concrete storage: a fake in a unit test, a caching wrapper in production.
 """
+
+from sqlalchemy.orm import Session
 
 from apps.infra.repo import ProjectRepository, TaskRepository, TimeEntryRepository
 
 
-def project_repository() -> ProjectRepository:
-    return ProjectRepository()
+def project_repository(session: Session) -> ProjectRepository:
+    return ProjectRepository(session)
 
 
-def task_repository() -> TaskRepository:
-    return TaskRepository()
+def task_repository(session: Session) -> TaskRepository:
+    return TaskRepository(session)
 
 
-def time_entry_repository() -> TimeEntryRepository:
-    return TimeEntryRepository()
+def time_entry_repository(session: Session) -> TimeEntryRepository:
+    return TimeEntryRepository(session)

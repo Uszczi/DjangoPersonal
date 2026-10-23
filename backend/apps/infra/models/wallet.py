@@ -1,33 +1,41 @@
+from decimal import Decimal
 from typing import Any
 
-from django.conf import settings
-from django.db import models
+from sqlalchemy import ForeignKey, String, UniqueConstraint, event
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from apps.infra.rules import normalize_wallet_name, wallet_name_key
 
+from .base import Base
+from .user import User
 
-class Wallet(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='wallets',
+
+class Wallet(Base):
+    """A place money is kept; its balance is the sum of its transactions."""
+
+    __tablename__ = 'wallets'
+    __table_args__ = (
+        UniqueConstraint('user_id', 'normalized_name', name='wallet_name_unique_per_user'),
     )
-    name = models.CharField(max_length=100)
-    normalized_name = models.CharField(max_length=100, editable=False)
 
-    class Meta:
-        ordering = ['normalized_name']
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'normalized_name'],
-                name='wallet_name_unique_per_user',
-            ),
-        ]
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
+    name: Mapped[str] = mapped_column(String(100))
+    normalized_name: Mapped[str] = mapped_column(String(100))
 
-    def save(self, *args: Any, **kwargs: Any) -> None:
-        self.name = normalize_wallet_name(self.name)
-        self.normalized_name = wallet_name_key(self.name)
-        super().save(*args, **kwargs)
+    user: Mapped[User] = relationship()
 
-    def __str__(self) -> str:
-        return self.name
+    #: Computed from the ledger by ``WalletRepository`` whenever it loads a
+    #: wallet; not stored.
+    transaction_count: int = 0
+    balance: Decimal = Decimal('0.00')
+
+    def __repr__(self) -> str:
+        return f'<Wallet {self.id} {self.name!r}>'
+
+
+@event.listens_for(Wallet, 'before_insert')
+@event.listens_for(Wallet, 'before_update')
+def _normalize_wallet(mapper: Any, connection: Any, wallet: Wallet) -> None:
+    wallet.name = normalize_wallet_name(wallet.name)
+    wallet.normalized_name = wallet_name_key(wallet.name)

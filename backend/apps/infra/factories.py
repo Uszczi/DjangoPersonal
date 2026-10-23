@@ -1,39 +1,93 @@
-"""factory_boy factories for demo data (the ``seed_dev`` command) and test rows."""
+"""factory_boy factories for demo data (``apps.infra.seed_dev``) and test rows.
+
+The factories write through whatever session :func:`bind_session` was last
+given (one per test, or the seed's session). They only *flush* unless bound
+with ``commit=True``, which API tests need: the app under test reads through
+its own connection and sees committed rows only. Users are created through :class:`UserRepository`, so
+every factory-made user has an Inbox, exactly like a registered one.
+"""
 
 import random
-from datetime import UTC
-from datetime import date
-from datetime import timedelta
+from datetime import UTC, date, timedelta
 from decimal import Decimal
+from typing import Any
 
-from django.contrib.auth.hashers import make_password
-from factory.declarations import LazyAttribute
-from factory.declarations import LazyFunction
-from factory.declarations import Sequence
-from factory.declarations import SubFactory
-from factory.django import DjangoModelFactory
+from factory.alchemy import SQLAlchemyModelFactory
+from factory.base import Factory
+from factory.declarations import LazyAttribute, LazyFunction, Sequence, SubFactory
 from factory.faker import Faker
+from sqlalchemy.orm import Session
 
-from apps.infra.models import DEFAULT_PROJECT_STATUSES, Project
-from apps.infra.models import Category
-from apps.infra.models import Task
-from apps.infra.models import TimeEntry
-from apps.infra.models import Transaction
-from apps.infra.models import User
-from apps.infra.models import Wallet
+from apps.infra.models import (
+    Category,
+    Project,
+    Task,
+    TimeEntry,
+    Transaction,
+    User,
+    Wallet,
+)
+from apps.infra.repo import UserRepository
+from apps.infra.rules import DEFAULT_PROJECT_STATUSES
 
 DEV_PASSWORD = 'devpass123'
 
+_session: Session | None = None
+_commit = False
 
-class UserFactory(DjangoModelFactory[User]):
+
+def bind_session(session: Session | None, *, commit: bool = False) -> None:
+    """Make every factory write through ``session`` (``None`` unbinds)."""
+    global _session, _commit
+    _session, _commit = session, commit
+
+
+def _current_session() -> Session:
+    if _session is None:
+        raise RuntimeError('No session bound; call apps.infra.factories.bind_session() first.')
+    return _session
+
+
+# ``SQLAlchemyModelFactory`` is not generic itself; ``Factory[T]`` adds the
+# model type for the type checker without changing the MRO.
+class _Factory[T](SQLAlchemyModelFactory, Factory[T]):
+    class Meta:
+        abstract = True
+        sqlalchemy_session_factory = _current_session
+        sqlalchemy_session_persistence = 'flush'
+
+    @classmethod
+    def _after_create(cls, instance: T) -> T:
+        if _commit:
+            _current_session().commit()
+        return instance
+
+    @classmethod
+    def _create(cls, model_class: type[T], *args: Any, **kwargs: Any) -> T:
+        return cls._after_create(super()._create(model_class, *args, **kwargs))
+
+
+class UserFactory(_Factory[User]):
+    """A user with an Inbox; ``password`` is stored as given (pass a hash)."""
+
     class Meta:
         model = User
 
     username = Sequence(lambda n: f'user{n}')
-    password = LazyFunction(lambda: make_password(DEV_PASSWORD))
+    password = 'unusable'
+
+    @classmethod
+    def _create(cls, model_class: type[User], *args: Any, **kwargs: Any) -> User:
+        user = UserRepository(_current_session()).create(
+            username=kwargs.pop('username'), password_hash=kwargs.pop('password')
+        )
+        for field, value in kwargs.items():
+            setattr(user, field, value)
+        _current_session().flush()
+        return cls._after_create(user)
 
 
-class ProjectFactory(DjangoModelFactory[Project]):
+class ProjectFactory(_Factory[Project]):
     class Meta:
         model = Project
 
@@ -42,7 +96,7 @@ class ProjectFactory(DjangoModelFactory[Project]):
     description = Faker('sentence', locale='pl_PL')
 
 
-class TaskFactory(DjangoModelFactory[Task]):
+class TaskFactory(_Factory[Task]):
     class Meta:
         model = Task
 
@@ -52,18 +106,19 @@ class TaskFactory(DjangoModelFactory[Task]):
     status = Faker('random_element', elements=list(DEFAULT_PROJECT_STATUSES))
 
 
-class TimeEntryFactory(DjangoModelFactory[TimeEntry]):
+class TimeEntryFactory(_Factory[TimeEntry]):
     class Meta:
         model = TimeEntry
 
     task = SubFactory(TaskFactory)
+    user = LazyAttribute(lambda entry: entry.task.project.user)
     start = Faker('date_time_between', start_date='-14d', end_date='now', tzinfo=UTC)
     end = LazyAttribute(
         lambda entry: entry.start + timedelta(minutes=random.randint(15, 180))
     )
 
 
-class WalletFactory(DjangoModelFactory[Wallet]):
+class WalletFactory(_Factory[Wallet]):
     class Meta:
         model = Wallet
 
@@ -71,7 +126,7 @@ class WalletFactory(DjangoModelFactory[Wallet]):
     name = Sequence(lambda n: f'Wallet {n}')
 
 
-class CategoryFactory(DjangoModelFactory[Category]):
+class CategoryFactory(_Factory[Category]):
     class Meta:
         model = Category
 
@@ -79,7 +134,7 @@ class CategoryFactory(DjangoModelFactory[Category]):
     name = Sequence(lambda n: f'Category {n}')
 
 
-class TransactionFactory(DjangoModelFactory[Transaction]):
+class TransactionFactory(_Factory[Transaction]):
     class Meta:
         model = Transaction
 

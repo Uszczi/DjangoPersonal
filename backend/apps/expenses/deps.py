@@ -1,19 +1,21 @@
 """Composition root: builds the repositories use cases run against.
 
-Same contract as ``apps.work.deps``: the HTTP layer asks this module for the
-repositories it hands to a use case, and every call returns a fresh instance.
+Same contract as ``apps.work.deps``: callers pass the current ``Session`` and
+every call returns a fresh repository on it.
 """
+
+from sqlalchemy.orm import Session
 
 from apps.infra.repo import CategoryRepository, TransactionRepository, WalletRepository
 
 
-def wallet_repository() -> WalletRepository:
-    return WalletRepository()
+def wallet_repository(session: Session) -> WalletRepository:
+    return WalletRepository(session)
 
 
-def category_repository() -> CategoryRepository:
-    return CategoryRepository()
+def category_repository(session: Session) -> CategoryRepository:
+    return CategoryRepository(session)
 
 
-def transaction_repository() -> TransactionRepository:
-    return TransactionRepository()
+def transaction_repository(session: Session) -> TransactionRepository:
+    return TransactionRepository(session)

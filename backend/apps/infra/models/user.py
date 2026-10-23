@@ -1,22 +1,26 @@
-from django.contrib.auth.models import AbstractUser
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+from datetime import datetime
 
-from apps.infra.models.project import Project
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column
+
+from .base import Base, UTCDateTime, utc_now
 
 
-class User(AbstractUser):
-    """Custom user model.
+class User(Base):
+    """An account; every other row belongs to exactly one user.
 
-    Kept as an empty extension for now so future changes can add fields
-    without a painful migration away from Django's built-in user.
+    Deleting a user removes all of their data through ``ON DELETE CASCADE``.
     """
 
-    class Meta(AbstractUser.Meta):
-        swappable = 'AUTH_USER_MODEL'
+    __tablename__ = 'users'
 
+    id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str] = mapped_column(String(150), unique=True)
+    password: Mapped[str] = mapped_column(String(255))
+    is_active: Mapped[bool] = mapped_column(default=True)
+    #: Allowed into the admin panel.
+    is_staff: Mapped[bool] = mapped_column(default=False)
+    date_joined: Mapped[datetime] = mapped_column(UTCDateTime, default=utc_now)
 
-@receiver(post_save, sender=User)
-def _create_inbox_project(sender: type[User], instance: User, created: bool, **kwargs: object) -> None:
-    if created:
-        Project.objects.create(user=instance, name='Inbox', is_inbox=True)
+    def __repr__(self) -> str:
+        return f'<User {self.id} {self.username!r}>'

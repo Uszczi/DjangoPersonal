@@ -4,7 +4,7 @@
 from apps.shared.base import BaseModel
 from pydantic import Field, field_validator
 
-from apps.infra.models import normalize_category_name
+from apps.infra.rules import normalize_category_name
 
 
 class _CategoryPayload(BaseModel):

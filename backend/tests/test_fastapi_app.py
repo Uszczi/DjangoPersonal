@@ -1,9 +1,9 @@
 """The FastAPI skeleton: settings, session, errors, health and metrics.
 
-These run against a throwaway app on a temporary SQLite file, independent of
-``--backend``; the domain endpoints arrive in later migration stages. Error
-shapes are checked against what Django Ninja answers for the same contract,
-since that shape is part of the API contract.
+These run against a throwaway app on a temporary SQLite file with probe
+endpoints standing in for the domain routers. The validation-error shape is
+part of the published API contract (the frontend reads it), so it is pinned
+literally.
 """
 
 from collections.abc import Iterator
@@ -19,7 +19,7 @@ from sqlalchemy import text
 from apps.shared.errors import DomainError, NotFound
 from apps.work.contracts import PatchedProjectRequest, ProjectRequest
 from config.app import create_app
-from config.app_settings import Settings
+from config.app_settings import BASE_DIR, INSECURE_DEV_SECRET_KEY, Settings
 from config.db import SessionDep
 
 from .harness import ApiClient, FastAPITransport
@@ -98,7 +98,7 @@ def _note_count(app: FastAPI) -> int:
 # --- Settings ---------------------------------------------------------------
 
 
-def test_settings_read_the_django_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_settings_read_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv('DJANGO_SECRET_KEY', 'from-env')
     monkeypatch.setenv('DJANGO_DEBUG', 'yes')
     monkeypatch.setenv('DJANGO_ALLOWED_HOSTS', 'example.com, .example.org,,app')
@@ -119,23 +119,21 @@ def test_settings_read_the_django_environment(monkeypatch: pytest.MonkeyPatch) -
     )
 
 
-def test_settings_defaults_match_django(monkeypatch: pytest.MonkeyPatch) -> None:
-    for name in ('DJANGO_SECRET_KEY', 'DJANGO_DEBUG', 'DJANGO_ALLOWED_HOSTS', 'POSTGRES_HOST'):
+def test_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
+    for name in ('DJANGO_SECRET_KEY', 'DJANGO_DEBUG', 'DJANGO_ALLOWED_HOSTS', 'POSTGRES_HOST', 'SQLITE_PATH'):
         monkeypatch.delenv(name, raising=False)
-    import config.settings as django_settings
 
     settings = Settings()
 
-    assert settings.secret_key == django_settings.SECRET_KEY
+    assert settings.secret_key == INSECURE_DEV_SECRET_KEY
     assert settings.debug is False
     assert settings.allowed_hosts == ['localhost', '127.0.0.1']
     assert settings.database_url.drivername == 'sqlite+pysqlite'
-    # Read from the module: pytest-django swaps the live setting for an in-memory DB.
-    assert settings.database_url.database == str(django_settings.BASE_DIR / 'db.sqlite3')
+    assert settings.database_url.database == str(BASE_DIR / 'db.sqlite3')
 
 
 @pytest.mark.parametrize(('raw', 'expected'), [('1', True), ('ON', True), ('no', False), ('banana', False)])
-def test_debug_is_parsed_like_django_env_bool(
+def test_debug_accepts_the_usual_truthy_words(
     monkeypatch: pytest.MonkeyPatch, raw: str, expected: bool
 ) -> None:
     monkeypatch.setenv('DJANGO_DEBUG', raw)
@@ -224,42 +222,91 @@ def test_domain_errors_become_detail_responses(client: ApiClient) -> None:
     assert unauthorized.json() == {'detail': 'Invalid username or password.'}
 
 
+def _error(type_: str, loc: list[str], msg: str, **ctx: object) -> dict[str, object]:
+    error: dict[str, object] = {'type': type_, 'loc': loc, 'msg': msg}
+    if ctx:
+        error['ctx'] = ctx
+    return error
+
+
+NOT_AN_INT = 'Input should be a valid integer, unable to parse string as an integer'
+
+
 @pytest.mark.parametrize(
-    ('method', 'path', 'payload'),
+    ('method', 'path', 'payload', 'expected'),
     [
-        ('POST', '/projects/', {}),
-        ('POST', '/projects/', {'name': '   '}),
-        ('POST', '/projects/', {'name': 'x' * 101, 'position': 'first'}),
-        ('PATCH', '/projects/{id}/', {'name': None}),
-        ('PATCH', '/projects/abc/', {}),
+        (
+            'POST',
+            '/projects/',
+            {},
+            [_error('missing', ['body', 'payload', 'name'], 'Field required')],
+        ),
+        (
+            'POST',
+            '/projects/',
+            {'name': '   '},
+            [
+                _error(
+                    'value_error',
+                    ['body', 'payload', 'name'],
+                    'Value error, This field may not be blank.',
+                    error='This field may not be blank.',
+                )
+            ],
+        ),
+        (
+            'POST',
+            '/projects/',
+            {'name': 'x' * 101, 'position': 'first'},
+            [
+                _error(
+                    'string_too_long',
+                    ['body', 'payload', 'name'],
+                    'String should have at most 100 characters',
+                    max_length=100,
+                ),
+                _error('int_parsing', ['body', 'payload', 'position'], NOT_AN_INT),
+            ],
+        ),
+        (
+            'PATCH',
+            '/projects/1/',
+            {'name': None},
+            [
+                _error(
+                    'value_error',
+                    ['body', 'payload', 'name'],
+                    'Value error, This field may not be null.',
+                    error='This field may not be null.',
+                )
+            ],
+        ),
+        ('PATCH', '/projects/abc/', {}, [_error('int_parsing', ['path', 'id'], NOT_AN_INT)]),
     ],
 )
-def test_validation_errors_match_ninja(
+def test_validation_errors_keep_the_published_shape(
     client: ApiClient,
-    api_client: ApiClient,
     method: str,
     path: str,
     payload: dict[str, Any],
+    expected: list[dict[str, object]],
 ) -> None:
-    project_id = api_client.post('/api/v1/projects/', {'name': 'Existing'}).json()['id']
-    path = path.format(id=project_id)
+    response = client.request(method, f'{PROBE_PREFIX}{path}', payload)
 
-    ninja = api_client.request(method, f'/api/v1{path}', payload)
-    fastapi = client.request(method, f'{PROBE_PREFIX}{path}', payload)
-
-    assert ninja.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert (fastapi.status_code, fastapi.json()) == (ninja.status_code, ninja.json())
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert response.json() == {'detail': expected}
 
 
-def test_malformed_json_matches_ninja(client: ApiClient, api_client: ApiClient) -> None:
-    headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {api_client.token}'}
-    body = b'{"name": '
+def test_malformed_json_is_a_bad_request(client: ApiClient) -> None:
+    response = client.transport.request(
+        'POST',
+        f'{PROBE_PREFIX}/projects/',
+        body=b'{"name": ',
+        headers={'Content-Type': 'application/json'},
+    )
 
-    ninja = api_client.transport.request('POST', '/api/v1/projects/', body=body, headers=headers)
-    fastapi = client.transport.request('POST', f'{PROBE_PREFIX}/projects/', body=body, headers=headers)
-
-    assert ninja.status_code == HTTPStatus.BAD_REQUEST
-    assert (fastapi.status_code, fastapi.json()) == (ninja.status_code, ninja.json())
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {'detail': 'Cannot parse request body'}
 
 
 # --- Session -------------------------------------------------------------------

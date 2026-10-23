@@ -1,34 +1,49 @@
-"""Shared fixtures for the API test suite.
+"""Shared fixtures for the test suite.
 
-Everything a test needs to reach the API goes through these fixtures, so the
-suite does not depend on the framework serving it: ``--backend`` picks the
-transport (see :mod:`tests.harness`), users come from :func:`make_user`, and
-other rows from the factories in ``apps.infra.factories``. Tests that exercise
-Django internals directly (repositories, the seed command) carry the
-``django_only`` marker and are skipped for any other backend.
+Every test gets a throwaway SQLite database with the full schema:
+``session`` for repository-level tests, and an app (``transport``) on the same
+database for API tests. Users come from :func:`make_user`, other rows from the
+factories in ``apps.infra.factories`` (bound to the test's session).
+
+The HTTP API returns feature by feature during the migration off Django
+(``.scratch/fastapi-migration``); the API test modules listed in
+:data:`AWAITING_PORT` are skipped until the stage that serves them lands.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from pathlib import Path
 from typing import Any
 
 import pytest
+from fastapi import FastAPI
+from sqlalchemy.orm import Session
 
-from apps.infra.models import User
+from apps.accounts.ports import PasswordHasher, TokenService
+from apps.infra import factories
+from apps.infra.models import Base, User
+from config.app import create_app
+from config.app_settings import Settings
+from config.db import Database
 
-from .harness import ApiClient, DjangoTransport, Response, Transport
+from .harness import ApiClient, FastAPITransport, Response, Transport
 
-BACKENDS = ('django', 'fastapi')
-IMPLEMENTED_BACKENDS = ('django',)
 DEFAULT_PASSWORD = 'StrongPass123!'
+
+#: API test modules whose endpoints are not served yet, and the stage that ports them.
+AWAITING_PORT = {
+    'test_accounts_api.py': '05',
+    'test_projects_api.py': '06',
+    'test_tasks_api.py': '06',
+    'test_time_tracking_api.py': '06',
+    'test_whiteboards_api.py': '07',
+    'test_wallets_api.py': '08',
+    'test_categories_api.py': '08',
+    'test_transactions_api.py': '08',
+    'test_api_contract.py': '08',
+}
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
-    parser.addoption(
-        '--backend',
-        choices=BACKENDS,
-        default='django',
-        help='Which application serves the API under test.',
-    )
     parser.addoption(
         '--snapshot-update',
         action='store_true',
@@ -37,49 +52,67 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
 
 
-def pytest_configure(config: pytest.Config) -> None:
-    config.addinivalue_line(
-        'markers', 'django_only: the test exercises Django internals, not the HTTP API'
-    )
-    backend = config.getoption('--backend')
-    if backend not in IMPLEMENTED_BACKENDS:
-        raise pytest.UsageError(f'--backend={backend} is not implemented yet.')
-
-
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    if config.getoption('--backend') == 'django':
-        return
-    skip = pytest.mark.skip(reason='Django-only test')
     for item in items:
-        if 'django_only' in item.keywords:
-            item.add_marker(skip)
-
-
-@pytest.fixture(scope='session')
-def backend(pytestconfig: pytest.Config) -> str:
-    return str(pytestconfig.getoption('--backend'))
+        stage = AWAITING_PORT.get(item.path.name)
+        if stage is not None:
+            item.add_marker(pytest.mark.skip(reason=f'Served again from migration stage {stage}'))
 
 
 @pytest.fixture
-def transport(backend: str, db: Any) -> Transport:
-    return DjangoTransport()
+def settings(tmp_path: Path) -> Settings:
+    return Settings(sqlite_path=tmp_path / 'test.sqlite3', allowed_hosts=['testserver'])
 
 
 @pytest.fixture
-def jwt_signing_key(backend: str) -> str:
-    """The key access and refresh tokens are signed with (HS256)."""
-    from ninja_jwt.settings import api_settings
+def database(settings: Settings) -> Iterator[Database]:
+    """The test database, with the schema the models describe.
 
-    return str(api_settings.SIGNING_KEY)
+    ``create_all`` rather than the migrations, for speed; ``test_migrations``
+    checks that the two agree.
+    """
+    database = Database(settings)
+    Base.metadata.create_all(database.engine)
+    yield database
+    database.dispose()
 
 
 @pytest.fixture
-def make_user(db: Any) -> Callable[..., User]:
-    """Create a user; the password is hashed the way registration hashes it."""
-    from apps.accounts import deps
-    from apps.infra.factories import UserFactory
+def session(database: Database) -> Iterator[Session]:
+    """A session on the test database; the factories write through it."""
+    with database.session_factory() as session:
+        factories.bind_session(session)
+        yield session
+        factories.bind_session(None)
 
-    hasher = deps.password_hasher()
+
+@pytest.fixture
+def app(settings: Settings, database: Database) -> Iterator[FastAPI]:
+    app = create_app(settings)
+    yield app
+    app.state.database.dispose()
+
+
+@pytest.fixture
+def transport(app: FastAPI, session: Session) -> Transport:
+    # The app reads through its own connection, so test rows must be committed.
+    factories.bind_session(session, commit=True)
+    return FastAPITransport(app)
+
+
+@pytest.fixture
+def password_hasher() -> PasswordHasher:
+    pytest.skip('The password hasher arrives in migration stage 05.')
+
+
+@pytest.fixture
+def token_service() -> TokenService:
+    pytest.skip('The token service arrives in migration stage 05.')
+
+
+@pytest.fixture
+def make_user(session: Session, password_hasher: PasswordHasher) -> Callable[..., User]:
+    """Create (and commit) a user; the password is hashed the way registration hashes it."""
 
     def make(
         username: str | None = None,
@@ -90,19 +123,18 @@ def make_user(db: Any) -> Callable[..., User]:
     ) -> User:
         if username is not None:
             fields['username'] = username
-        encoded = password_hash if password_hash is not None else hasher.hash(password)
-        return UserFactory.create(password=encoded, **fields)
+        encoded = password_hash if password_hash is not None else password_hasher.hash(password)
+        user: User = factories.UserFactory.create(password=encoded, **fields)
+        session.commit()
+        return user
 
     return make
 
 
 @pytest.fixture
-def token_for() -> Callable[[User], str]:
+def token_for(token_service: TokenService) -> Callable[[User], str]:
     """An access token for ``user``."""
-    from apps.accounts import deps
-
-    tokens = deps.token_service()
-    return lambda user: tokens.issue(user).access
+    return lambda user: token_service.issue(user).access
 
 
 @pytest.fixture

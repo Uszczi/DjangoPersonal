@@ -5,7 +5,7 @@ from decimal import Decimal
 from apps.shared.base import BaseModel
 from pydantic import Field, field_validator
 
-from apps.infra.models import normalize_wallet_name
+from apps.infra.rules import normalize_wallet_name
 
 from .transactions import Amount
 

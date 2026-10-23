@@ -132,7 +132,7 @@ class UpdateTask:
     def execute(self, task_id: int, data: PatchedTaskUpdateRequest) -> TaskModel:
         task = _get_task(self.tasks, task_id, user=self.user)
 
-        old_project_id = task.project_id
+        old_project_id = task.project.id
         old_status = task.status
 
         apply_provided(
@@ -147,7 +147,9 @@ class UpdateTask:
             raise DomainError('Invalid status for this project.')
 
         provided_position = data.position
-        project_changed = task.project_id != old_project_id
+        # Compared through the relationship: ``project_id`` only follows a
+        # reassigned ``project`` once the change is flushed.
+        project_changed = task.project.id != old_project_id
         status_changed = task.status != old_status
 
         if provided_position is not None or project_changed or status_changed:

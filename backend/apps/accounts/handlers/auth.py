@@ -11,7 +11,7 @@ from apps.accounts.contracts.auth import (
 from apps.accounts.ports import InvalidToken, PasswordHasher, PasswordPolicy, TokenService
 from apps.expenses.handlers.categories import seed_base_categories
 from apps.infra.models import User
-from apps.infra.repo import CategoryRepository, DuplicateUsername, UserRepository, unit_of_work
+from apps.infra.repo import CategoryRepository, DuplicateUsername, UserRepository
 from apps.shared.errors import DomainError
 
 
@@ -20,8 +20,8 @@ class RegisterUser:
 
     A fresh account also receives the expenses base categories (and the System
     category), so the expense book is ready the moment the first wallet
-    appears. The whole thing is one transaction: a user never exists without
-    their starting categories.
+    appears. The caller's transaction (one request) covers both, so a user
+    never exists without their starting categories.
     """
 
     def __init__(
@@ -47,13 +47,12 @@ class RegisterUser:
             raise DomainError('; '.join(problems), status=400)
 
         try:
-            with unit_of_work():
-                user = self.users.create(
-                    username=data.username, password_hash=self.hasher.hash(data.password)
-                )
-                seed_base_categories(self.categories, user)
+            user = self.users.create(
+                username=data.username, password_hash=self.hasher.hash(data.password)
+            )
         except DuplicateUsername as error:
             raise DomainError('A user with this username already exists.', status=400) from error
+        seed_base_categories(self.categories, user)
 
         tokens = self.tokens.issue(user)
         return AuthResponse(access=tokens.access, refresh=tokens.refresh)
@@ -62,7 +61,7 @@ class RegisterUser:
 class LoginUser:
     """Authenticate a user and issue a token pair.
 
-    Mirrors Django's ``ModelBackend``: inactive users cannot log in, an unknown
+    Inactive users cannot log in, an unknown
     username still pays for one hash (so response time does not reveal which
     usernames exist), and a hash with outdated parameters is upgraded on a
     successful login.

@@ -4,7 +4,7 @@ from functools import partial
 
 from apps.infra.models import Project as ProjectModel
 from apps.infra.models import User
-from apps.infra.models import normalize_project_name, project_name_key
+from apps.infra.rules import INBOX_NAME_KEY, normalize_project_name, project_name_key
 from apps.infra.repo import DuplicateProjectName, ProjectHasTimeEntries, ProjectRepository
 from apps.shared.errors import DomainError, NotFound
 from apps.work.contracts import PatchedProjectRequest, ProjectRequest
@@ -47,7 +47,7 @@ def _validate_name(
             raise DomainError('Inbox cannot be renamed.')
         return name
 
-    if name_key == 'inbox':
+    if name_key == INBOX_NAME_KEY:
         raise DomainError('Inbox is a reserved project name.')
 
     if repository.name_taken(name_key, user=user, exclude=current):

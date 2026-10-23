@@ -3,6 +3,8 @@
 from typing import Any
 from http import HTTPStatus
 
+from sqlalchemy.orm import Session
+
 from apps.infra.factories import CategoryFactory
 
 from .harness import ApiClient
@@ -168,16 +170,19 @@ def test_creating_a_wallet_does_not_seed_categories(post_json: Any, anon_client:
     assert len(client.get('/api/v1/categories/').json()) == 11
 
 
-def test_seeding_categories_is_idempotent(post_json: Any, anon_client: Any) -> None:
+def test_seeding_categories_is_idempotent(
+    post_json: Any, anon_client: Any, session: Session
+) -> None:
     from apps.expenses.handlers.categories import seed_base_categories
     from apps.infra.repo import CategoryRepository, UserRepository
 
     client = _register(anon_client)
-    user = UserRepository().get_by_username('fresh')
+    user = UserRepository(session).get_by_username('fresh')
     assert user is not None
 
     # A second seed for the same user adds nothing.
-    seed_base_categories(CategoryRepository(), user)
+    seed_base_categories(CategoryRepository(session), user)
+    session.commit()
 
     assert len(client.get('/api/v1/categories/').json()) == 11
 

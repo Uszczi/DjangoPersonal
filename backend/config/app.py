@@ -1,13 +1,12 @@
-"""The FastAPI application (stage 03 of the Django -> FastAPI migration).
+"""The FastAPI application.
 
-Runs alongside the Django app until the cutover; it carries the shared
-infrastructure - settings, the request-scoped database session, error
-handling, health checks, metrics and logging - and gains the domain routers
-one feature at a time. ``just backend-fastapi`` serves it on :8000 through
-:func:`create_served_app`.
+It carries the shared infrastructure - settings, the request-scoped database
+session, error handling, health checks, metrics and logging - and the domain
+routers, which return feature by feature during the migration (stages 05-08).
+``just backend`` serves it on :8000 through :func:`create_served_app`.
 
-The OpenAPI schema stays at ``/api/v1/schema/`` (3.1, as Ninja already emits)
-with no interactive docs, matching the Django app.
+The OpenAPI schema is served at ``/api/v1/schema/`` (3.1) with no interactive
+docs.
 """
 
 import logging.config
@@ -25,7 +24,7 @@ from config.db import Database
 
 API_PREFIX = '/api/v1'
 
-# The console format of ``LOGGING`` in ``config/settings.py``.
+# One console handler on the root logger; containers ship stdout to Loki.
 LOGGING: dict[str, Any] = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -52,8 +51,8 @@ def configure_logging() -> None:
     logging.config.dictConfig(LOGGING)
 
 
-# FastAPI documents a 422 on every operation; Ninja documents none. Keeping
-# them would add models to the generated TypeScript client and status codes to
+# FastAPI documents a 422 on every operation; the published API documents
+# none. Keeping them would add models to the generated TypeScript client and status codes to
 # the API contract snapshot, so the schema leaves them out (the 422 responses
 # themselves are still sent - see ``apps.shared.http_errors``).
 VALIDATION_ERROR_SCHEMAS = ('HTTPValidationError', 'ValidationError')
@@ -103,7 +102,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(ops.router)
 
     app.add_middleware(ops.MetricsMiddleware)
-    # Added last, so it runs first: Django's ALLOWED_HOSTS check. Requests for
+    # Added last, so it runs first: the allowed-hosts check. Requests for
     # a foreign host are refused before routing and stay out of the metrics.
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.trusted_hosts)
     return app

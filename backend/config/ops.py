@@ -1,6 +1,4 @@
-"""Operational endpoints and request metrics for the FastAPI app.
-
-The FastAPI counterparts of ``config.health`` and ``config.metrics``:
+"""Operational endpoints and request metrics.
 
 ``/health``       - liveness: the process answers, no dependencies touched.
 ``/health/ready`` - readiness: also verifies the database connection.

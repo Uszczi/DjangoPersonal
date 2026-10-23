@@ -1,7 +1,7 @@
 """Project contracts: request payloads and the response shape."""
 
 
-from apps.infra.models import (
+from apps.infra.rules import (
     MAX_STATUS_LENGTH,
     MAX_STATUSES,
     normalize_project_name,

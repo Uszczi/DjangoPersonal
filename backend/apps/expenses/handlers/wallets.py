@@ -7,7 +7,7 @@ from functools import partial
 from apps.infra.models import Transaction as TransactionModel
 from apps.infra.models import User
 from apps.infra.models import Wallet as WalletModel
-from apps.infra.models import normalize_wallet_name, wallet_name_key
+from apps.infra.rules import normalize_wallet_name, wallet_name_key
 from apps.infra.repo import (
     CategoryRepository,
     DuplicateWalletName,

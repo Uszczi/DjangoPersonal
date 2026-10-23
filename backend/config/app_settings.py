@@ -1,10 +1,8 @@
 """Settings for the FastAPI application.
 
-The FastAPI app replaces Django in stages (see
-``.scratch/fastapi-migration/spec.md``) and is deployed with the same env files,
-so every field reads the variable ``config/settings.py`` reads today
-(``DJANGO_SECRET_KEY``, ``DJANGO_DEBUG``, ``POSTGRES_*``, ...) and parses it the
-same way. The VPS ``.env`` does not change at cutover.
+Every field is read from the environment (``deployment/.env`` in Docker). The
+``DJANGO_*`` names are the ones the deployed env files still use; they lose the
+prefix at the cutover (migration stage 10).
 """
 
 from datetime import timedelta
@@ -17,20 +15,19 @@ from sqlalchemy import URL
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# The same fallback as ``config/settings.py``, so tokens minted by either app
-# in development verify in the other.
+# Development only; production always sets ``DJANGO_SECRET_KEY``.
 INSECURE_DEV_SECRET_KEY = 'django-insecure-fx*-*3#p(4zly%b^+pep($1i%5=9(-lkuli@k9g8nfmp9#sr)p'
 
 
 def _env_bool(value: object) -> object:
-    """Mirror ``settings.env_bool``: only 1/true/yes/on mean true, anything else false."""
+    """Only 1/true/yes/on mean true, anything else false."""
     if isinstance(value, str):
         return value.strip().lower() in {'1', 'true', 'yes', 'on'}
     return value
 
 
 def _env_list(value: object) -> object:
-    """Mirror ``settings.env_list``: a comma-separated list, blanks dropped."""
+    """A comma-separated list, blanks dropped."""
     if isinstance(value, str):
         return [item.strip() for item in value.split(',') if item.strip()]
     return value
@@ -56,10 +53,9 @@ class Settings(BaseSettings):
     postgres_db: str = Field(default='app_db', validation_alias='POSTGRES_DB')
     postgres_user: str = Field(default='app_user', validation_alias='POSTGRES_USER')
     postgres_password: str = Field(default='supersecret', validation_alias='POSTGRES_PASSWORD')
-    # Not configurable in Django; a field so tests can point at a throwaway file.
-    sqlite_path: Path = BASE_DIR / 'db.sqlite3'
+    sqlite_path: Path = Field(default=BASE_DIR / 'db.sqlite3', validation_alias='SQLITE_PATH')
 
-    # ``CONN_MAX_AGE`` in Django: how long a pooled Postgres connection is reused.
+    # How long a pooled Postgres connection is reused.
     db_connection_max_age_seconds: int = 60
 
     access_token_lifetime: timedelta = timedelta(minutes=15)
@@ -87,7 +83,7 @@ class Settings(BaseSettings):
     def trusted_hosts(self) -> list[str]:
         """``allowed_hosts`` in Starlette's syntax.
 
-        Django's leading-dot entry (``.example.com``) means the domain and every
+        A leading-dot entry (``.example.com``) means the domain and every
         subdomain; Starlette spells that as two entries.
         """
         hosts: list[str] = []

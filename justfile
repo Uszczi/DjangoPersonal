@@ -1,37 +1,33 @@
 default:
     @just --list
 
-# Run the Django development server.
+# Run the API (FastAPI) on port 8000 with auto-reload.
 backend:
-    cd backend && uv run python manage.py runserver
-
-# Run the FastAPI app (migration stage 03, not deployed yet) on port 8000.
-backend-fastapi:
     cd backend && uv run uvicorn --factory config.app:create_served_app --reload --port 8000
 
 # Run the MCP server (streamable HTTP) on port 8001.
 mcp:
     cd backend && uv run python -m mcp_server
 
-# Create Django migration files from model changes.
-makemigrations:
-    cd backend && uv run python manage.py makemigrations
+# Create an Alembic revision from model changes, e.g. `just makemigrations "add due dates"`.
+makemigrations message:
+    cd backend && uv run alembic revision --autogenerate -m "{{message}}"
 
-# Apply pending Django migrations to the database.
+# Apply pending Alembic migrations to the database.
 migrate:
-    cd backend && uv run python manage.py migrate
+    cd backend && uv run alembic upgrade head
 
 # Seed the dev database with demo data (refuses if the database is not empty).
 seed:
-    cd backend && uv run python manage.py seed_dev
+    cd backend && uv run python -m apps.infra.seed_dev
 
 # Generate the OpenAPI schema and the TypeScript API client.
 generate-api:
-    cd backend && uv run python -c "import os, json, yaml; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings'); import django; django.setup(); from django.test import Client, override_settings; override = override_settings(ALLOWED_HOSTS=['*']); override.enable(); response = Client().get('/api/v1/schema/'); override.disable(); assert response.status_code == 200, response.status_code; schema = json.loads(response.content); open('openapi.yaml', 'w').write(yaml.safe_dump(schema, allow_unicode=True, sort_keys=False))"
+    cd backend && uv run python -c "import yaml; from config.app import create_app; schema = create_app().openapi(); open('openapi.yaml', 'w').write(yaml.safe_dump(schema, allow_unicode=True, sort_keys=False))"
     cd frontend && npm run generate:api
 
 # Regenerate the TypeScript client and fail if it differs from the committed one
-# (the API contract baseline for the FastAPI migration).
+# (the API contract baseline; the routers return in migration stages 05-08).
 check-api-client: generate-api
     git diff --exit-code --stat -- frontend/src/generated/api
 
@@ -55,15 +51,14 @@ backend-cpp:
 frontend-cpp:
     cd frontend && VITE_PROXY_TARGET=http://127.0.0.1:8080 npm run dev
 
-# Type-check the backend with mypy (django-stubs plugin).
+# Type-check the backend with mypy (strict).
 typecheck:
     cd backend && uv run mypy .
 
-# Check the Django project and validate the frontend.
+# Type-check and test the backend, then validate the frontend.
 check:
     just typecheck
     cd backend && uv run pytest
-    cd backend && uv run python manage.py check
     cd frontend && npm test
     cd frontend && npm run lint
     cd frontend && npm run build

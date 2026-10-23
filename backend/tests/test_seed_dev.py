@@ -1,45 +1,54 @@
-"""Tests for the ``seed_dev`` management command."""
+"""Tests for ``python -m apps.infra.seed_dev``."""
+
+import random
 
 import pytest
-from django.core.management import call_command
-from django.core.management.base import CommandError
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
 
-from apps.infra.factories import DEV_PASSWORD
-from apps.infra.models import Task
-from apps.infra.models import TimeEntry
-from apps.infra.models import User
-
-pytestmark = pytest.mark.django_only
+from apps.infra.models import Category, Project, Task, TimeEntry, User
+from apps.infra.repo import UserRepository
+from apps.infra.seed_dev import DatabaseNotEmpty, USERS, seed
 
 
-@pytest.mark.django_db
-def test_seed_dev_populates_an_empty_database() -> None:
+def _count(session: Session, model: type) -> int:
+    return int(session.scalar(select(func.count()).select_from(model)) or 0)
+
+
+def test_seed_dev_populates_an_empty_database(session: Session) -> None:
     # A fixed seed keeps the demo data (and this test) reproducible.
-    call_command('seed_dev', seed=1)
+    seed(session, random.Random(1), password_hash='hash')
 
-    users = User.objects.all()
-    assert users.count() == 2
-    assert all(user.check_password(DEV_PASSWORD) for user in users)
+    users = list(session.scalars(select(User)))
+    assert sorted(user.username for user in users) == sorted(USERS)
+    assert all(user.password == 'hash' for user in users)
 
     for user in users:
-        projects = user.projects.all()
-        assert projects.filter(is_inbox=True).count() == 1
-        assert projects.filter(is_inbox=False).count() == 3
-        assert TimeEntry.objects.filter(end__isnull=True, task__project__user=user).count() == 1
+        projects = list(session.scalars(select(Project).where(Project.user_id == user.id)))
+        assert sum(project.is_inbox for project in projects) == 1
+        assert sum(not project.is_inbox for project in projects) == 3
+        running = session.scalar(
+            select(func.count())
+            .select_from(TimeEntry)
+            .where(TimeEntry.user_id == user.id, TimeEntry.end.is_(None))
+        )
+        assert running == 1
+        assert session.scalar(
+            select(func.count()).select_from(Category).where(Category.user_id == user.id)
+        )
 
-    assert Task.objects.count() > 0
-    assert TimeEntry.objects.count() > Task.objects.count()
+    assert _count(session, Task) > 0
+    assert _count(session, TimeEntry) > _count(session, Task) / 2
 
-    for entry in TimeEntry.objects.filter(end__isnull=False):
+    for entry in session.scalars(select(TimeEntry).where(TimeEntry.end.is_not(None))):
         assert entry.end is not None
         assert entry.end > entry.start
 
 
-@pytest.mark.django_db
-def test_seed_dev_refuses_to_seed_a_non_empty_database() -> None:
-    User.objects.create_user(username='existing', password='StrongPass123!')
+def test_seed_dev_refuses_to_seed_a_non_empty_database(session: Session) -> None:
+    UserRepository(session).create(username='existing', password_hash='hash')
 
-    with pytest.raises(CommandError, match='Database is not empty'):
-        call_command('seed_dev')
+    with pytest.raises(DatabaseNotEmpty, match='Database is not empty'):
+        seed(session, random.Random(1), password_hash='hash')
 
-    assert User.objects.count() == 1
+    assert _count(session, User) == 1

@@ -1,14 +1,15 @@
-# 05: Accounts on FastAPI (compatible passwords and JWT)
+# 05: Accounts on FastAPI (new passwords and JWT)
 
-**What to build:** `register`/`login`/`refresh`/`me`/account deletion run on FastAPI with the same `operation_id`s, shapes, and status codes. Password hashes and tokens are interchangeable with Django in both directions.
+**What to build:** `register`/`login`/`refresh`/`me`/account deletion run on FastAPI with the same `operation_id`s, shapes, and status codes. Hashes and tokens are our own formats; nothing has to interoperate with Django.
 
-**Blocked by:** 02, 04.
+**Blocked by:** 04.
 
 **Status:** needs-triage
 
-- [ ] `PasswordHasher` on `hashlib.pbkdf2_hmac` in Django's `pbkdf2_sha256$<iter>$<salt>$<b64>` format (verification + new hashes with the same iteration count).
-- [ ] `PasswordPolicy`: the same rules as `AUTH_PASSWORD_VALIDATORS` and the same error messages the tests expect.
-- [ ] `TokenService` on PyJWT: the same secret, algorithm, lifetimes (15 min / 14 days), and claims as `NINJA_JWT`.
-- [ ] A `current_user` dependency (Bearer) replaces `JWTAuth()`; 401 in the same shape.
-- [ ] Cross tests: a Django hash verifies in the new code and vice versa; a `ninja_jwt` token passes `current_user` and vice versa.
-- [ ] `test_accounts_api.py` green with `--backend=fastapi`.
+- [ ] `PasswordHasher` on the stdlib (`hashlib.scrypt`, self-describing `scrypt$<n>$<r>$<p>$<salt>$<hash>` encoding so parameters can be raised later via `needs_rehash`). No new dependency.
+- [ ] `PasswordPolicy`: a small rule set (minimum length, not entirely numeric, not too similar to the username, not on a short common-passwords list). Adjust the test expectations where messages differ from Django's.
+- [ ] `TokenService` on PyJWT: HS256 with `Settings.secret_key`, lifetimes from `Settings` (15 min / 14 days), claims `sub` (user id), `type` (`access`/`refresh`), `exp`, `iat`, `jti`.
+- [ ] A `current_user` dependency (Bearer) replaces `JWTAuth()`; 401 `{"detail": ...}` for a missing/invalid/expired token or a deleted/inactive user.
+- [ ] `apps/accounts/deps.py` provides the adapters; the test fixtures `make_user`/`token_for` in `tests/conftest.py` stop skipping.
+- [ ] `apps/infra/seed_dev.py` hashes `DEV_PASSWORD` with the new hasher instead of storing `UNUSABLE_PASSWORD`.
+- [ ] `test_accounts_api.py` green; health tests restored against the FastAPI app.

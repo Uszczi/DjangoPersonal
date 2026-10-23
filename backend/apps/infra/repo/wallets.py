@@ -2,41 +2,41 @@
 
 from decimal import Decimal
 
-from django.db import IntegrityError, transaction
-from django.db.models import Case, Count, F, QuerySet, Sum, Value, When
-from django.db.models.fields import DecimalField
-from django.db.models.functions import Coalesce
+from sqlalchemy import ColumnElement, Numeric, Select, case, func, select, true
+from sqlalchemy.orm import Session
 
-from apps.infra.models import Wallet as WalletModel
+from apps.infra.models import Category as CategoryModel
+from apps.infra.models import Transaction as TransactionModel
 from apps.infra.models import User
+from apps.infra.models import Wallet as WalletModel
 
+from ._flush import flush
 from .errors import DuplicateWalletName
 
-#: Money column shared by the balance annotation and the response contract.
-_MONEY = DecimalField(max_digits=10, decimal_places=2)
+#: Money column shared by the balance expression and the response contract.
+_MONEY = Numeric(10, 2)
 
 #: A transaction's signed contribution to its wallet: System-category entries
 #: (the opening balance and later corrections) add to it, every other entry is
 #: spending and subtracts. An uncategorized transaction is spending too.
-_BALANCE = Coalesce(
-    Sum(
-        Case(
-            When(transactions__category__is_system=True, then=F('transactions__amount')),
-            default=-F('transactions__amount'),
-            output_field=_MONEY,
-        ),
-        output_field=_MONEY,
+_BALANCE: ColumnElement[Decimal] = func.coalesce(
+    func.sum(
+        case(
+            (CategoryModel.is_system == true(), TransactionModel.amount),
+            else_=-TransactionModel.amount,
+        )
     ),
-    Value(Decimal('0.00'), output_field=_MONEY),
-    output_field=_MONEY,
+    0,
+    type_=_MONEY,
 )
 
 
-def _with_details(queryset: QuerySet[WalletModel]) -> QuerySet[WalletModel]:
-    """Attach ``transaction_count`` and ``balance`` to every wallet row."""
-    return queryset.annotate(
-        transaction_count=Count('transactions'),
-        balance=_BALANCE,
+def _ledger(query: Select[WalletModel, int, Decimal]) -> Select[WalletModel, int, Decimal]:
+    """Join each wallet to its transactions (and their categories) for the totals."""
+    return (
+        query.outerjoin(TransactionModel, TransactionModel.wallet_id == WalletModel.id)
+        .outerjoin(CategoryModel, CategoryModel.id == TransactionModel.category_id)
+        .group_by(WalletModel.id)
     )
 
 
@@ -45,47 +45,59 @@ class WalletRepository:
 
     Same contract as the other repositories: queries, writes and storage
     errors live here; the use cases own the rules about *what* to store.
+    Every wallet it returns carries ``transaction_count`` and ``balance``.
     """
+
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def _with_details(self, *conditions: ColumnElement[bool]) -> list[WalletModel]:
+        query = _ledger(
+            select(WalletModel, func.count(TransactionModel.id), _BALANCE).where(*conditions)
+        ).order_by(WalletModel.normalized_name)
+        wallets = []
+        for wallet, count, balance in self.session.execute(query):
+            wallet.transaction_count = count
+            wallet.balance = balance
+            wallets.append(wallet)
+        return wallets
 
     def list_all(self, *, user: User) -> list[WalletModel]:
         """Every wallet for ``user``, alphabetically, with count and balance."""
-        return list(
-            _with_details(WalletModel.objects.filter(user=user)).order_by('normalized_name')
-        )
+        return self._with_details(WalletModel.user_id == user.id)
 
     def find(self, wallet_id: int, *, user: User) -> WalletModel | None:
         """The wallet with this id for ``user``, or ``None``."""
-        return _with_details(WalletModel.objects.filter(pk=wallet_id, user=user)).first()
+        found = self._with_details(WalletModel.id == wallet_id, WalletModel.user_id == user.id)
+        return found[0] if found else None
 
     def balance(self, wallet_id: int, *, user: User) -> Decimal:
         """The wallet's balance, computed from its ledger.
 
-        Handlers read it through here rather than off an annotated row, so the
-        value is a plain, typed number and never a stale annotation.
+        Handlers read it through here rather than off a loaded wallet, so the
+        value is never a stale copy.
         """
-        totals = WalletModel.objects.filter(pk=wallet_id, user=user).aggregate(
-            balance=_BALANCE
-        )
-        return totals['balance'] or Decimal('0.00')
+        wallet = self.find(wallet_id, user=user)
+        return wallet.balance if wallet is not None else Decimal('0.00')
 
     def name_taken(
         self, name_key: str, *, user: User, exclude: WalletModel | None = None
     ) -> bool:
         """Whether another wallet already uses this normalized name."""
-        duplicates = WalletModel.objects.filter(normalized_name=name_key, user=user)
-        if exclude is not None:
-            duplicates = duplicates.exclude(pk=exclude.pk)
-        return duplicates.exists()
+        query = select(WalletModel.id).where(
+            WalletModel.normalized_name == name_key, WalletModel.user_id == user.id
+        )
+        if exclude is not None and exclude.id is not None:
+            query = query.where(WalletModel.id != exclude.id)
+        return self.session.scalars(query.limit(1)).first() is not None
 
     def save(self, wallet: WalletModel) -> WalletModel:
         """Persist a new or existing wallet, or fail on a name clash."""
-        try:
-            with transaction.atomic():
-                wallet.save()
-        except IntegrityError as error:
-            raise DuplicateWalletName from error
+        self.session.add(wallet)
+        flush(self.session, on_conflict=DuplicateWalletName)
         return wallet
 
     def delete(self, wallet: WalletModel) -> None:
-        """Delete a wallet; transactions cascade away at the database level."""
-        wallet.delete()
+        """Delete a wallet; its transactions cascade away in the database."""
+        self.session.delete(wallet)
+        self.session.flush()
