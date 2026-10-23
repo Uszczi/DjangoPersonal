@@ -1,9 +1,15 @@
 """Composition root for the ``whiteboard`` app (see ``apps.work.deps``)."""
 
-from sqlalchemy.orm import Session
+from typing import Annotated
+
+from fastapi import Depends
 
 from apps.infra.repo import WhiteboardRepository
+from config.db import SessionDep
 
 
-def whiteboard_repository(session: Session) -> WhiteboardRepository:
+def whiteboard_repository(session: SessionDep) -> WhiteboardRepository:
     return WhiteboardRepository(session)
+
+
+WhiteboardRepositoryDep = Annotated[WhiteboardRepository, Depends(whiteboard_repository)]
