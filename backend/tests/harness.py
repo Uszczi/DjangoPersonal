@@ -11,7 +11,10 @@ against either backend with ``--backend``.
 
 import json as jsonlib
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
+
+if TYPE_CHECKING:
+    from fastapi import FastAPI
 
 
 @dataclass(frozen=True)
@@ -103,4 +106,23 @@ class DjangoTransport:
             content_type=content_type,
             headers=headers,
         )
+        return Response(status_code=response.status_code, body=response.content)
+
+
+class FastAPITransport:
+    """Serves requests through FastAPI's ``TestClient``.
+
+    Server errors come back as 500 responses, as they would over the wire,
+    instead of being re-raised into the test.
+    """
+
+    def __init__(self, app: 'FastAPI') -> None:
+        from fastapi.testclient import TestClient
+
+        self.client = TestClient(app, raise_server_exceptions=False)
+
+    def request(
+        self, method: str, path: str, *, body: bytes | None, headers: dict[str, str]
+    ) -> Response:
+        response = self.client.request(method, path, content=body, headers=headers)
         return Response(status_code=response.status_code, body=response.content)

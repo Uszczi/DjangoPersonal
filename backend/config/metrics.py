@@ -2,43 +2,21 @@
 
 Exposes request rate / latency / status codes on ``/metrics`` (scraped by
 Prometheus over the compose network, not through the public reverse proxy).
-
-Multiple workers: when ``PROMETHEUS_MULTIPROC_DIR`` is set, prometheus-client
-aggregates counters from every worker process, so the app can run with as many
-uvicorn workers as needed without losing or duplicating metrics.
+The collectors themselves live in :mod:`config.prometheus`, shared with the
+FastAPI app.
 """
 
-import os
 import time
 from collections.abc import Callable
 
 from django.http import HttpRequest, HttpResponse
-from prometheus_client import (
+
+from config.prometheus import (
     CONTENT_TYPE_LATEST,
-    CollectorRegistry,
-    Counter,
-    Histogram,
-    generate_latest,
-    multiprocess,
-)
-
-PROMETHEUS_MULTIPROC_DIR = os.environ.get('PROMETHEUS_MULTIPROC_DIR')
-MULTIPROCESS_MODE = bool(PROMETHEUS_MULTIPROC_DIR)
-
-# Probes and scraping are infrastructure, not user traffic - keep them out of
-# the request counters so dashboards stay readable.
-UNMETERED_PATHS = ('/metrics', '/health', '/health/ready')
-
-REQUEST_COUNT = Counter(
-    'django_http_requests_total',
-    'Total HTTP requests handled by the Django app.',
-    ['method', 'route', 'status'],
-)
-
-REQUEST_LATENCY = Histogram(
-    'django_http_request_duration_seconds',
-    'HTTP request latency in seconds.',
-    ['method', 'route'],
+    REQUEST_COUNT,
+    REQUEST_LATENCY,
+    UNMETERED_PATHS,
+    render_metrics,
 )
 
 
@@ -69,14 +47,5 @@ class MetricsMiddleware:
         return response
 
 
-def _render_metrics() -> bytes:
-    if not MULTIPROCESS_MODE:
-        return generate_latest()
-
-    registry = CollectorRegistry()
-    multiprocess.MultiProcessCollector(registry)  # type: ignore[no-untyped-call]
-    return generate_latest(registry)
-
-
 def metrics_view(request: HttpRequest) -> HttpResponse:
-    return HttpResponse(_render_metrics(), content_type=CONTENT_TYPE_LATEST)
+    return HttpResponse(render_metrics(), content_type=CONTENT_TYPE_LATEST)

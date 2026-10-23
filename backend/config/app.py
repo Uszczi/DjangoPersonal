@@ -1,0 +1,120 @@
+"""The FastAPI application (stage 03 of the Django -> FastAPI migration).
+
+Runs alongside the Django app until the cutover; it carries the shared
+infrastructure - settings, the request-scoped database session, error
+handling, health checks, metrics and logging - and gains the domain routers
+one feature at a time. ``just backend-fastapi`` serves it on :8000 through
+:func:`create_served_app`.
+
+The OpenAPI schema stays at ``/api/v1/schema/`` (3.1, as Ninja already emits)
+with no interactive docs, matching the Django app.
+"""
+
+import logging.config
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from typing import Any
+
+from fastapi import FastAPI
+from starlette.middleware.trustedhost import TrustedHostMiddleware
+
+from apps.shared.http_errors import register_fastapi_error_handlers
+from config import ops
+from config.app_settings import Settings
+from config.db import Database
+
+API_PREFIX = '/api/v1'
+
+# The console format of ``LOGGING`` in ``config/settings.py``.
+LOGGING: dict[str, Any] = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}
+
+
+def configure_logging() -> None:
+    logging.config.dictConfig(LOGGING)
+
+
+# FastAPI documents a 422 on every operation; Ninja documents none. Keeping
+# them would add models to the generated TypeScript client and status codes to
+# the API contract snapshot, so the schema leaves them out (the 422 responses
+# themselves are still sent - see ``apps.shared.http_errors``).
+VALIDATION_ERROR_SCHEMAS = ('HTTPValidationError', 'ValidationError')
+
+
+def _without_validation_responses(app: FastAPI) -> None:
+    generate = app.openapi
+
+    def openapi() -> dict[str, Any]:
+        if app.openapi_schema is None:
+            schema = generate()
+            for operations in schema.get('paths', {}).values():
+                for operation in operations.values():
+                    operation.get('responses', {}).pop('422', None)
+            schemas = schema.get('components', {}).get('schemas', {})
+            for name in VALIDATION_ERROR_SCHEMAS:
+                schemas.pop(name, None)
+        return app.openapi_schema or {}
+
+    app.openapi = openapi  # type: ignore[method-assign]
+
+
+def create_app(settings: Settings | None = None) -> FastAPI:
+    settings = settings or Settings()
+    database = Database(settings)
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        yield
+        database.dispose()
+
+    app = FastAPI(
+        title='DjangoPersonal API',
+        description='API for DjangoPersonal projects, tasks, and expenses.',
+        version='1.0.0',
+        openapi_url=f'{API_PREFIX}/schema/',
+        docs_url=None,
+        redoc_url=None,
+        debug=settings.debug,
+        lifespan=lifespan,
+    )
+    app.state.settings = settings
+    app.state.database = database
+
+    _without_validation_responses(app)
+    register_fastapi_error_handlers(app)
+    app.include_router(ops.router)
+
+    app.add_middleware(ops.MetricsMiddleware)
+    # Added last, so it runs first: Django's ALLOWED_HOSTS check. Requests for
+    # a foreign host are refused before routing and stay out of the metrics.
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.trusted_hosts)
+    return app
+
+
+def create_served_app() -> FastAPI:
+    """The process entry point: ``uvicorn --factory config.app:create_served_app``.
+
+    A factory rather than a module-level ``app`` so importing :func:`create_app`
+    (tests, the MCP server) neither reconfigures logging nor opens the
+    database from the environment.
+    """
+    configure_logging()
+    return create_app()

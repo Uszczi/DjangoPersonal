@@ -5,6 +5,10 @@ default:
 backend:
     cd backend && uv run python manage.py runserver
 
+# Run the FastAPI app (migration stage 03, not deployed yet) on port 8000.
+backend-fastapi:
+    cd backend && uv run uvicorn --factory config.app:create_served_app --reload --port 8000
+
 # Run the MCP server (streamable HTTP) on port 8001.
 mcp:
     cd backend && uv run python -m mcp_server

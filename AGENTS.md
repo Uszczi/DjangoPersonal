@@ -51,6 +51,7 @@ Everything goes through the `justfile`:
 
 ```bash
 just backend          # Django dev server on :8000 (SQLite)
+just backend-fastapi  # FastAPI app (migration in progress, not deployed) on :8000
 just mcp              # MCP server (streamable HTTP) on :8001
 just frontend         # Vite dev server; proxies /api to Django on :8000
 just storybook        # Storybook component workshop on :6006 (build via npm run build-storybook)
