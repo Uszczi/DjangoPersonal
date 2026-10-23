@@ -42,7 +42,7 @@ class RegisterUser:
         if data.password != data.password_confirm:
             raise DomainError('Passwords do not match.', status=400)
 
-        problems = self.policy.problems(data.password)
+        problems = self.policy.problems(data.password, username=data.username)
         if problems:
             raise DomainError('; '.join(problems), status=400)
 

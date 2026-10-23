@@ -18,6 +18,7 @@ import pytest
 from fastapi import FastAPI
 from sqlalchemy.orm import Session
 
+from apps.accounts import deps
 from apps.accounts.ports import PasswordHasher, TokenService
 from apps.infra import factories
 from apps.infra.models import Base, User
@@ -31,7 +32,6 @@ DEFAULT_PASSWORD = 'StrongPass123!'
 
 #: API test modules whose endpoints are not served yet, and the stage that ports them.
 AWAITING_PORT = {
-    'test_accounts_api.py': '05',
     'test_projects_api.py': '06',
     'test_tasks_api.py': '06',
     'test_time_tracking_api.py': '06',
@@ -102,12 +102,13 @@ def transport(app: FastAPI, session: Session) -> Transport:
 
 @pytest.fixture
 def password_hasher() -> PasswordHasher:
-    pytest.skip('The password hasher arrives in migration stage 05.')
+    return deps.password_hasher()
 
 
 @pytest.fixture
-def token_service() -> TokenService:
-    pytest.skip('The token service arrives in migration stage 05.')
+def token_service(settings: Settings) -> TokenService:
+    """Signs tokens exactly like the app under test (same settings)."""
+    return deps.token_service(settings)
 
 
 @pytest.fixture

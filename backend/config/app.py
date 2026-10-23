@@ -17,6 +17,7 @@ from typing import Any
 from fastapi import FastAPI
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from apps.accounts.api import router as accounts_router
 from apps.shared.http_errors import register_fastapi_error_handlers
 from config import ops
 from config.app_settings import Settings
@@ -100,6 +101,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     _without_validation_responses(app)
     register_fastapi_error_handlers(app)
     app.include_router(ops.router)
+    app.include_router(accounts_router, prefix=API_PREFIX)
 
     app.add_middleware(ops.MetricsMiddleware)
     # Added last, so it runs first: the allowed-hosts check. Requests for

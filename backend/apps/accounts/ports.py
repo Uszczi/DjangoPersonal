@@ -29,8 +29,11 @@ class PasswordHasher(Protocol):
 class PasswordPolicy(Protocol):
     """The rules a new password must satisfy."""
 
-    def problems(self, password: str) -> list[str]:
-        """Human-readable reasons ``password`` is rejected; empty when it is fine."""
+    def problems(self, password: str, *, username: str | None = None) -> list[str]:
+        """Human-readable reasons ``password`` is rejected; empty when it is fine.
+
+        ``username`` (when known) lets the policy reject look-alike passwords.
+        """
         ...
 
 
@@ -52,4 +55,8 @@ class TokenService(Protocol):
 
     def refresh_access(self, refresh: str) -> str:
         """A new access token for ``refresh``, or raise :class:`InvalidToken`."""
+        ...
+
+    def user_id_for(self, access: str) -> int:
+        """The id of the user an access token was issued to, or raise :class:`InvalidToken`."""
         ...

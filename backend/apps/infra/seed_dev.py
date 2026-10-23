@@ -11,6 +11,7 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from apps.accounts.deps import password_hasher
 from apps.expenses.handlers.categories import seed_base_categories
 from apps.infra.factories import (
     DEV_PASSWORD,
@@ -61,10 +62,6 @@ TASK_TITLES = (
 )
 
 FOURTEEN_DAYS_IN_MINUTES = 14 * 24 * 60
-
-#: Stored until stage 05 brings the password hasher; it matches no password.
-UNUSABLE_PASSWORD = '!unusable'
-
 
 class DatabaseNotEmpty(Exception):
     """Seeding would mix demo data into existing data."""
@@ -170,7 +167,11 @@ def main(argv: list[str] | None = None) -> None:
     try:
         with database.session_factory() as session:
             try:
-                stats = seed(session, random.Random(args.seed), password_hash=UNUSABLE_PASSWORD)
+                stats = seed(
+                    session,
+                    random.Random(args.seed),
+                    password_hash=password_hasher().hash(DEV_PASSWORD),
+                )
             except DatabaseNotEmpty as error:
                 raise SystemExit(str(error)) from error
             session.commit()
@@ -182,7 +183,7 @@ def main(argv: list[str] | None = None) -> None:
         f"{stats['projects']} projects, {stats['tasks']} tasks, "
         f"{stats['time_entries']} time entries."
     )
-    print(f'Password for every seeded account (once stage 05 lands): {DEV_PASSWORD}')
+    print(f'Password for every seeded account: {DEV_PASSWORD}')
 
 
 if __name__ == '__main__':

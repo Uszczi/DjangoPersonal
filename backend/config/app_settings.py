@@ -9,6 +9,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Annotated
 
+from fastapi import Depends, Request
 from pydantic import BeforeValidator, Field
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 from sqlalchemy import URL
@@ -93,3 +94,12 @@ class Settings(BaseSettings):
             else:
                 hosts.append(host)
         return hosts
+
+
+def get_settings(request: Request) -> Settings:
+    """The settings the running app was created with (a FastAPI dependency)."""
+    settings: Settings = request.app.state.settings
+    return settings
+
+
+SettingsDep = Annotated[Settings, Depends(get_settings)]
