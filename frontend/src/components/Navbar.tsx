@@ -61,7 +61,8 @@ export function Navbar() {
 
   return (
     <>
-      <header className="flex h-[68px] items-center justify-between gap-7 bg-deep-ink px-[38px] text-[#f4f7f4]">
+      <header className="bg-deep-ink text-[#f4f7f4]">
+        <div className="mx-auto flex h-[68px] w-full max-w-app items-center justify-between gap-7 px-[38px]">
         <Link className="inline-flex items-center gap-[11px] text-[15px] font-bold tracking-[-0.03em] text-inherit no-underline" to="/" aria-label="DjangoPersonal — strona główna">
           <span className="inline-flex h-[29px] w-[29px] items-center justify-center rounded-[5px_5px_5px_1px] bg-signal font-utility text-[13px] text-white -rotate-[3deg]" aria-hidden="true">
             D
@@ -101,6 +102,7 @@ export function Navbar() {
             </Button>
           </div>
         )}
+        </div>
       </header>
       {isNavOpen && (
         <Drawer

@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @theme {
+  --container-app: 1440px;
   --color-canvas: #e9eff0;
   --color-paper: #f8faf7;
   --color-deep-ink: #18343b;
