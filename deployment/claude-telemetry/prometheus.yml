@@ -1,0 +1,10 @@
+# Metrics arrive via the OTLP receiver (pushed by Alloy); nothing to scrape.
+global:
+  evaluation_interval: 1m
+
+otlp:
+  # Keep resource attributes Claude Code sets as regular labels.
+  promote_resource_attributes:
+    - service.version
+    - os.type
+    - host.arch

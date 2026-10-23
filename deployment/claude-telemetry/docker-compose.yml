@@ -1,0 +1,68 @@
+# Local-only stack that collects Claude Code telemetry (OpenTelemetry metrics
+# and events) and shows it in Grafana. Independent of the app stack: separate
+# project name, separate volumes, and host ports that do not collide with it.
+# Every port is bound to 127.0.0.1 — nothing here has authentication.
+#
+# Usage: just telemetry-up, then open http://localhost:3003
+name: claude-telemetry
+
+services:
+  alloy:
+    image: grafana/alloy:v1.10.0
+    restart: unless-stopped
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - /etc/alloy/config.alloy
+    ports:
+      - "127.0.0.1:14317:4317" # OTLP gRPC (Claude Code → Alloy)
+      - "127.0.0.1:14318:4318" # OTLP HTTP
+      - "127.0.0.1:12346:12345" # Alloy UI
+    volumes:
+      - ./config.alloy:/etc/alloy/config.alloy:ro
+    depends_on:
+      - prometheus
+      - loki
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=365d
+      - --web.enable-otlp-receiver
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+
+  loki:
+    image: grafana/loki:3.5.0
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki-data:/loki
+
+  grafana:
+    image: grafana/grafana:12.1.0
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3003:3000"
+    environment:
+      # Localhost-only, single user: skip the login screen.
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/claude_code.json
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+      - loki
+
+volumes:
+  prometheus-data:
+  loki-data:
+  grafana-data:

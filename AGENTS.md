@@ -151,14 +151,6 @@ Use the default labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-
 
 Use the single-context layout: `GLOSSARY.md` at the repo root + `docs/adr/`. Read the glossary before naming domain concepts, and flag conflicts with existing ADRs explicitly instead of silently overriding them. See `docs/agents/domain.md`.
 
-### DjangoPersonal task tracking
-
-Agent work that changes source code is recorded in the user's DjangoPersonal
-organizer via the `djangopersonal` MCP server. See the `djangopersonal` skill.
-Short version: create a task in the `DjangoPersonal` project with a title before
-starting, then update it with an implementation description and status
-`Zrobione` when done. Pass every field on update (the contract treats an
-explicit `null` as "set to null").
 
 ### Working rules for agents
 

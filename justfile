@@ -123,3 +123,19 @@ local-migrate:
 # Wipe the local stack including volumes (destroys the database).
 local-reset:
     {{compose-local}} down --volumes
+
+# --- Claude Code telemetry (local Alloy + Prometheus + Loki + Grafana) --------
+
+compose-telemetry := "docker compose -f deployment/claude-telemetry/docker-compose.yml"
+
+# Start the telemetry stack; Grafana on http://localhost:3003, OTLP on :14317.
+telemetry-up:
+    {{compose-telemetry}} up --detach
+
+# Stop the telemetry stack (keeps collected data).
+telemetry-down:
+    {{compose-telemetry}} down
+
+# Follow telemetry stack logs (optionally for one service).
+telemetry-logs service="":
+    {{compose-telemetry}} logs --follow {{service}}

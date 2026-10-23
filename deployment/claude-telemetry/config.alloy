@@ -1,0 +1,37 @@
+// Claude Code telemetry pipeline: OTLP in, metrics → Prometheus, events → Loki.
+// Both backends ingest OTLP natively, so attributes survive as labels
+// (Prometheus) and structured metadata (Loki) without manual mapping.
+
+otelcol.receiver.otlp "default" {
+	grpc {
+		endpoint = "0.0.0.0:4317"
+	}
+
+	http {
+		endpoint = "0.0.0.0:4318"
+	}
+
+	output {
+		metrics = [otelcol.processor.batch.default.input]
+		logs    = [otelcol.processor.batch.default.input]
+	}
+}
+
+otelcol.processor.batch "default" {
+	output {
+		metrics = [otelcol.exporter.otlphttp.prometheus.input]
+		logs    = [otelcol.exporter.otlphttp.loki.input]
+	}
+}
+
+otelcol.exporter.otlphttp "prometheus" {
+	client {
+		endpoint = "http://prometheus:9090/api/v1/otlp"
+	}
+}
+
+otelcol.exporter.otlphttp "loki" {
+	client {
+		endpoint = "http://loki:3100/otlp"
+	}
+}

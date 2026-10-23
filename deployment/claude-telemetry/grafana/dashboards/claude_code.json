@@ -1,0 +1,762 @@
+{
+  "uid": "claude-code",
+  "title": "Claude Code",
+  "tags": [
+    "claude-code"
+  ],
+  "editable": true,
+  "schemaVersion": 41,
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "refresh": "1m",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Koszt",
+      "description": "Szacowany koszt API wg Claude Code (dla subskrypcji to wartość orientacyjna).",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(sum_over_time({service_name=\"claude-code\"} | event_name=\"api_request\" | unwrap cost_usd [$__range]))",
+          "refId": "A",
+          "legendFormat": "",
+          "queryType": "instant"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "id": 1,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Tokeny wysłane (input)",
+      "description": "input + cache read + cache write — to, co liczy się jako „input”.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(sum_over_time({service_name=\"claude-code\"} | event_name=\"api_request\" | label_format ctx=`{{ add .input_tokens .cache_read_tokens .cache_creation_tokens }}` | unwrap ctx [$__range]))",
+          "refId": "A",
+          "legendFormat": "",
+          "queryType": "instant"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "id": 2,
+      "gridPos": {
+        "x": 4,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Tokeny output",
+      "description": "",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(sum_over_time({service_name=\"claude-code\"} | event_name=\"api_request\" | unwrap output_tokens [$__range]))",
+          "refId": "A",
+          "legendFormat": "",
+          "queryType": "instant"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "id": 3,
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Cache hit",
+      "description": "Udział inputu czytanego z prompt cache (tani).",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(sum_over_time({service_name=\"claude-code\"} | event_name=\"api_request\" | unwrap cache_read_tokens [$__range])) / sum(sum_over_time({service_name=\"claude-code\"} | event_name=\"api_request\" | label_format ctx=`{{ add .input_tokens .cache_read_tokens .cache_creation_tokens }}` | unwrap ctx [$__range]))",
+          "refId": "A",
+          "legendFormat": "",
+          "queryType": "instant"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          },
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "id": 4,
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Zapytania API",
+      "description": "",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(count_over_time({service_name=\"claude-code\"} | event_name=\"api_request\" [$__range]))",
+          "refId": "A",
+          "legendFormat": "",
+          "queryType": "instant"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "id": 5,
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Sesje",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "count(count by (session_id) (max_over_time(claude_code_session_count_total[$__range])))",
+          "refId": "A",
+          "legendFormat": "",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "id": 6,
+      "gridPos": {
+        "x": 20,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Rozmiar kontekstu na zapytanie (per sesja)",
+      "description": "Ile tokenów było wysyłane przy każdej turze. Rosnąca linia = sesja puchnie; czas na /compact albo /clear.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "max by (session_id) (max_over_time({service_name=\"claude-code\"} | event_name=\"api_request\" | label_format ctx=`{{ add .input_tokens .cache_read_tokens .cache_creation_tokens }}` | unwrap ctx [$__interval]))",
+          "refId": "A",
+          "legendFormat": "{{session_id}}",
+          "queryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "none"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 7,
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 24,
+        "h": 9
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Tokeny wg typu",
+      "description": "",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(sum_over_time({service_name=\"claude-code\"} | event_name=\"api_request\" | unwrap cache_read_tokens [$__interval]))",
+          "refId": "A",
+          "legendFormat": "cache read",
+          "queryType": "range"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(sum_over_time({service_name=\"claude-code\"} | event_name=\"api_request\" | unwrap cache_creation_tokens [$__interval]))",
+          "refId": "B",
+          "legendFormat": "cache write",
+          "queryType": "range"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(sum_over_time({service_name=\"claude-code\"} | event_name=\"api_request\" | unwrap input_tokens [$__interval]))",
+          "refId": "C",
+          "legendFormat": "input (bez cache)",
+          "queryType": "range"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(sum_over_time({service_name=\"claude-code\"} | event_name=\"api_request\" | unwrap output_tokens [$__interval]))",
+          "refId": "D",
+          "legendFormat": "output",
+          "queryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 70,
+            "lineWidth": 1,
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 8,
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 12,
+        "h": 8
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Koszt wg modelu",
+      "description": "",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (model) (sum_over_time({service_name=\"claude-code\"} | event_name=\"api_request\" | unwrap cost_usd [$__interval]))",
+          "refId": "A",
+          "legendFormat": "{{model}}",
+          "queryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 70,
+            "lineWidth": 1,
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "id": 9,
+      "gridPos": {
+        "x": 12,
+        "y": 13,
+        "w": 12,
+        "h": 8
+      }
+    },
+    {
+      "type": "table",
+      "title": "Sesje",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "description": "Najdroższe sesje w wybranym zakresie. session_id = nazwa pliku w ~/.claude/projects/<projekt>/<session_id>.jsonl",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (session_id) (sum_over_time({service_name=\"claude-code\"} | event_name=\"api_request\" | label_format ctx=`{{ add .input_tokens .cache_read_tokens .cache_creation_tokens }}` | unwrap ctx [$__range]))",
+          "refId": "A",
+          "legendFormat": "",
+          "queryType": "instant",
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "max by (session_id) (max_over_time({service_name=\"claude-code\"} | event_name=\"api_request\" | label_format ctx=`{{ add .input_tokens .cache_read_tokens .cache_creation_tokens }}` | unwrap ctx [$__range]))",
+          "refId": "B",
+          "legendFormat": "",
+          "queryType": "instant",
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (session_id) (count_over_time({service_name=\"claude-code\"} | event_name=\"api_request\" [$__range]))",
+          "refId": "C",
+          "legendFormat": "",
+          "queryType": "instant",
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (session_id) (sum_over_time({service_name=\"claude-code\"} | event_name=\"api_request\" | unwrap cost_usd [$__range]))",
+          "refId": "D",
+          "legendFormat": "",
+          "queryType": "instant",
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "session_id": "Sesja",
+              "Value #A": "Input łącznie",
+              "Value #B": "Max kontekst",
+              "Value #C": "Zapytania",
+              "Value #D": "Koszt"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Input łącznie",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Koszt"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true
+      },
+      "id": 10,
+      "gridPos": {
+        "x": 0,
+        "y": 21,
+        "w": 14,
+        "h": 9
+      }
+    },
+    {
+      "type": "table",
+      "title": "Narzędzia — ile dorzucają do kontekstu",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "description": "Suma tool_result_size_bytes (~4 bajty ≈ 1 token). Każdy wynik zostaje w kontekście do końca sesji.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (tool_name) (sum_over_time({service_name=\"claude-code\"} | event_name=\"tool_result\" | unwrap tool_result_size_bytes [$__range]))",
+          "refId": "A",
+          "legendFormat": "",
+          "queryType": "instant",
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "max by (tool_name) (max_over_time({service_name=\"claude-code\"} | event_name=\"tool_result\" | unwrap tool_result_size_bytes [$__range]))",
+          "refId": "B",
+          "legendFormat": "",
+          "queryType": "instant",
+          "format": "table"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (tool_name) (count_over_time({service_name=\"claude-code\"} | event_name=\"tool_result\" [$__range]))",
+          "refId": "C",
+          "legendFormat": "",
+          "queryType": "instant",
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "tool_name": "Narzędzie",
+              "Value #A": "Wynik łącznie",
+              "Value #B": "Największy wynik",
+              "Value #C": "Wywołania"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Wynik łącznie",
+                "desc": true
+              }
+            ]
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Wywołania"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true
+      },
+      "id": 11,
+      "gridPos": {
+        "x": 14,
+        "y": 21,
+        "w": 10,
+        "h": 9
+      }
+    },
+    {
+      "type": "logs",
+      "title": "Zapytania API",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "{service_name=\"claude-code\"} | event_name=\"api_request\" | line_format `{{.model}}  ctx={{ add .input_tokens .cache_read_tokens .cache_creation_tokens }}  (cache read {{.cache_read_tokens}}, write {{.cache_creation_tokens}}, fresh {{.input_tokens}})  out={{.output_tokens}}  ${{.cost_usd}}  {{.duration_ms}}ms  session={{.session_id}}`",
+          "refId": "A",
+          "legendFormat": "",
+          "queryType": "range"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": false,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      },
+      "id": 12,
+      "gridPos": {
+        "x": 0,
+        "y": 30,
+        "w": 24,
+        "h": 10
+      }
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  }
+}
