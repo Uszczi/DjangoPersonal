@@ -1,6 +1,7 @@
-import { useEffect, useRef, type HTMLAttributes, type ReactNode } from "react";
+import type { HTMLAttributes, ReactNode } from "react";
 
 import { IconButton } from "./IconButton";
+import { useModalDialog } from "./useModalDialog";
 
 type ModalProps = {
   kicker: ReactNode;
@@ -20,9 +21,8 @@ const sectionClasses: Record<NonNullable<ModalProps["size"]>, string> = {
 };
 
 /**
- * A modal on the native `<dialog>` element: `showModal()` puts it in the top layer, makes the
- * rest of the page inert (focus stays inside) and turns Escape into a `cancel` event.
- * Render it only while open; it opens on mount and closes on unmount.
+ * A centered modal on the native `<dialog>` element (see `useModalDialog`); focuses its first
+ * field. Render it only while open; it opens on mount and closes on unmount.
  */
 export function Modal({
   kicker,
@@ -32,40 +32,13 @@ export function Modal({
   size = "md",
   children,
 }: ModalProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    dialog.showModal();
-    // `autoFocus` runs before the dialog is open, so focus the first field here; confirm
-    // dialogs without fields keep the browser default (the first button).
-    dialog
-      .querySelector<HTMLElement>("input:not(:disabled), textarea:not(:disabled), select:not(:disabled)")
-      ?.focus();
-    return () => dialog.close();
-  }, []);
+  const dialogProps = useModalDialog(onClose, { focusFirstField: true });
 
   return (
     <dialog
-      ref={dialogRef}
+      {...dialogProps}
       aria-labelledby={titleId}
       className="fixed inset-0 m-0 h-full max-h-none w-full max-w-none items-start justify-center overflow-y-auto border-0 bg-overlay px-0 py-4 pt-16 text-ink backdrop:bg-transparent open:flex md:items-center md:px-5 md:py-5 md:pt-5"
-      onCancel={(event) => {
-        event.preventDefault();
-        onClose();
-      }}
-      onClose={(event) => {
-        // The browser may close the dialog without a cancelable `cancel` (e.g. a repeated
-        // Escape). Keep React in charge: ask the owner to close, and stay open if it refuses.
-        const dialog = event.currentTarget;
-        if (dialog.open) return;
-        onClose();
-        dialog.showModal();
-      }}
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
     >
       <section
         className={`w-full ${sectionClasses[size]} rounded-lg border border-line bg-paper p-[29px] shadow-dialog animate-dialog-enter`}

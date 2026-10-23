@@ -1,5 +1,7 @@
 /** Public API of the design system: import from `@/design-system`, not from component files. */
-export { Button, buttonVariants } from "./components/Button";
+export { Button } from "./components/Button";
+export { buttonVariants } from "./components/buttonVariants";
+export { Drawer } from "./components/Drawer";
 export { ErrorAlert } from "./components/ErrorAlert";
 export { Field } from "./components/Field";
 export { IconButton } from "./components/IconButton";

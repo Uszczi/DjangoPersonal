@@ -1,14 +1,6 @@
 import type { ButtonHTMLAttributes } from "react";
 
-export const buttonVariants = [
-  "primary",
-  "secondary",
-  "danger",
-  "ghost",
-  "ghostDanger",
-] as const;
-
-type ButtonVariant = (typeof buttonVariants)[number];
+import type { ButtonVariant } from "./buttonVariants";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;

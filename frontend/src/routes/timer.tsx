@@ -3,7 +3,7 @@ import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
-import { Button, Select, TextInput } from "@/design-system";
+import { Button, ErrorAlert, Field, Modal, ModalFooter, Select, TextInput } from "@/design-system";
 import { defaultProject, useProjectsStore } from "@/stores/projects";
 import { useTimerStore } from "@/stores/timer";
 import type { TimeEntryResponse } from "@/generated/api";
@@ -666,97 +666,67 @@ export function TimerPage() {
       </section>
 
       {editingEntry && (
-        <div
-          className="fixed inset-0 z-5 flex items-center justify-center bg-overlay p-5"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) closeEntryEditor();
-          }}
+        <Modal
+          kicker="ZMIANA SZCZEGÓŁÓW"
+          title="Edytuj wpis"
+          titleId="entry-edit-title"
+          onClose={closeEntryEditor}
+          size="lg"
         >
-          <section
-            className="w-full max-w-[480px] rounded-lg border border-line bg-paper p-[29px] shadow-dialog animate-dialog-enter"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="entry-edit-title"
-          >
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <p className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">ZMIANA SZCZEGÓŁÓW</p>
-                <h2 id="entry-edit-title" className="mt-1 font-display text-[24px] font-bold tracking-[-0.02em] text-ink">Edytuj wpis</h2>
-              </div>
-              <button
-                className="inline-flex items-center justify-center rounded-md border border-transparent bg-transparent text-[20px] leading-none text-muted transition-all hover:-translate-y-px cursor-pointer hover:text-ink"
-                onClick={closeEntryEditor}
-                aria-label="Zamknij"
-              >
-                <span aria-hidden="true">×</span>
-              </button>
-            </div>
-
-            <form onSubmit={saveEntryEdit}>
-              <label className="mb-4 block">
-                <span className="mb-1 block text-[12px] font-semibold text-ink-soft">Data</span>
-                <TextInput
-                  type="date"
-                  value={editForm.date}
-                  onChange={(event) =>
-                    setEditForm((current) => ({
-                      ...current,
-                      date: event.target.value,
-                    }))
-                  }
-                  required
-                />
-              </label>
-              <label className="mb-4 block">
-                <span className="mb-1 block text-[12px] font-semibold text-ink-soft">Zadanie</span>
-                <TaskTitleInput
-                  listId="edit-task-titles"
-                  value={editForm.title}
-                  onChange={(title) =>
-                    setEditForm((current) => ({ ...current, title }))
-                  }
-                />
-                <datalist id="edit-task-titles">
-                  {tasks.map((task) => (
-                    <option key={task.id} value={task.title} />
-                  ))}
-                </datalist>
-              </label>
-              <label className="mb-4 block">
-                <span className="mb-1 block text-[12px] font-semibold text-ink-soft">Czas (minuty)</span>
-                <TextInput
-                  type="number"
-                  min={1}
-                  max={1440}
-                  value={editForm.minutes}
-                  onChange={(event) =>
-                    setEditForm((current) => ({
-                      ...current,
-                      minutes: event.target.value,
-                    }))
-                  }
-                  required
-                />
-              </label>
-              {editError && (
-                <p className="mb-4 text-[13px] text-danger" role="alert">
-                  {editError}
-                </p>
-              )}
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="secondary"
-                  onClick={closeEntryEditor}
-                >
-                  Anuluj
-                </Button>
-                <Button variant="primary" type="submit">
-                  Zapisz zmiany
-                </Button>
-              </div>
-            </form>
-          </section>
-        </div>
+          <form onSubmit={saveEntryEdit}>
+            <Field label="Data">
+              <TextInput
+                type="date"
+                value={editForm.date}
+                onChange={(event) =>
+                  setEditForm((current) => ({
+                    ...current,
+                    date: event.target.value,
+                  }))
+                }
+                required
+              />
+            </Field>
+            <Field label="Zadanie">
+              <TaskTitleInput
+                listId="edit-task-titles"
+                value={editForm.title}
+                onChange={(title) =>
+                  setEditForm((current) => ({ ...current, title }))
+                }
+              />
+              <datalist id="edit-task-titles">
+                {tasks.map((task) => (
+                  <option key={task.id} value={task.title} />
+                ))}
+              </datalist>
+            </Field>
+            <Field label="Czas (minuty)">
+              <TextInput
+                type="number"
+                min={1}
+                max={1440}
+                value={editForm.minutes}
+                onChange={(event) =>
+                  setEditForm((current) => ({
+                    ...current,
+                    minutes: event.target.value,
+                  }))
+                }
+                required
+              />
+            </Field>
+            {editError && <ErrorAlert>{editError}</ErrorAlert>}
+            <ModalFooter>
+              <Button variant="secondary" onClick={closeEntryEditor}>
+                Anuluj
+              </Button>
+              <Button variant="primary" type="submit">
+                Zapisz zmiany
+              </Button>
+            </ModalFooter>
+          </form>
+        </Modal>
       )}
     </>
   );

@@ -1,24 +1,32 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import { Button } from "@/design-system";
+import { Button, Drawer } from "@/design-system";
 import { useAuthStore } from "@/stores/auth";
 
 type TopTabPath = "/" | "/tasks" | "/projects" | "/timer" | "/whiteboard" | "/expenses";
 
+/** Link colors for the dark header bar and for the light mobile drawer. */
+const tabToneClasses = {
+  dark: "text-[#b5c6c6] hover:text-white data-[selected]:bg-[#29474d] data-[selected]:text-white",
+  light: "text-ink-soft hover:bg-wash hover:text-ink data-[selected]:bg-deep-ink data-[selected]:text-white",
+};
+
 function TopTabLink({
   to,
   children,
+  tone = "dark",
   onClick,
 }: {
   to: TopTabPath;
   children: string;
+  tone?: keyof typeof tabToneClasses;
   onClick?: () => void;
 }) {
   return (
     <Link
-      className="cursor-pointer rounded-[5px] border border-transparent bg-transparent px-[14px] py-2 font-utility text-[11px] font-semibold tracking-[0.08em] text-[#b5c6c6] transition-colors hover:text-white data-[selected]:bg-[#29474d] data-[selected]:text-white"
+      className={`cursor-pointer rounded-[5px] border border-transparent bg-transparent px-[14px] py-2 font-utility text-[11px] font-semibold tracking-[0.08em] transition-colors ${tabToneClasses[tone]}`}
       to={to}
       activeOptions={{ exact: true }}
       activeProps={{
@@ -50,15 +58,6 @@ export function Navbar() {
   function closeNav() {
     setIsNavOpen(false);
   }
-
-  useEffect(() => {
-    if (!isNavOpen) return;
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") closeNav();
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isNavOpen]);
 
   return (
     <>
@@ -104,49 +103,44 @@ export function Navbar() {
         )}
       </header>
       {isNavOpen && (
-        <div
-          className="fixed inset-0 z-5 flex items-start justify-end bg-overlay p-5"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) closeNav();
-          }}
-        >
-          <nav
-            className="flex min-h-[200px] w-full max-w-[320px] flex-col gap-5 rounded-lg border border-line bg-paper p-[29px] shadow-dialog animate-nav-enter"
-            aria-label="Nawigacja widoków"
-            id="mobile-nav"
-          >
-            <div className="inline-flex items-center gap-[11px] text-[15px] font-bold tracking-[-0.03em] text-inherit no-underline">
+        <Drawer
+          id="mobile-nav"
+          label="Menu"
+          onClose={closeNav}
+          title={
+            <div className="inline-flex items-center gap-[11px] text-[15px] font-bold tracking-[-0.03em]">
               <span className="inline-flex h-[29px] w-[29px] items-center justify-center rounded-[5px_5px_5px_1px] bg-signal font-utility text-[13px] text-white -rotate-[3deg]" aria-hidden="true">
                 D
               </span>
               <span>Menu</span>
             </div>
-            <div className="flex flex-col gap-1">
-              {NAV_ITEMS.map((item) => (
-                <TopTabLink key={item.to} to={item.to} onClick={closeNav}>
-                  {item.label}
-                </TopTabLink>
-              ))}
-            </div>
-            {user && (
-              <div className="flex items-center gap-4">
-                <Link className="text-[13px] font-medium text-[#b5c6c6] no-underline transition-colors hover:text-white" to="/user" onClick={closeNav}>
-                  {user.username}
-                </Link>
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    closeNav();
-                    logout();
-                    navigate({ to: "/login" });
-                  }}
-                >
-                  Wyloguj
-                </Button>
-              </div>
-            )}
+          }
+        >
+          <nav className="flex flex-col gap-1" aria-label="Nawigacja widoków">
+            {NAV_ITEMS.map((item) => (
+              <TopTabLink key={item.to} to={item.to} tone="light" onClick={closeNav}>
+                {item.label}
+              </TopTabLink>
+            ))}
           </nav>
-        </div>
+          {user && (
+            <div className="flex items-center gap-4">
+              <Link className="text-[13px] font-medium text-ink-soft no-underline transition-colors hover:text-ink" to="/user" onClick={closeNav}>
+                {user.username}
+              </Link>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  closeNav();
+                  logout();
+                  navigate({ to: "/login" });
+                }}
+              >
+                Wyloguj
+              </Button>
+            </div>
+          )}
+        </Drawer>
       )}
     </>
   );
