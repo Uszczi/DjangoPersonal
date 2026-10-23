@@ -4,7 +4,7 @@ import { useEffect } from "react";
 
 import { TransactionEditorModal } from "@/components/TransactionEditorModal";
 import { DeleteTransactionModal } from "@/components/DeleteTransactionModal";
-import { Button } from "@/design-system";
+import { Button, DeleteButton, EditButton, ListRow, ListRowSubtitle, ListRowTitle } from "@/design-system";
 import { WalletSelect } from "@/components/WalletSelect";
 import { type TransactionResponse } from "@/generated/api";
 import { ShowModal } from "@/stores/modal";
@@ -150,20 +150,19 @@ export function WalletDetailPage() {
                   ? categories.find((item) => item.id === transaction.categoryId)
                   : undefined;
                 return (
-                  <li className="flex min-h-[62px] items-center gap-[13px] border-b border-[#dce5e1] px-[3px] py-[10px]" key={transaction.id}>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[14px] font-medium leading-snug text-ink">{transaction.title}</p>
+                  <ListRow key={transaction.id}>
+                    <div className="min-w-0">
+                      <ListRowTitle>{transaction.title}</ListRowTitle>
                       {transaction.description && (
-                        <small className="mt-0.5 block truncate text-[12px] leading-relaxed text-muted">{transaction.description}</small>
+                        <ListRowSubtitle>{transaction.description}</ListRowSubtitle>
                       )}
-                      {category && (
-                        <small className="mt-0.5 block truncate text-[12px] leading-relaxed text-muted">{category.name}</small>
-                      )}
+                      {category && <ListRowSubtitle>{category.name}</ListRowSubtitle>}
                     </div>
-                    <span className="font-utility text-[13px] font-semibold text-ink">{transaction.amount}</span>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
+                    <>
+                      <span className="mr-2 font-utility text-[13px] font-semibold text-ink">
+                        {transaction.amount}
+                      </span>
+                      <EditButton
                         aria-label={`Edytuj transakcję: ${transaction.title}`}
                         onClick={() =>
                           ShowModal(TransactionEditorModal, {
@@ -171,20 +170,15 @@ export function WalletDetailPage() {
                             transaction,
                           })
                         }
-                      >
-                        Edytuj
-                      </Button>
-                      <Button
-                        variant="ghostDanger"
+                      />
+                      <DeleteButton
                         aria-label={`Usuń transakcję: ${transaction.title}`}
                         onClick={() =>
                           ShowModal(DeleteTransactionModal, { transaction })
                         }
-                      >
-                        Usuń
-                      </Button>
-                    </div>
-                  </li>
+                      />
+                    </>
+                  </ListRow>
                 );
               })}
             </ul>

@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { apiErrorMessage } from "@/apiErrorMessage";
 import { Button, ErrorAlert, Field, Modal, ModalFooter, TextInput } from "@/design-system";
 import type { WalletResponse } from "@/generated/api";
+import { WalletColorPicker } from "@/components/WalletColorPicker";
 import { balanceError } from "@/money";
 import { useWalletsStore } from "@/stores/wallets";
 
@@ -12,7 +13,7 @@ type WalletEditModalProps = {
 };
 
 /**
- * The edit modal: rename the wallet and/or state the balance it now holds.
+ * The edit modal: rename or recolour the wallet and/or state the balance it now holds.
  * Changing the balance writes a System correction, so the ledger keeps
  * summing to what the user says they have.
  */
@@ -20,6 +21,7 @@ export function WalletEditModal({ wallet, onClose }: WalletEditModalProps) {
   const updateWallet = useWalletsStore((state) => state.updateWallet);
 
   const [name, setName] = useState(wallet.name);
+  const [color, setColor] = useState(wallet.color);
   const [currentBalance, setCurrentBalance] = useState(wallet.balance ?? "0.00");
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -47,6 +49,7 @@ export function WalletEditModal({ wallet, onClose }: WalletEditModalProps) {
     try {
       await updateWallet(wallet, {
         name: trimmedName,
+        color,
         currentBalance: currentBalance.trim(),
       });
       onClose();
@@ -74,6 +77,7 @@ export function WalletEditModal({ wallet, onClose }: WalletEditModalProps) {
             required
           />
         </Field>
+        <WalletColorPicker value={color} onChange={setColor} />
         <Field label="Stan aktualny">
           <TextInput
             inputMode="decimal"

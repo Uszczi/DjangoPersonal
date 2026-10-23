@@ -108,6 +108,7 @@ class CreateWallet:
         wallet = WalletModel(
             user=self.user,
             name=_validate_name(self.wallets, data.name, user=self.user),
+            color=data.color,
         )
         created = _save(self.wallets, wallet)
         if data.initial_balance:
@@ -152,7 +153,7 @@ class ReplaceWallet:
 class UpdateWallet:
     """Apply the supplied fields to an existing wallet (PATCH).
 
-    Renaming is ordinary. Setting ``current_balance`` records the difference
+    Renaming and recolouring are ordinary. Setting ``current_balance`` records the difference
     against the wallet's computed balance as a System transaction, so the
     ledger keeps summing to what the user says they have.
     """
@@ -176,6 +177,8 @@ class UpdateWallet:
             wallet.name = _validate_name(
                 self.wallets, data.name, current=wallet, user=self.user
             )
+        if data.color is not None:
+            wallet.color = data.color
         saved = _save(self.wallets, wallet)
 
         if data.current_balance is not None:

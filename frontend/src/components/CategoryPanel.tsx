@@ -1,7 +1,15 @@
 import { useEffect, useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
-import { Button, ErrorAlert, TextInput } from "@/design-system";
+import {
+  Button,
+  DeleteButton,
+  EditButton,
+  ErrorAlert,
+  ListRow,
+  ListRowTitle,
+  TextInput,
+} from "@/design-system";
 import { DeleteCategoryModal } from "@/components/DeleteCategoryModal";
 import { ShowModal } from "@/stores/modal";
 import { useCategoriesStore, type CategoryInput } from "@/stores/categories";
@@ -134,13 +142,11 @@ export function CategoryPanel() {
       ) : (
         <ul className="m-0 list-none p-0" aria-label="Lista kategorii">
           {visibleCategories.map((category) => (
-            <li
-              className="grid min-h-[62px] items-center gap-[13px] border-b border-[#dce5e1] px-3 py-[10px] grid-cols-[24px_minmax(0,1fr)_auto]"
-              key={category.id}
-            >
+            <ListRow key={category.id}>
               {editingId === category.id ? (
                 <form
-                  className="contents"
+                  id={`rename-category-${category.id}`}
+                  className="min-w-0 flex-1"
                   onSubmit={(event) => void handleRename(category, event)}
                 >
                   <TextInput
@@ -153,52 +159,38 @@ export function CategoryPanel() {
                       if (event.key === "Escape") cancelEditing();
                     }}
                   />
-                  <div className="flex items-center gap-[13px]">
-                    <Button
-                      variant="primary"
-                      type="submit"
-                    >
-                      Zapisz
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={cancelEditing}
-                    >
-                      Anuluj
-                    </Button>
-                  </div>
+                  {renameError && <ErrorAlert>{renameError}</ErrorAlert>}
                 </form>
               ) : (
+                <ListRowTitle>{category.name}</ListRowTitle>
+              )}
+              {editingId === category.id ? (
+                <div className="flex items-center gap-[13px]">
+                  <Button
+                    variant="primary"
+                    type="submit"
+                    form={`rename-category-${category.id}`}
+                  >
+                    Zapisz
+                  </Button>
+                  <Button variant="secondary" onClick={cancelEditing}>
+                    Anuluj
+                  </Button>
+                </div>
+              ) : (
                 <>
-                  <div className="min-w-0">
-                    <p className="m-0 overflow-wrap-anywhere text-[13px] leading-[1.45] text-ink-soft">
-                      {category.name}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-[13px]">
-                    <button
-                      className="cursor-pointer bg-transparent p-0 text-[11px] text-[#567277] underline decoration-[#b5c4bf] underline-offset-[3px] hover:text-signal"
-                      type="button"
-                      aria-label={`Zmień nazwę kategorii: ${category.name}`}
-                      onClick={() => startEditing(category)}
-                    >
-                      Zmień
-                    </button>
-                    <button
-                      className="cursor-pointer bg-transparent p-0 text-[11px] text-[#8a5648] underline decoration-[#d3b8b0] underline-offset-[3px] hover:text-danger"
-                      type="button"
-                      aria-label={`Usuń kategorię: ${category.name}`}
-                      onClick={() => openDeleteDialog(category)}
-                    >
-                      Usuń
-                    </button>
-                  </div>
+                  <EditButton
+                    aria-label={`Zmień nazwę kategorii: ${category.name}`}
+                    title="Zmień nazwę"
+                    onClick={() => startEditing(category)}
+                  />
+                  <DeleteButton
+                    aria-label={`Usuń kategorię: ${category.name}`}
+                    onClick={() => openDeleteDialog(category)}
+                  />
                 </>
               )}
-              {renameError && editingId === category.id && (
-                <ErrorAlert>{renameError}</ErrorAlert>
-              )}
-            </li>
+            </ListRow>
           ))}
         </ul>
       )}

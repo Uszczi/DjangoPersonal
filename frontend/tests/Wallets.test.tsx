@@ -12,6 +12,7 @@ const inbox = { id: 1, name: 'Inbox', description: '', is_inbox: true }
 const personalWalletApi = {
   id: 1,
   name: 'Personal',
+  color: '#477c7c',
   transaction_count: 0,
   balance: '0.00',
 }
@@ -19,6 +20,7 @@ const personalWalletApi = {
 const businessWalletApi = {
   id: 2,
   name: 'Business',
+  color: '#d45b3e',
   transaction_count: 3,
   balance: '120.00',
 }
@@ -66,7 +68,7 @@ describe('Wallets', () => {
       .mockResolvedValueOnce(jsonResponse([inbox]))  // projects (root layout)
       .mockResolvedValueOnce(jsonResponse([]))       // categories (CategoryPanel)
       .mockResolvedValueOnce(
-        jsonResponse({ id: 1, name: 'Personal', transaction_count: 0, balance: '0.00' }, 201),
+        jsonResponse({ id: 1, name: 'Personal', color: '#477c7c', transaction_count: 0, balance: '0.00' }, 201),
       )
     const user = userEvent.setup()
 
@@ -84,7 +86,7 @@ describe('Wallets', () => {
       '/api/v1/wallets/',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ name: 'Personal' }),
+        body: JSON.stringify({ name: 'Personal', color: '#477c7c' }),
       }),
     )
   })
@@ -96,7 +98,7 @@ describe('Wallets', () => {
       .mockResolvedValueOnce(jsonResponse([]))       // categories (CategoryPanel)
       .mockResolvedValueOnce(
         jsonResponse(
-          { id: 1, name: 'Personal', transaction_count: 1, balance: '250.00' },
+          { id: 1, name: 'Personal', color: '#477c7c', transaction_count: 1, balance: '250.00' },
           201,
         ),
       )
@@ -116,7 +118,7 @@ describe('Wallets', () => {
       '/api/v1/wallets/',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ name: 'Personal', initial_balance: '250' }),
+        body: JSON.stringify({ name: 'Personal', color: '#477c7c', initial_balance: '250' }),
       }),
     )
   })
@@ -127,7 +129,7 @@ describe('Wallets', () => {
       .mockResolvedValueOnce(jsonResponse([inbox]))
       .mockResolvedValueOnce(jsonResponse([])) // categories (CategoryPanel)
       .mockResolvedValueOnce(
-        jsonResponse({ id: 1, name: 'Personal', transaction_count: 1, balance: '75.00' }),
+        jsonResponse({ id: 1, name: 'Personal', color: '#477c7c', transaction_count: 1, balance: '75.00' }),
       )
     const user = userEvent.setup()
 
@@ -160,7 +162,7 @@ describe('Wallets', () => {
       .mockResolvedValueOnce(jsonResponse([inbox]))
       .mockResolvedValueOnce(jsonResponse([])) // categories (CategoryPanel)
       .mockResolvedValueOnce(
-        jsonResponse({ id: 1, name: 'Personal renamed', transaction_count: 0, balance: '0.00' }),
+        jsonResponse({ id: 1, name: 'Personal renamed', color: '#477c7c', transaction_count: 0, balance: '0.00' }),
       )
     const user = userEvent.setup()
 
@@ -185,6 +187,67 @@ describe('Wallets', () => {
     )
   })
 
+  test('user can pick a colour for a new wallet', async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse([]))       // wallets list
+      .mockResolvedValueOnce(jsonResponse([inbox]))  // projects (root layout)
+      .mockResolvedValueOnce(jsonResponse([]))       // categories (CategoryPanel)
+      .mockResolvedValueOnce(
+        jsonResponse(
+          { id: 1, name: 'Personal', color: '#3d6fb6', transaction_count: 0, balance: '0.00' },
+          201,
+        ),
+      )
+    const user = userEvent.setup()
+
+    renderApp('/expenses')
+    await screen.findByText('Brak portfeli. Utwórz pierwszy portfel.')
+
+    await user.click(screen.getAllByRole('button', { name: 'Nowy portfel' })[0])
+    await user.type(await screen.findByLabelText('Nazwa portfela'), 'Personal')
+    expect(screen.getByRole('radio', { name: 'Morski' })).toBeChecked()
+    await user.click(screen.getByRole('radio', { name: 'Niebieski' }))
+    await user.click(screen.getByRole('button', { name: 'Utwórz portfel' }))
+
+    await screen.findByRole('list', { name: 'Portfele' })
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
+      '/api/v1/wallets/',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ name: 'Personal', color: '#3d6fb6' }),
+      }),
+    )
+  })
+
+  test('user can change a wallet colour', async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse([personalWalletApi]))
+      .mockResolvedValueOnce(jsonResponse([inbox]))
+      .mockResolvedValueOnce(jsonResponse([])) // categories (CategoryPanel)
+      .mockResolvedValueOnce(jsonResponse({ ...personalWalletApi, color: '#4f8a3c' }))
+    const user = userEvent.setup()
+
+    renderApp('/expenses')
+    await screen.findByRole('list', { name: 'Portfele' })
+
+    await user.click(screen.getByRole('button', { name: 'Edytuj portfel: Personal' }))
+    expect(await screen.findByRole('radio', { name: 'Morski' })).toBeChecked()
+    await user.click(screen.getByRole('radio', { name: 'Zielony' }))
+    await user.click(screen.getByRole('button', { name: 'Zapisz zmiany' }))
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        4,
+        '/api/v1/wallets/1/',
+        expect.objectContaining({
+          method: 'PATCH',
+          body: JSON.stringify({ name: 'Personal', color: '#4f8a3c' }),
+        }),
+      ),
+    )
+  })
+
   test('user can delete a wallet with confirmation', async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([personalWalletApi]))
@@ -206,7 +269,7 @@ describe('Wallets', () => {
     expect(await screen.findByText('Brak portfeli. Utwórz pierwszy portfel.')).toBeInTheDocument()
   })
 
-  test('header select switches the active wallet', async () => {
+  test('the wallet switcher lists every wallet and opens the chosen one', async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([personalWalletApi, businessWalletApi]))
       .mockResolvedValueOnce(jsonResponse([inbox]))
@@ -216,7 +279,10 @@ describe('Wallets', () => {
     const { router } = renderApp('/expenses')
     await screen.findByRole('list', { name: 'Portfele' })
 
-    await user.selectOptions(screen.getByLabelText('Wybierz portfel'), '2')
+    const switcher = screen.getByRole('navigation', { name: 'Wybierz portfel' })
+    const links = within(switcher).getAllByRole('link')
+    expect(links.map((link) => link.textContent)).toEqual(['Personal', 'Business'])
+    await user.click(within(switcher).getByRole('link', { name: 'Business' }))
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/expenses/2'))
   })

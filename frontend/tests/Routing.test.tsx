@@ -1,6 +1,6 @@
 /** User-visible routing tests: the URL drives the view and the selected ProjectResponse. */
 
-import { act, cleanup, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
@@ -64,7 +64,7 @@ describe('Routing', () => {
   test('the app opens on the main page', async () => {
     renderApp('/')
 
-    expect(await screen.findByRole('heading', { name: 'Start' })).toBeInTheDocument()
+    expect(await within(await screen.findByRole('main')).findByRole('link', { name: /Wydatki/ })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Zadania' })).not.toBeInTheDocument()
   })
 
@@ -74,10 +74,12 @@ describe('Routing', () => {
     expect(await screen.findByRole('heading', { name: 'Tej strony nie ma' })).toBeInTheDocument()
   })
 
-  test('a URL naming a ProjectResponse that does not exist shows a not-found page', async () => {
-    renderApp('/tasks?project=999')
+  test('a URL naming a ProjectResponse that does not exist drops it from the URL', async () => {
+    const { router } = renderApp('/tasks?project=999')
 
-    expect(await screen.findByRole('heading', { name: 'Tej strony nie ma' })).toBeInTheDocument()
+    await waitFor(() => expect(router.state.location.search).toEqual({}))
+    expect(router.state.location.pathname).toBe('/tasks')
+    expect(screen.queryByRole('heading', { name: 'Tej strony nie ma' })).not.toBeInTheDocument()
   })
 
   test('a failed projects load does not masquerade as a missing ProjectResponse', async () => {
@@ -116,23 +118,6 @@ describe('Routing', () => {
       'aria-current',
       'page',
     )
-  })
-
-  test('the selected ProjectResponse survives switching to the timer page and back', async () => {
-    const user = userEvent.setup()
-    const { router } = renderApp('/tasks?project=2')
-    await screen.findByRole('link', { name: 'Planning' })
-
-    await user.click(screen.getByRole('link', { name: 'Czas' }))
-    expect(await screen.findByRole('heading', { name: 'Timer' })).toBeInTheDocument()
-    expect(router.state.location.search).toMatchObject({ project: 2 })
-
-    await user.click(screen.getByRole('link', { name: 'Zadania' }))
-    expect(await screen.findByRole('link', { name: 'Planning' })).toHaveAttribute(
-      'aria-current',
-      'page',
-    )
-    expect(router.state.location.search).toMatchObject({ project: 2 })
   })
 
   test('the selected ProjectResponse is remembered between sessions', async () => {
@@ -195,7 +180,7 @@ describe('Routing', () => {
 
     await user.click(screen.getByRole('link', { name: 'DjangoPersonal — strona główna' }))
 
-    expect(await screen.findByRole('heading', { name: 'Start' })).toBeInTheDocument()
+    expect(await within(await screen.findByRole('main')).findByRole('link', { name: /Wydatki/ })).toBeInTheDocument()
     expect(router.state.location.pathname).toBe('/')
   })
 

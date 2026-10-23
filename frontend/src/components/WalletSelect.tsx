@@ -1,44 +1,37 @@
-import { useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 
+import { WalletColorDot } from "@/components/WalletColorDot";
 import { useWalletsStore } from "@/stores/wallets";
-import { Field, Select } from "@/design-system";
 
 type WalletSelectProps = {
-  /** The wallet highlighted in the select, if one is active. */
+  /** The wallet highlighted in the list, if one is active. */
   activeWalletId?: number;
 };
 
 /**
- * Header select that switches the active wallet by navigating to its
- * `/expenses/$walletId` route. Hidden while there are no wallets to pick.
+ * Switches the active wallet: the wallets side by side in one row (scrolling
+ * sideways when they do not fit), each its colour and name linking to its
+ * `/expenses/$walletId` route. Hidden while there are no wallets.
  */
 export function WalletSelect({ activeWalletId }: WalletSelectProps) {
-  const navigate = useNavigate();
   const wallets = useWalletsStore((state) => state.wallets);
 
   if (wallets.length === 0) return null;
 
   return (
-    <Field label="Portfel">
-      <Select
-        aria-label="Wybierz portfel"
-        value={activeWalletId != null ? String(activeWalletId) : ""}
-        onChange={(event) => {
-          const walletId = event.target.value;
-          if (walletId) {
-            navigate({ to: "/expenses/$walletId", params: { walletId } });
-          }
-        }}
-      >
-        <option value="" disabled>
-          Wybierz portfel
-        </option>
-        {wallets.map((wallet) => (
-          <option key={wallet.id} value={String(wallet.id)}>
-            {wallet.name}
-          </option>
-        ))}
-      </Select>
-    </Field>
+    <nav className="flex min-w-0 items-center gap-1 overflow-x-auto" aria-label="Wybierz portfel">
+      {wallets.map((wallet) => (
+        <Link
+          key={wallet.id}
+          to="/expenses/$walletId"
+          params={{ walletId: String(wallet.id) }}
+          aria-current={wallet.id === activeWalletId ? "page" : undefined}
+          className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded px-[11px] py-[6px] text-sm text-ink-soft no-underline transition-colors hover:bg-wash hover:text-ink aria-[current]:bg-wash aria-[current]:font-semibold aria-[current]:text-ink"
+        >
+          <WalletColorDot color={wallet.color} />
+          <span>{wallet.name}</span>
+        </Link>
+      ))}
+    </nav>
   );
 }

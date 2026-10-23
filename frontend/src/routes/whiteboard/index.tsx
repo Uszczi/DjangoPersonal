@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { api } from "@/api";
-import { Button, TextInput } from "@/design-system";
+import { Button, DeleteButton, EditButton, ListRow, TextInput } from "@/design-system";
 import { useWhiteboardsStore } from "@/stores/whiteboards";
 
 export const Route = createFileRoute("/whiteboard/")({
@@ -100,9 +100,10 @@ function WhiteboardsPage() {
         <>
           <ul className="flex flex-col" aria-label="Tablice">
             {whiteboards.map((wb) => (
-              <li className="flex min-h-[62px] items-center gap-[13px] border-b border-[#dce5e1] px-[3px] py-[10px]" key={wb.id}>
+              <ListRow key={wb.id}>
                 {editingId === wb.id ? (
                   <TextInput
+                    aria-label="Nazwa tablicy"
                     value={editingName}
                     autoFocus
                     onChange={(e) => setEditingName(e.target.value)}
@@ -125,27 +126,24 @@ function WhiteboardsPage() {
                     <span className="truncate text-[14px] font-medium text-ink">{wb.name}</span>
                   </button>
                 )}
-                <span className="shrink-0 text-[12px] text-muted">
-                  {new Date(wb.updatedAt).toLocaleDateString("pl-PL")}
-                </span>
-                <div className="flex shrink-0 items-center gap-2">
-                  <Button
-                    variant="ghost"
+                <>
+                  <span className="mr-2 text-[12px] text-muted">
+                    {new Date(wb.updatedAt).toLocaleDateString("pl-PL")}
+                  </span>
+                  <EditButton
+                    aria-label={`Zmień nazwę tablicy: ${wb.name}`}
+                    title="Zmień nazwę"
                     onClick={() => {
                       setEditingId(wb.id);
                       setEditingName(wb.name);
                     }}
-                  >
-                    Zmień nazwę
-                  </Button>
-                  <Button
-                    variant="ghostDanger"
+                  />
+                  <DeleteButton
+                    aria-label={`Usuń tablicę: ${wb.name}`}
                     onClick={() => void handleDelete(wb.id)}
-                  >
-                    Usuń
-                  </Button>
-                </div>
-              </li>
+                  />
+                </>
+              </ListRow>
             ))}
           </ul>
           <div className="mt-4">

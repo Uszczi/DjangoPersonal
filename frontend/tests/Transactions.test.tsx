@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { renderApp } from './renderApp'
 
 // API returns snake_case; the generated client maps it to camelCase.
-const personalWalletApi = { id: 1, name: 'Personal', transaction_count: 2 }
+const personalWalletApi = { id: 1, name: 'Personal', color: '#477c7c', transaction_count: 2 }
 
 const categoriesApi = [{ id: 5, name: 'Jedzenie' }]
 

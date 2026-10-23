@@ -4,7 +4,12 @@ from typing import Any
 from sqlalchemy import ForeignKey, String, UniqueConstraint, event
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from apps.infra.rules import normalize_wallet_name, wallet_name_key
+from apps.infra.rules import (
+    DEFAULT_WALLET_COLOR,
+    normalize_wallet_color,
+    normalize_wallet_name,
+    wallet_name_key,
+)
 
 from .base import Base
 from .user import User
@@ -22,6 +27,10 @@ class Wallet(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
     name: Mapped[str] = mapped_column(String(100))
     normalized_name: Mapped[str] = mapped_column(String(100))
+    #: ``#RRGGBB``, shown next to the wallet's name.
+    color: Mapped[str] = mapped_column(
+        String(7), default=DEFAULT_WALLET_COLOR, server_default=DEFAULT_WALLET_COLOR
+    )
 
     user: Mapped[User] = relationship()
 
@@ -39,3 +48,5 @@ class Wallet(Base):
 def _normalize_wallet(mapper: Any, connection: Any, wallet: Wallet) -> None:
     wallet.name = normalize_wallet_name(wallet.name)
     wallet.normalized_name = wallet_name_key(wallet.name)
+    if wallet.color is not None:
+        wallet.color = normalize_wallet_color(wallet.color)

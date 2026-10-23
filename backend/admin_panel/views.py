@@ -105,7 +105,7 @@ class WhiteboardView(_AppView, model=Whiteboard):
 
 class WalletView(_AppView, model=Wallet):
     icon = 'fa-solid fa-wallet'
-    column_list = [Wallet.id, Wallet.user, Wallet.name]
+    column_list = [Wallet.id, Wallet.user, Wallet.name, Wallet.color]
     column_searchable_list = [Wallet.name]
     column_sortable_list = [Wallet.id, Wallet.name]
     form_columns = [Wallet.name]

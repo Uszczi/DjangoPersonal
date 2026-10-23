@@ -28,10 +28,22 @@ import { CSS } from "@dnd-kit/utilities";
 import { useDroppable } from "@dnd-kit/core";
 
 import { DeleteTaskModal } from "@/components/DeleteTaskModal";
-import { Button } from "@/design-system";
+import {
+  Button,
+  DeleteButton,
+  Drawer,
+  EditButton,
+  IconButton,
+  ListRow,
+  ListRowSubtitle,
+  ListRowTitle,
+} from "@/design-system";
 import { ProjectEditorModal } from "@/components/ProjectEditorModal";
-import { ProjectsSidebar } from "@/components/ProjectsSidebar";
+import { ProjectNavList, ProjectsSidebar } from "@/components/ProjectsSidebar";
 import { TaskEditorModal } from "@/components/TaskEditorModal";
+import { rememberedProjectId, rememberProject } from "@/lastProject";
+import { validateProjectSearch } from "@/projectSearch";
+import { useAuthStore } from "@/stores/auth";
 import { useLayoutStore } from "@/stores/layout";
 import { ShowModal } from "@/stores/modal";
 import { defaultProject, useProjectsStore } from "@/stores/projects";
@@ -40,8 +52,60 @@ import { api } from "@/api";
 import type { TaskResponse } from "@/generated/api";
 
 export const Route = createFileRoute("/tasks")({
+  validateSearch: validateProjectSearch,
   component: TasksPage,
 });
+
+/** Keeps the `?project=` search param in step with the user's Projects.
+
+The first bare visit in a session restores the remembered Project, a Project that exists is
+remembered for later sessions, and one the user does not have (deleted,
+someone else's, a typo) is dropped from the URL.
+ */
+function useProjectSearchParam(project: number | undefined) {
+  const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+  const projects = useProjectsStore((state) => state.projects);
+  const isLoading = useProjectsStore((state) => state.isLoading);
+  const pageError = useProjectsStore((state) => state.pageError);
+
+  const known = projects.some((item) => item.id === project);
+  const projectNotFound =
+    !isLoading && !pageError && project !== undefined && !known;
+
+  const isRestored = useProjectsStore(
+    (state) => state.isRememberedProjectRestored,
+  );
+  const markRestored = useProjectsStore(
+    (state) => state.markRememberedProjectRestored,
+  );
+  useEffect(() => {
+    if (isRestored || !user || project !== undefined || isLoading) return;
+    markRestored();
+    const remembered = rememberedProjectId(user.id);
+    if (
+      remembered !== null &&
+      projects.some((item) => item.id === remembered)
+    ) {
+      void navigate({
+        to: "/tasks",
+        search: { project: remembered },
+        replace: true,
+      });
+    }
+  }, [isRestored, markRestored, user, project, isLoading, projects, navigate]);
+
+  useEffect(() => {
+    if (user && project !== undefined && !isLoading && known) {
+      rememberProject(user.id, project);
+    }
+  }, [user, project, isLoading, known]);
+
+  useEffect(() => {
+    if (!projectNotFound) return;
+    void navigate({ to: "/tasks", search: {}, replace: true });
+  }, [projectNotFound, navigate]);
+}
 
 function SortableTaskRow({
   task,
@@ -70,74 +134,53 @@ function SortableTaskRow({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.5 : undefined,
   };
 
   return (
-    <li
+    <ListRow
       ref={setNodeRef}
       style={style}
-      className={`grid min-h-[62px] grid-cols-[24px_18px_minmax(0,1fr)_auto] items-center gap-[13px] border-b border-[#dce5e1] px-[3px] py-[10px]${isCompleted ? " opacity-60" : ""}${isDragging ? " opacity-50" : ""}`}
+      className={isCompleted ? "opacity-60" : ""}
       data-task-id={task.id}
     >
-      <span
-        className="inline-flex cursor-grab items-center justify-center text-[14px] text-[#9aafaa] transition-colors hover:text-muted"
-        aria-label={`Przeciągnij zadanie: ${task.title}`}
-        title="Przeciągnij"
-        {...attributes}
-        {...listeners}
-      >
-        <span aria-hidden="true">⠿</span>
-      </span>
-      <button
-        className={`inline-flex h-4 w-4 cursor-pointer items-center justify-center rounded border p-0 text-[11px] text-white${isCompleted ? " border-[#668b79] bg-[#668b79]" : " border-[#9aafaa] bg-transparent"}`}
-        type="button"
-        data-completed={isCompleted ? true : undefined}
-        aria-label={`${isCompleted ? "Otwórz zadanie" : "Oznacz jako ukończone"}: ${task.title}`}
-        onClick={onToggleStatus}
-      >
-        {isCompleted ? "✓" : ""}
-      </button>
-      <div className="min-w-0">
-        <p className={`truncate text-[14px] font-medium leading-snug text-ink ${isCompleted ? "line-through" : ""}`}>
-          {task.title}
-        </p>
-        {task.description && (
-          <small className="mt-0.5 block truncate text-[12px] leading-relaxed text-muted">
-            {task.description}
-          </small>
-        )}
-      </div>
-      <div className="flex items-center gap-1">
+      <>
+        <span
+          className="inline-flex cursor-grab items-center justify-center text-[14px] text-[#9aafaa] transition-colors hover:text-muted"
+          aria-label={`Przeciągnij zadanie: ${task.title}`}
+          title="Przeciągnij"
+          {...attributes}
+          {...listeners}
+        >
+          <span aria-hidden="true">⠿</span>
+        </span>
         <button
-          className="inline-flex h-[28px] items-center justify-center rounded border border-transparent bg-transparent px-2 text-[16px] text-muted transition-colors hover:bg-wash hover:text-ink cursor-pointer"
+          className={`inline-flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded border p-0 text-[11px] text-white${isCompleted ? " border-[#668b79] bg-[#668b79]" : " border-[#9aafaa] bg-transparent"}`}
           type="button"
+          data-completed={isCompleted ? true : undefined}
+          aria-label={`${isCompleted ? "Otwórz zadanie" : "Oznacz jako ukończone"}: ${task.title}`}
+          onClick={onToggleStatus}
+        >
+          {isCompleted ? "✓" : ""}
+        </button>
+        <div className="min-w-0">
+          <ListRowTitle className={isCompleted ? "line-through" : ""}>{task.title}</ListRowTitle>
+          {task.description && <ListRowSubtitle>{task.description}</ListRowSubtitle>}
+        </div>
+      </>
+      <>
+        <IconButton
+          className="text-[14px] hover:text-ink"
           aria-label={`Uruchom timer: ${task.title}`}
           title="Uruchom timer"
           onClick={onStartTimer}
         >
           <span aria-hidden="true">▶</span>
-        </button>
-        <button
-          className="inline-flex h-[28px] w-[28px] cursor-pointer items-center justify-center rounded-[5px] border border-transparent bg-transparent text-[16px] text-muted transition-all hover:bg-wash hover:text-ink"
-          type="button"
-          aria-label={`Edytuj zadanie: ${task.title}`}
-          title="Edytuj"
-          onClick={onEdit}
-        >
-          <span aria-hidden="true">✎</span>
-        </button>
-        <button
-          className="inline-flex h-[28px] w-[28px] cursor-pointer items-center justify-center rounded-[5px] border border-transparent bg-transparent text-[16px] text-danger transition-all hover:bg-signal-pale hover:text-danger-strong"
-          type="button"
-          aria-label={`Usuń zadanie: ${task.title}`}
-          title="Usuń"
-          onClick={onDelete}
-        >
-          <span aria-hidden="true">🗑</span>
-        </button>
-      </div>
-    </li>
+        </IconButton>
+        <EditButton aria-label={`Edytuj zadanie: ${task.title}`} onClick={onEdit} />
+        <DeleteButton aria-label={`Usuń zadanie: ${task.title}`} onClick={onDelete} />
+      </>
+    </ListRow>
   );
 }
 
@@ -167,8 +210,9 @@ function DroppableContainer({
 }
 
 export function TasksPage() {
-  const { project } = useSearch({ from: "__root__" });
+  const { project } = useSearch({ from: "/tasks" });
   const navigate = useNavigate();
+  useProjectSearchParam(project);
 
   const projects = useProjectsStore((state) => state.projects);
   const isProjectsLoading = useProjectsStore((state) => state.isLoading);
@@ -196,6 +240,7 @@ export function TasksPage() {
   }, [loadTasks, selectedProjectId]);
 
   const tasks = taskList?.projectId === selectedProjectId ? taskList.tasks : [];
+  const [isProjectsDrawerOpen, setProjectsDrawerOpen] = useState(false);
   const [collapsedStatuses, setCollapsedStatuses] = useState<
     ReadonlySet<string>
   >(new Set());
@@ -333,7 +378,7 @@ export function TasksPage() {
 
   async function startTimer(task: TaskResponse) {
     if (await startTaskTimer(task)) {
-      navigate({ to: "/timer" });
+      navigate({ to: "/timer", search: { project: selectedProjectId ?? undefined } });
     }
   }
 
@@ -442,20 +487,54 @@ export function TasksPage() {
 
   return (
     <>
-      <div className={`flex flex-1 ${isSidebarCollapsed ? "" : ""}`}>
+      {isProjectsDrawerOpen && (
+        <Drawer
+          id="projects-drawer"
+          label="Projekty"
+          title={
+            <h2 className="font-display text-[18px] font-bold tracking-[-0.02em] text-ink">
+              Projekty
+            </h2>
+          }
+          onClose={() => setProjectsDrawerOpen(false)}
+        >
+          <ProjectNavList
+            selectedProjectId={selectedProjectId}
+            tone="light"
+            onNavigate={() => setProjectsDrawerOpen(false)}
+          />
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setProjectsDrawerOpen(false);
+              ShowModal(ProjectEditorModal);
+            }}
+          >
+            <span aria-hidden="true">+</span>
+            Nowy projekt
+          </Button>
+        </Drawer>
+      )}
+      <div className="flex flex-1 gap-8">
         <ProjectsSidebar
           selectedProjectId={selectedProjectId}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={toggleSidebar}
         />
-        <section className="flex flex-1 flex-col p-8" aria-labelledby="tasks-heading">
+        <section className="flex min-w-0 flex-1 flex-col" aria-labelledby="tasks-heading">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
+              {/* Small screens have no sidebar; the Projects open in a drawer. */}
               <button
-                className="inline-flex items-center justify-center rounded-md border border-transparent bg-transparent text-[18px] text-muted transition-all hover:-translate-y-px cursor-pointer hover:text-ink"
-                onClick={toggleSidebar}
+                className="inline-flex cursor-pointer items-center justify-center rounded-md border border-transparent bg-transparent text-[18px] text-muted transition-all hover:-translate-y-px hover:text-ink md:hidden"
+                aria-label="Pokaż projekty"
+                title="Pokaż projekty"
+                aria-haspopup="dialog"
+                aria-expanded={isProjectsDrawerOpen}
+                aria-controls="projects-drawer"
+                onClick={() => setProjectsDrawerOpen(true)}
               >
-                <span aria-hidden="true">{isSidebarCollapsed ? "»" : "«"}</span>
+                <span aria-hidden="true">»</span>
               </button>
               <h2 id="tasks-heading" className="font-display text-[22px] font-bold tracking-[-0.02em] text-ink">Zadania</h2>
               <span className="text-[13px] text-muted" title="Aktualny projekt">

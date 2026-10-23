@@ -1,13 +1,18 @@
 """Wallet contracts: request payloads and the response shape."""
 
 from decimal import Decimal
+from typing import Annotated
 
 from apps.shared.base import BaseModel
 from pydantic import Field, field_validator
 
-from apps.infra.rules import normalize_wallet_name
+from apps.infra.rules import DEFAULT_WALLET_COLOR, normalize_wallet_name
 
 from .transactions import Amount
+
+
+#: A ``#RRGGBB`` hex colour.
+WalletColor = Annotated[str, Field(pattern=r'^#[0-9a-fA-F]{6}$')]
 
 
 class _WalletPayload(BaseModel):
@@ -25,7 +30,9 @@ class _WalletPayload(BaseModel):
                 raise ValueError('This field may not be blank.')
         return value
 
-    @field_validator('name', 'initial_balance', 'current_balance', check_fields=False)
+    @field_validator(
+        'name', 'color', 'initial_balance', 'current_balance', check_fields=False
+    )
     @classmethod
     def reject_null(cls, value: object) -> object:
         """An explicit ``null`` is not "leave it alone" — it is a 400."""
@@ -43,6 +50,7 @@ class _WalletPayload(BaseModel):
 
 class WalletRequest(_WalletPayload):
     name: str = Field(min_length=1, max_length=100)
+    color: WalletColor = DEFAULT_WALLET_COLOR
 
 
 class WalletCreateRequest(WalletRequest):
@@ -53,12 +61,14 @@ class WalletCreateRequest(WalletRequest):
 
 class PatchedWalletRequest(_WalletPayload):
     name: str | None = Field(default=None, min_length=1, max_length=100)
+    color: WalletColor | None = None
     current_balance: Amount | None = None
 
 
 class WalletResponse(BaseModel):
     id: int = Field(..., json_schema_extra={'readOnly': True})
     name: str
+    color: str
     transaction_count: int = Field(
         default=0, json_schema_extra={'readOnly': True}
     )

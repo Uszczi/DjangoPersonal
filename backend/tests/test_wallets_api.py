@@ -207,6 +207,52 @@ def test_patch_with_null_name_is_rejected(post_json: Any, patch_json: Any) -> No
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
+def test_new_wallet_gets_the_default_color(post_json: Any) -> None:
+    response = post_json('/api/v1/wallets/', {'name': 'Personal'})
+
+    assert response.status_code == HTTPStatus.CREATED
+    assert response.json()['color'] == '#477c7c'
+
+
+def test_create_wallet_with_color(post_json: Any) -> None:
+    response = post_json('/api/v1/wallets/', {'name': 'Personal', 'color': '#D45B3E'})
+
+    assert response.status_code == HTTPStatus.CREATED
+    assert response.json()['color'] == '#d45b3e'
+
+
+def test_wallet_color_can_be_changed(
+    post_json: Any, patch_json: Any, api_client: Any
+) -> None:
+    created = post_json('/api/v1/wallets/', {'name': 'Personal'})
+
+    response = patch_json(f"/api/v1/wallets/{created.json()['id']}/", {'color': '#3d6fb6'})
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['color'] == '#3d6fb6'
+    assert response.json()['name'] == 'Personal'
+    listing = api_client.get('/api/v1/wallets/').json()
+    assert [w['color'] for w in listing] == ['#3d6fb6']
+
+
+def test_renaming_keeps_the_color(post_json: Any, patch_json: Any) -> None:
+    created = post_json('/api/v1/wallets/', {'name': 'Old', 'color': '#3d6fb6'})
+
+    response = patch_json(f"/api/v1/wallets/{created.json()['id']}/", {'name': 'New'})
+
+    assert response.json()['color'] == '#3d6fb6'
+
+
+def test_wallet_color_must_be_a_hex_color(post_json: Any, patch_json: Any) -> None:
+    for color in ['red', '#fff', '#12345g', '477c7c']:
+        response = post_json('/api/v1/wallets/', {'name': f'Bad {color}', 'color': color})
+        assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, color
+
+    created = post_json('/api/v1/wallets/', {'name': 'Kept'})
+    response = patch_json(f"/api/v1/wallets/{created.json()['id']}/", {'color': None})
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
 def test_wallet_not_found(api_client: Any) -> None:
     response = api_client.get('/api/v1/wallets/9999/')
 

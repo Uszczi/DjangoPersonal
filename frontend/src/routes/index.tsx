@@ -7,9 +7,5 @@ export const Route = createFileRoute("/")({
 });
 
 export function MainPage() {
-  return (
-    <div className="p-8">
-      <NavTiles />
-    </div>
-  );
+  return <NavTiles />;
 }

@@ -1,4 +1,4 @@
-import { cleanup, screen, waitFor } from '@testing-library/react'
+import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
@@ -55,7 +55,7 @@ describe('Auth', () => {
       expect.objectContaining({ method: 'POST' }),
     )
 
-    expect(await screen.findByRole('heading', { name: 'Start' })).toBeInTheDocument()
+    expect(await within(await screen.findByRole('main')).findByRole('link', { name: /Wydatki/ })).toBeInTheDocument()
   })
 
   test('login with invalid credentials shows detail message', async () => {
@@ -99,7 +99,7 @@ describe('Auth', () => {
       expect.objectContaining({ method: 'POST' }),
     )
 
-    expect(await screen.findByRole('heading', { name: 'Start' })).toBeInTheDocument()
+    expect(await within(await screen.findByRole('main')).findByRole('link', { name: /Wydatki/ })).toBeInTheDocument()
   })
 
   test('logout clears store and shows login', async () => {

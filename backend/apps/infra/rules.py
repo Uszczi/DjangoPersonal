@@ -84,6 +84,16 @@ def normalize_wallet_name(name: str) -> str:
     return name.strip()
 
 
+#: The colour a wallet gets when none is chosen (and the one existing wallets
+#: were given when the column was added).
+DEFAULT_WALLET_COLOR = '#477c7c'
+
+
+def normalize_wallet_color(color: str) -> str:
+    """Store ``#RRGGBB`` in lower case, so equal colours compare equal."""
+    return color.strip().lower()
+
+
 def wallet_name_key(name: str) -> str:
     return normalize_wallet_name(name).casefold()
 

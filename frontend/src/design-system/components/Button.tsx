@@ -9,9 +9,10 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 const baseClasses =
   "inline-flex cursor-pointer items-center justify-center gap-3 rounded-[5px] border text-[12px] font-semibold transition-all";
 
-/** Full-size buttons are 40px tall; ghost buttons are compact inline actions. */
-const regularSize = "min-h-[40px] px-[15px] disabled:cursor-wait disabled:opacity-70";
-const ghostSize = "min-h-[28px] px-[10px] disabled:cursor-not-allowed disabled:opacity-50";
+const regularSize =
+  "min-h-[40px] px-[15px] disabled:cursor-wait disabled:opacity-70";
+const ghostSize =
+  "min-h-[28px] px-[10px] disabled:cursor-not-allowed disabled:opacity-50";
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary: `${regularSize} border-transparent bg-signal text-white hover:-translate-y-px hover:bg-signal-strong`,

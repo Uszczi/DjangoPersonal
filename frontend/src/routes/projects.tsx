@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, type ComponentProps, type HTMLAttributes } from "react";
 import {
   DndContext,
   closestCenter,
@@ -19,7 +19,14 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 import { DeleteProjectModal } from "@/components/DeleteProjectModal";
-import { Button } from "@/design-system";
+import {
+  Button,
+  DeleteButton,
+  EditButton,
+  ListRow,
+  ListRowSubtitle,
+  ListRowTitle,
+} from "@/design-system";
 import { ProjectEditorModal } from "@/components/ProjectEditorModal";
 import { ShowModal } from "@/stores/modal";
 import { useProjectsStore } from "@/stores/projects";
@@ -29,15 +36,59 @@ export const Route = createFileRoute("/projects")({
   component: ProjectsPage,
 });
 
-function SortableProjectRow({
-  project,
-  onEdit,
-  onDelete,
-}: {
-  project: { id: number; name: string; description?: string; isInbox: boolean };
+type ProjectRowProject = {
+  id: number;
+  name: string;
+  description?: string;
+  isInbox: boolean;
+};
+
+type ProjectRowProps = {
+  project: ProjectRowProject;
   onEdit: () => void;
-  onDelete: () => void;
-}) {
+  /** Absent for the Inbox, which cannot be deleted. */
+  onDelete?: () => void;
+  /** The drag handle's dnd-kit props; the Inbox, which never moves, has none. */
+  dragHandle?: HTMLAttributes<HTMLSpanElement>;
+} & Pick<ComponentProps<typeof ListRow>, "ref" | "style">;
+
+function ProjectRow({ project, onEdit, onDelete, dragHandle, ref, style }: ProjectRowProps) {
+  return (
+    <ListRow ref={ref} style={style}>
+      <>
+        {dragHandle ? (
+          <span
+            className="inline-flex cursor-grab items-center justify-center text-[14px] text-[#9aafaa] transition-colors hover:text-muted"
+            aria-label={`Przeciągnij projekt: ${project.name}`}
+            title="Przeciągnij"
+            {...dragHandle}
+          >
+            <span aria-hidden="true">⠿</span>
+          </span>
+        ) : (
+          <span className="inline-block w-[14px]" aria-hidden="true" />
+        )}
+        <div className="min-w-0">
+          <ListRowTitle>{project.name}</ListRowTitle>
+          {project.description && <ListRowSubtitle>{project.description}</ListRowSubtitle>}
+          {project.isInbox && (
+            <span className="mt-1 inline-block rounded-full border border-signal bg-signal-pale px-2 py-0.5 text-[10px] font-semibold tracking-wide text-signal">
+              DOMYŚLNY
+            </span>
+          )}
+        </div>
+      </>
+      <>
+        <EditButton aria-label={`Edytuj projekt: ${project.name}`} onClick={onEdit} />
+        {onDelete && (
+          <DeleteButton aria-label={`Usuń projekt: ${project.name}`} onClick={onDelete} />
+        )}
+      </>
+    </ListRow>
+  );
+}
+
+function SortableProjectRow(props: Omit<ProjectRowProps, "dragHandle" | "ref" | "style">) {
   const {
     attributes,
     listeners,
@@ -45,70 +96,19 @@ function SortableProjectRow({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: project.id, disabled: project.isInbox });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
+  } = useSortable({ id: props.project.id });
 
   return (
-    <li
+    <ProjectRow
+      {...props}
       ref={setNodeRef}
-      style={style}
-      className={`flex min-h-[62px] items-center gap-[13px] border-b border-[#dce5e1] px-[3px] py-[10px]${isDragging ? " opacity-50" : ""}`}
-    >
-      {project.isInbox ? (
-        <span
-          className="inline-flex items-center justify-center text-[14px] text-[#9aafaa]"
-          aria-hidden="true"
-        />
-      ) : (
-        <span
-          className="inline-flex cursor-grab items-center justify-center text-[14px] text-[#9aafaa] transition-colors hover:text-muted"
-          aria-label={`Przeciągnij projekt: ${project.name}`}
-          title="Przeciągnij"
-          {...attributes}
-          {...listeners}
-        >
-          <span aria-hidden="true">⠿</span>
-        </span>
-      )}
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[14px] font-medium leading-snug text-ink">
-          {project.name}
-        </p>
-        {project.description && (
-          <small className="mt-0.5 block truncate text-[12px] leading-relaxed text-muted">
-            {project.description}
-          </small>
-        )}
-        {project.isInbox && (
-          <span className="mt-1 inline-block rounded-full border border-signal bg-signal-pale px-2 py-0.5 text-[10px] font-semibold tracking-wide text-signal">
-            DOMYŚLNY
-          </span>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          aria-label={`Edytuj projekt: ${project.name}`}
-          onClick={onEdit}
-        >
-          Edytuj
-        </Button>
-        {!project.isInbox && (
-          <Button
-            variant="ghostDanger"
-            aria-label={`Usuń projekt: ${project.name}`}
-            onClick={onDelete}
-          >
-            Usuń
-          </Button>
-        )}
-      </div>
-    </li>
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+      }}
+      dragHandle={{ ...attributes, ...listeners }}
+    />
   );
 }
 
@@ -208,34 +208,10 @@ export function ProjectsPage() {
         <>
           <ul className="flex flex-col" aria-label="Projekty">
             {inboxProject && (
-              <li
-                className="flex min-h-[62px] items-center gap-[13px] border-b border-[#dce5e1] px-[3px] py-[10px]"
-                key={inboxProject.id}
-              >
-                <span
-                  className="inline-flex items-center justify-center text-[14px] text-[#9aafaa]"
-                  aria-hidden="true"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[14px] font-medium leading-snug text-ink">
-                    {inboxProject.name}
-                  </p>
-                  {inboxProject.description && (
-                    <small className="mt-0.5 block truncate text-[12px] leading-relaxed text-muted">
-                      {inboxProject.description}
-                    </small>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    aria-label={`Edytuj projekt: ${inboxProject.name}`}
-                    onClick={() => openEditForm(inboxProject)}
-                  >
-                    Edytuj
-                  </Button>
-                </div>
-              </li>
+              <ProjectRow
+                project={inboxProject}
+                onEdit={() => openEditForm(inboxProject)}
+              />
             )}
             <DndContext
               sensors={sensors}

@@ -24,6 +24,10 @@ export interface WalletRequest {
      *
      */
     name: string;
+    /**
+     *
+     */
+    color?: string;
 }
 
 /**
@@ -45,6 +49,7 @@ export function WalletRequestFromJSONTyped(json: any, ignoreDiscriminator: boole
     return {
 
         'name': json['name'],
+        'color': json['color'] == null ? undefined : json['color'],
     };
 }
 
@@ -60,6 +65,7 @@ export function WalletRequestToJSONTyped(value?: WalletRequest | null, ignoreDis
     return {
 
         'name': value['name'],
+        'color': value['color'],
     };
 }
 

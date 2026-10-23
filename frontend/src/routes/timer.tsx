@@ -3,19 +3,29 @@ import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
-import { Button, ErrorAlert, Field, Modal, ModalFooter, Select, TextInput } from "@/design-system";
+import { validateProjectSearch } from "@/projectSearch";
+import {
+  Button,
+  DeleteButton,
+  EditButton,
+  ErrorAlert,
+  Field,
+  ListRow,
+  ListRowTitle,
+  Modal,
+  ModalFooter,
+  Select,
+  TextInput,
+} from "@/design-system";
 import { defaultProject, useProjectsStore } from "@/stores/projects";
 import { useTimerStore } from "@/stores/timer";
 import type { TimeEntryResponse } from "@/generated/api";
 
 export const Route = createFileRoute("/timer")({
+  validateSearch: validateProjectSearch,
   component: TimerPage,
 });
 
-/**
- * "Zadanie" input backed by a datalist. The caret button mirrors the browser
- * dropdown: clicking it opens the suggestions (showPicker where available).
- */
 function TaskTitleInput({
   listId,
   value,
@@ -104,7 +114,7 @@ function entryMinutes(entry: TimeEntryResponse) {
 }
 
 export function TimerPage() {
-  const { project } = useSearch({ from: "__root__" });
+  const { project } = useSearch({ from: "/timer" });
   const projects = useProjectsStore((state) => state.projects);
   const isLoading = useTimerStore((state) => state.isLoading);
   const pageError = useTimerStore((state) => state.pageError);
@@ -339,40 +349,47 @@ export function TimerPage() {
     <>
       <div className="mb-6">
         <div>
-          <h1 className="font-display text-[28px] font-bold tracking-[-0.02em] text-ink">Timer</h1>
+          <h1 className="font-display text-[28px] font-bold tracking-[-0.02em] text-ink">
+            Timer
+          </h1>
         </div>
       </div>
 
-      <section className="mb-6 rounded-[7px] border border-[#dce4df] bg-paper p-[27px_32px_22px_37px] shadow-[0_14px_35px_rgb(29_55_57/5%)]" aria-label="Bieżący timer">
-        <div className="absolute bottom-0 left-0 top-0 w-[5px] bg-signal"></div>
+      <section
+        className="mb-6 rounded-[7px] border border-[#dce4df] bg-paper p-[27px_32px_22px_37px] shadow-[0_14px_35px_rgb(29_55_57/5%)]"
+        aria-label="Bieżący timer"
+      >
         {runningEntry ? (
           <>
-            <p className="font-utility text-[11px] font-semibold tracking-[0.08em] text-signal">TIMER AKTYWNY</p>
-            <p className="mt-1 font-display text-[20px] font-bold text-ink">{taskTitle(runningEntry)}</p>
+            <p className="font-utility text-[11px] font-semibold tracking-[0.08em] text-signal">
+              TIMER AKTYWNY
+            </p>
+            <p className="mt-1 font-display text-[20px] font-bold text-ink">
+              {taskTitle(runningEntry)}
+            </p>
             <p className="mt-2 font-utility text-[36px] font-bold tracking-tight text-ink">
               {formatElapsed(correctedNow - runningEntry.start.getTime())}
             </p>
             <div className="mt-4 flex items-center gap-3">
-              <Button
-                variant="primary"
-                onClick={() => void stopTimer()}
-              >
+              <Button variant="primary" onClick={() => void stopTimer()}>
                 Zatrzymaj timer
               </Button>
-              <Button
-                variant="secondary"
-                onClick={() => void discardTimer()}
-              >
+              <Button variant="secondary" onClick={() => void discardTimer()}>
                 Odrzuć timer
               </Button>
             </div>
           </>
         ) : (
           <>
-            <p className="mb-4 text-[14px] text-muted">Brak aktywnego timera. Wybierz projekt i zadanie, aby go uruchomić.</p>
+            <p className="mb-4 text-[14px] text-muted">
+              Brak aktywnego timera. Wybierz projekt i zadanie, aby go
+              uruchomić.
+            </p>
             <form className="flex flex-col gap-4" onSubmit={startTimer}>
               <label className="block">
-                <span className="mb-1 block text-[12px] font-semibold text-ink-soft">Projekt</span>
+                <span className="mb-1 block text-[12px] font-semibold text-ink-soft">
+                  Projekt
+                </span>
                 <Select
                   value={startProjectId}
                   onChange={(event) =>
@@ -394,7 +411,9 @@ export function TimerPage() {
                 </Select>
               </label>
               <label className="block">
-                <span className="mb-1 block text-[12px] font-semibold text-ink-soft">Zadanie</span>
+                <span className="mb-1 block text-[12px] font-semibold text-ink-soft">
+                  Zadanie
+                </span>
                 <TaskTitleInput
                   listId="start-task-titles"
                   value={startForm.title}
@@ -421,15 +440,25 @@ export function TimerPage() {
         )}
       </section>
 
-      <section className="mb-6 rounded-[7px] border border-[#dce4df] bg-paper p-[27px_32px_22px_37px] shadow-[0_14px_35px_rgb(29_55_57/5%)]" aria-labelledby="manual-entry-heading">
+      <section
+        className="mb-6 rounded-[7px] border border-[#dce4df] bg-paper p-[27px_32px_22px_37px] shadow-[0_14px_35px_rgb(29_55_57/5%)]"
+        aria-labelledby="manual-entry-heading"
+      >
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 id="manual-entry-heading" className="font-display text-[22px] font-bold tracking-[-0.02em] text-ink">Dodaj wpis ręcznie</h2>
+            <h2
+              id="manual-entry-heading"
+              className="font-display text-[22px] font-bold tracking-[-0.02em] text-ink"
+            >
+              Dodaj wpis ręcznie
+            </h2>
           </div>
         </div>
         <form className="flex flex-col gap-4" onSubmit={addManualEntry}>
           <label className="block">
-            <span className="mb-1 block text-[12px] font-semibold text-ink-soft">Data</span>
+            <span className="mb-1 block text-[12px] font-semibold text-ink-soft">
+              Data
+            </span>
             <TextInput
               type="date"
               value={manualForm.date}
@@ -443,7 +472,9 @@ export function TimerPage() {
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-[12px] font-semibold text-ink-soft">Projekt</span>
+            <span className="mb-1 block text-[12px] font-semibold text-ink-soft">
+              Projekt
+            </span>
             <Select
               value={manualProjectId}
               onChange={(event) =>
@@ -466,7 +497,9 @@ export function TimerPage() {
             </Select>
           </label>
           <label className="block">
-            <span className="mb-1 block text-[12px] font-semibold text-ink-soft">Zadanie</span>
+            <span className="mb-1 block text-[12px] font-semibold text-ink-soft">
+              Zadanie
+            </span>
             <TaskTitleInput
               listId="manual-task-titles"
               value={manualForm.title}
@@ -481,7 +514,9 @@ export function TimerPage() {
             </datalist>
           </label>
           <label className="block">
-            <span className="mb-1 block text-[12px] font-semibold text-ink-soft">Czas (minuty)</span>
+            <span className="mb-1 block text-[12px] font-semibold text-ink-soft">
+              Czas (minuty)
+            </span>
             <TextInput
               type="number"
               min={1}
@@ -514,7 +549,12 @@ export function TimerPage() {
       >
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 id="recent-entries-heading" className="font-display text-[22px] font-bold tracking-[-0.02em] text-ink">Ostatnie wpisy</h2>
+            <h2
+              id="recent-entries-heading"
+              className="font-display text-[22px] font-bold tracking-[-0.02em] text-ink"
+            >
+              Ostatnie wpisy
+            </h2>
           </div>
           <div className="flex items-center gap-4">
             <label className="flex items-center gap-2 text-[12px] font-semibold text-ink-soft">
@@ -587,34 +627,28 @@ export function TimerPage() {
         ) : (
           <ul className="flex flex-col" aria-label="Ostatnie wpisy">
             {recentEntries.map((entry) => (
-              <li className="grid min-h-[62px] grid-cols-[24px_18px_minmax(0,1fr)_auto] items-center gap-[13px] border-b border-[#dce5e1] px-[3px] py-[10px]" key={entry.id}>
-                <span className="font-utility text-[11px] text-muted">
-                  {formatClock(entry.start)}–
-                  {entry.end ? formatClock(entry.end) : "…"}
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate text-[14px] font-medium leading-snug text-ink">{taskTitle(entry)}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">
+              <ListRow key={entry.id}>
+                <>
+                  <span className="shrink-0 font-utility text-[11px] text-muted">
+                    {formatClock(entry.start)}–
+                    {entry.end ? formatClock(entry.end) : "…"}
+                  </span>
+                  <ListRowTitle>{taskTitle(entry)}</ListRowTitle>
+                </>
+                <>
+                  <span className="mr-2 font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">
                     {formatDuration(entryMinutes(entry)).toUpperCase()}
                   </span>
-                  <Button
-                    variant="ghost"
+                  <EditButton
                     aria-label={`Edytuj wpis: ${taskTitle(entry)}`}
                     onClick={() => openEntryEditForm(entry)}
-                  >
-                    Edytuj
-                  </Button>
-                  <Button
-                    variant="ghostDanger"
+                  />
+                  <DeleteButton
                     aria-label={`Usuń wpis: ${taskTitle(entry)}`}
                     onClick={() => void deleteEntryAction(entry)}
-                  >
-                    Usuń
-                  </Button>
-                </div>
-              </li>
+                  />
+                </>
+              </ListRow>
             ))}
           </ul>
         )}
@@ -625,39 +659,67 @@ export function TimerPage() {
         )}
       </section>
 
-      <section className="mb-6 rounded-[7px] border border-[#dce4df] bg-paper p-[27px_32px_22px_37px] shadow-[0_14px_35px_rgb(29_55_57/5%)]" aria-labelledby="summary-heading">
+      <section
+        className="mb-6 rounded-[7px] border border-[#dce4df] bg-paper p-[27px_32px_22px_37px] shadow-[0_14px_35px_rgb(29_55_57/5%)]"
+        aria-labelledby="summary-heading"
+      >
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 id="summary-heading" className="font-display text-[22px] font-bold tracking-[-0.02em] text-ink">Suma czasu</h2>
+            <h2
+              id="summary-heading"
+              className="font-display text-[22px] font-bold tracking-[-0.02em] text-ink"
+            >
+              Suma czasu
+            </h2>
           </div>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="rounded border border-[#dce4df] bg-surface p-4">
-            <h3 className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">Dziś łącznie</h3>
-            <p className="mt-2 font-display text-[24px] font-bold text-ink">{formatDuration(todaysMinutes)}</p>
+            <h3 className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">
+              Dziś łącznie
+            </h3>
+            <p className="mt-2 font-display text-[24px] font-bold text-ink">
+              {formatDuration(todaysMinutes)}
+            </p>
           </div>
           <div className="rounded border border-[#dce4df] bg-surface p-4">
-            <h3 className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">Według zadania (dziś)</h3>
+            <h3 className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">
+              Według zadania (dziś)
+            </h3>
             {perTaskMinutes.size === 0 ? (
               <p className="mt-2 text-[13px] text-muted">Brak wpisów.</p>
             ) : (
               <ul className="mt-2 flex flex-col gap-1">
                 {[...perTaskMinutes.entries()].map(([taskId, minutes]) => (
-                  <li key={taskId} className="flex items-center justify-between text-[13px]">
-                    <span className="truncate text-ink">{taskTitles.get(taskId) ?? `Zadanie #${taskId}`}</span>
-                    <span className="ml-2 font-utility text-[11px] text-muted">{formatDuration(minutes)}</span>
+                  <li
+                    key={taskId}
+                    className="flex items-center justify-between text-[13px]"
+                  >
+                    <span className="truncate text-ink">
+                      {taskTitles.get(taskId) ?? `Zadanie #${taskId}`}
+                    </span>
+                    <span className="ml-2 font-utility text-[11px] text-muted">
+                      {formatDuration(minutes)}
+                    </span>
                   </li>
                 ))}
               </ul>
             )}
           </div>
           <div className="rounded border border-[#dce4df] bg-surface p-4">
-            <h3 className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">Ostatnie 7 dni</h3>
+            <h3 className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">
+              Ostatnie 7 dni
+            </h3>
             <ul className="mt-2 flex flex-col gap-1">
               {dayKeys.map((key) => (
-                <li key={key} className="flex items-center justify-between text-[13px]">
+                <li
+                  key={key}
+                  className="flex items-center justify-between text-[13px]"
+                >
                   <span className="truncate text-ink">{key}</span>
-                  <span className="ml-2 font-utility text-[11px] text-muted">{formatDuration(minutesByDay.get(key) ?? 0)}</span>
+                  <span className="ml-2 font-utility text-[11px] text-muted">
+                    {formatDuration(minutesByDay.get(key) ?? 0)}
+                  </span>
                 </li>
               ))}
             </ul>

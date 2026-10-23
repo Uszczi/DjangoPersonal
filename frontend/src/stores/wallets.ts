@@ -4,11 +4,11 @@ import { api } from "@/api";
 import { type WalletResponse } from "@/generated/api";
 import { createLoadGuard } from "@/stores/loadGuard";
 
-/** What the create modal collects: a name and, optionally, an opening balance. */
-export type WalletCreateInput = { name: string; initialBalance: string };
+/** What the create modal collects: a name, a colour and, optionally, an opening balance. */
+export type WalletCreateInput = { name: string; color: string; initialBalance: string };
 
-/** What the edit modal collects: a name and the balance the wallet now holds. */
-export type WalletUpdateInput = { name: string; currentBalance: string };
+/** What the edit modal collects: a name, a colour and the balance the wallet now holds. */
+export type WalletUpdateInput = { name: string; color: string; currentBalance: string };
 
 type WalletsState = {
   wallets: WalletResponse[];
@@ -54,10 +54,11 @@ export const useWalletsStore = create<WalletsState>((set) => ({
     }
   },
 
-  createWallet: async ({ name, initialBalance }) => {
+  createWallet: async ({ name, color, initialBalance }) => {
     const createdWallet = await api.walletsCreate({
       walletCreateRequest: {
         name,
+        color,
         // Omitted when blank, so a wallet without an opening balance sends
         // exactly the name it always did.
         initialBalance: initialBalance.trim() || undefined,
@@ -74,11 +75,12 @@ export const useWalletsStore = create<WalletsState>((set) => ({
     return createdWallet;
   },
 
-  updateWallet: async (wallet, { name, currentBalance }) => {
+  updateWallet: async (wallet, { name, color, currentBalance }) => {
     const updatedWallet = await api.walletsPartialUpdate({
       id: wallet.id,
       patchedWalletRequest: {
         name,
+        color: color === wallet.color ? undefined : color,
         // Only send the balance when it actually changed, so a plain rename
         // never writes a System correction.
         currentBalance:

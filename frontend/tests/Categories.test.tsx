@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { renderApp } from './renderApp'
 
 const inbox = { id: 1, name: 'Inbox', description: '', is_inbox: true }
-const wallet = { id: 1, name: 'Personal', transaction_count: 0, balance: '0.00' }
+const wallet = { id: 1, name: 'Personal', color: '#477c7c', transaction_count: 0, balance: '0.00' }
 
 // API returns snake_case; the generated client maps it to camelCase.
 const catJedzenie = { id: 1, name: 'Jedzenie', is_system: false }

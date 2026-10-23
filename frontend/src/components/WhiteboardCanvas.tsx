@@ -448,7 +448,7 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
       </div>
       <div
         ref={canvasAreaRef}
-        style={{ position: "relative", height: "calc(100vh - 140px)", width: "100%" }}
+        style={{ position: "relative", height: "calc(100vh - 204px)", width: "100%" }}
       >
       <Stage
         ref={stageRef}
