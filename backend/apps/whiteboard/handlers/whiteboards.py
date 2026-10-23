@@ -1,7 +1,4 @@
 """Whiteboard use cases."""
-from typing import Any
-
-from django.db.models import QuerySet
 
 from apps.infra.models import User
 from apps.infra.models import Whiteboard as WhiteboardModel
@@ -28,7 +25,7 @@ class ListWhiteboards:
         self.whiteboards = whiteboards
         self.user = user
 
-    def execute(self) -> QuerySet[WhiteboardModel]:
+    def execute(self) -> list[WhiteboardModel]:
         return self.whiteboards.list_all(user=self.user)
 
 

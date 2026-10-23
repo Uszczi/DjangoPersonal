@@ -385,7 +385,11 @@ def register_user(username: str, password: str, password_confirm: str) -> dict[s
             username=username, password=password, password_confirm=password_confirm
         )
         result = accounts_handlers.RegisterUser(
-            accounts_deps.user_repository(), accounts_deps.category_repository()
+            accounts_deps.user_repository(),
+            accounts_deps.category_repository(),
+            accounts_deps.password_hasher(),
+            accounts_deps.password_policy(),
+            accounts_deps.token_service(),
         ).execute(payload)
         return result.model_dump(mode="json")
     except Exception as exc:  # noqa: BLE001
@@ -396,7 +400,11 @@ def login_user(username: str, password: str) -> dict[str, Any]:
     """Authenticate and return token pair."""
     try:
         payload = LoginRequest(username=username, password=password)
-        result = accounts_handlers.LoginUser(accounts_deps.user_repository()).execute(payload)
+        result = accounts_handlers.LoginUser(
+            accounts_deps.user_repository(),
+            accounts_deps.password_hasher(),
+            accounts_deps.token_service(),
+        ).execute(payload)
         return result.model_dump(mode="json")
     except Exception as exc:  # noqa: BLE001
         _raise(exc)
@@ -406,7 +414,7 @@ def refresh_access_token(refresh: str) -> dict[str, Any]:
     """Exchange a refresh token for a new access token."""
     try:
         payload = RefreshRequest(refresh=refresh)
-        result = accounts_handlers.RefreshAccessToken().execute(payload)
+        result = accounts_handlers.RefreshAccessToken(accounts_deps.token_service()).execute(payload)
         return result.model_dump(mode="json")
     except Exception as exc:  # noqa: BLE001
         _raise(exc)

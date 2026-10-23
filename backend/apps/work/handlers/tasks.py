@@ -1,9 +1,6 @@
 """Tasks use cases."""
 
 from functools import partial
-from typing import Any
-
-from django.db.models import QuerySet
 
 from apps.infra.models import Project as ProjectModel
 from apps.infra.models import Task as TaskModel
@@ -49,7 +46,7 @@ def _resolve_status(project: ProjectModel, status: str | None) -> str:
     return status
 
 
-def _order_tasks(tasks: QuerySet[TaskModel] | list[TaskModel]) -> list[TaskModel]:
+def _order_tasks(tasks: list[TaskModel]) -> list[TaskModel]:
     """Order tasks by their status order, then position, then id.
 
     Status order comes from each project's own ``project_statuses`` list, so

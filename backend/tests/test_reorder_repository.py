@@ -87,7 +87,7 @@ def test_project_reorder_leaves_the_inbox_out_of_scope(user: User) -> None:
     inbox.refresh_from_db()
     assert inbox.position == 0
     assert inbox.is_inbox is True
-    first = ProjectRepository().list_all(user=user).first()
+    first = ProjectRepository().list_all(user=user)[0]
     assert first is not None and first.is_inbox is True
 
 

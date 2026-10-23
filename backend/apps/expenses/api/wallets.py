@@ -1,4 +1,3 @@
-from django.db.models import QuerySet
 from django.http import HttpRequest
 from typing import cast
 from ninja import Router, Status
@@ -23,7 +22,7 @@ router = Router(tags=['personal'])
     auth=JWTAuth(),
     operation_id='wallets_list',
 )
-def list_wallets(request: HttpRequest) -> QuerySet[WalletModel]:
+def list_wallets(request: HttpRequest) -> list[WalletModel]:
     return handlers.ListWallets(deps.wallet_repository(), cast(User, request.user)).execute()
 
 

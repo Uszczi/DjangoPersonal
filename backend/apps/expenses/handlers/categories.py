@@ -2,20 +2,14 @@
 
 from functools import partial
 
-from django.contrib.auth.models import AbstractUser
-from django.db import transaction
-from django.db.models import QuerySet
-
 from apps.infra.models import User
 from apps.infra.models import Category as CategoryModel
 from apps.infra.models import category_name_key, normalize_category_name
-from apps.infra.repo import CategoryRepository, DuplicateCategoryName
+from apps.infra.repo import CategoryRepository, DuplicateCategoryName, unit_of_work
 from apps.shared.errors import DomainError, NotFound
 
 from ..contracts import CategoryRequest, PatchedCategoryRequest
 from ._patch import apply_provided
-
-UserType = AbstractUser
 
 #: The labels every new user starts with, created with their first wallet.
 BASE_CATEGORY_NAMES = [
@@ -43,7 +37,7 @@ def seed_base_categories(repository: CategoryRepository, user: User) -> None:
     a category before their first wallet still ends up with the full base set,
     and no seeded name can clash with one they already made.
     """
-    with transaction.atomic():
+    with unit_of_work():
         for name in BASE_CATEGORY_NAMES:
             if repository.name_taken(category_name_key(name), user=user):
                 continue
@@ -117,7 +111,7 @@ class ListCategories:
         self.categories = categories
         self.user = user
 
-    def execute(self) -> QuerySet[CategoryModel]:
+    def execute(self) -> list[CategoryModel]:
         return self.categories.list_all(user=self.user)
 
 

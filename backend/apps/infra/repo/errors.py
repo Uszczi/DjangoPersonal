@@ -26,5 +26,9 @@ class TaskHasTimeEntries(RepositoryError):
     """A task cannot be deleted while time entries still reference it."""
 
 
+class ProjectHasTimeEntries(RepositoryError):
+    """A project cannot be deleted while time entries reference its tasks."""
+
+
 class DuplicateUsername(RepositoryError):
     """A user with this username already exists."""

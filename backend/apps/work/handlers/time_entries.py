@@ -1,8 +1,6 @@
 """Time entry use cases."""
+from collections.abc import Sequence
 from datetime import date as datetime_date, timedelta
-from typing import Any
-
-from django.db.models import QuerySet
 
 from apps.infra.models import TimeEntry as TimeEntryModel
 from apps.infra.models import User
@@ -37,7 +35,7 @@ class ListTimeEntries:
 
     def execute(
         self, task_id: int | None = None, day: datetime_date | None = None
-    ) -> QuerySet[TimeEntryModel]:
+    ) -> Sequence[TimeEntryModel]:
         return self.time_entries.list(task_id=task_id, day=day, user=self.user)
 
 

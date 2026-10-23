@@ -1,4 +1,6 @@
 
+from typing import cast
+
 from django.http import HttpRequest
 from ninja import Router, Status
 from ninja_jwt.authentication import JWTAuth
@@ -13,6 +15,7 @@ from apps.accounts.contracts.auth import (
     RegisterRequest,
     UserResponse,
 )
+from apps.infra.models import User
 
 router = Router(tags=['personal'])
 
@@ -23,7 +26,13 @@ router = Router(tags=['personal'])
     operation_id='auth_register',
 )
 def register(request: HttpRequest, payload: RegisterRequest) -> Status[AuthResponse]:
-    handler = handlers.RegisterUser(deps.user_repository(), deps.category_repository())
+    handler = handlers.RegisterUser(
+        deps.user_repository(),
+        deps.category_repository(),
+        deps.password_hasher(),
+        deps.password_policy(),
+        deps.token_service(),
+    )
     return Status(201, handler.execute(payload))
 
 
@@ -33,7 +42,9 @@ def register(request: HttpRequest, payload: RegisterRequest) -> Status[AuthRespo
     operation_id='auth_login',
 )
 def login(request: HttpRequest, payload: LoginRequest) -> LoginResponse:
-    handler = handlers.LoginUser(deps.user_repository())
+    handler = handlers.LoginUser(
+        deps.user_repository(), deps.password_hasher(), deps.token_service()
+    )
     return handler.execute(payload)
 
 
@@ -43,7 +54,7 @@ def login(request: HttpRequest, payload: LoginRequest) -> LoginResponse:
     operation_id='auth_refresh',
 )
 def refresh(request: HttpRequest, payload: RefreshRequest) -> RefreshResponse:
-    handler = handlers.RefreshAccessToken()
+    handler = handlers.RefreshAccessToken(deps.token_service())
     return handler.execute(payload)
 
 
@@ -64,5 +75,5 @@ def me(request: HttpRequest) -> UserResponse:
     operation_id='auth_destroy',
 )
 def destroy(request: HttpRequest) -> Status[None]:
-    handlers.DeleteUser(deps.user_repository()).execute(request.user)
+    handlers.DeleteUser(deps.user_repository()).execute(cast(User, request.user))
     return Status(204, None)

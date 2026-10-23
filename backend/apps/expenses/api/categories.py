@@ -1,4 +1,3 @@
-from django.db.models import QuerySet
 from django.http import HttpRequest
 from typing import cast
 from ninja import Router, Status
@@ -18,7 +17,7 @@ router = Router(tags=['personal'])
     auth=JWTAuth(),
     operation_id='categories_list',
 )
-def list_categories(request: HttpRequest) -> QuerySet[CategoryModel]:
+def list_categories(request: HttpRequest) -> list[CategoryModel]:
     return handlers.ListCategories(deps.category_repository(), cast(User, request.user)).execute()
 
 

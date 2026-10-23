@@ -3,13 +3,13 @@
 from typing import Any
 
 from django.db import IntegrityError, transaction
-from django.db.models import QuerySet
+from django.db.models import ProtectedError
 
 from apps.infra.models import Project as ProjectModel
 from apps.infra.models import Task as TaskModel
 from apps.infra.models import User
 
-from .errors import DuplicateProjectName
+from .errors import DuplicateProjectName, ProjectHasTimeEntries
 
 
 class ProjectRepository:
@@ -20,10 +20,10 @@ class ProjectRepository:
     :meth:`save` may have been built or changed by the caller as a plain object.
     """
 
-    def list_all(self, *, user: User) -> QuerySet[ProjectModel]:
+    def list_all(self, *, user: User) -> list[ProjectModel]:
         """Every project for ``user``, inbox first, then alphabetically."""
         projects = ProjectModel.objects.filter(user=user)
-        return projects.order_by('-is_inbox', 'position', 'normalized_name')
+        return list(projects.order_by('-is_inbox', 'position', 'normalized_name'))
 
     def find(self, project_id: int, *, user: User) -> ProjectModel | None:
         """The project with this id for ``user``, or ``None``."""
@@ -85,7 +85,13 @@ class ProjectRepository:
         return project
 
     def delete(self, project: ProjectModel) -> None:
-        """Delete a project and all of its tasks atomically."""
-        with transaction.atomic():
-            project.tasks.all().delete()
-            project.delete()
+        """Delete a project and all of its tasks atomically.
+
+        Fails when any of those tasks still has time entries recorded.
+        """
+        try:
+            with transaction.atomic():
+                project.tasks.all().delete()
+                project.delete()
+        except ProtectedError as error:
+            raise ProjectHasTimeEntries from error

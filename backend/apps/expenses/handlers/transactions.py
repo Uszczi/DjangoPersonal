@@ -2,9 +2,6 @@
 
 from functools import partial
 
-from django.contrib.auth.models import AbstractUser
-from django.db.models import QuerySet
-
 from apps.infra.models import Category as CategoryModel
 from apps.infra.models import Transaction as TransactionModel
 from apps.infra.models import User
@@ -14,9 +11,6 @@ from apps.shared.errors import DomainError, NotFound
 
 from ..contracts import PatchedTransactionRequest, TransactionRequest
 from ._patch import apply_provided
-
-UserType = AbstractUser
-
 
 def _get_transaction(
     repository: TransactionRepository, transaction_id: int, *, user: User
@@ -63,7 +57,7 @@ class ListTransactions:
         self.wallets = wallets
         self.user = user
 
-    def execute(self, wallet_id: int) -> QuerySet[TransactionModel]:
+    def execute(self, wallet_id: int) -> list[TransactionModel]:
         if self.wallets.find(wallet_id, user=self.user) is None:
             raise NotFound('Wallet not found.')
         return self.transactions.list_for_wallet(wallet_id, user=self.user)

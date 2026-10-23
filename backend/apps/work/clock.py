@@ -1,13 +1,11 @@
-from datetime import datetime
-
-from django.utils import timezone
+from datetime import UTC, datetime
 
 
 def now() -> datetime:
-    """Current server time.
+    """Current server time, timezone-aware in UTC.
 
     The single seam tests use to control the clock; every timestamp in the
-    handler layer flows through here rather than calling ``timezone.now``
+    handler layer flows through here rather than calling ``datetime.now``
     directly.
     """
-    return timezone.now()
+    return datetime.now(UTC)

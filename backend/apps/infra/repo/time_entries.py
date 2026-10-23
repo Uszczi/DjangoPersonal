@@ -1,12 +1,10 @@
 """Persistence for time entries."""
 from datetime import date as datetime_date, datetime, time, timedelta
 from datetime import timezone as datetime_timezone
+from collections.abc import Sequence
 from typing import Any
 
 from django.db import transaction
-
-
-from django.db.models import QuerySet
 
 from apps.infra.models import Task as TaskModel
 from apps.infra.models import TimeEntry as TimeEntryModel
@@ -28,7 +26,7 @@ class TimeEntryRepository:
 
     def list(
         self, *, task_id: int | None = None, day: datetime_date | None = None, user: User
-    ) -> QuerySet[TimeEntryModel]:
+    ) -> Sequence[TimeEntryModel]:
         """Entries for a task and/or a calendar day, newest first."""
         entries = TimeEntryModel.objects.filter(user=user)
         if task_id is not None:
@@ -38,7 +36,7 @@ class TimeEntryRepository:
             entries = entries.filter(
                 start__gte=start, start__lt=start + timedelta(days=1)
             )
-        return entries
+        return list(entries)
 
     def find(self, entry_id: int, *, user: User) -> TimeEntryModel | None:
         """The entry with this id, or ``None``."""

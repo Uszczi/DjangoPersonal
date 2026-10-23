@@ -47,10 +47,10 @@ class WalletRepository:
     errors live here; the use cases own the rules about *what* to store.
     """
 
-    def list_all(self, *, user: User) -> QuerySet[WalletModel]:
+    def list_all(self, *, user: User) -> list[WalletModel]:
         """Every wallet for ``user``, alphabetically, with count and balance."""
-        return _with_details(WalletModel.objects.filter(user=user)).order_by(
-            'normalized_name'
+        return list(
+            _with_details(WalletModel.objects.filter(user=user)).order_by('normalized_name')
         )
 
     def find(self, wallet_id: int, *, user: User) -> WalletModel | None:

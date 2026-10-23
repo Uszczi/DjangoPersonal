@@ -18,6 +18,7 @@ from .errors import (
     DuplicateProjectName,
     DuplicateUsername,
     DuplicateWalletName,
+    ProjectHasTimeEntries,
     RepositoryError,
     TaskHasTimeEntries,
 )
@@ -26,6 +27,7 @@ from .projects import ProjectRepository
 from .tasks import TaskRepository
 from .time_entries import TimeEntryRepository, day_start
 from .transactions import TransactionRepository
+from .unit_of_work import unit_of_work
 from .users import UserRepository
 from .wallets import WalletRepository
 from .whiteboards import WhiteboardRepository
@@ -36,6 +38,7 @@ __all__ = [
     'DuplicateProjectName',
     'DuplicateUsername',
     'DuplicateWalletName',
+    'ProjectHasTimeEntries',
     'ProjectRepository',
     'RepositoryError',
     'TaskHasTimeEntries',
@@ -46,4 +49,5 @@ __all__ = [
     'WalletRepository',
     'WhiteboardRepository',
     'day_start',
+    'unit_of_work',
 ]

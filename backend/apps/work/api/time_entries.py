@@ -1,6 +1,6 @@
 from datetime import date as datetime_date
 
-from django.db.models import QuerySet
+from collections.abc import Sequence
 from django.http import HttpRequest
 from typing import cast
 from ninja import Router, Status
@@ -26,7 +26,7 @@ router = Router(tags=['personal'])
 )
 def list_time_entries(
     request: HttpRequest, task: int | None = None, date: datetime_date | None = None
-) -> QuerySet[TimeEntryModel]:
+) -> Sequence[TimeEntryModel]:
     handler = handlers.ListTimeEntries(deps.time_entry_repository(), cast(User, request.user))
     return handler.execute(task_id=task, day=date)
 

@@ -1,23 +1,15 @@
 """Projects use cases."""
 
 from functools import partial
-from typing import Any
-
-from django.contrib.auth.models import AbstractUser
-from django.db import IntegrityError
-from django.db.models import ProtectedError, QuerySet
 
 from apps.infra.models import Project as ProjectModel
 from apps.infra.models import User
 from apps.infra.models import normalize_project_name, project_name_key
-from apps.infra.repo import DuplicateProjectName, ProjectRepository
+from apps.infra.repo import DuplicateProjectName, ProjectHasTimeEntries, ProjectRepository
 from apps.shared.errors import DomainError, NotFound
 from apps.work.contracts import PatchedProjectRequest, ProjectRequest
 
 from ._patch import apply_provided
-
-UserType = AbstractUser
-
 
 def _get_project(
     repository: ProjectRepository, project_id: int, *, user: User
@@ -103,7 +95,7 @@ class ListProjects:
         self.projects = projects
         self.user = user
 
-    def execute(self) -> QuerySet[ProjectModel]:
+    def execute(self) -> list[ProjectModel]:
         return self.projects.list_all(user=self.user)
 
 
@@ -202,7 +194,7 @@ class DeleteProject:
 
         try:
             self.projects.delete(project)
-        except ProtectedError as error:
+        except ProjectHasTimeEntries as error:
             raise DomainError(
                 'Project cannot be deleted because some of its tasks have time entries.'
             ) from error

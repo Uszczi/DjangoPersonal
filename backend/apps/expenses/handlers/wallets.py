@@ -4,9 +4,6 @@ from datetime import date
 from decimal import Decimal
 from functools import partial
 
-from django.contrib.auth.models import AbstractUser
-from django.db.models import QuerySet
-
 from apps.infra.models import Transaction as TransactionModel
 from apps.infra.models import User
 from apps.infra.models import Wallet as WalletModel
@@ -22,8 +19,6 @@ from apps.shared.errors import DomainError, NotFound
 from ..contracts import PatchedWalletRequest, WalletCreateRequest, WalletRequest
 from ._patch import apply_provided
 from .categories import ensure_system_category
-
-UserType = AbstractUser
 
 #: The two entries the balance ledger writes itself: the opening balance the
 #: wallet is created with, and the correction when the current balance is set.
@@ -73,7 +68,7 @@ class ListWallets:
         self.wallets = wallets
         self.user = user
 
-    def execute(self) -> QuerySet[WalletModel]:
+    def execute(self) -> list[WalletModel]:
         return self.wallets.list_all(user=self.user)
 
 

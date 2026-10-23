@@ -1,4 +1,3 @@
-from django.db.models import QuerySet
 from django.http import HttpRequest
 from typing import cast
 from ninja import Router, Status
@@ -22,7 +21,7 @@ router = Router(tags=['personal'])
     auth=JWTAuth(),
     operation_id='whiteboards_list',
 )
-def list_whiteboards(request: HttpRequest) -> QuerySet[WhiteboardModel]:
+def list_whiteboards(request: HttpRequest) -> list[WhiteboardModel]:
     return handlers.ListWhiteboards(deps.whiteboard_repository(), cast(User, request.user)).execute()
 
 

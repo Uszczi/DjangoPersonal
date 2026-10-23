@@ -1,7 +1,6 @@
 """Persistence for categories."""
 
 from django.db import IntegrityError, transaction
-from django.db.models import QuerySet
 
 from apps.infra.models import Category as CategoryModel
 from apps.infra.models import User
@@ -16,9 +15,9 @@ class CategoryRepository:
     errors live here; the use cases own the rules about *what* to store.
     """
 
-    def list_all(self, *, user: User) -> QuerySet[CategoryModel]:
+    def list_all(self, *, user: User) -> list[CategoryModel]:
         """Every category for ``user``, alphabetically."""
-        return CategoryModel.objects.filter(user=user).order_by('normalized_name')
+        return list(CategoryModel.objects.filter(user=user).order_by('normalized_name'))
 
     def find(self, category_id: int, *, user: User) -> CategoryModel | None:
         """The category with this id for ``user``, or ``None``."""

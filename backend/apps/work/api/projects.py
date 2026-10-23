@@ -1,4 +1,3 @@
-from django.db.models import QuerySet
 from django.http import HttpRequest
 from typing import cast
 from ninja import Router, Status
@@ -18,7 +17,7 @@ router = Router(tags=['personal'])
     auth=JWTAuth(),
     operation_id='projects_list',
 )
-def list_projects(request: HttpRequest) -> QuerySet[ProjectModel]:
+def list_projects(request: HttpRequest) -> list[ProjectModel]:
     return handlers.ListProjects(deps.project_repository(), cast(User, request.user)).execute()
 
 
