@@ -15,7 +15,8 @@ WORKDIR /app
 
 # Install dependencies first so this layer is cached across code changes.
 COPY backend/pyproject.toml backend/uv.lock ./
-RUN uv sync --no-dev --frozen --no-install-project
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --no-dev --frozen --no-install-project
 
 # Application code (FastAPI app, MCP server, Alembic migrations).
 COPY backend/ ./

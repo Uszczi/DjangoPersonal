@@ -3,6 +3,7 @@
 .agents
 .scratch
 docs
+cpp_backend
 
 **/__pycache__
 **/*.py[cod]

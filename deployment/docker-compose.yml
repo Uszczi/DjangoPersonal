@@ -1,5 +1,9 @@
 services:
+  # Images come prebuilt from GHCR in CI deploys (IMAGE_PREFIX/IMAGE_TAG set by
+  # deploy.sh); without them, `build` produces local djangopersonal-* images.
+  # app and mcp share one backend image.
   app:
+    image: ${IMAGE_PREFIX:-djangopersonal}-backend:${IMAGE_TAG:-latest}
     build:
       context: ..
       dockerfile: ./deployment/Dockerfile
@@ -33,6 +37,7 @@ services:
       start_period: 20s
 
   mcp:
+    image: ${IMAGE_PREFIX:-djangopersonal}-backend:${IMAGE_TAG:-latest}
     build:
       context: ..
       dockerfile: ./deployment/Dockerfile
@@ -56,6 +61,7 @@ services:
   # Admin panel (sqladmin). Published on the host's loopback only: reach it
   # through an SSH tunnel (ssh -L 8002:127.0.0.1:8002 <vps>), not via nginx.
   admin:
+    image: ${IMAGE_PREFIX:-djangopersonal}-backend:${IMAGE_TAG:-latest}
     build:
       context: ..
       dockerfile: ./deployment/Dockerfile
@@ -75,6 +81,7 @@ services:
     command: ["sh", "-c", "exec uvicorn --factory admin_panel.app:create_served_app --host 0.0.0.0 --port 8002 --proxy-headers --forwarded-allow-ips '*'"]
 
   frontend:
+    image: ${IMAGE_PREFIX:-djangopersonal}-frontend:${IMAGE_TAG:-latest}
     build:
       context: ..
       dockerfile: ./deployment/frontend.Dockerfile
