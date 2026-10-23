@@ -11,7 +11,7 @@ services:
       POSTGRES_HOST: db
       POSTGRES_PORT: "5432"
       # `app` lets Prometheus scrape app:8000/metrics inside the compose network.
-      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1},app
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1},app
       UVICORN_WORKERS: ${UVICORN_WORKERS:-2}
     env_file:
       - path: .env
@@ -43,7 +43,7 @@ services:
     environment:
       POSTGRES_HOST: db
       POSTGRES_PORT: "5432"
-      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1},mcp
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1},mcp
       MCP_PORT: "8001"
     env_file:
       - path: .env
@@ -86,7 +86,7 @@ services:
     container_name: djangopersonal-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-app_db}
+      POSTGRES_DB: ${POSTGRES_DB:-djangopersonal_db}
       POSTGRES_USER: ${POSTGRES_USER:-app_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-supersecret}
       PGDATA: /var/lib/postgresql/data/pgdata

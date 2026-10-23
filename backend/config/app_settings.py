@@ -1,8 +1,6 @@
 """Settings for the FastAPI application.
 
-Every field is read from the environment (``deployment/.env`` in Docker). The
-``DJANGO_*`` names are the ones the deployed env files still use; they lose the
-prefix at the cutover (migration stage 10).
+Every field is read from the environment (``deployment/.env`` in Docker).
 """
 
 from datetime import timedelta
@@ -16,7 +14,7 @@ from sqlalchemy import URL
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Development only; production always sets ``DJANGO_SECRET_KEY``.
+# Development only; production always sets ``SECRET_KEY`` (``deploy.sh`` checks).
 INSECURE_DEV_SECRET_KEY = 'django-insecure-fx*-*3#p(4zly%b^+pep($1i%5=9(-lkuli@k9g8nfmp9#sr)p'
 
 
@@ -42,16 +40,16 @@ class Settings(BaseSettings):
     # ``populate_by_name`` lets code (and tests) pass ``debug=True`` next to the env aliases.
     model_config = SettingsConfigDict(extra='ignore', populate_by_name=True)
 
-    secret_key: str = Field(default=INSECURE_DEV_SECRET_KEY, validation_alias='DJANGO_SECRET_KEY')
-    debug: EnvBool = Field(default=False, validation_alias='DJANGO_DEBUG')
+    secret_key: str = Field(default=INSECURE_DEV_SECRET_KEY, validation_alias='SECRET_KEY')
+    debug: EnvBool = Field(default=False, validation_alias='DEBUG')
     allowed_hosts: EnvList = Field(
         default_factory=lambda: ['localhost', '127.0.0.1'],
-        validation_alias='DJANGO_ALLOWED_HOSTS',
+        validation_alias='ALLOWED_HOSTS',
     )
 
     postgres_host: str | None = Field(default=None, validation_alias='POSTGRES_HOST')
     postgres_port: int = Field(default=5432, validation_alias='POSTGRES_PORT')
-    postgres_db: str = Field(default='app_db', validation_alias='POSTGRES_DB')
+    postgres_db: str = Field(default='djangopersonal_db', validation_alias='POSTGRES_DB')
     postgres_user: str = Field(default='app_user', validation_alias='POSTGRES_USER')
     postgres_password: str = Field(default='supersecret', validation_alias='POSTGRES_PASSWORD')
     sqlite_path: Path = Field(default=BASE_DIR / 'db.sqlite3', validation_alias='SQLITE_PATH')

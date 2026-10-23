@@ -122,9 +122,9 @@ A FastMCP server that re-exposes the same handlers/deps as HTTP tools over strea
 ## Deployment
 
 - `deployment/docker-compose.yml` runs: `app` (uvicorn, :8000, `UVICORN_WORKERS` workers with Prometheus multiprocess aggregation via `PROMETHEUS_MULTIPROC_DIR`), `mcp` (:8001), `frontend` (nginx serving the Vite build, :3000), `db` (Postgres 17), plus MongoDB and Redis (present in the stack; not used by the app code), and the observability stack: Prometheus (:9090), Grafana (:3001), Loki (:3100), Tempo (:3200), Alloy (OTLP :4317/:4318), node-exporter.
-- **CI/CD**: `.github/workflows/deploy.yml` — push to `master` rsyncs the repo to the VPS (`~/pp/<repo-name>/`) over SSH and runs `./deployment/deploy.sh`, which copies `~/pp/.env.<repo-name>` into `deployment/.env`, builds images, starts the DB, applies migrations, runs `manage.py check`, refreshes the host nginx via `sudo ./deployment/update_nginx.sh` (copies `deployment/nginx/*.conf` into `/etc/nginx/sites-enabled` and reloads), and brings the stack up.
-- **Secrets** come from env files only: `deployment/.env` (gitignored; template in `deployment/.env.example`). Never commit real values. The Django `SECRET_KEY` and `DEBUG` come from env (`DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, default off).
-- The backend selects Postgres when `POSTGRES_HOST` is set, SQLite otherwise. Static files are collected at image build time and served by WhiteNoise; the app runs behind a reverse proxy that terminates TLS (`SECURE_PROXY_SSL_HEADER` set).
+- **CI/CD**: `.github/workflows/deploy.yml` — push to `master` rsyncs the repo to the VPS (`~/pp/<repo-name>/`) over SSH and runs `./deployment/deploy.sh`, which copies `~/pp/.env.<repo-name>` into `deployment/.env`, refuses to continue without `SECRET_KEY` in it, builds images, starts the DB, runs `alembic upgrade head`, refreshes the host nginx via `sudo ./deployment/update_nginx.sh` (copies `deployment/nginx/*.conf` into `/etc/nginx/sites-enabled` and reloads), brings the stack up, and checks `/health/ready`.
+- **Secrets** come from env files only: `deployment/.env` (gitignored; template in `deployment/.env.example`). Never commit real values. `SECRET_KEY`, `DEBUG` (default off) and `ALLOWED_HOSTS` come from env (`config/app_settings.py`); the production database is `djangopersonal_db`.
+- The backend selects Postgres when `POSTGRES_HOST` is set, SQLite otherwise. The image runs `uvicorn --factory config.app:create_served_app` behind a reverse proxy that terminates TLS (`--proxy-headers`).
 
 ## Security considerations
 

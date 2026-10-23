@@ -87,9 +87,9 @@ deploy-restart:
 deploy-logs service="":
     {{compose}} logs --follow {{service}}
 
-# Apply Django migrations inside the app container.
+# Apply the Alembic migrations inside the app container.
 deploy-migrate:
-    {{compose}} run --rm app python manage.py migrate
+    {{compose}} run --rm app alembic upgrade head
 
 # Run the full VPS deploy flow (build, migrate, nginx, up).
 deploy:
@@ -115,9 +115,9 @@ local-status:
 local-logs service="":
     {{compose-local}} logs --follow {{service}}
 
-# Apply Django migrations against the local stack.
+# Apply the Alembic migrations against the local stack.
 local-migrate:
-    {{compose-local}} run --rm --no-deps app python manage.py migrate
+    {{compose-local}} run --rm --no-deps app alembic upgrade head
 
 # Wipe the local stack including volumes (destroys the database).
 local-reset:

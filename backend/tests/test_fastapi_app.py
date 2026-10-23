@@ -99,9 +99,9 @@ def _note_count(app: FastAPI) -> int:
 
 
 def test_settings_read_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv('DJANGO_SECRET_KEY', 'from-env')
-    monkeypatch.setenv('DJANGO_DEBUG', 'yes')
-    monkeypatch.setenv('DJANGO_ALLOWED_HOSTS', 'example.com, .example.org,,app')
+    monkeypatch.setenv('SECRET_KEY', 'from-env')
+    monkeypatch.setenv('DEBUG', 'yes')
+    monkeypatch.setenv('ALLOWED_HOSTS', 'example.com, .example.org,,app')
     monkeypatch.setenv('POSTGRES_HOST', 'db')
     monkeypatch.setenv('POSTGRES_PORT', '6543')
     monkeypatch.setenv('POSTGRES_DB', 'prod')
@@ -120,7 +120,7 @@ def test_settings_read_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
-    for name in ('DJANGO_SECRET_KEY', 'DJANGO_DEBUG', 'DJANGO_ALLOWED_HOSTS', 'POSTGRES_HOST', 'SQLITE_PATH'):
+    for name in ('SECRET_KEY', 'DEBUG', 'ALLOWED_HOSTS', 'POSTGRES_HOST', 'SQLITE_PATH'):
         monkeypatch.delenv(name, raising=False)
 
     settings = Settings()
@@ -136,7 +136,7 @@ def test_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_debug_accepts_the_usual_truthy_words(
     monkeypatch: pytest.MonkeyPatch, raw: str, expected: bool
 ) -> None:
-    monkeypatch.setenv('DJANGO_DEBUG', raw)
+    monkeypatch.setenv('DEBUG', raw)
 
     assert Settings().debug is expected
 
