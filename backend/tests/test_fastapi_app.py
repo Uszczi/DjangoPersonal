@@ -172,22 +172,22 @@ def test_readiness_reports_an_unreachable_database(tmp_path: Path) -> None:
 
 def test_requests_are_counted_by_route_template(client: ApiClient) -> None:
     labels = {'method': 'PATCH', 'route': f'{PROBE_PREFIX}/projects/{{id}}/', 'status': '200'}
-    before = REGISTRY.get_sample_value('django_http_requests_total', labels) or 0.0
+    before = REGISTRY.get_sample_value('app_http_requests_total', labels) or 0.0
     probes_before = REGISTRY.get_sample_value(
-        'django_http_requests_total', {**labels, 'method': 'GET', 'route': '/health'}
+        'app_http_requests_total', {**labels, 'method': 'GET', 'route': '/health'}
     )
 
     client.patch(f'{PROBE_PREFIX}/projects/7/', {})
     client.get('/health')
     metrics = client.get('/metrics')
 
-    assert REGISTRY.get_sample_value('django_http_requests_total', labels) == before + 1
+    assert REGISTRY.get_sample_value('app_http_requests_total', labels) == before + 1
     assert probes_before is None
     assert REGISTRY.get_sample_value(
-        'django_http_requests_total', {**labels, 'method': 'GET', 'route': '/health'}
+        'app_http_requests_total', {**labels, 'method': 'GET', 'route': '/health'}
     ) is None
     assert metrics.status_code == HTTPStatus.OK
-    assert 'django_http_request_duration_seconds_bucket' in metrics.text
+    assert 'app_http_request_duration_seconds_bucket' in metrics.text
 
 
 def test_requests_for_a_foreign_host_are_refused(client: ApiClient) -> None:

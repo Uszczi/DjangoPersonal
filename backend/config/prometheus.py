@@ -1,7 +1,7 @@
 """Framework-free Prometheus metrics, recorded by the middleware in ``config.ops``.
 
-The metric names keep their ``django_`` prefix so the Grafana dashboards and
-their history carry over unchanged (see migration stage 11).
+The names carry an ``app_`` prefix; the Grafana dashboard
+(``prometheus/dashboards/app.json``) queries them by that name.
 
 Multiple workers: when ``PROMETHEUS_MULTIPROC_DIR`` is set, prometheus-client
 aggregates counters from every worker process, so the app can run with as many
@@ -27,13 +27,13 @@ MULTIPROCESS_MODE = bool(PROMETHEUS_MULTIPROC_DIR)
 UNMETERED_PATHS = ('/metrics', '/health', '/health/ready')
 
 REQUEST_COUNT = Counter(
-    'django_http_requests_total',
+    'app_http_requests_total',
     'Total HTTP requests handled by the app.',
     ['method', 'route', 'status'],
 )
 
 REQUEST_LATENCY = Histogram(
-    'django_http_request_duration_seconds',
+    'app_http_request_duration_seconds',
     'HTTP request latency in seconds.',
     ['method', 'route'],
 )

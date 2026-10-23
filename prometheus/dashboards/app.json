@@ -1,8 +1,8 @@
 {
-  "uid": "django-app",
-  "title": "Django app (API)",
-  "description": "Traffic, status codes and latency for the Django/django-ninja API, from the app's /metrics endpoint.",
-  "tags": ["django", "api", "prometheus"],
+  "uid": "app",
+  "title": "App (API)",
+  "description": "Traffic, status codes and latency for the FastAPI API, from the app's /metrics endpoint.",
+  "tags": ["fastapi", "api", "prometheus"],
   "timezone": "browser",
   "schemaVersion": 39,
   "editable": true,
@@ -16,7 +16,7 @@
       "datasource": "Prometheus",
       "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
       "targets": [
-        { "refId": "A", "expr": "sum(rate(django_http_requests_total[$__rate_interval]))", "instant": true }
+        { "refId": "A", "expr": "sum(rate(app_http_requests_total[$__rate_interval]))", "instant": true }
       ],
       "fieldConfig": { "defaults": { "unit": "reqps", "decimals": 2 }, "overrides": [] },
       "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "area" }
@@ -30,7 +30,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(django_http_requests_total{status=~\"5..\"}[$__rate_interval])) / clamp_min(sum(rate(django_http_requests_total[$__rate_interval])), 0.001)",
+          "expr": "sum(rate(app_http_requests_total{status=~\"5..\"}[$__rate_interval])) / clamp_min(sum(rate(app_http_requests_total[$__rate_interval])), 0.001)",
           "instant": true
         }
       ],
@@ -53,7 +53,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(django_http_request_duration_seconds_bucket[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(app_http_request_duration_seconds_bucket[$__rate_interval])))",
           "instant": true
         }
       ],
@@ -67,7 +67,7 @@
       "datasource": "Prometheus",
       "gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
       "targets": [
-        { "refId": "A", "expr": "count(count by (route) (django_http_requests_total))", "instant": true }
+        { "refId": "A", "expr": "count(count by (route) (app_http_requests_total))", "instant": true }
       ],
       "fieldConfig": { "defaults": { "unit": "short", "decimals": 0 }, "overrides": [] },
       "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "none" }
@@ -79,7 +79,7 @@
       "datasource": "Prometheus",
       "gridPos": { "h": 9, "w": 12, "x": 0, "y": 5 },
       "targets": [
-        { "refId": "A", "expr": "sum by (route) (rate(django_http_requests_total[$__rate_interval]))", "legendFormat": "{{route}}" }
+        { "refId": "A", "expr": "sum by (route) (rate(app_http_requests_total[$__rate_interval]))", "legendFormat": "{{route}}" }
       ],
       "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] }
     },
@@ -90,9 +90,9 @@
       "datasource": "Prometheus",
       "gridPos": { "h": 9, "w": 12, "x": 12, "y": 5 },
       "targets": [
-        { "refId": "A", "expr": "histogram_quantile(0.50, sum by (le) (rate(django_http_request_duration_seconds_bucket[$__rate_interval])))", "legendFormat": "p50" },
-        { "refId": "B", "expr": "histogram_quantile(0.95, sum by (le) (rate(django_http_request_duration_seconds_bucket[$__rate_interval])))", "legendFormat": "p95" },
-        { "refId": "C", "expr": "histogram_quantile(0.99, sum by (le) (rate(django_http_request_duration_seconds_bucket[$__rate_interval])))", "legendFormat": "p99" }
+        { "refId": "A", "expr": "histogram_quantile(0.50, sum by (le) (rate(app_http_request_duration_seconds_bucket[$__rate_interval])))", "legendFormat": "p50" },
+        { "refId": "B", "expr": "histogram_quantile(0.95, sum by (le) (rate(app_http_request_duration_seconds_bucket[$__rate_interval])))", "legendFormat": "p95" },
+        { "refId": "C", "expr": "histogram_quantile(0.99, sum by (le) (rate(app_http_request_duration_seconds_bucket[$__rate_interval])))", "legendFormat": "p99" }
       ],
       "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] }
     },
@@ -103,7 +103,7 @@
       "datasource": "Prometheus",
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 14 },
       "targets": [
-        { "refId": "A", "expr": "sum by (status) (rate(django_http_requests_total[$__rate_interval]))", "legendFormat": "{{status}}" }
+        { "refId": "A", "expr": "sum by (status) (rate(app_http_requests_total[$__rate_interval]))", "legendFormat": "{{status}}" }
       ],
       "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "drawStyle": "line", "fillOpacity": 20, "lineWidth": 1, "stacking": { "mode": "normal" } } }, "overrides": [] }
     }

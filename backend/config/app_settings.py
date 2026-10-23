@@ -16,7 +16,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Development only; production always sets ``SECRET_KEY`` and ``ADMIN_SECRET_KEY``
 # (``deploy.sh`` checks).
-INSECURE_DEV_SECRET_KEY = 'django-insecure-fx*-*3#p(4zly%b^+pep($1i%5=9(-lkuli@k9g8nfmp9#sr)p'
+INSECURE_DEV_SECRET_KEY = 'insecure-dev-secret-key-fx3p4zlypep1i5lkulik9g8nfmp9sr'
 INSECURE_DEV_ADMIN_SECRET_KEY = 'insecure-dev-admin-session-key'
 
 
