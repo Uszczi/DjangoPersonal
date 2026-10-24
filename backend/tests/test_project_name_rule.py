@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from apps.infra.rules import normalize_project_name, project_name_key
+from personal.infra.rules import normalize_project_name, project_name_key
 
 
 def test_project_names_are_trimmed() -> None:
@@ -22,7 +22,7 @@ def test_inbox_reserved_key() -> None:
 
 
 def test_task_model_module_has_no_duplicate_name_rule() -> None:
-    import apps.infra.models.task as task_module
+    import personal.infra.models.task as task_module
 
     assert not hasattr(task_module, 'normalize_project_name')
     assert not hasattr(task_module, 'project_name_key')

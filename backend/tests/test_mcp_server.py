@@ -15,13 +15,13 @@ from mcp.shared.auth import OAuthClientInformationFull
 from pydantic import AnyUrl
 from sqlalchemy.orm import Session
 
-from apps.accounts.ports import TokenService
-from apps.infra import factories
-from apps.infra.models import User
-from config.db import Database
-from mcp_server import oauth, runtime
-from mcp_server.auth import get_current_user
-from mcp_server.server import mcp
+from personal.core.accounts.ports import TokenService
+from personal.entrypoints.mcp import oauth, runtime
+from personal.entrypoints.mcp.auth import get_current_user
+from personal.entrypoints.mcp.server import mcp
+from personal.infra import factories
+from personal.infra.db import Database
+from personal.infra.models import User
 
 from .conftest import DEFAULT_PASSWORD
 

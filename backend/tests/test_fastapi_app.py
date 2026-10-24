@@ -16,11 +16,11 @@ from fastapi import APIRouter, FastAPI
 from prometheus_client import REGISTRY
 from sqlalchemy import text
 
-from apps.shared.errors import DomainError, NotFound
-from apps.work.contracts import PatchedProjectRequest, ProjectRequest
-from config.app import create_app
-from config.app_settings import BASE_DIR, INSECURE_DEV_SECRET_KEY, Settings
-from config.db import SessionDep
+from personal.core.shared.errors import DomainError, NotFound
+from personal.core.work.contracts import PatchedProjectRequest, ProjectRequest
+from personal.entrypoints.http.app import create_app
+from personal.entrypoints.http.deps import SessionDep
+from personal.settings import BASE_DIR, INSECURE_DEV_SECRET_KEY, Settings
 
 from .harness import ApiClient, FastAPITransport
 

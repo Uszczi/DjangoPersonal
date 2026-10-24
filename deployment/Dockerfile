@@ -29,4 +29,4 @@ ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Worker count is configurable (UVICORN_WORKERS); metrics are aggregated across
 # workers via PROMETHEUS_MULTIPROC_DIR, so scaling up doesn't skew them.
-CMD ["sh", "-c", "exec uvicorn --factory config.app:create_served_app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips '*' --workers ${UVICORN_WORKERS:-2}"]
+CMD ["sh", "-c", "exec uvicorn --factory personal.entrypoints.http.app:create_served_app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips '*' --workers ${UVICORN_WORKERS:-2}"]

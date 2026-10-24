@@ -1,4 +1,4 @@
-"""Tests for ``python -m apps.infra.seed_dev``."""
+"""Tests for ``python -m personal.entrypoints.seed_dev``."""
 
 import random
 
@@ -6,9 +6,9 @@ import pytest
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from apps.infra.models import Category, Project, Task, TimeEntry, User
-from apps.infra.repo import UserRepository
-from apps.infra.seed_dev import DatabaseNotEmpty, USERS, seed
+from personal.entrypoints.seed_dev import USERS, DatabaseNotEmpty, seed
+from personal.infra.models import Category, Project, Task, TimeEntry, User
+from personal.infra.repo import UserRepository
 
 
 def _count(session: Session, model: type) -> int:

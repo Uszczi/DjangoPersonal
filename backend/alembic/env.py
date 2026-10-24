@@ -3,8 +3,8 @@
 from alembic import context
 from sqlalchemy import create_engine
 
-from apps.infra.models import Base
-from config.app_settings import Settings
+from personal.infra.models import Base
+from personal.settings import Settings
 
 config = context.config
 

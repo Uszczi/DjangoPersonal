@@ -51,7 +51,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: ["sh", "-c", "exec python -m mcp_server"]
+    command: ["sh", "-c", "exec python -m personal.entrypoints.mcp"]
 
   # Admin panel (sqladmin). Published on the host's loopback only: reach it
   # through an SSH tunnel (ssh -L 8002:127.0.0.1:8002 <vps>), not via nginx.
@@ -72,7 +72,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: ["sh", "-c", "exec uvicorn --factory admin_panel.app:create_served_app --host 0.0.0.0 --port 8002 --proxy-headers --forwarded-allow-ips '*'"]
+    command: ["sh", "-c", "exec uvicorn --factory personal.entrypoints.admin.app:create_served_app --host 0.0.0.0 --port 8002 --proxy-headers --forwarded-allow-ips '*'"]
 
   frontend:
     build:

@@ -1,5 +1,5 @@
-from typing import Any
 from http import HTTPStatus
+from typing import Any
 
 
 def test_user_can_create_and_browse_tasks_in_a_project(post_json: Any, api_client: Any) -> None:

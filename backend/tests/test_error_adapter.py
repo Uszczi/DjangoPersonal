@@ -2,8 +2,8 @@
 
 from http import HTTPStatus
 
-from apps.shared.errors import DomainError, NotFound
-from apps.shared.http_errors import status_for
+from personal.core.shared.errors import DomainError, NotFound
+from personal.entrypoints.http.errors import status_for
 
 
 def test_code_taxonomy_maps_onto_status_codes() -> None:

@@ -41,5 +41,5 @@ show_error_codes = true
 
 # factory_boy ships py.typed but its declaration constructors are untyped.
 [[tool.mypy.overrides]]
-module = ["apps.infra.factories"]
+module = ["personal.infra.factories"]
 disallow_untyped_calls = false

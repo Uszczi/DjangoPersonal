@@ -1,9 +1,9 @@
 """API behavior tests for the Wallets boundary."""
 
-from typing import Any
 from http import HTTPStatus
+from typing import Any
 
-from apps.infra.factories import WalletFactory
+from personal.infra.factories import WalletFactory
 
 
 def test_list_wallets_returns_only_own(api_client: Any, make_user: Any) -> None:

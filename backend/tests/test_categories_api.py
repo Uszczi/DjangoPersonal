@@ -1,13 +1,12 @@
 """API behavior tests for the Categories boundary."""
 
-from typing import Any
 from http import HTTPStatus
+from typing import Any
 
 import pytest
-
 from sqlalchemy.orm import Session
 
-from apps.infra.factories import CategoryFactory
+from personal.infra.factories import CategoryFactory
 
 from .harness import ApiClient
 
@@ -193,7 +192,7 @@ def test_delete_category(post_json: Any, api_client: Any) -> None:
 
 
 def test_registering_seeds_base_categories_and_system(post_json: Any, anon_client: Any) -> None:
-    from apps.expenses.handlers.categories import (
+    from personal.core.expenses.handlers.categories import (
         BASE_CATEGORIES,
         SYSTEM_CATEGORY_ICON,
         SYSTEM_CATEGORY_NAME,
@@ -229,8 +228,8 @@ def test_creating_a_wallet_does_not_seed_categories(post_json: Any, anon_client:
 def test_seeding_categories_is_idempotent(
     post_json: Any, anon_client: Any, session: Session
 ) -> None:
-    from apps.expenses.handlers.categories import seed_base_categories
-    from apps.infra.repo import CategoryRepository, UserRepository
+    from personal.core.expenses.handlers.categories import seed_base_categories
+    from personal.infra.repo import CategoryRepository, UserRepository
 
     client = _register(anon_client)
     user = UserRepository(session).get_by_username('fresh')

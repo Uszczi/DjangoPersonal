@@ -1,5 +1,5 @@
-from typing import Any
 from http import HTTPStatus
+from typing import Any
 
 
 def test_whiteboards_require_authentication(anon_client: Any) -> None:

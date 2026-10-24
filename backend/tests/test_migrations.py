@@ -3,13 +3,13 @@
 from pathlib import Path
 
 import pytest
-from alembic import command
 from alembic.autogenerate import compare_metadata
 from alembic.config import Config
 from alembic.migration import MigrationContext
 from sqlalchemy import Engine, create_engine, inspect
 
-from apps.infra.models import Base
+from alembic import command
+from personal.infra.models import Base
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 

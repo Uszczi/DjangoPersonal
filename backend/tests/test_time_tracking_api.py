@@ -1,11 +1,10 @@
-from typing import Any
 from datetime import date, datetime, timedelta, timezone
 from http import HTTPStatus
+from typing import Any
 
 import pytest
 
-from apps.work import clock
-
+from personal.core.work import clock
 
 FIXED_NOW = datetime(2026, 10, 14, 12, 0, 0, tzinfo=timezone.utc)
 

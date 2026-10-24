@@ -8,9 +8,9 @@ import jwt
 import pytest
 from sqlalchemy.orm import Session
 
-from apps.accounts.adapters import JwtTokenService, ScryptPasswordHasher, SimplePasswordPolicy
-from apps.accounts.ports import InvalidToken, TokenService
-from apps.infra.models import User
+from personal.core.accounts.ports import InvalidToken, TokenService
+from personal.infra.models import User
+from personal.infra.security import JwtTokenService, ScryptPasswordHasher, SimplePasswordPolicy
 
 from .harness import ApiClient
 

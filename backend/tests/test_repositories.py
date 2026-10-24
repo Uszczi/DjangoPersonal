@@ -8,7 +8,7 @@ from sqlalchemy import func, insert, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from apps.infra.models import (
+from personal.infra.models import (
     Category,
     Project,
     Task,
@@ -18,7 +18,7 @@ from apps.infra.models import (
     Wallet,
     Whiteboard,
 )
-from apps.infra.repo import (
+from personal.infra.repo import (
     CategoryRepository,
     DuplicateCategoryName,
     DuplicateProjectName,

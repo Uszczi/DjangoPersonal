@@ -6,8 +6,8 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from apps.infra.models import Project, Task, User
-from apps.infra.repo import ProjectRepository, TaskRepository, UserRepository
+from personal.infra.models import Project, Task, User
+from personal.infra.repo import ProjectRepository, TaskRepository, UserRepository
 
 
 @pytest.fixture

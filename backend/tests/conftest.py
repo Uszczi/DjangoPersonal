@@ -3,7 +3,7 @@
 Every test gets a throwaway SQLite database with the full schema:
 ``session`` for repository-level tests, and an app (``transport``) on the same
 database for API tests. Users come from :func:`make_user`, other rows from the
-factories in ``apps.infra.factories`` (bound to the test's session).
+factories in ``personal.infra.factories`` (bound to the test's session).
 """
 
 from collections.abc import Callable, Iterator
@@ -14,13 +14,13 @@ import pytest
 from fastapi import FastAPI
 from sqlalchemy.orm import Session
 
-from apps.accounts import deps
-from apps.accounts.ports import PasswordHasher, TokenService
-from apps.infra import factories
-from apps.infra.models import Base, User
-from config.app import create_app
-from config.app_settings import Settings
-from config.db import Database
+from personal import wiring
+from personal.core.accounts.ports import PasswordHasher, TokenService
+from personal.entrypoints.http.app import create_app
+from personal.infra import factories
+from personal.infra.db import Database
+from personal.infra.models import Base, User
+from personal.settings import Settings
 
 from .harness import ApiClient, FastAPITransport, Response, Transport
 
@@ -78,13 +78,13 @@ def transport(app: FastAPI, session: Session) -> Transport:
 
 @pytest.fixture
 def password_hasher() -> PasswordHasher:
-    return deps.password_hasher()
+    return wiring.password_hasher()
 
 
 @pytest.fixture
 def token_service(settings: Settings) -> TokenService:
     """Signs tokens exactly like the app under test (same settings)."""
-    return deps.token_service(settings)
+    return wiring.token_service(settings)
 
 
 @pytest.fixture

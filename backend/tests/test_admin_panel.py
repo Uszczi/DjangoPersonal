@@ -8,12 +8,12 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from admin_panel import create_superuser
-from admin_panel.app import create_app
-from apps.infra import factories
-from apps.infra.models import Category, Project, User, Whiteboard
-from config.app_settings import Settings
-from config.db import Database
+from personal.entrypoints.admin import create_superuser
+from personal.entrypoints.admin.app import create_app
+from personal.infra import factories
+from personal.infra.db import Database
+from personal.infra.models import Category, Project, User, Whiteboard
+from personal.settings import Settings
 
 from .conftest import DEFAULT_PASSWORD
 

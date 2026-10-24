@@ -1,9 +1,9 @@
 """API behavior tests for the Transactions boundary."""
 
-from typing import Any
 from http import HTTPStatus
+from typing import Any
 
-from apps.infra.factories import CategoryFactory, TransactionFactory, WalletFactory
+from personal.infra.factories import CategoryFactory, TransactionFactory, WalletFactory
 
 
 def test_create_transaction(post_json: Any, api_client: Any) -> None:

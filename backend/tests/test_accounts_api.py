@@ -1,7 +1,7 @@
 """API behavior tests for the accounts boundary."""
 
-from typing import Any
 from http import HTTPStatus
+from typing import Any
 
 
 def test_failed_login_returns_unauthorized_with_detail_body(

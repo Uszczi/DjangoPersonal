@@ -3,19 +3,19 @@ default:
 
 # Run the API (FastAPI) on port 8000 with auto-reload.
 backend:
-    cd backend && uv run uvicorn --factory config.app:create_served_app --reload --port 8000
+    cd backend && uv run uvicorn --factory personal.entrypoints.http.app:create_served_app --reload --port 8000
 
 # Run the MCP server (streamable HTTP) on port 8001.
 mcp:
-    cd backend && uv run python -m mcp_server
+    cd backend && uv run python -m personal.entrypoints.mcp
 
 # Run the admin panel (sqladmin) on port 8002; open http://localhost:8002/admin/.
 admin:
-    cd backend && uv run uvicorn --factory admin_panel.app:create_served_app --reload --port 8002
+    cd backend && uv run uvicorn --factory personal.entrypoints.admin.app:create_served_app --reload --port 8002
 
 # Create a staff account for the admin panel, or promote an existing one.
 createsuperuser username *flags:
-    cd backend && uv run python -m admin_panel.create_superuser {{username}} {{flags}}
+    cd backend && uv run python -m personal.entrypoints.admin.create_superuser {{username}} {{flags}}
 
 # Create an Alembic revision from model changes, e.g. `just makemigrations "add due dates"`.
 makemigrations message:
@@ -27,11 +27,11 @@ migrate:
 
 # Seed the dev database with demo data (refuses if the database is not empty).
 seed:
-    cd backend && uv run python -m apps.infra.seed_dev
+    cd backend && uv run python -m personal.entrypoints.seed_dev
 
 # Generate the OpenAPI schema and the TypeScript API client.
 generate-api:
-    cd backend && uv run python -c "import yaml; from config.app import create_app; schema = create_app().openapi(); open('openapi.yaml', 'w').write(yaml.safe_dump(schema, allow_unicode=True, sort_keys=False))"
+    cd backend && uv run python -c "import yaml; from personal.entrypoints.http.app import create_app; schema = create_app().openapi(); open('openapi.yaml', 'w').write(yaml.safe_dump(schema, allow_unicode=True, sort_keys=False))"
     cd frontend && npm run generate:api
 
 # Regenerate the TypeScript client and fail if it differs from the committed one
@@ -97,7 +97,7 @@ deploy-logs service="":
 
 # Create or promote an admin-panel staff account inside the app container.
 deploy-createsuperuser username:
-    {{compose}} run --rm app python -m admin_panel.create_superuser {{username}}
+    {{compose}} run --rm app python -m personal.entrypoints.admin.create_superuser {{username}}
 
 # Apply the Alembic migrations inside the app container.
 deploy-migrate:

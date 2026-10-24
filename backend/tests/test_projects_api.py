@@ -1,4 +1,5 @@
 from typing import Any
+
 """API behavior tests for the Project boundary."""
 
 from http import HTTPStatus
