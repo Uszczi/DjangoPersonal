@@ -95,7 +95,7 @@ function SortableProjectRow(props: Omit<ProjectRowProps, "dragHandle" | "ref" | 
   );
 }
 
-export function ProjectsPage() {
+function ProjectsPage() {
   const projects = useProjectsStore((state) => state.projects);
   const isLoading = useProjectsStore((state) => state.isLoading);
   const pageError = useProjectsStore((state) => state.pageError);

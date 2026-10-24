@@ -9,7 +9,7 @@ export const Route = createFileRoute("/expenses/$walletId")({
 });
 
 /** A wallet deep link: remembers the wallet as selected, so `/expenses` reopens it. */
-export function WalletDetailPage() {
+function WalletDetailPage() {
   const { walletId } = Route.useParams();
   const navigate = useNavigate();
   const wallets = useWalletsStore((state) => state.wallets);

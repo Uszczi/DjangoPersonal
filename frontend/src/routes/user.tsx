@@ -9,7 +9,7 @@ export const Route = createFileRoute("/user")({
   component: UserPage,
 });
 
-export function UserPage() {
+function UserPage() {
   const user = useAuthStore((state) => state.user);
 
   function openDeleteDialog() {

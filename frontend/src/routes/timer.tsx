@@ -112,7 +112,7 @@ function entryMinutes(entry: TimeEntryResponse) {
   return Math.round((entry.end.getTime() - entry.start.getTime()) / 60000);
 }
 
-export function TimerPage() {
+function TimerPage() {
   const { project } = useSearch({ from: "/timer" });
   const projects = useProjectsStore((state) => state.projects);
   const isLoading = useTimerStore((state) => state.isLoading);

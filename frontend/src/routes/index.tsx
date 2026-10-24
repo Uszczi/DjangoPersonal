@@ -6,6 +6,6 @@ export const Route = createFileRoute("/")({
   component: MainPage,
 });
 
-export function MainPage() {
+function MainPage() {
   return <NavTiles />;
 }

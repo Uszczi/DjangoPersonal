@@ -198,7 +198,7 @@ function DroppableContainer({
   );
 }
 
-export function TasksPage() {
+function TasksPage() {
   const { project } = useSearch({ from: "/tasks" });
   const navigate = useNavigate();
   useProjectSearchParam(project);

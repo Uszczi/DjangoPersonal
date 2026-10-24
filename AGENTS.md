@@ -139,7 +139,7 @@ A separate `sqladmin` service (`admin` container, :8002, published on the host's
 - **Backend** (`backend/tests/`, pytest with xdist, config in `pyproject.toml`): every test gets a throwaway SQLite database with the models' schema (`create_all`; `test_migrations.py` checks Alembic agrees). Repository tests use the `session` fixture; API tests go through the transport-agnostic `ApiClient` (`tests/harness.py`, FastAPI's `TestClient` underneath) with the fixtures `api_client`, `anon_client`, `client_for`, `post_json`/`patch_json`/`put_json`, `auth_headers`, `make_user`, `token_for`. Factories come from `personal.infra.factories` (bound to the test session; committed for API tests). `test_api_contract.py` freezes every operation (method, path, `operation_id`, status codes) in `tests/snapshots/api_contract.json` (`--snapshot-update` to accept a change). MCP tools and the admin panel have their own tests (`test_mcp_server.py`, `test_admin_panel.py`). Run: `cd backend && uv run pytest` (or `just check`).
 - **Frontend** (`frontend/tests/`, Vitest + jsdom + Testing Library): render the whole app through a memory-history router via the `renderApp()` helper, which resets every Zustand store first. Run: `cd frontend && npm test`.
 - **Type checking**: `just typecheck` (mypy strict over all of `backend/`; `personal.infra.factories` relaxed because factory_boy constructors are untyped).
-- Note: as of 2026-10-23 the `frontend` suite is green and oxlint reports 7 warnings. Backend suite is green.
+- Note: as of 2026-10-24 the `frontend` suite is green and oxlint reports 1 warning (`WhiteboardCanvas.tsx` exhaustive-deps). Backend suite is green.
 
 ## Deployment
 
