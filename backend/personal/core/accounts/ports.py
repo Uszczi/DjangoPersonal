@@ -1,10 +1,3 @@
-"""What the accounts use cases need from the outside world, as interfaces.
-
-Hashing, password rules and token issuing are infrastructure. The handlers
-depend on these protocols instead, and ``personal.wiring`` supplies the concrete
-implementations (``personal.infra.security``), so the use cases never import a library for them.
-"""
-
 from typing import NamedTuple, Protocol
 
 from personal.infra.models import User
