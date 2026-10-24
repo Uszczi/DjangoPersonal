@@ -1,24 +1,19 @@
 import { create } from "zustand";
 
 import { api } from "@/api";
-import {
-  parseDate,
-  type CounterEntryResponse,
-  type CounterResponse,
-} from "@/generated/api";
+import type { CounterEntryResponse, CounterResponse } from "@/generated/api";
 import { createLoadGuard } from "@/stores/loadGuard";
 
 export type CounterEntryInput = {
   value: number;
-  /** `yyyy-mm-dd`, as the date input carries it. */
-  date: string;
+  occurredAt: Date;
   note: string;
 };
 
-/** Newest first, matching the server's order (date desc, then id desc). */
+/** Newest first, matching the server's order (occurred_at desc, then id desc). */
 function newestFirst(entries: CounterEntryResponse[]): CounterEntryResponse[] {
   return [...entries].sort(
-    (a, b) => b.date.getTime() - a.date.getTime() || b.id - a.id,
+    (a, b) => b.occurredAt.getTime() - a.occurredAt.getTime() || b.id - a.id,
   );
 }
 
@@ -138,14 +133,10 @@ export const useCountersStore = create<CountersState>((set, get) => {
       const saved = entry
         ? await api.counterEntriesPartialUpdate({
             id: entry.id,
-            patchedCounterEntryRequest: { ...input, date: parseDate(input.date) },
+            patchedCounterEntryRequest: input,
           })
         : await api.counterEntriesCreate({
-            counterEntryRequest: {
-              ...input,
-              counter: counterId,
-              date: parseDate(input.date),
-            },
+            counterEntryRequest: { ...input, counter: counterId },
           });
       replaceEntries(counterId, (entries) =>
         newestFirst([...entries.filter((item) => item.id !== saved.id), saved]),

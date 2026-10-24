@@ -35,7 +35,7 @@ export interface CounterEntryResponse {
     /**
      *
      */
-    date: Date;
+    occurredAt: Date;
     /**
      *
      */
@@ -49,7 +49,7 @@ export function instanceOfCounterEntryResponse(value: object): value is CounterE
     if (!('id' in value) || value['id'] === undefined) return false;
     if ((!('counterId' in (value as Record<string, any>)) && !('counter_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['counterId'] === undefined && (value as Record<string, any>)['counter_id'] === undefined)) return false;
     if (!('value' in value) || value['value'] === undefined) return false;
-    if (!('date' in value) || value['date'] === undefined) return false;
+    if ((!('occurredAt' in (value as Record<string, any>)) && !('occurred_at' in (value as Record<string, any>))) || ((value as Record<string, any>)['occurredAt'] === undefined && (value as Record<string, any>)['occurred_at'] === undefined)) return false;
     if (!('note' in value) || value['note'] === undefined) return false;
     return true;
 }
@@ -67,7 +67,7 @@ export function CounterEntryResponseFromJSONTyped(json: any, ignoreDiscriminator
         'id': json['id'],
         'counterId': json['counter_id'],
         'value': json['value'],
-        'date': (json['date'] == null ? json['date'] : parseDate(json['date'])),
+        'occurredAt': (json['occurred_at'] == null ? json['occurred_at'] : parseDateTime(json['occurred_at'])),
         'note': json['note'],
     };
 }
@@ -84,7 +84,7 @@ export function CounterEntryResponseToJSONTyped(value?: Omit<CounterEntryRespons
     return {
 
         'value': value['value'],
-        'date': value['date'] == null ? value['date'] : serializeDate(value['date']),
+        'occurred_at': value['occurredAt'] == null ? value['occurredAt'] : serializeDateTime(value['occurredAt']),
         'note': value['note'],
     };
 }

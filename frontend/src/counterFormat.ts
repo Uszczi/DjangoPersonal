@@ -1,13 +1,14 @@
-/** Today as `yyyy-mm-dd` in the user's local time zone (what a date input holds). */
-export function todayKey() {
-  return dateKey(new Date());
-}
+const entryTimeFormatter = new Intl.DateTimeFormat("pl-PL", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
 
-/** Local `yyyy-mm-dd` for a (local-midnight) date the API client hands us. */
-export function dateKey(date: Date) {
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
+/** When an entry happened, in the user's time zone, e.g. `20 października 2026 14:30`. */
+export function formatEntryTime(date: Date) {
+  return entryTimeFormatter.format(date);
 }
 
 /** An entry's value with its sign, e.g. `+1` or `−2`. */

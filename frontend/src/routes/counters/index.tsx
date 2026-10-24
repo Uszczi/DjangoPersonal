@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { CounterEditorModal } from "@/components/modals/CounterEditorModal";
 import { DeleteCounterModal } from "@/components/modals/DeleteCounterModal";
-import { entryCountLabel, todayKey } from "@/counterFormat";
+import { entryCountLabel } from "@/counterFormat";
 import {
   Button,
   DeleteButton,
@@ -87,7 +87,7 @@ function CountersPage() {
                   variant="secondary"
                   aria-label={`Dodaj 1 do licznika: ${counter.name}`}
                   onClick={() =>
-                    void saveEntry(counter.id, { value: 1, date: todayKey(), note: "" })
+                    void saveEntry(counter.id, { value: 1, occurredAt: new Date(), note: "" })
                   }
                 >
                   +1

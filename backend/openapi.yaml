@@ -1253,10 +1253,10 @@ components:
           minimum: -1000000000.0
           title: Value
           default: 1
-        date:
+        occurred_at:
           type: string
-          format: date
-          title: Date
+          format: date-time
+          title: Occurred At
         note:
           type: string
           maxLength: 1000
@@ -1265,7 +1265,7 @@ components:
       type: object
       required:
       - counter
-      - date
+      - occurred_at
       title: CounterEntryRequest
     CounterEntryResponse:
       properties:
@@ -1280,10 +1280,10 @@ components:
         value:
           type: integer
           title: Value
-        date:
+        occurred_at:
           type: string
-          format: date
-          title: Date
+          format: date-time
+          title: Occurred At
         note:
           type: string
           title: Note
@@ -1292,7 +1292,7 @@ components:
       - id
       - counter_id
       - value
-      - date
+      - occurred_at
       - note
       title: CounterEntryResponse
     CounterRequest:
@@ -1389,12 +1389,12 @@ components:
             minimum: -1000000000.0
           - type: 'null'
           title: Value
-        date:
+        occurred_at:
           anyOf:
           - type: string
-            format: date
+            format: date-time
           - type: 'null'
-          title: Date
+          title: Occurred At
         note:
           anyOf:
           - type: string

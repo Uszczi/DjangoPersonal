@@ -17,7 +17,8 @@ def _counter(post_json: Any, name: str = 'Kawa') -> int:
 
 def _entry(post_json: Any, counter_id: int, **fields: Any) -> dict[str, Any]:
     response = post_json(
-        '/api/v1/counter-entries/', {'counter': counter_id, 'date': '2026-10-20', **fields}
+        '/api/v1/counter-entries/',
+        {'counter': counter_id, 'occurred_at': '2026-10-20T08:00:00Z', **fields},
     )
     assert response.status_code == HTTPStatus.CREATED, response.json()
     body: dict[str, Any] = response.json()
@@ -53,8 +54,8 @@ def test_rename_counter(post_json: Any, patch_json: Any) -> None:
 def test_entries_add_up_to_the_total(post_json: Any, api_client: ApiClient) -> None:
     counter_id = _counter(post_json)
     first = _entry(post_json, counter_id)
-    _entry(post_json, counter_id, value=5, date='2026-10-21', note=' po obiedzie ')
-    _entry(post_json, counter_id, value=-2)
+    _entry(post_json, counter_id, value=5, occurred_at='2026-10-20T14:30:00+02:00', note=' po obiedzie ')
+    _entry(post_json, counter_id, value=-2, occurred_at='2026-10-20T07:15:00Z')
 
     assert first['value'] == 1
     assert first['note'] == ''
@@ -65,22 +66,43 @@ def test_entries_add_up_to_the_total(post_json: Any, api_client: ApiClient) -> N
     assert counter['total'] == 4
 
     entries = api_client.get(f'/api/v1/counter-entries/?counter={counter_id}').json()
-    assert [(e['date'], e['value'], e['note']) for e in entries] == [
-        ('2026-10-21', 5, 'po obiedzie'),
-        ('2026-10-20', -2, ''),
-        ('2026-10-20', 1, ''),
+    # Newest moment first, stored and returned in UTC.
+    assert [(e['occurred_at'], e['value'], e['note']) for e in entries] == [
+        ('2026-10-20T12:30:00Z', 5, 'po obiedzie'),
+        ('2026-10-20T08:00:00Z', 1, ''),
+        ('2026-10-20T07:15:00Z', -2, ''),
     ]
 
 
 def test_entry_value_may_not_be_zero_or_null(post_json: Any, patch_json: Any) -> None:
     counter_id = _counter(post_json)
     response = post_json(
-        '/api/v1/counter-entries/', {'counter': counter_id, 'date': '2026-10-20', 'value': 0}
+        '/api/v1/counter-entries/', {'counter': counter_id, 'occurred_at': '2026-10-20T08:00:00Z', 'value': 0}
     )
     assert response.status_code == 422
 
     entry = _entry(post_json, counter_id)
     assert patch_json(f'/api/v1/counter-entries/{entry["id"]}/', {'value': None}).status_code == 422
+
+
+def test_entry_time_needs_a_time_zone(post_json: Any) -> None:
+    counter_id = _counter(post_json)
+    response = post_json(
+        '/api/v1/counter-entries/', {'counter': counter_id, 'occurred_at': '2026-10-20T08:00:00'}
+    )
+    assert response.status_code == 422
+
+
+def test_move_entry_in_time(post_json: Any, patch_json: Any) -> None:
+    counter_id = _counter(post_json)
+    entry = _entry(post_json, counter_id)
+
+    response = patch_json(
+        f'/api/v1/counter-entries/{entry["id"]}/', {'occurred_at': '2026-10-21T21:45:00Z'}
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['occurred_at'] == '2026-10-21T21:45:00Z'
 
 
 def test_edit_entry(post_json: Any, patch_json: Any, api_client: ApiClient) -> None:
@@ -118,7 +140,7 @@ def test_delete_counter_removes_its_entries(post_json: Any, api_client: ApiClien
 
 def test_unknown_counter(post_json: Any, api_client: ApiClient) -> None:
     assert api_client.get('/api/v1/counter-entries/?counter=999').status_code == 404
-    response = post_json('/api/v1/counter-entries/', {'counter': 999, 'date': '2026-10-20'})
+    response = post_json('/api/v1/counter-entries/', {'counter': 999, 'occurred_at': '2026-10-20T08:00:00Z'})
     assert response.status_code == 404
 
 
@@ -139,7 +161,7 @@ def test_counters_are_private(
     assert other.get(f'/api/v1/counter-entries/{entry["id"]}/').status_code == 404
     assert other.patch(f'/api/v1/counter-entries/{entry["id"]}/', {'value': 2}).status_code == 404
     assert other.delete(f'/api/v1/counter-entries/{entry["id"]}/').status_code == 404
-    response = other.post('/api/v1/counter-entries/', {'counter': counter_id, 'date': '2026-10-20'})
+    response = other.post('/api/v1/counter-entries/', {'counter': counter_id, 'occurred_at': '2026-10-20T08:00:00Z'})
     assert response.status_code == 404
 
 

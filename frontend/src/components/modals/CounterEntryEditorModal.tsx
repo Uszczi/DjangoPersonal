@@ -2,8 +2,16 @@ import { useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
 import { DeleteCounterEntryModal } from "@/components/modals/DeleteCounterEntryModal";
-import { dateKey, todayKey } from "@/counterFormat";
-import { Button, ErrorAlert, Field, Modal, ModalFooter, TextArea, TextInput } from "@/design-system";
+import {
+  Button,
+  DateTimePicker,
+  ErrorAlert,
+  Field,
+  Modal,
+  ModalFooter,
+  TextArea,
+  TextInput,
+} from "@/design-system";
 import type { CounterEntryResponse } from "@/generated/api";
 import { useCountersStore } from "@/stores/counters";
 import { ShowModal } from "@/stores/modal";
@@ -29,11 +37,12 @@ export function CounterEntryEditorModal({
 }: CounterEntryEditorModalProps) {
   const saveEntry = useCountersStore((state) => state.saveEntry);
 
-  const [form, setForm] = useState({
+  // A new entry defaults to the moment the modal opened.
+  const [form, setForm] = useState(() => ({
     value: String(entry?.value ?? 1),
-    date: entry ? dateKey(entry.date) : todayKey(),
+    occurredAt: entry?.occurredAt ?? (new Date() as Date | null),
     note: entry?.note ?? "",
-  });
+  }));
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -49,8 +58,8 @@ export function CounterEntryEditorModal({
       setFormError(valueError);
       return;
     }
-    if (!form.date) {
-      setFormError("Podaj datę.");
+    if (!form.occurredAt) {
+      setFormError("Podaj datę i godzinę.");
       return;
     }
 
@@ -59,7 +68,7 @@ export function CounterEntryEditorModal({
     try {
       await saveEntry(
         counterId,
-        { value: Number(value), date: form.date, note: form.note.trim() },
+        { value: Number(value), occurredAt: form.occurredAt, note: form.note.trim() },
         entry,
       );
       onClose();
@@ -90,13 +99,10 @@ export function CounterEntryEditorModal({
             required
           />
         </Field>
-        <Field label="Data">
-          <TextInput
-            type="date"
-            value={form.date}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, date: event.target.value }))
-            }
+        <Field label="Kiedy">
+          <DateTimePicker
+            value={form.occurredAt}
+            onChange={(occurredAt) => setForm((current) => ({ ...current, occurredAt }))}
             required
           />
         </Field>

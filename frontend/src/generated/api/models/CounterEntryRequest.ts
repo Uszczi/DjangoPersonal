@@ -31,7 +31,7 @@ export interface CounterEntryRequest {
     /**
      *
      */
-    date: Date;
+    occurredAt: Date;
     /**
      *
      */
@@ -43,7 +43,7 @@ export interface CounterEntryRequest {
  */
 export function instanceOfCounterEntryRequest(value: object): value is CounterEntryRequest {
     if (!('counter' in value) || value['counter'] === undefined) return false;
-    if (!('date' in value) || value['date'] === undefined) return false;
+    if ((!('occurredAt' in (value as Record<string, any>)) && !('occurred_at' in (value as Record<string, any>))) || ((value as Record<string, any>)['occurredAt'] === undefined && (value as Record<string, any>)['occurred_at'] === undefined)) return false;
     return true;
 }
 
@@ -59,7 +59,7 @@ export function CounterEntryRequestFromJSONTyped(json: any, ignoreDiscriminator:
 
         'counter': json['counter'],
         'value': json['value'] == null ? undefined : json['value'],
-        'date': (json['date'] == null ? json['date'] : parseDate(json['date'])),
+        'occurredAt': (json['occurred_at'] == null ? json['occurred_at'] : parseDateTime(json['occurred_at'])),
         'note': json['note'] == null ? undefined : json['note'],
     };
 }
@@ -77,7 +77,7 @@ export function CounterEntryRequestToJSONTyped(value?: CounterEntryRequest | nul
 
         'counter': value['counter'],
         'value': value['value'],
-        'date': value['date'] == null ? value['date'] : serializeDate(value['date']),
+        'occurred_at': value['occurredAt'] == null ? value['occurredAt'] : serializeDateTime(value['occurredAt']),
         'note': value['note'],
     };
 }

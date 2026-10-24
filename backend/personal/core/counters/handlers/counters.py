@@ -121,7 +121,7 @@ class CreateCounterEntry:
             user=self.user,
             counter=_get_counter(self.counters, data.counter, user=self.user),
             value=data.value,
-            date=data.date,
+            occurred_at=data.occurred_at,
             note=data.note,
         )
         return self.entries.save(entry)

@@ -1,9 +1,8 @@
 """Counter contracts: request payloads and the response shapes."""
 
-from datetime import date as datetime_date
 from datetime import datetime
 
-from pydantic import Field, field_validator
+from pydantic import AwareDatetime, Field, field_validator
 
 from personal.core.shared.base import BaseModel
 
@@ -40,7 +39,7 @@ class CounterResponse(BaseModel):
 
 
 class _CounterEntryPayload(BaseModel):
-    @field_validator('value', 'date', 'note', 'counter', mode='before', check_fields=False)
+    @field_validator('value', 'occurred_at', 'note', 'counter', mode='before', check_fields=False)
     @classmethod
     def reject_null(cls, value: object) -> object:
         """An explicit ``null`` is not "leave it alone" — it is a validation error."""
@@ -64,13 +63,14 @@ class _CounterEntryPayload(BaseModel):
 class CounterEntryRequest(_CounterEntryPayload):
     counter: int
     value: int = Field(default=1, ge=-1_000_000_000, le=1_000_000_000)
-    date: datetime_date
+    #: The moment the entry happened; must carry a time zone (sent as ISO 8601).
+    occurred_at: AwareDatetime
     note: str = Field(default='', max_length=1000)
 
 
 class PatchedCounterEntryRequest(_CounterEntryPayload):
     value: int | None = Field(default=None, ge=-1_000_000_000, le=1_000_000_000)
-    date: datetime_date | None = None
+    occurred_at: AwareDatetime | None = None
     note: str | None = Field(default=None, max_length=1000)
 
 
@@ -78,5 +78,5 @@ class CounterEntryResponse(BaseModel):
     id: int = Field(..., json_schema_extra={'readOnly': True})
     counter_id: int = Field(..., json_schema_extra={'readOnly': True})
     value: int
-    date: datetime_date
+    occurred_at: datetime
     note: str

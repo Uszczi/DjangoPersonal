@@ -155,11 +155,11 @@ class CounterEntryView(_AppView, model=CounterEntry):
         CounterEntry.id,
         CounterEntry.user,
         CounterEntry.counter,
-        CounterEntry.date,
+        CounterEntry.occurred_at,
         CounterEntry.value,
         CounterEntry.note,
     ]
-    column_sortable_list = [CounterEntry.id, CounterEntry.date, CounterEntry.value]
+    column_sortable_list = [CounterEntry.id, CounterEntry.occurred_at, CounterEntry.value]
 
 
 VIEWS: list[type[ModelView]] = [

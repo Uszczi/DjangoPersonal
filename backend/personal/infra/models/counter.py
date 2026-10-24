@@ -1,4 +1,3 @@
-from datetime import date as date_type
 from datetime import datetime
 from typing import Any
 
@@ -39,7 +38,7 @@ def _normalize_counter(mapper: Any, connection: Any, counter: Counter) -> None:
 
 
 class CounterEntry(Base):
-    """One value added to a counter on a given day."""
+    """One value added to a counter at a given moment."""
 
     __tablename__ = 'counter_entries'
 
@@ -49,7 +48,7 @@ class CounterEntry(Base):
         ForeignKey('counters.id', ondelete='CASCADE'), index=True
     )
     value: Mapped[int] = mapped_column(default=1)
-    date: Mapped[date_type]
+    occurred_at: Mapped[datetime] = mapped_column(UTCDateTime)
     note: Mapped[str] = mapped_column(Text, default='')
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utc_now)
 

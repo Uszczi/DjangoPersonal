@@ -71,7 +71,7 @@ class CounterEntryRepository:
         query = (
             select(CounterEntryModel)
             .where(CounterEntryModel.counter_id == counter_id, CounterEntryModel.user_id == user.id)
-            .order_by(CounterEntryModel.date.desc(), CounterEntryModel.id.desc())
+            .order_by(CounterEntryModel.occurred_at.desc(), CounterEntryModel.id.desc())
         )
         return list(self.session.scalars(query))
 

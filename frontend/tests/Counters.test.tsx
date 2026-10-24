@@ -1,13 +1,13 @@
 /** User-visible Counter flow tests, against a small in-memory fake of the counters API. */
 
-import { cleanup, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { renderApp } from './renderApp'
 
 type Counter = { id: number; name: string; created_at: string }
-type Entry = { id: number; counter_id: number; value: number; date: string; note: string }
+type Entry = { id: number; counter_id: number; value: number; occurred_at: string; note: string }
 
 function jsonResponse(data: unknown, status = 200) {
   return new Response(status === 204 ? null : JSON.stringify(data), {
@@ -65,7 +65,7 @@ function fakeBackend(initial: { counters?: Counter[]; entries?: Entry[] } = {}) 
       return jsonResponse(
         entries
           .filter((entry) => entry.counter_id === id)
-          .sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id),
+          .sort((a, b) => Date.parse(b.occurred_at) - Date.parse(a.occurred_at) || b.id - a.id),
       )
     }
     if (path.endsWith('/counter-entries/') && method === 'POST') {
@@ -73,7 +73,7 @@ function fakeBackend(initial: { counters?: Counter[]; entries?: Entry[] } = {}) 
         id: nextId++,
         counter_id: body.counter,
         value: body.value ?? 1,
-        date: body.date,
+        occurred_at: body.occurred_at,
         note: body.note ?? '',
       }
       entries.push(entry)
@@ -105,6 +105,7 @@ describe('Counters', () => {
 
   afterEach(() => {
     cleanup()
+    vi.useRealTimers()
     vi.unstubAllGlobals()
   })
 
@@ -128,7 +129,7 @@ describe('Counters', () => {
     fetchMock.mockImplementation(
       fakeBackend({
         counters: [coffee],
-        entries: [{ id: 10, counter_id: 1, value: 2, date: '2026-10-20', note: '' }],
+        entries: [{ id: 10, counter_id: 1, value: 2, occurred_at: '2026-10-20T08:00:00Z', note: '' }],
       }),
     )
     const user = userEvent.setup()
@@ -157,18 +158,25 @@ describe('Counters', () => {
     const value = await screen.findByLabelText('Wartość')
     await user.clear(value)
     await user.type(value, '4')
-    await user.clear(screen.getByLabelText('Data'))
-    await user.type(screen.getByLabelText('Data'), '2026-10-20')
+    // The picker holds local time; jsdom has no picker UI, so set the value directly.
+    fireEvent.change(screen.getByLabelText('Kiedy'), { target: { value: '2026-10-20T14:30' } })
     await user.type(screen.getByLabelText('Notatka'), 'espresso')
     await user.click(screen.getByRole('button', { name: 'Dodaj wpis' }))
 
     const entries = await screen.findByRole('list', { name: 'Wpisy' })
     expect(within(entries).getByText('espresso')).toBeInTheDocument()
+    expect(within(entries).getByText('20 października 2026 14:30')).toBeInTheDocument()
+    const created = fetchMock.mock.calls.find(
+      ([url, init]) => url === '/api/v1/counter-entries/' && init?.method === 'POST',
+    )
+    expect(JSON.parse(String(created?.[1]?.body)).occurred_at).toBe(
+      new Date(2026, 9, 20, 14, 30).toISOString(),
+    )
     expect(await within(page).findByLabelText('Suma: 4')).toBeInTheDocument()
 
     // Edit.
     await user.click(
-      within(entries).getByRole('button', { name: 'Edytuj wpis +4 z dnia 20 października 2026' }),
+      within(entries).getByRole('button', { name: 'Edytuj wpis +4 z 20 października 2026 14:30' }),
     )
     const editValue = await screen.findByLabelText('Wartość')
     await user.clear(editValue)
@@ -185,6 +193,24 @@ describe('Counters', () => {
 
     expect(await screen.findByText('Brak wpisów. Dodaj pierwszy wpis.')).toBeInTheDocument()
     expect(await within(page).findByLabelText('Suma: 0')).toBeInTheDocument()
+  })
+
+  test('a new entry defaults to now, and an empty time is refused', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(2026, 9, 24, 9, 5))
+    fetchMock.mockImplementation(fakeBackend({ counters: [coffee] }))
+    const user = userEvent.setup()
+
+    renderApp('/counters/1')
+    const page = await screen.findByRole('region', { name: 'Licznik: Kawa' })
+    await user.click(within(page).getByRole('button', { name: 'Nowy wpis' }))
+    const when = await screen.findByLabelText('Kiedy')
+    expect(when).toHaveValue('2026-10-24T09:05')
+
+    fireEvent.change(when, { target: { value: '' } })
+    await user.click(screen.getByRole('button', { name: 'Dodaj wpis' }))
+
+    expect(await screen.findByText('Podaj datę i godzinę.')).toBeInTheDocument()
   })
 
   test('a zero value is refused before it reaches the server', async () => {

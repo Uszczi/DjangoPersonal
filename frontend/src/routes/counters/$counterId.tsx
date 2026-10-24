@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { CounterEditorModal } from "@/components/modals/CounterEditorModal";
 import { CounterEntryEditorModal } from "@/components/modals/CounterEntryEditorModal";
 import { DeleteCounterModal } from "@/components/modals/DeleteCounterModal";
-import { entryCountLabel, signedValue, todayKey } from "@/counterFormat";
+import { entryCountLabel, formatEntryTime, signedValue } from "@/counterFormat";
 import {
   Button,
   ListRow,
@@ -17,12 +17,6 @@ import { ShowModal } from "@/stores/modal";
 
 export const Route = createFileRoute("/counters/$counterId")({
   component: CounterPage,
-});
-
-const dayFormatter = new Intl.DateTimeFormat("pl-PL", {
-  day: "numeric",
-  month: "long",
-  year: "numeric",
 });
 
 /** One counter: its total, quick +1, and the entries to add, edit and delete. */
@@ -102,7 +96,7 @@ function CounterPage() {
       <div className="mb-6 flex flex-wrap gap-2">
         <Button
           variant="primary"
-          onClick={() => void saveEntry(id, { value: 1, date: todayKey(), note: "" })}
+          onClick={() => void saveEntry(id, { value: 1, occurredAt: new Date(), note: "" })}
         >
           +1
         </Button>
@@ -142,11 +136,11 @@ function CounterPage() {
           {entries.map((entry) => (
             <ListRow key={entry.id}>
               <ListRowButton
-                aria-label={`Edytuj wpis ${signedValue(entry.value)} z dnia ${dayFormatter.format(entry.date)}`}
+                aria-label={`Edytuj wpis ${signedValue(entry.value)} z ${formatEntryTime(entry.occurredAt)}`}
                 onClick={() => ShowModal(CounterEntryEditorModal, { counterId: id, entry })}
               >
                 <div className="min-w-0">
-                  <ListRowTitle>{dayFormatter.format(entry.date)}</ListRowTitle>
+                  <ListRowTitle>{formatEntryTime(entry.occurredAt)}</ListRowTitle>
                   {entry.note && <ListRowSubtitle multiline>{entry.note}</ListRowSubtitle>}
                 </div>
               </ListRowButton>

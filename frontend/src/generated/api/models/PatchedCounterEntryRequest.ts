@@ -27,7 +27,7 @@ export interface PatchedCounterEntryRequest {
     /**
      *
      */
-    date?: Date | null;
+    occurredAt?: Date | null;
     /**
      *
      */
@@ -52,7 +52,7 @@ export function PatchedCounterEntryRequestFromJSONTyped(json: any, ignoreDiscrim
     return {
 
         'value': json['value'] === undefined ? undefined : json['value'] === null ? null : json['value'],
-        'date': json['date'] === undefined ? undefined : json['date'] === null ? null : (parseDate(json['date'])),
+        'occurredAt': json['occurred_at'] === undefined ? undefined : json['occurred_at'] === null ? null : (parseDateTime(json['occurred_at'])),
         'note': json['note'] === undefined ? undefined : json['note'] === null ? null : json['note'],
     };
 }
@@ -69,7 +69,7 @@ export function PatchedCounterEntryRequestToJSONTyped(value?: PatchedCounterEntr
     return {
 
         'value': value['value'],
-        'date': value['date'] == null ? value['date'] : serializeDate(value['date']),
+        'occurred_at': value['occurredAt'] == null ? value['occurredAt'] : serializeDateTime(value['occurredAt']),
         'note': value['note'],
     };
 }
