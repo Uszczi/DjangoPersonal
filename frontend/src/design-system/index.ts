@@ -11,6 +11,7 @@ export { IconButton } from "./components/IconButton";
 export { IconPicker, type IconSuggestion } from "./components/IconPicker";
 export { InboxIcon } from "./icons/InboxIcon";
 export { NamedIcon } from "./icons/NamedIcon";
+export { PageHeader } from "./components/PageHeader";
 export { LoadingStatus } from "./components/LoadingStatus";
 export { ListRow, ListRowButton, ListRowSubtitle, ListRowTitle } from "./components/ListRow";
 export { Modal, ModalFooter } from "./components/Modal";

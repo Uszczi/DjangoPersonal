@@ -15,6 +15,7 @@ import {
   LoadingStatus,
   Modal,
   ModalFooter,
+  PageHeader,
   Select,
   TextInput,
 } from "@/design-system";
@@ -350,13 +351,7 @@ function TimerPage() {
 
   return (
     <>
-      <div className="mb-6">
-        <div>
-          <h1 className="font-display text-[28px] font-bold tracking-[-0.02em] text-ink">
-            Timer
-          </h1>
-        </div>
-      </div>
+      <PageHeader title="Timer" />
 
       <section
         className="mb-6 rounded-[7px] border border-[#dce4df] bg-paper p-[27px_32px_22px_37px] shadow-[0_14px_35px_rgb(29_55_57/5%)]"

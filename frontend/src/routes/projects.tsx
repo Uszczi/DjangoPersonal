@@ -22,6 +22,7 @@ import {
   ListRowSubtitle,
   ListRowTitle,
   LoadingStatus,
+  PageHeader,
 } from "@/design-system";
 import { ProjectEditorModal } from "@/components/modals/ProjectEditorModal";
 import { ShowModal } from "@/stores/modal";
@@ -153,20 +154,15 @@ function ProjectsPage() {
 
   return (
     <>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-[28px] font-bold tracking-[-0.02em] text-ink">
-            Projekty
-          </h1>
-        </div>
-        <Button
-          variant="primary"
-          onClick={openCreateForm}
-        >
-          <span aria-hidden="true">+</span>
-          Nowy projekt
-        </Button>
-      </div>
+      <PageHeader
+        title="Projekty"
+        actions={
+          <Button variant="primary" onClick={openCreateForm}>
+            <span aria-hidden="true">+</span>
+            Nowy projekt
+          </Button>
+        }
+      />
 
       {pageError && (
         <ErrorMessage>

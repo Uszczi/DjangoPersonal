@@ -33,6 +33,7 @@ import {
   ListRowSubtitle,
   ListRowTitle,
   LoadingStatus,
+  PageHeader,
 } from "@/design-system";
 import { ProjectEditorModal } from "@/components/modals/ProjectEditorModal";
 import { ProjectNavList, ProjectsSidebar } from "@/components/ProjectsSidebar";
@@ -499,9 +500,12 @@ function TasksPage() {
           onToggleCollapse={toggleSidebar}
         />
         <section className="flex min-w-0 flex-1 flex-col" aria-labelledby="tasks-heading">
-          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              {/* Small screens have no sidebar; the Projects open in a drawer. */}
+          <PageHeader
+            title="Zadania"
+            titleId="tasks-heading"
+            subtitle={<span title="Aktualny projekt">{selectedProject.name}</span>}
+            leading={
+              /* Small screens have no sidebar; the Projects open in a drawer. */
               <button
                 className="inline-flex cursor-pointer items-center justify-center rounded-md border border-transparent bg-transparent text-[18px] text-muted transition-all hover:-translate-y-px hover:text-ink md:hidden"
                 aria-label="Pokaż projekty"
@@ -513,24 +517,19 @@ function TasksPage() {
               >
                 <span aria-hidden="true">»</span>
               </button>
-              <h2 id="tasks-heading" className="font-display text-[22px] font-bold tracking-[-0.02em] text-ink">Zadania</h2>
-              <span className="text-[13px] text-muted" title="Aktualny projekt">
-                {selectedProject.name}
-              </span>
-            </div>
-            <div className="flex w-full items-center justify-between gap-4 sm:w-auto sm:justify-start">
-              <span className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">
-                {tasks.length} {tasks.length === 1 ? "ZADANIE" : "ZADAŃ"}
-              </span>
-              <Button
-                variant="primary"
-                onClick={openTaskForm}
-              >
-                <span aria-hidden="true">+</span>
-                Nowe zadanie
-              </Button>
-            </div>
-          </div>
+            }
+            actions={
+              <>
+                <span className="mr-2 font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">
+                  {tasks.length} {tasks.length === 1 ? "ZADANIE" : "ZADAŃ"}
+                </span>
+                <Button variant="primary" onClick={openTaskForm}>
+                  <span aria-hidden="true">+</span>
+                  Nowe zadanie
+                </Button>
+              </>
+            }
+          />
 
           {isTasksLoading ? (
             <LoadingStatus variant="inline">

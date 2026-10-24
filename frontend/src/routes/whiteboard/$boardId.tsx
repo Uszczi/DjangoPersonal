@@ -2,7 +2,14 @@ import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { api } from "@/api";
-import { Button, ErrorMessage, LoadingStatus, TextArea, TextInput } from "@/design-system";
+import {
+  Button,
+  ErrorMessage,
+  LoadingStatus,
+  PageHeader,
+  TextArea,
+  TextInput,
+} from "@/design-system";
 import { WhiteboardCanvas } from "@/components/WhiteboardCanvas";
 import { MarkdownHighlightEditor } from "@/components/MarkdownHighlightEditor";
 import { apiErrorMessage } from "@/apiErrorMessage";
@@ -215,9 +222,15 @@ function WhiteboardEditorPage() {
 
   return (
     <>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          {editingName ? (
+      <PageHeader
+        title={name || "Tablica"}
+        onTitleClick={() => {
+          nameBeforeEdit.current = name;
+          setEditingName(true);
+        }}
+        titleClickLabel="Kliknij, aby zmienić nazwę"
+        titleEditor={
+          editingName && (
             <TextInput
               autoFocus
               value={name}
@@ -228,32 +241,23 @@ function WhiteboardEditorPage() {
                 if (e.key === "Escape") setEditingName(false);
               }}
             />
-          ) : (
-            <h1
-              onClick={() => {
-                nameBeforeEdit.current = name;
-                setEditingName(true);
-              }}
-              style={{ cursor: "pointer" }}
-              title="Kliknij, aby zmienić nazwę"
-              className="font-display text-[28px] font-bold tracking-[-0.02em] text-ink"
+          )
+        }
+        actions={
+          <>
+            <span
+              className="mr-2 font-utility text-[11px] font-semibold tracking-[0.08em] text-muted"
+              role="status"
+              aria-live="polite"
             >
-              {name || "Tablica"}
-            </h1>
-          )}
-        </div>
-        <span className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted" role="status" aria-live="polite">
-          {saveLabel}
-        </span>
-        <Button
-          variant="secondary"
-          onClick={() => {
-            void flush();
-          }}
-        >
-          Zapisz
-        </Button>
-      </div>
+              {saveLabel}
+            </span>
+            <Button variant="secondary" onClick={() => void flush()}>
+              Zapisz
+            </Button>
+          </>
+        }
+      />
       {kind === "markdown" ? (
         <>
           <div

@@ -13,6 +13,7 @@ import {
   ListRowSubtitle,
   ListRowTitle,
   LoadingStatus,
+  PageHeader,
 } from "@/design-system";
 import { useCountersStore } from "@/stores/counters";
 import { ShowModal } from "@/stores/modal";
@@ -66,34 +67,25 @@ function CounterPage() {
 
   return (
     <section aria-label={`Licznik: ${counter.name}`}>
-      <Link
-        to="/counters"
-        className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted no-underline hover:text-ink"
-      >
-        ← LICZNIKI
-      </Link>
-
-      <div className="mt-4 mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div className="min-w-0">
-          <button
-            type="button"
-            aria-label={`Zmień nazwę licznika: ${counter.name}`}
-            onClick={() => ShowModal(CounterEditorModal, { counter })}
-            className="rounded px-1 text-left hover:bg-wash"
+      <PageHeader
+        eyebrow={
+          <Link to="/counters" className="text-muted no-underline hover:text-ink">
+            ← LICZNIKI
+          </Link>
+        }
+        title={counter.name}
+        onTitleClick={() => ShowModal(CounterEditorModal, { counter })}
+        titleClickLabel={`Zmień nazwę licznika: ${counter.name}`}
+        subtitle={entryCountLabel(counter.entryCount)}
+        actions={
+          <p
+            className="font-display text-[44px] leading-none font-bold tracking-[-0.03em] text-ink"
+            aria-label={`Suma: ${counter.total}`}
           >
-            <h1 className="font-display text-[28px] font-bold tracking-[-0.02em] text-ink">
-              {counter.name}
-            </h1>
-          </button>
-          <p className="px-1 text-[13px] text-muted">{entryCountLabel(counter.entryCount)}</p>
-        </div>
-        <p
-          className="font-display text-[44px] leading-none font-bold tracking-[-0.03em] text-ink"
-          aria-label={`Suma: ${counter.total}`}
-        >
-          {counter.total}
-        </p>
-      </div>
+            {counter.total}
+          </p>
+        }
+      />
 
       <div className="mb-6 flex flex-wrap gap-2">
         <Button

@@ -10,6 +10,7 @@ import {
   ListRowButton,
   ListRowTitle,
   LoadingStatus,
+  PageHeader,
 } from "@/design-system";
 import { useWhiteboardsStore } from "@/stores/whiteboards";
 
@@ -61,21 +62,21 @@ function WhiteboardsPage() {
 
   return (
     <>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-[28px] font-bold tracking-[-0.02em] text-ink">Notatki</h1>
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <Button variant="primary" onClick={() => void handleCreate("whiteboard")}>
-            <span aria-hidden="true">+</span>
-            Nowa tablica
-          </Button>
-          <Button variant="secondary" onClick={() => void handleCreate("markdown")}>
-            <span aria-hidden="true">+</span>
-            Nowa notatka
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Notatki"
+        actions={
+          <>
+            <Button variant="primary" onClick={() => void handleCreate("whiteboard")}>
+              <span aria-hidden="true">+</span>
+              Nowa tablica
+            </Button>
+            <Button variant="secondary" onClick={() => void handleCreate("markdown")}>
+              <span aria-hidden="true">+</span>
+              Nowa notatka
+            </Button>
+          </>
+        }
+      />
 
       {whiteboards.length === 0 ? (
         <div className="pt-[40px] text-muted">

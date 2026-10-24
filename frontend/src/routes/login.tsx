@@ -2,7 +2,7 @@ import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@/apiErrorMessage";
-import { Button, TextInput } from "@/design-system";
+import { Button, PageHeader, TextInput } from "@/design-system";
 import { useAuthStore } from "@/stores/auth";
 
 export const Route = createFileRoute("/login")({
@@ -36,12 +36,7 @@ function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas p-5">
       <section className="w-full max-w-[480px] rounded-lg border border-line bg-paper p-[29px] shadow-dialog animate-dialog-enter" aria-labelledby="login-title">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <p className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">KONTO</p>
-            <h1 id="login-title" className="mt-1 font-display text-[24px] font-bold tracking-[-0.02em] text-ink">Zaloguj się</h1>
-          </div>
-        </div>
+        <PageHeader eyebrow="KONTO" title="Zaloguj się" titleId="login-title" />
 
         <form onSubmit={handleSubmit}>
           <label className="mb-4 block">

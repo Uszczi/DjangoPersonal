@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { CategoryPanel } from "@/components/CategoryPanel";
 import { WalletCreateModal } from "@/components/modals/WalletCreateModal";
 import { WalletView } from "@/components/WalletView";
-import { Button, ErrorMessage, LoadingStatus } from "@/design-system";
+import { Button, ErrorMessage, LoadingStatus, PageHeader } from "@/design-system";
 import { ShowModal } from "@/stores/modal";
 import { useWalletsStore } from "@/stores/wallets";
 
@@ -41,15 +41,15 @@ export function ExpensesPage({ walletId }: ExpensesPageProps) {
 
   return (
     <>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-[28px] font-bold tracking-[-0.02em] text-ink">
-          Wydatki
-        </h1>
-        <Button variant="primary" onClick={openCreateForm}>
-          <span aria-hidden="true">+</span>
-          Nowy portfel
-        </Button>
-      </div>
+      <PageHeader
+        title="Wydatki"
+        actions={
+          <Button variant="primary" onClick={openCreateForm}>
+            <span aria-hidden="true">+</span>
+            Nowy portfel
+          </Button>
+        }
+      />
 
       {pageError && (
         <ErrorMessage>
