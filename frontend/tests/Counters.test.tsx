@@ -145,6 +145,24 @@ describe('Counters', () => {
     expect(within(list).getByText('2 wpisy')).toBeInTheDocument()
   })
 
+  test('user can switch the list to tiles, and the choice is remembered', async () => {
+    fetchMock.mockImplementation(fakeBackend({ counters: [coffee] }))
+    const user = userEvent.setup()
+
+    renderApp('/counters')
+    const views = await screen.findByRole('group', { name: 'Widok liczników' })
+    expect(within(views).getByRole('button', { name: 'Wiersze' })).toHaveAttribute('aria-pressed', 'true')
+
+    await user.click(within(views).getByRole('button', { name: 'Kafelki' }))
+
+    expect(within(views).getByRole('button', { name: 'Kafelki' })).toHaveAttribute('aria-pressed', 'true')
+    const list = screen.getByRole('list', { name: 'Liczniki' })
+    expect(within(list).getByLabelText('Suma: 0')).toBeInTheDocument()
+    await user.click(within(list).getByRole('button', { name: 'Dodaj 1 do licznika: Kawa' }))
+    expect(await within(list).findByLabelText('Suma: 1')).toBeInTheDocument()
+    expect(window.localStorage.getItem('countersView')).toBe('tiles')
+  })
+
   test('user can add, edit and delete entries', async () => {
     fetchMock.mockImplementation(fakeBackend({ counters: [coffee] }))
     const user = userEvent.setup()
