@@ -1,4 +1,4 @@
-import { Stack, useLocalSearchParams } from "expo-router";
+import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 
@@ -43,6 +43,7 @@ export default function ProjectTasksScreen() {
       {errorMessage !== "" && <Text style={common.error}>{errorMessage}</Text>}
       <FlatList
         data={tasks ?? []}
+        contentContainerStyle={styles.listContent}
         keyExtractor={(task) => String(task.id)}
         refreshControl={
           <RefreshControl
@@ -60,27 +61,70 @@ export default function ProjectTasksScreen() {
           return (
             <Pressable
               style={common.row}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: isDone }}
-              onPress={() => void toggleTaskStatus(item)}
+              accessibilityRole="button"
+              accessibilityHint="Otwiera edycję zadania"
+              onPress={() =>
+                router.push({ pathname: "/task", params: { taskId: item.id } })
+              }
             >
-              <View style={[styles.checkbox, isDone && styles.checkboxChecked]}>
+              <Pressable
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: isDone }}
+                accessibilityLabel={item.title}
+                hitSlop={12}
+                onPress={() => void toggleTaskStatus(item)}
+                style={[styles.checkbox, isDone && styles.checkboxChecked]}
+              >
                 {isDone && <Text style={styles.checkmark}>✓</Text>}
-              </View>
+              </Pressable>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.title, isDone && styles.titleDone]}>{item.title}</Text>
+                {item.description !== "" && (
+                  <Text style={common.muted} numberOfLines={1}>
+                    {item.description}
+                  </Text>
+                )}
                 <Text style={common.muted}>{item.status}</Text>
               </View>
+              <Text style={common.muted}>›</Text>
             </Pressable>
           );
         }}
       />
+      {/* In the screen body, not the header: header buttons can miss taps on Android. */}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Dodaj zadanie"
+        onPress={() => router.push({ pathname: "/task", params: { projectId } })}
+        style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
+      >
+        <Text style={styles.fabLabel}>+</Text>
+      </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   empty: { padding: 24, textAlign: "center" },
+  listContent: { paddingBottom: 96 },
+  fab: {
+    position: "absolute",
+    right: 20,
+    bottom: 32,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+  },
+  fabPressed: { opacity: 0.8 },
+  fabLabel: { color: colors.onPrimary, fontSize: 30, lineHeight: 32 },
   checkbox: {
     width: 22,
     height: 22,

@@ -36,6 +36,7 @@ export default function RootLayout() {
         <Stack.Protected guard={isSignedIn}>
           <Stack.Screen name="index" options={{ title: "Projekty" }} />
           <Stack.Screen name="projects/[id]" options={{ title: "Zadania" }} />
+          <Stack.Screen name="task" options={{ presentation: "modal", title: "Zadanie" }} />
         </Stack.Protected>
         <Stack.Protected guard={!isSignedIn}>
           <Stack.Screen name="login" options={{ headerShown: false }} />
