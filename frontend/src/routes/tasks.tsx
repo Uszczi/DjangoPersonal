@@ -6,10 +6,6 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 import {
   DndContext,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
   type CollisionDetection,
   type DragEndEvent,
   type DragOverEvent,
@@ -20,7 +16,6 @@ import {
 } from "@dnd-kit/core";
 import {
   SortableContext,
-  sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
@@ -29,6 +24,7 @@ import { useDroppable } from "@dnd-kit/core";
 
 import {
   Button,
+  DragHandle,
   Drawer,
   IconButton,
   ListRow,
@@ -46,6 +42,7 @@ import { useLayoutStore } from "@/stores/layout";
 import { ShowModal } from "@/stores/modal";
 import { defaultProject, useProjectsStore } from "@/stores/projects";
 import { useTasksStore } from "@/stores/tasks";
+import { useSortSensors } from "@/useSortSensors";
 import { api } from "@/api";
 import type { TaskResponse } from "@/generated/api";
 
@@ -141,15 +138,11 @@ function SortableTaskRow({
       data-task-id={task.id}
     >
       <>
-        <span
-          className="inline-flex cursor-grab items-center justify-center text-[14px] text-[#9aafaa] transition-colors hover:text-muted"
+        <DragHandle
           aria-label={`Przeciągnij zadanie: ${task.title}`}
-          title="Przeciągnij"
           {...attributes}
           {...listeners}
-        >
-          <span aria-hidden="true">⠿</span>
-        </span>
+        />
         <button
           className={`inline-flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded border p-0 text-[11px] text-white${isCompleted ? " border-[#668b79] bg-[#668b79]" : " border-[#9aafaa] bg-transparent"}`}
           type="button"
@@ -241,16 +234,7 @@ export function TasksPage() {
     ReadonlySet<string>
   >(new Set());
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
+  const sensors = useSortSensors();
 
   // Custom collision detection for multi-container sorting
   const collisionDetection: CollisionDetection = (args) => {

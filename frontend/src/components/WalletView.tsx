@@ -124,7 +124,7 @@ export function WalletView({ wallet }: { wallet: WalletResponse }) {
                       <div className="min-w-0">
                         <ListRowTitle>{transaction.title}</ListRowTitle>
                         {transaction.description && (
-                          <ListRowSubtitle>{transaction.description}</ListRowSubtitle>
+                          <ListRowSubtitle multiline>{transaction.description}</ListRowSubtitle>
                         )}
                         {category && (
                           <ListRowSubtitle>

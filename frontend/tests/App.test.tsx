@@ -189,6 +189,7 @@ describe('Projects', () => {
     act(() => {
       ShowModal(ProjectEditorModal, { project: readingProject })
     })
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
 
     await user.clear(await screen.findByLabelText('Nazwa projektu'))
     await user.type(screen.getByLabelText('Nazwa projektu'), 'Research')
@@ -209,6 +210,57 @@ describe('Projects', () => {
           terminal_status: 'Zrobione',
         }),
       }),
+    )
+  })
+
+  test('user can reorder project statuses by dragging', async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse([inbox, planning]))
+      .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(
+        jsonResponse({ ...planning, project_statuses: ['Zrobione', 'Todo'] }),
+      )
+    // jsdom has no layout: stack the status rows 50px apart so dnd-kit can find neighbours.
+    const rect = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockImplementation(function (this: HTMLElement) {
+        const label = this.querySelector('input[aria-label^="Status "]')?.getAttribute('aria-label')
+        const top = label ? Number(label.replace('Status ', '')) * 50 : 0
+        return DOMRect.fromRect({ x: 0, y: top, width: 300, height: label ? 40 : 0 })
+      })
+    const user = userEvent.setup()
+
+    renderApp('/tasks')
+    await screen.findByRole('link', { name: 'Planning' })
+    act(() => {
+      ShowModal(ProjectEditorModal, { project: planningProject })
+    })
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
+
+    const handle = await screen.findByRole('button', { name: 'Przeciągnij status 1' })
+    handle.focus()
+    await user.keyboard('[Space]')
+    await user.keyboard('[ArrowDown]')
+    await user.keyboard('[Space]')
+
+    await waitFor(() => expect(screen.getByLabelText('Status 1')).toHaveValue('Zrobione'))
+    expect(screen.getByLabelText('Status 2')).toHaveValue('Todo')
+    rect.mockRestore()
+
+    await user.click(screen.getByRole('button', { name: 'Zapisz zmiany' }))
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/v1/projects/2/',
+        expect.objectContaining({
+          method: 'PATCH',
+          body: JSON.stringify({
+            name: 'Planning',
+            description: '',
+            project_statuses: ['Zrobione', 'Todo'],
+            terminal_status: 'Zrobione',
+          }),
+        }),
+      ),
     )
   })
 
@@ -462,6 +514,7 @@ describe('Projects', () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
     await screen.findByText('Capture scope')
     await user.click(screen.getByRole('button', { name: 'Edytuj zadanie: Capture scope' }))
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
     await user.clear(screen.getByLabelText('Tytuł zadania'))
     await user.type(screen.getByLabelText('Tytuł zadania'), 'Capture requirements')
     await user.type(screen.getByLabelText('Opis (opcjonalnie)'), 'Confirm with the team')
@@ -519,6 +572,7 @@ describe('Projects', () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
     await screen.findByText('First title')
     await user.click(screen.getByRole('button', { name: 'Edytuj zadanie: First title' }))
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
     await user.clear(screen.getByLabelText('Tytuł zadania'))
     await user.type(screen.getByLabelText('Tytuł zadania'), 'Updated title')
     await user.clear(screen.getByLabelText('Opis (opcjonalnie)'))
@@ -628,6 +682,7 @@ describe('Deleting tasks and projects', () => {
     renderApp('/tasks')
     await screen.findByText('Prepare outline')
     await user.click(screen.getByRole('button', { name: 'Edytuj zadanie: Prepare outline' }))
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Usuń' }))
 
     expect(
@@ -646,6 +701,7 @@ describe('Deleting tasks and projects', () => {
     )
 
     await user.click(screen.getByRole('button', { name: 'Edytuj zadanie: Prepare outline' }))
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Usuń' }))
     await user.click(screen.getByRole('button', { name: 'Usuń zadanie' }))
 
@@ -672,6 +728,7 @@ describe('Deleting tasks and projects', () => {
     renderApp('/tasks')
     await screen.findByText('Prepare outline')
     await user.click(screen.getByRole('button', { name: 'Edytuj zadanie: Prepare outline' }))
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Usuń' }))
     await user.click(screen.getByRole('button', { name: 'Usuń zadanie' }))
 

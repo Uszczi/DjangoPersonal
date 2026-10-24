@@ -64,3 +64,20 @@ export const Editor: Story = {
     ),
   },
 };
+
+/** An editor of an existing item before the pencil is pressed: fields disabled, no footer. */
+export const ReadOnlyEditor: Story = {
+  args: {
+    size: "lg",
+    kicker: "ZMIANA SZCZEGÓŁÓW",
+    title: "Edytuj zadanie",
+    onEdit: fn(),
+    children: (
+      <fieldset disabled className="contents">
+        <Field label="Tytuł zadania">
+          <TextInput defaultValue="Kupić mleko" />
+        </Field>
+      </fieldset>
+    ),
+  },
+};

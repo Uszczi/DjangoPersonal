@@ -149,6 +149,7 @@ export function TimerPage() {
     minutes: "",
   });
   const [editError, setEditError] = useState("");
+  const [isEditingEntry, setIsEditingEntry] = useState(false);
   const [entryRange, setEntryRange] = useState<"today" | "7" | "30" | "all">(
     "today",
   );
@@ -294,6 +295,7 @@ export function TimerPage() {
       minutes: String(entryMinutes(entry)),
     });
     setEditError("");
+    setIsEditingEntry(false);
   }
 
   async function saveEntryEdit(event: FormEvent<HTMLFormElement>) {
@@ -725,71 +727,76 @@ export function TimerPage() {
           title="Edytuj wpis"
           titleId="entry-edit-title"
           onClose={closeEntryEditor}
+          onEdit={isEditingEntry ? undefined : () => setIsEditingEntry(true)}
           size="lg"
         >
           <form onSubmit={saveEntryEdit}>
-            <Field label="Data">
-              <TextInput
-                type="date"
-                value={editForm.date}
-                onChange={(event) =>
-                  setEditForm((current) => ({
-                    ...current,
-                    date: event.target.value,
-                  }))
-                }
-                required
-              />
-            </Field>
-            <Field label="Zadanie">
-              <TaskTitleInput
-                listId="edit-task-titles"
-                value={editForm.title}
-                onChange={(title) =>
-                  setEditForm((current) => ({ ...current, title }))
-                }
-              />
-              <datalist id="edit-task-titles">
-                {tasks.map((task) => (
-                  <option key={task.id} value={task.title} />
-                ))}
-              </datalist>
-            </Field>
-            <Field label="Czas (minuty)">
-              <TextInput
-                type="number"
-                min={1}
-                max={1440}
-                value={editForm.minutes}
-                onChange={(event) =>
-                  setEditForm((current) => ({
-                    ...current,
-                    minutes: event.target.value,
-                  }))
-                }
-                required
-              />
-            </Field>
+            <fieldset disabled={!isEditingEntry} className="contents">
+              <Field label="Data">
+                <TextInput
+                  type="date"
+                  value={editForm.date}
+                  onChange={(event) =>
+                    setEditForm((current) => ({
+                      ...current,
+                      date: event.target.value,
+                    }))
+                  }
+                  required
+                />
+              </Field>
+              <Field label="Zadanie">
+                <TaskTitleInput
+                  listId="edit-task-titles"
+                  value={editForm.title}
+                  onChange={(title) =>
+                    setEditForm((current) => ({ ...current, title }))
+                  }
+                />
+                <datalist id="edit-task-titles">
+                  {tasks.map((task) => (
+                    <option key={task.id} value={task.title} />
+                  ))}
+                </datalist>
+              </Field>
+              <Field label="Czas (minuty)">
+                <TextInput
+                  type="number"
+                  min={1}
+                  max={1440}
+                  value={editForm.minutes}
+                  onChange={(event) =>
+                    setEditForm((current) => ({
+                      ...current,
+                      minutes: event.target.value,
+                    }))
+                  }
+                  required
+                />
+              </Field>
+            </fieldset>
             {editError && <ErrorAlert>{editError}</ErrorAlert>}
-            <ModalFooter>
-              <Button
-                variant="ghostDanger"
-                className="mr-auto"
-                onClick={() => {
-                  const entry = editingEntry;
-                  closeEntryEditor();
-                  void deleteEntryAction(entry);
-                }}
-              >
-                Usuń
-              </Button>
-              <Button variant="secondary" onClick={closeEntryEditor}>
-                Anuluj
-              </Button>
-              <Button variant="primary" type="submit">
-                Zapisz zmiany
-              </Button>
-            </ModalFooter>
+            {isEditingEntry && (
+              <ModalFooter>
+                <Button
+                  variant="ghostDanger"
+                  className="mr-auto"
+                  onClick={() => {
+                    const entry = editingEntry;
+                    closeEntryEditor();
+                    void deleteEntryAction(entry);
+                  }}
+                >
+                  Usuń
+                </Button>
+                <Button variant="secondary" onClick={closeEntryEditor}>
+                  Anuluj
+                </Button>
+                <Button variant="primary" type="submit">
+                  Zapisz zmiany
+                </Button>
+              </ModalFooter>
+            )}
           </form>
         </Modal>
       )}

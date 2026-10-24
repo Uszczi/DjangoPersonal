@@ -34,6 +34,7 @@ export function TaskEditorModal({
   });
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(!task);
 
   const targetProject = projects.find((item) => item.id === form.project);
   const statuses = targetProject?.projectStatuses ?? [];
@@ -107,114 +108,119 @@ export function TaskEditorModal({
       }
       titleId={titleId}
       onClose={close}
+      onEdit={isEditing ? undefined : () => setIsEditing(true)}
       size="lg"
     >
       <form onSubmit={handleSubmit}>
-        <Field label="Tytuł zadania">
-          <TextArea
-            ref={titleRef}
-            resize="none"
-            autoCapitalize="sentences"
-            maxLength={200}
-            rows={1}
-            value={form.title}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                title: event.target.value,
-              }))
-            }
-            required
-          />
-        </Field>
-        <Field label="Opis (opcjonalnie)">
-          <TextArea
-            ref={descriptionRef}
-            resize="none"
-            className="min-h-[80px]"
-            rows={3}
-            value={form.description}
-            onChange={(event) => {
-              setForm((current) => ({
-                ...current,
-                description: event.target.value,
-              }));
-            }}
-          />
-        </Field>
-        {task && (
-          <Field label="Projekt zadania">
-            <Select
-              value={form.project}
+        <fieldset disabled={!isEditing} className="contents">
+          <Field label="Tytuł zadania">
+            <TextArea
+              ref={titleRef}
+              resize="none"
+              autoCapitalize="sentences"
+              maxLength={200}
+              rows={1}
+              value={form.title}
               onChange={(event) =>
                 setForm((current) => ({
                   ...current,
-                  project: Number(event.target.value),
+                  title: event.target.value,
                 }))
               }
               required
-            >
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </Select>
+            />
           </Field>
-        )}
-        {statuses.length > 0 && (
-          <Field label="Status">
-            <Select
-              value={form.status || statuses[0]}
-              onChange={(event) =>
+          <Field label="Opis (opcjonalnie)">
+            <TextArea
+              ref={descriptionRef}
+              resize="none"
+              className="min-h-[80px]"
+              rows={3}
+              value={form.description}
+              onChange={(event) => {
                 setForm((current) => ({
                   ...current,
-                  status: event.target.value,
-                }))
-              }
-            >
-              {statuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </Select>
-          </Field>
-        )}
-        {formError && <ErrorAlert>{formError}</ErrorAlert>}
-        <ModalFooter>
-          {task && (
-            <Button
-              variant="ghostDanger"
-              className="mr-auto"
-              onClick={() => {
-                onClose();
-                ShowModal(DeleteTaskModal, { task });
+                  description: event.target.value,
+                }));
               }}
+            />
+          </Field>
+          {task && (
+            <Field label="Projekt zadania">
+              <Select
+                value={form.project}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    project: Number(event.target.value),
+                  }))
+                }
+                required
+              >
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          )}
+          {statuses.length > 0 && (
+            <Field label="Status">
+              <Select
+                value={form.status || statuses[0]}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    status: event.target.value,
+                  }))
+                }
+              >
+                {statuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          )}
+        </fieldset>
+        {formError && <ErrorAlert>{formError}</ErrorAlert>}
+        {isEditing && (
+          <ModalFooter>
+            {task && (
+              <Button
+                variant="ghostDanger"
+                className="mr-auto"
+                onClick={() => {
+                  onClose();
+                  ShowModal(DeleteTaskModal, { task });
+                }}
+                disabled={isSaving}
+              >
+                Usuń
+              </Button>
+            )}
+            <Button
+              variant="secondary"
+              onClick={close}
               disabled={isSaving}
             >
-              Usuń
+              Anuluj
             </Button>
-          )}
-          <Button
-            variant="secondary"
-            onClick={close}
-            disabled={isSaving}
-          >
-            Anuluj
-          </Button>
-          <Button
-            variant="primary"
-            type="submit"
-            disabled={isSaving}
-          >
-            {isSaving
-              ? "Zapisywanie…"
-              : task
-                ? "Zapisz zmiany"
-                : "Utwórz zadanie"}
-          </Button>
-        </ModalFooter>
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={isSaving}
+            >
+              {isSaving
+                ? "Zapisywanie…"
+                : task
+                  ? "Zapisz zmiany"
+                  : "Utwórz zadanie"}
+            </Button>
+          </ModalFooter>
+        )}
       </form>
     </Modal>
   );

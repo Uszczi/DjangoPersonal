@@ -169,6 +169,46 @@ describe('Transactions', () => {
     )
   })
 
+  test('an added transaction lands in newest-first order', async () => {
+    const createdApi = {
+      id: 12,
+      title: 'Książka',
+      amount: '34.90',
+      date: '2026-10-18',
+      description: '',
+      category_id: null,
+      wallet_id: 1,
+    }
+    fetchMock.mockImplementation(
+      routeByUrl({
+        // The server's order: newest day first.
+        transactions: [lunchTransactionApi, coffeeTransactionApi],
+        created: createdApi,
+      }),
+    )
+    const user = userEvent.setup()
+
+    renderApp('/expenses/1')
+    await screen.findByRole('list', { name: 'Transakcje z dnia 18 października 2026' })
+
+    await user.click(screen.getByRole('button', { name: 'Nowa transakcja' }))
+    await user.type(await screen.findByLabelText('Tytuł'), 'Książka')
+    await user.type(screen.getByLabelText('Kwota'), '34.90')
+    await user.clear(screen.getByLabelText('Data'))
+    await user.type(screen.getByLabelText('Data'), '2026-10-18')
+    await user.click(screen.getByRole('button', { name: 'Dodaj transakcję' }))
+
+    await screen.findByText('Książka')
+    const titles = screen
+      .getAllByRole('button', { name: /^Edytuj transakcję: / })
+      .map((button) => button.getAttribute('aria-label'))
+    expect(titles).toEqual([
+      'Edytuj transakcję: Książka',
+      'Edytuj transakcję: Obiad',
+      'Edytuj transakcję: Kawa',
+    ])
+  })
+
   test('amount must be positive with at most two decimal places', async () => {
     fetchMock.mockImplementation(routeByUrl())
     const user = userEvent.setup()
@@ -193,6 +233,38 @@ describe('Transactions', () => {
     expect(fetchMock.mock.calls.filter(([url]) => String(url).includes('/transactions/'))).toHaveLength(1)
   })
 
+  test('an existing transaction opens read-only until the pencil is pressed', async () => {
+    fetchMock.mockImplementation(routeByUrl({ transactions: [coffeeTransactionApi] }))
+    const user = userEvent.setup()
+
+    renderApp('/expenses/1')
+    await screen.findByRole('list', { name: 'Transakcje z dnia 16 października 2026' })
+    await user.click(screen.getByRole('button', { name: 'Edytuj transakcję: Kawa' }))
+
+    expect(await screen.findByLabelText('Tytuł')).toBeDisabled()
+    expect(screen.getByLabelText('Tytuł')).toHaveValue('Kawa')
+    expect(screen.queryByRole('button', { name: 'Zapisz zmiany' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Usuń' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Edytuj' }))
+
+    expect(screen.getByLabelText('Tytuł')).toBeEnabled()
+    expect(screen.getByLabelText('Tytuł')).toHaveFocus()
+    expect(screen.getByRole('button', { name: 'Zapisz zmiany' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Edytuj' })).not.toBeInTheDocument()
+  })
+
+  test('a new transaction opens editable, without the pencil', async () => {
+    fetchMock.mockImplementation(routeByUrl())
+    const user = userEvent.setup()
+
+    renderApp('/expenses/1')
+    await user.click(await screen.findByRole('button', { name: 'Nowa transakcja' }))
+
+    expect(await screen.findByLabelText('Tytuł')).toBeEnabled()
+    expect(screen.queryByRole('button', { name: 'Edytuj' })).not.toBeInTheDocument()
+  })
+
   test('user can edit a transaction via a modal', async () => {
     const patchedApi = { ...coffeeTransactionApi, title: 'Kawa specjalna' }
     fetchMock.mockImplementation(
@@ -204,6 +276,7 @@ describe('Transactions', () => {
     const day = await screen.findByRole('list', { name: 'Transakcje z dnia 16 października 2026' })
 
     await user.click(screen.getByRole('button', { name: 'Edytuj transakcję: Kawa' }))
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
 
     const titleInput = await screen.findByLabelText('Tytuł')
     expect(titleInput).toHaveValue('Kawa')
@@ -226,6 +299,37 @@ describe('Transactions', () => {
         }),
       }),
     )
+  })
+
+  test('a transaction description can span several lines', async () => {
+    const patchedApi = { ...coffeeTransactionApi, description: 'Na rynku\nz Anią' }
+    fetchMock.mockImplementation(
+      routeByUrl({ transactions: [coffeeTransactionApi], patched: patchedApi }),
+    )
+    const user = userEvent.setup()
+
+    renderApp('/expenses/1')
+    await screen.findByRole('list', { name: 'Transakcje z dnia 16 października 2026' })
+    await user.click(screen.getByRole('button', { name: 'Edytuj transakcję: Kawa' }))
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
+
+    const description = screen.getByLabelText('Opis')
+    expect(description.tagName).toBe('TEXTAREA')
+    await user.type(description, '{Enter}z Anią')
+    await user.click(screen.getByRole('button', { name: 'Zapisz zmiany' }))
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/v1/transactions/10/',
+        expect.objectContaining({
+          method: 'PATCH',
+          body: expect.stringContaining('"description":"Na rynku\\nz Anią"'),
+        }),
+      ),
+    )
+    // The list keeps the line break instead of folding the text into one line.
+    const shown = await screen.findByText((_, element) => element?.textContent === 'Na rynku\nz Anią')
+    expect(shown).toHaveClass('whitespace-pre-line')
   })
 
   test('the System category is not offered for a new transaction', async () => {
@@ -284,6 +388,7 @@ describe('Transactions', () => {
     await screen.findByRole('list', { name: 'Transakcje z dnia 16 października 2026' })
 
     await user.click(screen.getByRole('button', { name: 'Edytuj transakcję: Kawa' }))
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Usuń' }))
 
     expect(await screen.findByText(/zostanie trwale usunięta/)).toBeInTheDocument()
@@ -337,6 +442,7 @@ describe('Transactions', () => {
     expect(header).toHaveTextContent('-8.00')
 
     await user.click(screen.getByRole('button', { name: 'Edytuj transakcję: Kawa' }))
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Usuń' }))
     balance = '0.00'
     await user.click(await screen.findByRole('button', { name: 'Usuń transakcję' }))

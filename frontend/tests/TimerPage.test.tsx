@@ -277,6 +277,7 @@ describe('Time tracking', () => {
     await screen.findByText('45 MIN')
 
     await user.click(screen.getByRole('button', { name: 'Edytuj wpis: Prepare outline' }))
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
     const dialog = screen.getByRole('dialog')
     await user.clear(within(dialog).getByLabelText('Czas (minuty)'))
     await user.type(within(dialog).getByLabelText('Czas (minuty)'), '60')
@@ -297,6 +298,7 @@ describe('Time tracking', () => {
     )
 
     await user.click(screen.getByRole('button', { name: 'Edytuj wpis: Prepare outline' }))
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Usuń' }))
 
     await screen.findByText('Brak wpisów na dziś.')

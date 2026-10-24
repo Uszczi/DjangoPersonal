@@ -42,9 +42,17 @@ export function ListRowTitle({
   );
 }
 
-export function ListRowSubtitle({ children }: { children: ReactNode }) {
+export function ListRowSubtitle({
+  multiline = false,
+  children,
+}: {
+  /** Keep the text's line breaks (up to three lines) instead of truncating to one line. */
+  multiline?: boolean;
+  children: ReactNode;
+}) {
+  const lines = multiline ? "line-clamp-3 whitespace-pre-line break-words" : "truncate";
   return (
-    <small className="mt-0.5 block truncate text-[12px] leading-relaxed text-muted">
+    <small className={`mt-0.5 block ${lines} text-[12px] leading-relaxed text-muted`}>
       {children}
     </small>
   );

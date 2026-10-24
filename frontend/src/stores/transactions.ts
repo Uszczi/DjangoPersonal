@@ -18,6 +18,13 @@ function toRequest(input: TransactionInput) {
   return { ...input, date: parseDate(input.date) };
 }
 
+/** Newest first, matching the server's order (date desc, then id desc). */
+function newestFirst(transactions: TransactionResponse[]): TransactionResponse[] {
+  return [...transactions].sort(
+    (a, b) => b.date.getTime() - a.date.getTime() || b.id - a.id,
+  );
+}
+
 export type TransactionListState = {
   walletId: number;
   transactions: TransactionResponse[];
@@ -81,10 +88,10 @@ export const useTransactionsStore = create<TransactionsState>((set) => ({
         const belongsInList = updated.walletId === current.walletId;
         if (!wasVisible && !belongsInList) return {};
         const transactions = belongsInList
-          ? [
+          ? newestFirst([
               ...current.transactions.filter((item) => item.id !== updated.id),
               updated,
-            ]
+            ])
           : current.transactions.filter((item) => item.id !== updated.id);
         return { transactionList: { walletId: current.walletId, transactions } };
       });
@@ -100,7 +107,7 @@ export const useTransactionsStore = create<TransactionsState>((set) => ({
       return {
         transactionList: {
           walletId: current.walletId,
-          transactions: [...current.transactions, created],
+          transactions: newestFirst([...current.transactions, created]),
         },
       };
     });

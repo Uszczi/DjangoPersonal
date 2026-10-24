@@ -3,16 +3,11 @@ import { useEffect, type ComponentProps, type HTMLAttributes } from "react";
 import {
   DndContext,
   closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
-  sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
@@ -20,6 +15,7 @@ import { CSS } from "@dnd-kit/utilities";
 
 import {
   Button,
+  DragHandle,
   ListRow,
   ListRowButton,
   ListRowSubtitle,
@@ -28,6 +24,7 @@ import {
 import { ProjectEditorModal } from "@/components/modals/ProjectEditorModal";
 import { ShowModal } from "@/stores/modal";
 import { useProjectsStore } from "@/stores/projects";
+import { useSortSensors } from "@/useSortSensors";
 import { api } from "@/api";
 
 export const Route = createFileRoute("/projects")({
@@ -53,14 +50,7 @@ function ProjectRow({ project, onEdit, dragHandle, ref, style }: ProjectRowProps
     <ListRow ref={ref} style={style}>
       <>
         {dragHandle ? (
-          <span
-            className="inline-flex cursor-grab items-center justify-center text-[14px] text-[#9aafaa] transition-colors hover:text-muted"
-            aria-label={`Przeciągnij projekt: ${project.name}`}
-            title="Przeciągnij"
-            {...dragHandle}
-          >
-            <span aria-hidden="true">⠿</span>
-          </span>
+          <DragHandle aria-label={`Przeciągnij projekt: ${project.name}`} {...dragHandle} />
         ) : (
           <span className="inline-block w-[14px]" aria-hidden="true" />
         )}
@@ -111,16 +101,7 @@ export function ProjectsPage() {
   const pageError = useProjectsStore((state) => state.pageError);
   const loadProjects = useProjectsStore((state) => state.loadProjects);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
+  const sensors = useSortSensors();
 
   useEffect(() => {
     void loadProjects();

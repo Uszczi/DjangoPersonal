@@ -179,6 +179,7 @@ describe('Wallets', () => {
 
     renderApp('/expenses')
     await user.click(await screen.findByRole('button', { name: 'Edytuj portfel: Personal' }))
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
     const balanceInput = await screen.findByLabelText('Stan aktualny')
     expect(balanceInput).toHaveValue('0.00')
 
@@ -220,6 +221,7 @@ describe('Wallets', () => {
     expect(await screen.findByText('Brak transakcji. Dodaj pierwszą transakcję.')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Edytuj portfel: Personal' }))
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
     const balanceInput = await screen.findByLabelText('Stan aktualny')
     await user.clear(balanceInput)
     await user.type(balanceInput, '75')
@@ -238,6 +240,7 @@ describe('Wallets', () => {
 
     renderApp('/expenses')
     await user.click(await screen.findByRole('button', { name: 'Edytuj portfel: Personal' }))
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
     await screen.findByText('Brak transakcji. Dodaj pierwszą transakcję.')
     const transactionLoads = () =>
       fetchMock.mock.calls.filter(([url]) => String(url).includes('/transactions/')).length
@@ -261,6 +264,7 @@ describe('Wallets', () => {
 
     renderApp('/expenses')
     await user.click(await screen.findByRole('button', { name: 'Edytuj portfel: Personal' }))
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
 
     await user.clear(await screen.findByLabelText('Nazwa portfela'))
     await user.type(screen.getByLabelText('Nazwa portfela'), 'Personal renamed')
@@ -310,6 +314,7 @@ describe('Wallets', () => {
 
     renderApp('/expenses')
     await user.click(await screen.findByRole('button', { name: 'Edytuj portfel: Personal' }))
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
     expect(await screen.findByRole('radio', { name: 'Morski' })).toBeChecked()
     await user.click(screen.getByRole('radio', { name: 'Zielony' }))
     await user.click(screen.getByRole('button', { name: 'Zapisz zmiany' }))
@@ -333,6 +338,7 @@ describe('Wallets', () => {
 
     renderApp('/expenses')
     await user.click(await screen.findByRole('button', { name: 'Edytuj portfel: Business' }))
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Usuń' }))
 
     expect(await screen.findByText(/zostanie trwale usunięty/)).toBeInTheDocument()
@@ -351,6 +357,7 @@ describe('Wallets', () => {
 
     renderApp('/expenses')
     await user.click(await screen.findByRole('button', { name: 'Edytuj portfel: Personal' }))
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Usuń' }))
     await user.click(await screen.findByRole('button', { name: 'Usuń portfel' }))
 
@@ -405,6 +412,7 @@ describe('Wallets', () => {
 
     renderApp('/expenses')
     await user.click(await screen.findByRole('button', { name: 'Edytuj portfel: Personal' }))
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
     await user.click(await screen.findByRole('button', { name: 'Ikona portfela: Oszczędności' }))
     await user.click(await screen.findByRole('button', { name: 'Bez ikony' }))
     expect(screen.getByRole('button', { name: 'Ikona portfela: Bez ikony' })).toHaveFocus()

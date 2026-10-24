@@ -68,3 +68,19 @@ export const LongTitle: Story = {
     ],
   },
 };
+
+export const MultilineSubtitle: Story = {
+  args: {
+    children: [
+      <ListRowButton key="start" aria-label="Edytuj transakcję: Zakupy" onClick={fn()}>
+        <div className="min-w-0">
+          <ListRowTitle>Zakupy</ListRowTitle>
+          <ListRowSubtitle multiline>{"Chleb, masło\nMleko\nJajka\nKawa"}</ListRowSubtitle>
+        </div>
+      </ListRowButton>,
+      <Fragment key="end">
+        <span className="font-utility text-[13px] font-semibold text-ink-soft">42.50</span>
+      </Fragment>,
+    ],
+  },
+};

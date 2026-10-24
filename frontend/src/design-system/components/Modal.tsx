@@ -1,4 +1,6 @@
-import type { HTMLAttributes, ReactNode } from "react";
+import { useRef, type HTMLAttributes, type ReactNode } from "react";
+import { flushSync } from "react-dom";
+import { Pencil } from "lucide-react";
 
 import { IconButton } from "./IconButton";
 import { useModalDialog } from "./useModalDialog";
@@ -12,6 +14,11 @@ type ModalProps = {
   onClose: () => void;
   /** `md` is 430px (confirm dialogs), `lg` is 480px (editors). */
   size?: "md" | "lg";
+  /**
+   * Editors of an existing item open read-only; while this is set, a pencil beside the close
+   * button switches to editing (the owner flips its state) and focuses the first field.
+   */
+  onEdit?: () => void;
   children: ReactNode;
 };
 
@@ -30,9 +37,19 @@ export function Modal({
   titleId,
   onClose,
   size = "md",
+  onEdit,
   children,
 }: ModalProps) {
   const dialogProps = useModalDialog(onClose, { focusFirstField: true });
+  const sectionRef = useRef<HTMLElement>(null);
+
+  function startEditing(edit: () => void) {
+    // Render the editable form now, so its first field exists to take focus from the pencil.
+    flushSync(edit);
+    sectionRef.current
+      ?.querySelector<HTMLElement>("input:not(:disabled), textarea:not(:disabled), select:not(:disabled)")
+      ?.focus();
+  }
 
   return (
     <dialog
@@ -41,6 +58,7 @@ export function Modal({
       className="fixed inset-0 m-0 h-full max-h-none w-full max-w-none items-start justify-center overflow-y-auto border-0 bg-overlay px-0 py-4 pt-16 text-ink backdrop:bg-transparent open:flex md:px-5 md:py-5 md:pt-[4vh]"
     >
       <section
+        ref={sectionRef}
         className={`w-full ${sectionClasses[size]} rounded-lg border border-line bg-paper p-[29px] shadow-dialog animate-dialog-enter`}
       >
         <div className="mb-[27px] flex items-start justify-between">
@@ -55,9 +73,16 @@ export function Modal({
               {title}
             </h2>
           </div>
-          <IconButton onClick={onClose} aria-label="Zamknij">
-            <span aria-hidden="true">×</span>
-          </IconButton>
+          <div className="flex shrink-0 gap-1">
+            {onEdit && (
+              <IconButton onClick={() => startEditing(onEdit)} aria-label="Edytuj" title="Edytuj">
+                <Pencil aria-hidden="true" className="size-[18px]" />
+              </IconButton>
+            )}
+            <IconButton onClick={onClose} aria-label="Zamknij">
+              <span aria-hidden="true">×</span>
+            </IconButton>
+          </div>
         </div>
         {children}
       </section>

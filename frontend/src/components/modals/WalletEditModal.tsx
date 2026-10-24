@@ -29,6 +29,7 @@ export function WalletEditModal({ wallet, onClose }: WalletEditModalProps) {
   const [currentBalance, setCurrentBalance] = useState(wallet.balance ?? "0.00");
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   function close() {
     if (!isSaving) onClose();
@@ -71,55 +72,60 @@ export function WalletEditModal({ wallet, onClose }: WalletEditModalProps) {
       title="Edytuj portfel"
       titleId="wallet-edit-title"
       onClose={close}
+      onEdit={isEditing ? undefined : () => setIsEditing(true)}
       size="lg"
     >
       <form onSubmit={handleSubmit} noValidate>
-        <Field label="Nazwa portfela">
-          <TextInput
-            maxLength={100}
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            required
-          />
-        </Field>
-        <WalletColorPicker value={color} onChange={setColor} />
-        <WalletIconPicker value={icon} onChange={setIcon} />
-        <Field label="Stan aktualny">
-          <TextInput
-            inputMode="decimal"
-            autoComplete="off"
-            value={currentBalance}
-            onChange={(event) => setCurrentBalance(event.target.value)}
-          />
-        </Field>
+        <fieldset disabled={!isEditing} className="contents">
+          <Field label="Nazwa portfela">
+            <TextInput
+              maxLength={100}
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              required
+            />
+          </Field>
+          <WalletColorPicker value={color} onChange={setColor} />
+          <WalletIconPicker value={icon} onChange={setIcon} />
+          <Field label="Stan aktualny">
+            <TextInput
+              inputMode="decimal"
+              autoComplete="off"
+              value={currentBalance}
+              onChange={(event) => setCurrentBalance(event.target.value)}
+            />
+          </Field>
+        </fieldset>
         {formError && <ErrorAlert>{formError}</ErrorAlert>}
-        <ModalFooter>
-          <Button
-            variant="ghostDanger"
-            className="mr-auto"
-            onClick={() => {
-              onClose();
-              ShowModal(DeleteWalletModal, { wallet });
-            }}
-            disabled={isSaving}
-          >
-            Usuń
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={close}
-            disabled={isSaving}
-          >
-            Anuluj
-          </Button>
-          <Button
-            variant="primary"
-            type="submit"
-            disabled={isSaving}
-          >
-            {isSaving ? "Zapisywanie…" : "Zapisz zmiany"}
-          </Button>
-        </ModalFooter>
+        {isEditing && (
+          <ModalFooter>
+            <Button
+              variant="ghostDanger"
+              className="mr-auto"
+              onClick={() => {
+                onClose();
+                ShowModal(DeleteWalletModal, { wallet });
+              }}
+              disabled={isSaving}
+            >
+              Usuń
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={close}
+              disabled={isSaving}
+            >
+              Anuluj
+            </Button>
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={isSaving}
+            >
+              {isSaving ? "Zapisywanie…" : "Zapisz zmiany"}
+            </Button>
+          </ModalFooter>
+        )}
       </form>
     </Modal>
   );
