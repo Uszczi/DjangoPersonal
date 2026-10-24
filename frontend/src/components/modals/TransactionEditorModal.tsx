@@ -5,7 +5,7 @@ import { DeleteTransactionModal } from "@/components/modals/DeleteTransactionMod
 import { Button, ErrorAlert, Field, Modal, ModalFooter, Select, TextArea, TextInput } from "@/design-system";
 import { ShowModal } from "@/stores/modal";
 import type { TransactionResponse } from "@personal/shared/generated/api";
-import { DEFAULT_CATEGORY_ICON } from "@/categoryIcons";
+import { DEFAULT_CATEGORY_ICON } from "@personal/shared/categoryIcons";
 import { CategoryIcon } from "@/components/CategoryIcon";
 import { useCategoriesStore } from "@personal/shared/stores/categories";
 import {

@@ -1,42 +1,41 @@
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from "react-native";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { useProjectsStore } from "@personal/shared/stores/projects";
 import { useTasksStore, type TaskInput } from "@personal/shared/stores/tasks";
 
+import { Button } from "../src/Button";
 import { ChipGroup } from "../src/ChipGroup";
-import { colors, common } from "../src/theme";
+import { confirmDestructive } from "../src/confirm";
+import { common, form } from "../src/theme";
 
 /**
  * Creates a Task (`?projectId=`) or edits one (`?taskId=`), like the web
  * TaskEditorModal. The edited Task comes from the loaded task list, which is
- * the list the user tapped it in.
+ * the list the user tapped it in. Moving up/down stands in for the web's
+ * drag and drop.
  */
 export default function TaskEditorScreen() {
   const params = useLocalSearchParams<{ projectId?: string; taskId?: string }>();
   const taskId = params.taskId ? Number(params.taskId) : null;
 
   const projects = useProjectsStore((state) => state.projects);
-  const task = useTasksStore((state) =>
-    taskId === null
-      ? null
-      : (state.taskList?.tasks.find((item) => item.id === taskId) ?? null),
-  );
+  const taskList = useTasksStore((state) => state.taskList);
+  const task =
+    taskId === null ? null : (taskList?.tasks.find((item) => item.id === taskId) ?? null);
+  // Derived outside the selector: a selector returning a fresh array would
+  // re-render forever.
+  const siblings = task
+    ? (taskList?.tasks ?? []).filter((item) => item.status === task.status)
+    : [];
   const saveTask = useTasksStore((state) => state.saveTask);
+  const moveTask = useTasksStore((state) => state.moveTask);
+  const confirmDelete = useTasksStore((state) => state.confirmDelete);
+  const actionError = useTasksStore((state) => state.actionError);
 
-  const [form, setForm] = useState<TaskInput>(() => ({
+  const [form_, setForm] = useState<TaskInput>(() => ({
     title: task?.title ?? "",
     description: task?.description ?? "",
     project: task?.projectId ?? Number(params.projectId ?? 0),
@@ -45,10 +44,10 @@ export default function TaskEditorScreen() {
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  const targetProject = projects.find((item) => item.id === form.project);
+  const targetProject = projects.find((item) => item.id === form_.project);
   const statuses = targetProject?.projectStatuses ?? [];
   const selectedStatus =
-    form.status && statuses.includes(form.status) ? form.status : statuses[0];
+    form_.status && statuses.includes(form_.status) ? form_.status : statuses[0];
 
   if (taskId !== null && !task) {
     return (
@@ -60,9 +59,9 @@ export default function TaskEditorScreen() {
 
   async function submit() {
     const input: TaskInput = {
-      title: form.title.trim(),
-      description: form.description.trim(),
-      project: form.project,
+      title: form_.title.trim(),
+      description: form_.description.trim(),
+      project: form_.project,
       status: selectedStatus,
     };
     if (!input.title) {
@@ -85,6 +84,34 @@ export default function TaskEditorScreen() {
     }
   }
 
+  async function deleteTask() {
+    if (!task) return;
+    const confirmed = await confirmDestructive(
+      "Usunąć zadanie?",
+      `Zadanie „${task.title}” zostanie trwale usunięte. Tej operacji nie można cofnąć.`,
+      "Usuń zadanie",
+    );
+    if (!confirmed) return;
+
+    setIsSaving(true);
+    try {
+      await confirmDelete(task);
+      router.back();
+    } catch (error) {
+      setFormError(await apiErrorMessage(error));
+      setIsSaving(false);
+    }
+  }
+
+  async function move(direction: "up" | "down") {
+    if (!task) return;
+    setIsSaving(true);
+    await moveTask(task, direction);
+    setIsSaving(false);
+  }
+
+  const position = task ? siblings.findIndex((item) => item.id === task.id) : -1;
+
   return (
     <KeyboardAvoidingView
       style={common.screen}
@@ -95,11 +122,11 @@ export default function TaskEditorScreen() {
           title: task ? "Edytuj zadanie" : `Dodaj do ${targetProject?.name ?? "Inbox"}`,
         }}
       />
-      <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
-        <Text style={styles.label}>Tytuł zadania</Text>
+      <ScrollView contentContainerStyle={form.content} keyboardShouldPersistTaps="handled">
+        <Text style={form.label}>Tytuł zadania</Text>
         <TextInput
-          style={styles.input}
-          value={form.title}
+          style={form.input}
+          value={form_.title}
           onChangeText={(title) => setForm((current) => ({ ...current, title }))}
           maxLength={200}
           multiline
@@ -108,27 +135,21 @@ export default function TaskEditorScreen() {
           editable={!isSaving}
         />
 
-        <Text style={styles.label}>Opis (opcjonalnie)</Text>
+        <Text style={form.label}>Opis (opcjonalnie)</Text>
         <TextInput
-          style={[styles.input, styles.description]}
-          value={form.description}
-          onChangeText={(description) =>
-            setForm((current) => ({ ...current, description }))
-          }
+          style={[form.input, form.multiline]}
+          value={form_.description}
+          onChangeText={(description) => setForm((current) => ({ ...current, description }))}
           multiline
-          textAlignVertical="top"
           editable={!isSaving}
         />
 
         {task && (
           <>
-            <Text style={styles.label}>Projekt zadania</Text>
+            <Text style={form.label}>Projekt zadania</Text>
             <ChipGroup
-              options={projects.map((project) => ({
-                value: project.id,
-                label: project.name,
-              }))}
-              value={form.project}
+              options={projects.map((project) => ({ value: project.id, label: project.name }))}
+              value={form_.project}
               onChange={(project) => setForm((current) => ({ ...current, project }))}
               disabled={isSaving}
             />
@@ -137,7 +158,7 @@ export default function TaskEditorScreen() {
 
         {statuses.length > 0 && (
           <>
-            <Text style={styles.label}>Status</Text>
+            <Text style={form.label}>Status</Text>
             <ChipGroup
               options={statuses.map((status) => ({ value: status, label: status }))}
               value={selectedStatus}
@@ -147,58 +168,54 @@ export default function TaskEditorScreen() {
           </>
         )}
 
-        {formError !== "" && <Text style={styles.error}>{formError}</Text>}
-
-        {/* In the form, not the header: header buttons can miss taps on Android. */}
-        <View style={styles.actions}>
-          <Pressable
-            accessibilityRole="button"
+        {(formError || actionError) !== "" && (
+          <Text style={form.error}>{formError || actionError}</Text>
+        )}
+        <View style={form.actions}>
+          <Button
+            label="Anuluj"
+            variant="secondary"
             disabled={isSaving}
             onPress={() => router.back()}
-            style={[styles.button, styles.buttonSecondary]}
-          >
-            <Text style={styles.buttonSecondaryText}>Anuluj</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            disabled={isSaving}
+          />
+          <Button
+            label={task ? "Zapisz zmiany" : "Utwórz zadanie"}
+            isBusy={isSaving}
             onPress={() => void submit()}
-            style={[styles.button, styles.buttonPrimary, isSaving && styles.buttonDisabled]}
-          >
-            {isSaving ? (
-              <ActivityIndicator color={colors.onPrimary} />
-            ) : (
-              <Text style={styles.buttonPrimaryText}>
-                {task ? "Zapisz zmiany" : "Utwórz zadanie"}
-              </Text>
-            )}
-          </Pressable>
+          />
         </View>
+
+        {task && siblings.length > 1 && (
+          <>
+            <Text style={form.label}>Kolejność w statusie „{task.status}”</Text>
+            <View style={[form.actions, { marginTop: 0 }]}>
+              <Button
+                label="↑ Wyżej"
+                variant="secondary"
+                disabled={isSaving || position <= 0}
+                onPress={() => void move("up")}
+              />
+              <Button
+                label="↓ Niżej"
+                variant="secondary"
+                disabled={isSaving || position === siblings.length - 1}
+                onPress={() => void move("down")}
+              />
+            </View>
+          </>
+        )}
+
+        {task && (
+          <View style={form.actions}>
+            <Button
+              label="Usuń zadanie"
+              variant="danger"
+              disabled={isSaving}
+              onPress={() => void deleteTask()}
+            />
+          </View>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  form: { padding: 16, gap: 8 },
-  label: { color: colors.muted, fontSize: 13, marginTop: 8 },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    backgroundColor: colors.surface,
-    color: colors.text,
-  },
-  description: { minHeight: 96 },
-  error: { color: colors.danger, marginTop: 8 },
-  actions: { flexDirection: "row", gap: 12, marginTop: 16 },
-  button: { flex: 1, borderRadius: 8, paddingVertical: 14, alignItems: "center" },
-  buttonPrimary: { backgroundColor: colors.primary },
-  buttonSecondary: { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  buttonDisabled: { opacity: 0.6 },
-  buttonPrimaryText: { color: colors.onPrimary, fontSize: 16, fontWeight: "600" },
-  buttonSecondaryText: { color: colors.text, fontSize: 16 },
-});

@@ -9,6 +9,8 @@ type ChipGroupProps<T> = {
   value: T | undefined;
   onChange: (value: T) => void;
   disabled?: boolean;
+  /** One line (inside a horizontal ScrollView) instead of wrapping. */
+  nowrap?: boolean;
 };
 
 /** Single choice from a short list; React Native has no built-in select. */
@@ -17,9 +19,10 @@ export function ChipGroup<T extends string | number>({
   value,
   onChange,
   disabled = false,
+  nowrap = false,
 }: ChipGroupProps<T>) {
   return (
-    <View style={styles.group} accessibilityRole="radiogroup">
+    <View style={[styles.group, nowrap && styles.nowrap]} accessibilityRole="radiogroup">
       {options.map((option) => {
         const isSelected = option.value === value;
         return (
@@ -43,6 +46,7 @@ export function ChipGroup<T extends string | number>({
 
 const styles = StyleSheet.create({
   group: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  nowrap: { flexWrap: "nowrap" },
   chip: {
     borderWidth: 1,
     borderColor: colors.border,

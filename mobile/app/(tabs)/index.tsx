@@ -1,18 +1,17 @@
-import { Link, Stack } from "expo-router";
+import { Link, router } from "expo-router";
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 
-import { useAuthStore } from "@personal/shared/stores/auth";
 import { useProjectsStore } from "@personal/shared/stores/projects";
 
-import { colors, common } from "../src/theme";
+import { Fab } from "../../src/Fab";
+import { colors, common } from "../../src/theme";
 
 export default function ProjectsScreen() {
   const projects = useProjectsStore((state) => state.projects);
   const isLoading = useProjectsStore((state) => state.isLoading);
   const pageError = useProjectsStore((state) => state.pageError);
   const loadProjects = useProjectsStore((state) => state.loadProjects);
-  const logout = useAuthStore((state) => state.logout);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
@@ -27,18 +26,10 @@ export default function ProjectsScreen() {
 
   return (
     <View style={common.screen}>
-      <Stack.Screen
-        options={{
-          headerRight: () => (
-            <Pressable accessibilityRole="button" onPress={logout} hitSlop={8}>
-              <Text style={{ color: colors.primary }}>Wyloguj</Text>
-            </Pressable>
-          ),
-        }}
-      />
       {pageError !== "" && <Text style={common.error}>{pageError}</Text>}
       <FlatList
         data={projects}
+        contentContainerStyle={{ paddingBottom: 96 }}
         keyExtractor={(project) => String(project.id)}
         refreshControl={
           <RefreshControl
@@ -50,7 +41,10 @@ export default function ProjectsScreen() {
           <Link href={{ pathname: "/projects/[id]", params: { id: item.id } }} asChild>
             <Pressable style={common.row}>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 16, color: colors.text }}>{item.name}</Text>
+                <Text style={{ fontSize: 16, color: colors.text }}>
+                  {item.name}
+                  {item.isInbox && <Text style={common.muted}>  · domyślny</Text>}
+                </Text>
                 {item.description !== "" && (
                   <Text style={common.muted} numberOfLines={1}>
                     {item.description}
@@ -62,6 +56,7 @@ export default function ProjectsScreen() {
           </Link>
         )}
       />
+      <Fab accessibilityLabel="Nowy projekt" onPress={() => router.push("/project")} />
     </View>
   );
 }

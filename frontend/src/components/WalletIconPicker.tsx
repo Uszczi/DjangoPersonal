@@ -1,5 +1,5 @@
 import { IconPicker } from "@/design-system";
-import { WALLET_ICON_SUGGESTIONS } from "@/walletIcons";
+import { WALLET_ICON_SUGGESTIONS } from "@personal/shared/walletIcons";
 
 type WalletIconPickerProps = {
   value: string | null;

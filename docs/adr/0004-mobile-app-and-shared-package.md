@@ -25,4 +25,4 @@ Consequences:
 - React is pinned to the exact version the Expo SDK requires (`19.3.0` for SDK 58) in both apps, so the workspace has one React copy. An Expo SDK upgrade bumps React for the web too.
 - The generated client lives in `packages/shared/src/generated/api/`; `just generate-api` writes there.
 - The frontend Docker image installs only the `frontend` workspace (`npm ci --workspace frontend`), so the Expo toolchain stays out of it; it still needs every workspace's `package.json` in the build context.
-- Web-only code stays in `frontend/`: the layout and modal stores, the whiteboard store (Konva has no React Native renderer), and anything using `localStorage` directly or the router.
+- Web-only code stays in `frontend/`: the layout and modal stores, the whiteboard store (Konva has no React Native renderer), and anything using `localStorage` directly or the router. Pure data and formatting (wallet colours, icon suggestions, `timeFormat`) moves to the shared package once both apps need it.

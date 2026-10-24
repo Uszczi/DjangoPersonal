@@ -22,6 +22,14 @@ import {
 import { defaultProject, useProjectsStore } from "@personal/shared/stores/projects";
 import { useTimerStore } from "@personal/shared/stores/timer";
 import type { TimeEntryResponse } from "@personal/shared/generated/api";
+import {
+  dateKey,
+  entryMinutes,
+  formatClock,
+  formatDuration,
+  formatElapsed,
+  todayKey,
+} from "@personal/shared/timeFormat";
 
 export const Route = createFileRoute("/timer")({
   validateSearch: validateProjectSearch,
@@ -74,45 +82,6 @@ function TaskTitleInput({
       </button>
     </div>
   );
-}
-
-function dateKey(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function todayKey() {
-  return dateKey(new Date());
-}
-
-function formatClock(date: Date) {
-  return date.toLocaleTimeString("pl-PL", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function formatElapsed(milliseconds: number) {
-  const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-}
-
-function formatDuration(minutes: number) {
-  const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
-  if (hours === 0) return `${rest} min`;
-  if (rest === 0) return `${hours} h`;
-  return `${hours} h ${rest} min`;
-}
-
-function entryMinutes(entry: TimeEntryResponse) {
-  if (!entry.end) return 0;
-  return Math.round((entry.end.getTime() - entry.start.getTime()) / 60000);
 }
 
 function TimerPage() {

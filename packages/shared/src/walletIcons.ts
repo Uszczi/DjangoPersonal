@@ -1,4 +1,4 @@
-import type { IconSuggestion } from "@/design-system";
+import type { IconSuggestion } from "./iconSuggestion";
 
 /**
  * The icons the wallet picker offers before anything is typed. A wallet's

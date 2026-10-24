@@ -1,4 +1,4 @@
-import { WALLET_COLORS } from "@/walletColors";
+import { WALLET_COLORS } from "@personal/shared/walletColors";
 
 type WalletColorPickerProps = {
   value: string;

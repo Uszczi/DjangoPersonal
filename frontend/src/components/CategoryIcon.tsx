@@ -1,4 +1,4 @@
-import { DEFAULT_CATEGORY_ICON } from "@/categoryIcons";
+import { DEFAULT_CATEGORY_ICON } from "@personal/shared/categoryIcons";
 import { NamedIcon } from "@/design-system";
 
 type CategoryIconProps = {

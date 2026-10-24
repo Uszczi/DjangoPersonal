@@ -27,12 +27,12 @@ Add a third client, a React Native app built with Expo, in `mobile/`. The web fr
 - `packages/shared` (`@personal/shared`) ships TypeScript sources (no build step); Vite, Vitest, `tsc` and Metro read them directly through the package `exports`.
 - The generated client moves to `packages/shared/src/generated/api/`; `just generate-api` writes there.
 - `configurePlatform({ apiBaseUrl, storage })` is the single seam between the shared code and its host. The web app keeps the defaults (relative URLs, so the Vite proxy applies; `localStorage`). The mobile app sets the backend URL and an `expo-secure-store` storage, then rehydrates the auth store.
-- Shared: generated client, `api`, `apiErrorMessage`, `money`, `counterFormat`, `loadGuard`, and the stores `auth`, `projects`, `tasks`, `timer`, `categories`, `counters`, `transactions`, `wallets`. Web-only (they depend on the DOM, the router or the whiteboard): `layout`, `modal`, `whiteboards`, `counterViewMode`, `lastProject`, `projectSearch`, the icon and colour maps.
+- Shared: generated client, `api`, `apiErrorMessage`, `money`, `counterFormat`, `timeFormat`, `loadGuard`, the wallet colours and icon suggestions, and the stores `auth`, `projects`, `tasks`, `timer`, `categories`, `counters`, `transactions`, `wallets`. Web-only (they depend on the DOM, the router or the whiteboard): `layout`, `modal`, `whiteboards`, `counterViewMode`, `lastProject`, `projectSearch`.
 - The mobile app uses Expo Router (file-based, like TanStack Router on the web) and plain `StyleSheet` for now; a mobile design system is a later step.
 - React is pinned to the version Expo SDK requires, in both apps, so the workspace has one React copy.
 - The backend needs no changes. During development the phone reaches it over the LAN (`just backend-lan`, with the machine's IP in `ALLOWED_HOSTS`).
 
 ## Out of Scope (for now)
 
-- Whiteboards (Konva has no React Native renderer), expenses, counters and the timer screens on mobile.
+- Whiteboards / Notatki (Konva has no React Native renderer).
 - Store builds (EAS), push notifications, offline mode.

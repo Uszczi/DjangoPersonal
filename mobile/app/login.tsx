@@ -1,3 +1,4 @@
+import { Link } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -75,6 +76,12 @@ export default function LoginScreen() {
             <Text style={styles.buttonText}>Zaloguj</Text>
           )}
         </Pressable>
+        <Text style={styles.footer}>
+          Nie masz konta?{" "}
+          <Link href="/register" replace style={styles.link}>
+            Załóż konto
+          </Link>
+        </Text>
       </View>
     </KeyboardAvoidingView>
   );
@@ -103,4 +110,6 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.5 },
   buttonText: { color: colors.onPrimary, fontSize: 16, fontWeight: "600" },
+  footer: { marginTop: 20, color: colors.muted, textAlign: "center" },
+  link: { color: colors.primary, fontWeight: "600" },
 });

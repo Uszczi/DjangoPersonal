@@ -11,7 +11,7 @@ import {
   LoadingStatus,
   TextInput,
 } from "@/design-system";
-import { CATEGORY_ICON_SUGGESTIONS, DEFAULT_CATEGORY_ICON } from "@/categoryIcons";
+import { CATEGORY_ICON_SUGGESTIONS, DEFAULT_CATEGORY_ICON } from "@personal/shared/categoryIcons";
 import { CategoryIcon } from "@/components/CategoryIcon";
 import { DeleteCategoryModal } from "@/components/modals/DeleteCategoryModal";
 import { ShowModal } from "@/stores/modal";

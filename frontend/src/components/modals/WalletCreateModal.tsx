@@ -6,7 +6,7 @@ import { WalletColorPicker } from "@/components/WalletColorPicker";
 import { WalletIconPicker } from "@/components/WalletIconPicker";
 import { balanceError } from "@personal/shared/money";
 import { useWalletsStore } from "@personal/shared/stores/wallets";
-import { DEFAULT_WALLET_COLOR } from "@/walletColors";
+import { DEFAULT_WALLET_COLOR } from "@personal/shared/walletColors";
 
 type WalletCreateModalProps = {
   onClose: () => void;
