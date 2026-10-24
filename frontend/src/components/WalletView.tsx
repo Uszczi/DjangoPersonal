@@ -5,7 +5,14 @@ import { TransactionEditorModal } from "@/components/modals/TransactionEditorMod
 import { WalletEditModal } from "@/components/modals/WalletEditModal";
 import { WalletMark } from "@/components/WalletMark";
 import { WalletSelect } from "@/components/WalletSelect";
-import { Button, ListRow, ListRowButton, ListRowSubtitle, ListRowTitle } from "@/design-system";
+import {
+  Button,
+  ErrorMessage,
+  ListRow,
+  ListRowButton,
+  ListRowSubtitle,
+  ListRowTitle,
+} from "@/design-system";
 import { type TransactionResponse, type WalletResponse } from "@/generated/api";
 import { ShowModal } from "@/stores/modal";
 import { useCategoriesStore } from "@/stores/categories";
@@ -89,9 +96,9 @@ export function WalletView({ wallet }: { wallet: WalletResponse }) {
       </div>
 
       {transactionLoadError?.walletId === wallet.id && (
-        <p className="py-4 text-[13px] text-danger" role="alert">
+        <ErrorMessage>
           {transactionLoadError.message}
-        </p>
+        </ErrorMessage>
       )}
 
       {groups.length === 0 ? (

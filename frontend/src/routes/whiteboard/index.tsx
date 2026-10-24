@@ -2,7 +2,15 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { api } from "@/api";
-import { Button, DeleteButton, ListRow, ListRowButton, ListRowTitle } from "@/design-system";
+import {
+  Button,
+  DeleteButton,
+  ErrorMessage,
+  ListRow,
+  ListRowButton,
+  ListRowTitle,
+  LoadingStatus,
+} from "@/design-system";
 import { useWhiteboardsStore } from "@/stores/whiteboards";
 
 export const Route = createFileRoute("/whiteboard/")({
@@ -41,14 +49,14 @@ function WhiteboardsPage() {
 
   if (isLoading) {
     return (
-      <div className="pt-[40px] text-muted" role="status">
+      <LoadingStatus>
         Wczytywanie tablic…
-      </div>
+      </LoadingStatus>
     );
   }
 
   if (pageError) {
-    return <p className="py-4 text-[13px] text-danger" role="alert">{pageError}</p>;
+    return <ErrorMessage>{pageError}</ErrorMessage>;
   }
 
   return (

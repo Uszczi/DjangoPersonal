@@ -7,7 +7,6 @@ export const Route = createFileRoute("/counters")({
   component: CountersLayout,
 });
 
-/** Loads the counters once for both the list and a counter's page. */
 function CountersLayout() {
   const loadCounters = useCountersStore((state) => state.loadCounters);
 

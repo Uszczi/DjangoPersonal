@@ -26,11 +26,13 @@ import {
   Button,
   DragHandle,
   Drawer,
+  ErrorMessage,
   IconButton,
   ListRow,
   ListRowButton,
   ListRowSubtitle,
   ListRowTitle,
+  LoadingStatus,
 } from "@/design-system";
 import { ProjectEditorModal } from "@/components/modals/ProjectEditorModal";
 import { ProjectNavList, ProjectsSidebar } from "@/components/ProjectsSidebar";
@@ -360,9 +362,9 @@ function TasksPage() {
 
   if (isProjectsLoading) {
     return (
-      <div className="pt-[40px] text-muted" role="status">
+      <LoadingStatus>
         Wczytywanie projektów…
-      </div>
+      </LoadingStatus>
     );
   }
 
@@ -531,13 +533,13 @@ function TasksPage() {
           </div>
 
           {isTasksLoading ? (
-            <p className="py-4 text-[13px] text-muted" role="status">
+            <LoadingStatus variant="inline">
               Wczytywanie zadań…
-            </p>
+            </LoadingStatus>
           ) : tasksError ? (
-            <p className="py-4 text-[13px] text-danger" role="alert">
+            <ErrorMessage>
               {tasksError}
-            </p>
+            </ErrorMessage>
           ) : tasks.length === 0 ? (
             <p className="py-4 text-[13px] text-muted">Nie ma tu jeszcze zadań.</p>
           ) : (
@@ -559,9 +561,9 @@ function TasksPage() {
             </Button>
           </div>
           {actionError && (
-            <p className="py-4 text-[13px] text-danger" role="alert">
+            <ErrorMessage>
               {actionError}
-            </p>
+            </ErrorMessage>
           )}
         </section>
       </div>

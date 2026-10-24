@@ -2,7 +2,7 @@ import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { api } from "@/api";
-import { Button, TextArea, TextInput } from "@/design-system";
+import { Button, ErrorMessage, LoadingStatus, TextArea, TextInput } from "@/design-system";
 import { WhiteboardCanvas } from "@/components/WhiteboardCanvas";
 import { MarkdownHighlightEditor } from "@/components/MarkdownHighlightEditor";
 import { apiErrorMessage } from "@/apiErrorMessage";
@@ -190,16 +190,16 @@ function WhiteboardEditorPage() {
 
   if (isLoading) {
     return (
-      <div className="pt-[40px] text-muted" role="status">
+      <LoadingStatus>
         Wczytywanie tablicy…
-      </div>
+      </LoadingStatus>
     );
   }
 
   if (notFound) return <NotFoundPage />;
 
   if (loadError) {
-    return <p className="py-4 text-[13px] text-danger" role="alert">{loadError}</p>;
+    return <ErrorMessage>{loadError}</ErrorMessage>;
   }
 
   if (!board) {

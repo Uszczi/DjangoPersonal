@@ -16,10 +16,12 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   Button,
   DragHandle,
+  ErrorMessage,
   ListRow,
   ListRowButton,
   ListRowSubtitle,
   ListRowTitle,
+  LoadingStatus,
 } from "@/design-system";
 import { ProjectEditorModal } from "@/components/modals/ProjectEditorModal";
 import { ShowModal } from "@/stores/modal";
@@ -143,9 +145,9 @@ function ProjectsPage() {
 
   if (isLoading) {
     return (
-      <div className="pt-[40px] text-muted" role="status">
+      <LoadingStatus>
         Wczytywanie projektów…
-      </div>
+      </LoadingStatus>
     );
   }
 
@@ -167,9 +169,9 @@ function ProjectsPage() {
       </div>
 
       {pageError && (
-        <p className="py-4 text-[13px] text-danger" role="alert">
+        <ErrorMessage>
           {pageError}
-        </p>
+        </ErrorMessage>
       )}
 
       {projects.length === 0 ? (

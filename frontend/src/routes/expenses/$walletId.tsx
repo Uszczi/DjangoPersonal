@@ -3,6 +3,7 @@ import { useEffect } from "react";
 
 import { ExpensesPage } from "@/components/ExpensesPage";
 import { useWalletsStore } from "@/stores/wallets";
+import { LoadingStatus } from "@/design-system";
 
 export const Route = createFileRoute("/expenses/$walletId")({
   component: WalletDetailPage,
@@ -32,9 +33,9 @@ function WalletDetailPage() {
 
   if (!isLoading && !pageError && !wallet) {
     return (
-      <div className="pt-[40px] text-muted" role="status">
+      <LoadingStatus>
         Przekierowywanie…
-      </div>
+      </LoadingStatus>
     );
   }
 

@@ -8,6 +8,7 @@ import {
   ListRow,
   ListRowButton,
   ListRowTitle,
+  LoadingStatus,
   TextInput,
 } from "@/design-system";
 import { CATEGORY_ICON_SUGGESTIONS, DEFAULT_CATEGORY_ICON } from "@/categoryIcons";
@@ -137,9 +138,9 @@ export function CategoryPanel() {
       )}
 
       {isLoading ? (
-        <p className="pt-10 text-muted" role="status">
+        <LoadingStatus>
           Wczytywanie kategorii…
-        </p>
+        </LoadingStatus>
       ) : pageError ? (
         <p
           className="m-0 px-2 py-6 text-[13px] text-danger-ink"

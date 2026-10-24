@@ -7,10 +7,12 @@ import { DeleteCounterModal } from "@/components/modals/DeleteCounterModal";
 import { entryCountLabel, formatEntryTime, signedValue } from "@/counterFormat";
 import {
   Button,
+  ErrorMessage,
   ListRow,
   ListRowButton,
   ListRowSubtitle,
   ListRowTitle,
+  LoadingStatus,
 } from "@/design-system";
 import { useCountersStore } from "@/stores/counters";
 import { ShowModal } from "@/stores/modal";
@@ -44,19 +46,19 @@ function CounterPage() {
 
   if (isLoading) {
     return (
-      <div className="pt-[40px] text-muted" role="status">
+      <LoadingStatus>
         Wczytywanie licznika…
-      </div>
+      </LoadingStatus>
     );
   }
   if (pageError) {
-    return <p className="py-4 text-[13px] text-danger" role="alert">{pageError}</p>;
+    return <ErrorMessage>{pageError}</ErrorMessage>;
   }
   if (!counter) {
     return (
-      <div className="pt-[40px] text-muted" role="status">
+      <LoadingStatus>
         Przekierowywanie…
-      </div>
+      </LoadingStatus>
     );
   }
 
@@ -122,12 +124,12 @@ function CounterPage() {
       </div>
 
       {entriesError && (
-        <p className="py-4 text-[13px] text-danger" role="alert">{entriesError}</p>
+        <ErrorMessage>{entriesError}</ErrorMessage>
       )}
 
       {entries === null ? (
         !entriesError && (
-          <p className="py-4 text-[13px] text-muted" role="status">Wczytywanie wpisów…</p>
+          <LoadingStatus variant="inline">Wczytywanie wpisów…</LoadingStatus>
         )
       ) : entries.length === 0 ? (
         <p className="py-4 text-[13px] text-muted">Brak wpisów. Dodaj pierwszy wpis.</p>

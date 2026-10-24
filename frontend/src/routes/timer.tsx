@@ -7,10 +7,12 @@ import { validateProjectSearch } from "@/projectSearch";
 import {
   Button,
   ErrorAlert,
+  ErrorMessage,
   Field,
   ListRow,
   ListRowButton,
   ListRowTitle,
+  LoadingStatus,
   Modal,
   ModalFooter,
   Select,
@@ -332,17 +334,17 @@ function TimerPage() {
 
   if (isLoading) {
     return (
-      <div className="pt-[40px] text-muted" role="status">
+      <LoadingStatus>
         Wczytywanie danych czasu…
-      </div>
+      </LoadingStatus>
     );
   }
 
   if (pageError) {
     return (
-      <p className="py-4 text-[13px] text-danger" role="alert">
+      <ErrorMessage>
         {pageError}
-      </p>
+      </ErrorMessage>
     );
   }
 
@@ -647,9 +649,9 @@ function TimerPage() {
           </ul>
         )}
         {actionError && (
-          <p className="py-4 text-[13px] text-danger" role="alert">
+          <ErrorMessage>
             {actionError}
-          </p>
+          </ErrorMessage>
         )}
       </section>
 

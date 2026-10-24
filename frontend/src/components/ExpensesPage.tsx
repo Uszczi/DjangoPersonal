@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { CategoryPanel } from "@/components/CategoryPanel";
 import { WalletCreateModal } from "@/components/modals/WalletCreateModal";
 import { WalletView } from "@/components/WalletView";
-import { Button } from "@/design-system";
+import { Button, ErrorMessage, LoadingStatus } from "@/design-system";
 import { ShowModal } from "@/stores/modal";
 import { useWalletsStore } from "@/stores/wallets";
 
@@ -33,9 +33,9 @@ export function ExpensesPage({ walletId }: ExpensesPageProps) {
 
   if (isLoading) {
     return (
-      <div className="pt-[40px] text-muted" role="status">
+      <LoadingStatus>
         Wczytywanie portfeli…
-      </div>
+      </LoadingStatus>
     );
   }
 
@@ -52,9 +52,9 @@ export function ExpensesPage({ walletId }: ExpensesPageProps) {
       </div>
 
       {pageError && (
-        <p className="py-4 text-[13px] text-danger" role="alert">
+        <ErrorMessage>
           {pageError}
-        </p>
+        </ErrorMessage>
       )}
 
       {wallets.length === 0 ? (

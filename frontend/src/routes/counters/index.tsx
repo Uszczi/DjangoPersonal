@@ -6,10 +6,12 @@ import { entryCountLabel } from "@/counterFormat";
 import {
   Button,
   DeleteButton,
+  ErrorMessage,
   ListRow,
   ListRowButton,
   ListRowSubtitle,
   ListRowTitle,
+  LoadingStatus,
 } from "@/design-system";
 import type { CounterResponse } from "@/generated/api";
 import { useCountersStore } from "@/stores/counters";
@@ -36,14 +38,14 @@ function CountersPage() {
 
   if (isLoading) {
     return (
-      <div className="pt-[40px] text-muted" role="status">
+      <LoadingStatus>
         Wczytywanie liczników…
-      </div>
+      </LoadingStatus>
     );
   }
 
   if (pageError) {
-    return <p className="py-4 text-[13px] text-danger" role="alert">{pageError}</p>;
+    return <ErrorMessage>{pageError}</ErrorMessage>;
   }
 
   return (
