@@ -1,6 +1,10 @@
 default:
     @just --list
 
+install:
+    cd frontend && npm install
+    cd backend && uv sync
+
 # Run the API (FastAPI) on port 8000 with auto-reload.
 backend:
     cd backend && uv run uvicorn --factory personal.entrypoints.http.app:create_served_app --reload --port 8000
