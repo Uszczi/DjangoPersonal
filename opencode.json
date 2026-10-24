@@ -4,14 +4,6 @@
     "djangopersonal": {
       "type": "remote",
       "url": "https://djangopersonal.bluszczzone.pl/mcp"
-    },
-    "djangopersonalcpp": {
-      "type": "remote",
-      "url": "http://127.0.0.1:8080/mcp",
-      "headers": {
-        "Authorization": "Bearer {env:DJANGOPERSONAL_CPP_TOKEN}"
-      },
-      "oauth": false
     }
   }
 }
