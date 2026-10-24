@@ -1,5 +1,3 @@
-"""Whiteboard use cases."""
-
 from personal.core.shared.errors import DomainError, NotFound
 from personal.core.whiteboard.contracts import (
     PatchedWhiteboardRequest,
@@ -14,7 +12,6 @@ from personal.infra.rules import default_board_content
 def _get_whiteboard(
     repository: WhiteboardRepository, whiteboard_id: int, *, user: User
 ) -> WhiteboardModel:
-    """Fetch a whiteboard addressed by id, or raise ``NotFound``."""
     whiteboard = repository.find(whiteboard_id, user=user)
     if whiteboard is None:
         raise NotFound('Whiteboard not found.')

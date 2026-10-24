@@ -1,5 +1,3 @@
-"""Transaction contracts: request payloads and the response shape."""
-
 from datetime import date as datetime_date
 from decimal import Decimal
 from typing import Annotated

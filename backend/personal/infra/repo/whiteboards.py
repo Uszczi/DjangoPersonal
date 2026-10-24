@@ -1,5 +1,3 @@
-"""Persistence for whiteboards."""
-
 from datetime import UTC, datetime
 from typing import Any
 
@@ -12,8 +10,6 @@ from personal.infra.rules import default_board_content
 
 
 class WhiteboardRepository:
-    """Every database access the ``whiteboard`` use cases need for whiteboards."""
-
     def __init__(self, session: Session) -> None:
         self.session = session
 

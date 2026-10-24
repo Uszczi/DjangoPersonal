@@ -81,7 +81,6 @@ export const useWhiteboardsStore = create<WhiteboardsState>((set) => ({
   },
 }));
 
-// Editor helpers
 export type EditorState = {
   board: BoardDocument | null;
   saveState: SaveState;

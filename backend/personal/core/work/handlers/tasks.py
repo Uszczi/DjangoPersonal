@@ -1,5 +1,3 @@
-"""Tasks use cases."""
-
 from functools import partial
 
 from personal.core.shared.errors import DomainError, NotFound
@@ -18,7 +16,6 @@ from .projects import _resolve_project
 
 
 def _get_task(repository: TaskRepository, task_id: int, *, user: User) -> TaskModel:
-    """Fetch a task addressed by id, or raise ``NotFound``."""
     task = repository.find(task_id, user=user)
     if task is None:
         raise NotFound('Task not found.')
@@ -117,8 +114,6 @@ class CreateTask:
 
 
 class UpdateTask:
-    """Apply the supplied fields to an existing task (PATCH)."""
-
     def __init__(
         self,
         projects: ProjectRepository,

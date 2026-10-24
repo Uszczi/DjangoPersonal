@@ -77,7 +77,6 @@ class InMemoryOAuthProvider:
         self, client: OAuthClientInformationFull, authorization_code: AuthorizationCode
     ) -> OAuthToken:
         del client
-        # remove used code
         _AUTH_CODES.pop(authorization_code.code, None)
 
         subject = authorization_code.subject
@@ -172,11 +171,6 @@ class InMemoryOAuthProvider:
 
 
 provider = InMemoryOAuthProvider()
-
-
-# ---------------------------------------------------------------------------
-# Login page (resource owner authentication)
-# ---------------------------------------------------------------------------
 
 
 _LOGIN_HTML = """<!doctype html>

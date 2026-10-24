@@ -1,5 +1,3 @@
-"""Auth contracts: request payloads and response shapes."""
-
 from pydantic import Field, model_validator
 
 from personal.core.shared.base import BaseModel

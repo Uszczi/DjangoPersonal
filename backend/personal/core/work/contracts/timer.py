@@ -1,4 +1,3 @@
-"""Timer contracts: request payload and the response shape."""
 from datetime import datetime
 
 from personal.core.shared.base import BaseModel

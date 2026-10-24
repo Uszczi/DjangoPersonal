@@ -134,11 +134,6 @@ def _provided(**fields: Any) -> dict[str, Any]:
     return {name: value for name, value in fields.items() if value is not None}
 
 
-# ---------------------------------------------------------------------------
-# Projects
-# ---------------------------------------------------------------------------
-
-
 @_tool
 def list_projects(ctx: ToolContext) -> list[dict[str, Any]]:
     """List all projects for the authenticated user (inbox first)."""
@@ -204,11 +199,6 @@ def delete_project(ctx: ToolContext, project_id: int) -> str:
     with _unit_of_work(ctx) as (session, user):
         handlers.DeleteProject(wiring.project_repository(session), user).execute(project_id)
         return 'deleted'
-
-
-# ---------------------------------------------------------------------------
-# Tasks
-# ---------------------------------------------------------------------------
 
 
 @_tool
@@ -279,11 +269,6 @@ def delete_task(ctx: ToolContext, task_id: int) -> str:
         return 'deleted'
 
 
-# ---------------------------------------------------------------------------
-# Time entries
-# ---------------------------------------------------------------------------
-
-
 @_tool
 def list_time_entries(
     ctx: ToolContext, task_id: int | None = None, date: str | None = None
@@ -345,11 +330,6 @@ def delete_time_entry(ctx: ToolContext, entry_id: int) -> str:
         return 'deleted'
 
 
-# ---------------------------------------------------------------------------
-# Timer
-# ---------------------------------------------------------------------------
-
-
 @_tool
 def start_timer(ctx: ToolContext, task_id: int) -> dict[str, Any]:
     """Start a timer for a task."""
@@ -376,11 +356,6 @@ def stop_timer(ctx: ToolContext) -> dict[str, Any]:
     with _unit_of_work(ctx) as (session, user):
         entry = handlers.StopTimer(wiring.time_entry_repository(session), user).execute()
         return timer(entry, clock.now())
-
-
-# ---------------------------------------------------------------------------
-# Accounts (auth)
-# ---------------------------------------------------------------------------
 
 
 @_tool

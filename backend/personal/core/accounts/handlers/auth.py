@@ -1,5 +1,3 @@
-"""Authentication use cases."""
-
 from personal.core.accounts.contracts.auth import (
     AuthResponse,
     LoginRequest,
@@ -85,8 +83,6 @@ class AuthenticateUser:
 
 
 class LoginUser:
-    """Authenticate a user (see :class:`AuthenticateUser`) and issue a token pair."""
-
     def __init__(self, users: UserRepository, hasher: PasswordHasher, tokens: TokenService):
         self.authenticate = AuthenticateUser(users, hasher)
         self.tokens = tokens
@@ -97,8 +93,6 @@ class LoginUser:
 
 
 class DeleteUser:
-    """Delete the authenticated account and all of its data."""
-
     def __init__(self, users: UserRepository):
         self.users = users
 
@@ -107,8 +101,6 @@ class DeleteUser:
 
 
 class RefreshAccessToken:
-    """Exchange a refresh token for a new access token."""
-
     def __init__(self, tokens: TokenService):
         self.tokens = tokens
 

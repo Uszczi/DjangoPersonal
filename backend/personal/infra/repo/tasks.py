@@ -1,5 +1,3 @@
-"""Persistence for tasks."""
-
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session, joinedload
 
@@ -12,8 +10,6 @@ from .errors import TaskHasTimeEntries
 
 
 class TaskRepository:
-    """Every database access the ``work`` use cases need for tasks."""
-
     def __init__(self, session: Session) -> None:
         self.session = session
 
@@ -35,14 +31,12 @@ class TaskRepository:
         return list(self.session.scalars(self._owned_by(user)))
 
     def list_inbox(self, *, user: User) -> list[TaskModel]:
-        """Tasks that live in the inbox project."""
         return list(self.session.scalars(self._owned_by(user).where(ProjectModel.is_inbox.is_(True))))
 
     def list_for_project(self, project_id: int, *, user: User) -> list[TaskModel]:
         return list(self.session.scalars(self._owned_by(user).where(TaskModel.project_id == project_id)))
 
     def find(self, task_id: int, *, user: User) -> TaskModel | None:
-        """The task with this id, or ``None``."""
         return self.session.scalars(self._owned_by(user).where(TaskModel.id == task_id)).first()
 
     def create(
@@ -106,7 +100,6 @@ class TaskRepository:
         return task
 
     def save(self, task: TaskModel) -> TaskModel:
-        """Persist changes made to an existing task."""
         self.session.add(task)
         self.session.flush()
         return task

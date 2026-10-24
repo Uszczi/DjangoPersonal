@@ -1,5 +1,3 @@
-"""Persistence for categories."""
-
 from sqlalchemy import exists, select
 from sqlalchemy.orm import Session
 
@@ -30,14 +28,12 @@ class CategoryRepository:
         return list(self.session.scalars(query))
 
     def find(self, category_id: int, *, user: User) -> CategoryModel | None:
-        """The category with this id for ``user``, or ``None``."""
         query = select(CategoryModel).where(
             CategoryModel.id == category_id, CategoryModel.user_id == user.id
         )
         return self.session.scalars(query).first()
 
     def find_by_name_key(self, name_key: str, *, user: User) -> CategoryModel | None:
-        """The category carrying this normalized name for ``user``, or ``None``."""
         query = select(CategoryModel).where(
             CategoryModel.normalized_name == name_key, CategoryModel.user_id == user.id
         )
@@ -46,7 +42,6 @@ class CategoryRepository:
     def name_taken(
         self, name_key: str, *, user: User, exclude: CategoryModel | None = None
     ) -> bool:
-        """Whether another category already uses this normalized name."""
         duplicates = exists().where(
             CategoryModel.normalized_name == name_key, CategoryModel.user_id == user.id
         )

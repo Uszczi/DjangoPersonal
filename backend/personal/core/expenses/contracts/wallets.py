@@ -1,5 +1,3 @@
-"""Wallet contracts: request payloads and the response shape."""
-
 from decimal import Decimal
 from typing import Annotated
 

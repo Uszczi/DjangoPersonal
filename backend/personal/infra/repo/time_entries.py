@@ -1,5 +1,3 @@
-"""Persistence for time entries."""
-
 from collections.abc import Sequence
 from datetime import date as datetime_date
 from datetime import datetime, timedelta
@@ -17,8 +15,6 @@ _NEWEST_FIRST = (TimeEntryModel.start.desc(), TimeEntryModel.id.desc())
 
 
 class TimeEntryRepository:
-    """Every database access the ``work`` use cases need for time entries."""
-
     def __init__(self, session: Session) -> None:
         self.session = session
 
@@ -37,14 +33,12 @@ class TimeEntryRepository:
         return list(self.session.scalars(query.order_by(*_NEWEST_FIRST)))
 
     def find(self, entry_id: int, *, user: User) -> TimeEntryModel | None:
-        """The entry with this id, or ``None``."""
         query = select(TimeEntryModel).where(
             TimeEntryModel.id == entry_id, TimeEntryModel.user_id == user.id
         )
         return self.session.scalars(query).first()
 
     def running(self, *, user: User) -> TimeEntryModel | None:
-        """The entry with a start but no end, if a timer is running."""
         query = (
             select(TimeEntryModel)
             .where(TimeEntryModel.end.is_(None), TimeEntryModel.user_id == user.id)
@@ -67,7 +61,6 @@ class TimeEntryRepository:
         return entry
 
     def save(self, entry: TimeEntryModel) -> TimeEntryModel:
-        """Persist changes made to an existing entry."""
         self.session.add(entry)
         self.session.flush()
         return entry
@@ -77,7 +70,6 @@ class TimeEntryRepository:
         self.session.flush()
 
     def close(self, entry: TimeEntryModel, *, at: datetime) -> TimeEntryModel:
-        """Mark an entry finished at ``at``."""
         entry.end = at
         self.session.flush()
         return entry

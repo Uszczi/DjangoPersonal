@@ -1,5 +1,3 @@
-"""Persistence for projects."""
-
 from sqlalchemy import exists, select, update
 from sqlalchemy.orm import Session
 
@@ -36,7 +34,6 @@ class ProjectRepository:
         return list(self.session.scalars(query))
 
     def find(self, project_id: int, *, user: User) -> ProjectModel | None:
-        """The project with this id for ``user``, or ``None``."""
         query = select(ProjectModel).where(
             ProjectModel.id == project_id, ProjectModel.user_id == user.id
         )
@@ -52,7 +49,6 @@ class ProjectRepository:
     def name_taken(
         self, name_key: str, *, user: User, exclude: ProjectModel | None = None
     ) -> bool:
-        """Whether another project already uses this normalized name."""
         duplicates = exists().where(
             ProjectModel.normalized_name == name_key, ProjectModel.user_id == user.id
         )

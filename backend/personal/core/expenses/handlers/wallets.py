@@ -1,5 +1,3 @@
-"""Wallet use cases."""
-
 from datetime import date
 from decimal import Decimal
 from functools import partial
@@ -29,7 +27,6 @@ BALANCE_CORRECTION_TITLE = 'Korekta stanu'
 def _get_wallet(
     repository: WalletRepository, wallet_id: int, *, user: User
 ) -> WalletModel:
-    """Fetch a wallet addressed by id, or raise ``NotFound``."""
     wallet = repository.find(wallet_id, user=user)
     if wallet is None:
         raise NotFound('Wallet not found.')
@@ -43,7 +40,6 @@ def _validate_name(
     *,
     user: User,
 ) -> str:
-    """Return the trimmed wallet name, or raise when it breaks a naming rule."""
     name = normalize_wallet_name(name)
     name_key = wallet_name_key(name)
 
@@ -73,8 +69,6 @@ class ListWallets:
 
 
 class GetWallet:
-    """Fetch a single wallet addressed by id."""
-
     def __init__(self, wallets: WalletRepository, user: User):
         self.wallets = wallets
         self.user = user
@@ -133,8 +127,6 @@ class CreateWallet:
 
 
 class ReplaceWallet:
-    """Replace a wallet wholesale with the supplied payload (PUT)."""
-
     def __init__(self, wallets: WalletRepository, user: User):
         self.wallets = wallets
         self.user = user

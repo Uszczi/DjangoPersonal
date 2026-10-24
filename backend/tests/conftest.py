@@ -110,7 +110,6 @@ def make_user(session: Session, password_hasher: PasswordHasher) -> Callable[...
 
 @pytest.fixture
 def token_for(token_service: TokenService) -> Callable[[User], str]:
-    """An access token for ``user``."""
     return lambda user: token_service.issue(user).access
 
 
@@ -123,7 +122,6 @@ def anon_client(transport: Transport) -> ApiClient:
 def client_for(
     anon_client: ApiClient, token_for: Callable[[User], str]
 ) -> Callable[[User], ApiClient]:
-    """A client authenticated as ``user``."""
     return lambda user: anon_client.authenticated(token_for(user))
 
 

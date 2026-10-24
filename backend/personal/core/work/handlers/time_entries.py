@@ -1,4 +1,3 @@
-"""Time entry use cases."""
 from collections.abc import Sequence
 from datetime import date as datetime_date
 from datetime import timedelta
@@ -21,7 +20,6 @@ def _ensure_not_future(value: datetime_date) -> None:
 def _get_time_entry(
     repository: TimeEntryRepository, entry_id: int, *, user: User
 ) -> TimeEntryModel:
-    """Fetch a time entry addressed by id, or raise ``NotFound``."""
     entry = repository.find(entry_id, user=user)
     if entry is None:
         raise NotFound('Time entry not found.')
@@ -72,7 +70,6 @@ class CreateTimeEntry:
 
 
 class UpdateTimeEntry:
-    """Apply the supplied fields to an existing time entry (PATCH)."""
     def __init__(
         self,
         tasks: TaskRepository,
@@ -107,14 +104,10 @@ class UpdateTimeEntry:
             start = day_start(day)
             entry.start = start
             entry.end = start + timedelta(minutes=duration)
-        if entry.task is None and not (entry.title or '').strip():
-            # keep previous? if no title provided, maybe okay
-            pass
         return self.time_entries.save(entry)
 
 
 class DeleteTimeEntry:
-    """Delete a time entry addressed by id."""
     def __init__(self, time_entries: TimeEntryRepository, user: User):
         self.time_entries = time_entries
         self.user = user

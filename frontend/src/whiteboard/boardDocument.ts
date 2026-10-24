@@ -116,7 +116,6 @@ export function moveElement(
     } as Partial<BoardElement>);
   }
   if (element.kind === "text" || element.kind === "note") {
-    // note also has width/height unchanged
     return updateElement(doc, id, { x: element.x + dx, y: element.y + dy } as Partial<BoardElement>);
   }
   if (element.kind === "rectangle" || element.kind === "ellipse") {
@@ -150,8 +149,6 @@ export function resizeElement(
   }
   return doc;
 }
-
-// ---------- Geometry (bounds and hit-testing) ----------
 
 /** Hit box used for text labels, which carry no stored width/height. */
 export const TEXT_LABEL_BOUNDS = { width: 60, height: 20 } as const;
@@ -230,8 +227,6 @@ export function parseBoard(value: unknown): BoardDocument {
   }
   return createEmptyBoard();
 }
-
-// ---------- History (in-memory undo/redo) ----------
 
 export type HistoryState = {
   past: BoardDocument[];

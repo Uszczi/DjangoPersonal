@@ -1,5 +1,3 @@
-"""Projects use cases."""
-
 from functools import partial
 
 from personal.core.shared.errors import DomainError, NotFound
@@ -14,7 +12,6 @@ from personal.infra.rules import INBOX_NAME_KEY, normalize_project_name, project
 def _get_project(
     repository: ProjectRepository, project_id: int, *, user: User
 ) -> ProjectModel:
-    """Fetch a project addressed by id, or raise ``NotFound``."""
     project = repository.find(project_id, user=user)
     if project is None:
         raise NotFound('Project not found.')
@@ -38,7 +35,6 @@ def _validate_name(
     *,
     user: User,
 ) -> str:
-    """Return the trimmed project name, or raise when it breaks a naming rule."""
     name = normalize_project_name(name)
     name_key = project_name_key(name)
 
@@ -100,8 +96,6 @@ class ListProjects:
 
 
 class GetProject:
-    """Fetch a single project addressed by id."""
-
     def __init__(self, projects: ProjectRepository, user: User):
         self.projects = projects
         self.user = user
@@ -111,8 +105,6 @@ class GetProject:
 
 
 class CreateProject:
-    """Create a project from a validated payload."""
-
     def __init__(self, projects: ProjectRepository, user: User):
         self.projects = projects
         self.user = user
@@ -128,8 +120,6 @@ class CreateProject:
 
 
 class ReplaceProject:
-    """Replace a project wholesale with the supplied payload (PUT)."""
-
     def __init__(self, projects: ProjectRepository, user: User):
         self.projects = projects
         self.user = user
@@ -149,8 +139,6 @@ class ReplaceProject:
 
 
 class UpdateProject:
-    """Apply the supplied fields to an existing project (PATCH)."""
-
     def __init__(self, projects: ProjectRepository, user: User):
         self.projects = projects
         self.user = user

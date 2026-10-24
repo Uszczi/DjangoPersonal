@@ -1,5 +1,3 @@
-"""Time entries endpoints."""
-
 from datetime import date as datetime_date
 
 from fastapi import APIRouter, Response, status

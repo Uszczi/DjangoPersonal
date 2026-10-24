@@ -1,5 +1,3 @@
-"""Wallet endpoints."""
-
 from fastapi import APIRouter, Response, status
 
 from personal.core.expenses import handlers

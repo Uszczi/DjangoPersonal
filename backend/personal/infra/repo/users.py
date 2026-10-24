@@ -1,5 +1,3 @@
-"""Persistence for users."""
-
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -32,11 +30,9 @@ class UserRepository:
         return user
 
     def find(self, user_id: int) -> UserModel | None:
-        """The user with this id, or ``None``."""
         return self.session.get(UserModel, user_id)
 
     def get_by_username(self, username: str) -> UserModel | None:
-        """The user with this username, or ``None``."""
         query = select(UserModel).where(UserModel.username == username)
         return self.session.scalars(query).first()
 

@@ -1,5 +1,3 @@
-"""Transaction use cases."""
-
 from functools import partial
 
 from personal.core.shared.errors import DomainError, NotFound
@@ -16,7 +14,6 @@ from ..contracts import PatchedTransactionRequest, TransactionRequest
 def _get_transaction(
     repository: TransactionRepository, transaction_id: int, *, user: User
 ) -> TransactionModel:
-    """Fetch a transaction addressed by id, or raise ``NotFound``."""
     transaction = repository.find(transaction_id, user=user)
     if transaction is None:
         raise NotFound('Transaction not found.')
@@ -26,7 +23,6 @@ def _get_transaction(
 def _resolve_wallet(
     repository: WalletRepository, wallet_id: int, *, user: User
 ) -> WalletModel:
-    """Resolve the wallet a payload references, or raise ``DomainError``."""
     wallet = repository.find(wallet_id, user=user)
     if wallet is None:
         raise DomainError('Invalid wallet ID.')
@@ -36,7 +32,6 @@ def _resolve_wallet(
 def _resolve_category(
     repository: CategoryRepository, category_id: int | None, *, user: User
 ) -> CategoryModel | None:
-    """Resolve the category a payload references, or raise ``DomainError``."""
     if category_id is None:
         return None
     category = repository.find(category_id, user=user)
@@ -65,8 +60,6 @@ class ListTransactions:
 
 
 class GetTransaction:
-    """Fetch a single transaction addressed by id."""
-
     def __init__(self, transactions: TransactionRepository, user: User):
         self.transactions = transactions
         self.user = user
@@ -76,8 +69,6 @@ class GetTransaction:
 
 
 class CreateTransaction:
-    """Create a transaction from a validated payload."""
-
     def __init__(
         self,
         transactions: TransactionRepository,
@@ -136,8 +127,6 @@ class ReplaceTransaction:
 
 
 class UpdateTransaction:
-    """Apply the supplied fields to an existing transaction (PATCH)."""
-
     def __init__(
         self,
         transactions: TransactionRepository,
@@ -166,8 +155,6 @@ class UpdateTransaction:
 
 
 class DeleteTransaction:
-    """Delete a transaction."""
-
     def __init__(self, transactions: TransactionRepository, user: User):
         self.transactions = transactions
         self.user = user

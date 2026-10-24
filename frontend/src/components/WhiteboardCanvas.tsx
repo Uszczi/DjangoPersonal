@@ -425,10 +425,6 @@ export function WhiteboardCanvas({ board, onChange, tool = "select" }: Props) {
     setSelectedNoteId(note.id);
   }
 
-  // keyboard delete
-  // (handled by parent? we add a window listener)
-  // We'll keep simple: delete on Delete key via stage keydown
-
   return (
     <div
       ref={containerRef}

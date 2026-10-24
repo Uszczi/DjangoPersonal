@@ -1,5 +1,3 @@
-"""Counter and counter-entry use cases."""
-
 from personal.core.shared.errors import NotFound
 from personal.core.shared.patch import apply_provided
 from personal.infra.models import Counter as CounterModel
@@ -16,7 +14,6 @@ from ..contracts import (
 
 
 def _get_counter(repository: CounterRepository, counter_id: int, *, user: User) -> CounterModel:
-    """Fetch a counter addressed by id, or raise ``NotFound``."""
     counter = repository.find(counter_id, user=user)
     if counter is None:
         raise NotFound('Counter not found.')
@@ -26,7 +23,6 @@ def _get_counter(repository: CounterRepository, counter_id: int, *, user: User) 
 def _get_entry(
     repository: CounterEntryRepository, entry_id: int, *, user: User
 ) -> CounterEntryModel:
-    """Fetch a counter entry addressed by id, or raise ``NotFound``."""
     entry = repository.find(entry_id, user=user)
     if entry is None:
         raise NotFound('Counter entry not found.')
@@ -61,8 +57,6 @@ class CreateCounter:
 
 
 class UpdateCounter:
-    """Apply the supplied fields to an existing counter (PATCH)."""
-
     def __init__(self, counters: CounterRepository, user: User):
         self.counters = counters
         self.user = user
@@ -74,8 +68,6 @@ class UpdateCounter:
 
 
 class DeleteCounter:
-    """Delete a counter together with its entries."""
-
     def __init__(self, counters: CounterRepository, user: User):
         self.counters = counters
         self.user = user

@@ -47,7 +47,6 @@ SessionDep = Annotated[Session, Depends(get_session, scope='function')]
 
 
 def get_settings(request: Request) -> Settings:
-    """The settings the running app was created with."""
     settings: Settings = request.app.state.settings
     return settings
 

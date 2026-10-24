@@ -1,4 +1,3 @@
-"""Time entry contracts: request payloads and the response shape."""
 from datetime import date as datetime_date
 from datetime import datetime
 

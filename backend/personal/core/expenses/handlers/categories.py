@@ -1,5 +1,3 @@
-"""Category use cases."""
-
 from functools import partial
 
 from personal.core.shared.errors import DomainError, NotFound
@@ -71,7 +69,6 @@ def ensure_system_category(repository: CategoryRepository, user: User) -> Catego
 def _get_category(
     repository: CategoryRepository, category_id: int, *, user: User
 ) -> CategoryModel:
-    """Fetch a category addressed by id, or raise ``NotFound``."""
     category = repository.find(category_id, user=user)
     if category is None:
         raise NotFound('Category not found.')
@@ -85,7 +82,6 @@ def _validate_name(
     *,
     user: User,
 ) -> str:
-    """Return the trimmed category name, or raise when it breaks a naming rule."""
     name = normalize_category_name(name)
     name_key = category_name_key(name)
 
@@ -110,8 +106,6 @@ def _reject_system(category: CategoryModel, action: str) -> None:
 
 
 class ListCategories:
-    """List every category for the user."""
-
     def __init__(self, categories: CategoryRepository, user: User):
         self.categories = categories
         self.user = user
@@ -121,8 +115,6 @@ class ListCategories:
 
 
 class GetCategory:
-    """Fetch a single category addressed by id."""
-
     def __init__(self, categories: CategoryRepository, user: User):
         self.categories = categories
         self.user = user
@@ -132,8 +124,6 @@ class GetCategory:
 
 
 class CreateCategory:
-    """Create a category from a validated payload."""
-
     def __init__(self, categories: CategoryRepository, user: User):
         self.categories = categories
         self.user = user
@@ -148,8 +138,6 @@ class CreateCategory:
 
 
 class ReplaceCategory:
-    """Replace a category wholesale with the supplied payload (PUT)."""
-
     def __init__(self, categories: CategoryRepository, user: User):
         self.categories = categories
         self.user = user
@@ -168,8 +156,6 @@ class ReplaceCategory:
 
 
 class UpdateCategory:
-    """Apply the supplied fields to an existing category (PATCH)."""
-
     def __init__(self, categories: CategoryRepository, user: User):
         self.categories = categories
         self.user = user

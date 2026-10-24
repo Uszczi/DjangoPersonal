@@ -1,5 +1,3 @@
-"""Persistence for counters and their entries."""
-
 from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.orm import Session
 
@@ -61,8 +59,6 @@ class CounterRepository:
 
 
 class CounterEntryRepository:
-    """Every database access the ``counters`` use cases need for entries."""
-
     def __init__(self, session: Session) -> None:
         self.session = session
 
@@ -76,19 +72,16 @@ class CounterEntryRepository:
         return list(self.session.scalars(query))
 
     def find(self, entry_id: int, *, user: User) -> CounterEntryModel | None:
-        """The entry with this id for ``user``, or ``None``."""
         query = select(CounterEntryModel).where(
             CounterEntryModel.id == entry_id, CounterEntryModel.user_id == user.id
         )
         return self.session.scalars(query).first()
 
     def save(self, entry: CounterEntryModel) -> CounterEntryModel:
-        """Persist a new or existing entry."""
         self.session.add(entry)
         self.session.flush()
         return entry
 
     def delete(self, entry: CounterEntryModel) -> None:
-        """Delete an entry."""
         self.session.delete(entry)
         self.session.flush()

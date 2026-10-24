@@ -1,5 +1,3 @@
-"""Tests for ``python -m personal.entrypoints.seed_dev``."""
-
 import random
 
 import pytest

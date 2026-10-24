@@ -244,11 +244,9 @@ function TasksPage() {
     const pointerIntersections = pointerWithin(args);
     const rectIntersections = rectIntersection(args);
 
-    // First, try pointerWithin for precise detection
     let collision = getFirstCollision(pointerIntersections, "id");
     if (collision) return [{ id: collision }];
 
-    // Fall back to rectIntersection
     collision = getFirstCollision(rectIntersections, "id");
     if (collision) return [{ id: collision }];
 
@@ -271,11 +269,9 @@ function TasksPage() {
 
     if (!activeStatus || !overStatus || activeStatus === overStatus) return;
 
-    // Move the task to the new container in local state
     const activeTask = tasks.find((t) => t.id === active.id);
     if (!activeTask) return;
 
-    // Update local state to reflect the move
     const updatedTasks = tasks.map((t) =>
       t.id === active.id ? { ...t, status: overStatus } : t,
     );

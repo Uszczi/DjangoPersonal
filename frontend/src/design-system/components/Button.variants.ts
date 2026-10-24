@@ -14,7 +14,6 @@ const regularSize =
 const ghostSize =
   "min-h-[28px] px-[10px] disabled:cursor-not-allowed disabled:opacity-50";
 
-/** Visual styles mapped by button variant. */
 export const buttonVariantStyles: Record<ButtonVariant, string> = {
   primary: `${regularSize} border-transparent bg-signal text-white hover:-translate-y-px hover:bg-signal-strong`,
   secondary: `${regularSize} whitespace-nowrap border-control-border bg-transparent text-ink-soft hover:border-control-border-hover hover:bg-surface`,

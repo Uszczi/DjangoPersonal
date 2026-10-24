@@ -1,5 +1,3 @@
-"""Counter endpoints: counters and the entries added to them."""
-
 from fastapi import APIRouter, Response, status
 
 from personal.core.counters import handlers

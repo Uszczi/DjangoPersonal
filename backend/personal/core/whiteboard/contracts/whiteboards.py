@@ -1,4 +1,3 @@
-"""Whiteboard contracts: request payloads and the response shape."""
 from datetime import datetime
 from typing import Any
 

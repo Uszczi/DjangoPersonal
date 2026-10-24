@@ -1,5 +1,3 @@
-"""API behavior tests for the Counters boundary."""
-
 from collections.abc import Callable
 from http import HTTPStatus
 from typing import Any

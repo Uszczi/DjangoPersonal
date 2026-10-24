@@ -1,5 +1,3 @@
-"""Accounts endpoints: register, log in, refresh, and the current user."""
-
 from fastapi import APIRouter, Response, status
 
 from personal.core.accounts import handlers

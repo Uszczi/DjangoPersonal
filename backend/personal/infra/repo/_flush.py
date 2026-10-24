@@ -1,5 +1,3 @@
-"""Flushing a write that may hit a constraint."""
-
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 

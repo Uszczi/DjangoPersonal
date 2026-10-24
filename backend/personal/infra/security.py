@@ -15,8 +15,6 @@ import jwt
 from personal.core.accounts.ports import InvalidToken, TokenPair
 from personal.infra.models import User
 
-# --- Passwords -----------------------------------------------------------------
-
 
 def _b64encode(raw: bytes) -> str:
     return base64.b64encode(raw).decode('ascii')
@@ -134,8 +132,6 @@ class SimplePasswordPolicy:
             return True
         return SequenceMatcher(a=password, b=username).quick_ratio() >= self.max_similarity
 
-
-# --- Tokens --------------------------------------------------------------------
 
 ACCESS = 'access'
 REFRESH = 'refresh'

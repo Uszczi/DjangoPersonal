@@ -1,5 +1,3 @@
-"""Counter contracts: request payloads and the response shapes."""
-
 from datetime import datetime
 
 from pydantic import AwareDatetime, Field, field_validator

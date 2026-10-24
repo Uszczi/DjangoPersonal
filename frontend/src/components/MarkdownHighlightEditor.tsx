@@ -16,7 +16,6 @@ function highlightMarkdown(markdown: string): string {
   safe = safe.replace(/^(#{1,6} .*)$/gm, '<span class="md-h">$1</span>');
   // List markers (- or 1.) at line starts.
   safe = safe.replace(/^(\s*)(-|\d+\.) /gm, '$1<span class="md-list">$2</span> ');
-  // Inline code.
   safe = safe.replace(
     /(`[^`\n]+`)/g,
     '<span class="md-code">$1</span>',

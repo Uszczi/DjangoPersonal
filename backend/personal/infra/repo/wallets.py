@@ -1,5 +1,3 @@
-"""Persistence for wallets."""
-
 from decimal import Decimal
 
 from sqlalchemy import ColumnElement, Numeric, Select, case, func, select, true
@@ -67,7 +65,6 @@ class WalletRepository:
         return self._with_details(WalletModel.user_id == user.id)
 
     def find(self, wallet_id: int, *, user: User) -> WalletModel | None:
-        """The wallet with this id for ``user``, or ``None``."""
         found = self._with_details(WalletModel.id == wallet_id, WalletModel.user_id == user.id)
         return found[0] if found else None
 
@@ -83,7 +80,6 @@ class WalletRepository:
     def name_taken(
         self, name_key: str, *, user: User, exclude: WalletModel | None = None
     ) -> bool:
-        """Whether another wallet already uses this normalized name."""
         query = select(WalletModel.id).where(
             WalletModel.normalized_name == name_key, WalletModel.user_id == user.id
         )

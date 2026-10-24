@@ -1,5 +1,3 @@
-"""API behavior tests for the Transactions boundary."""
-
 from http import HTTPStatus
 from typing import Any
 

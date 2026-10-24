@@ -1,6 +1,3 @@
-"""Project contracts: request payloads and the response shape."""
-
-
 from pydantic import Field, field_validator
 
 from personal.core.shared.base import BaseModel
