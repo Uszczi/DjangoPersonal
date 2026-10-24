@@ -18,6 +18,8 @@ from starlette.requests import Request
 
 from personal.infra.models import (
     Category,
+    Counter,
+    CounterEntry,
     Project,
     Task,
     TimeEntry,
@@ -137,6 +139,29 @@ class TransactionView(_AppView, model=Transaction):
     column_sortable_list = [Transaction.id, Transaction.date, Transaction.amount]
 
 
+class CounterView(_AppView, model=Counter):
+    icon = 'fa-solid fa-hashtag'
+    column_list = [Counter.id, Counter.user, Counter.name, Counter.created_at]
+    column_searchable_list = [Counter.name]
+    column_sortable_list = [Counter.id, Counter.name]
+    form_columns = [Counter.name]
+
+
+class CounterEntryView(_AppView, model=CounterEntry):
+    name_plural = 'Counter entries'
+    icon = 'fa-solid fa-list-ol'
+    can_edit = False
+    column_list = [
+        CounterEntry.id,
+        CounterEntry.user,
+        CounterEntry.counter,
+        CounterEntry.date,
+        CounterEntry.value,
+        CounterEntry.note,
+    ]
+    column_sortable_list = [CounterEntry.id, CounterEntry.date, CounterEntry.value]
+
+
 VIEWS: list[type[ModelView]] = [
     UserView,
     ProjectView,
@@ -146,4 +171,6 @@ VIEWS: list[type[ModelView]] = [
     WalletView,
     CategoryView,
     TransactionView,
+    CounterView,
+    CounterEntryView,
 ]

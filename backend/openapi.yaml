@@ -972,6 +972,221 @@ paths:
       responses:
         '204':
           description: Successful Response
+  /api/v1/counters/:
+    get:
+      tags:
+      - personal
+      summary: List Counters
+      operationId: counters_list
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/CounterResponse'
+                type: array
+                title: Response Counters List
+      security:
+      - JWTAuth: []
+    post:
+      tags:
+      - personal
+      summary: Create Counter
+      operationId: counters_create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CounterRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CounterResponse'
+      security:
+      - JWTAuth: []
+  /api/v1/counters/{id}/:
+    get:
+      tags:
+      - personal
+      summary: Get Counter
+      operationId: counters_retrieve
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CounterResponse'
+    patch:
+      tags:
+      - personal
+      summary: Update Counter
+      operationId: counters_partial_update
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCounterRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CounterResponse'
+    delete:
+      tags:
+      - personal
+      summary: Delete Counter
+      operationId: counters_destroy
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      responses:
+        '204':
+          description: Successful Response
+  /api/v1/counter-entries/:
+    get:
+      tags:
+      - personal
+      summary: List Counter Entries
+      operationId: counter_entries_list
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: counter
+        in: query
+        required: true
+        schema:
+          type: integer
+          title: Counter
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CounterEntryResponse'
+                title: Response Counter Entries List
+    post:
+      tags:
+      - personal
+      summary: Create Counter Entry
+      operationId: counter_entries_create
+      security:
+      - JWTAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CounterEntryRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CounterEntryResponse'
+  /api/v1/counter-entries/{id}/:
+    get:
+      tags:
+      - personal
+      summary: Get Counter Entry
+      operationId: counter_entries_retrieve
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CounterEntryResponse'
+    patch:
+      tags:
+      - personal
+      summary: Update Counter Entry
+      operationId: counter_entries_partial_update
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCounterEntryRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CounterEntryResponse'
+    delete:
+      tags:
+      - personal
+      summary: Delete Counter Entry
+      operationId: counter_entries_destroy
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      responses:
+        '204':
+          description: Successful Response
 components:
   schemas:
     AuthResponse:
@@ -1027,6 +1242,100 @@ components:
       - name
       - icon
       title: CategoryResponse
+    CounterEntryRequest:
+      properties:
+        counter:
+          type: integer
+          title: Counter
+        value:
+          type: integer
+          maximum: 1000000000.0
+          minimum: -1000000000.0
+          title: Value
+          default: 1
+        date:
+          type: string
+          format: date
+          title: Date
+        note:
+          type: string
+          maxLength: 1000
+          title: Note
+          default: ''
+      type: object
+      required:
+      - counter
+      - date
+      title: CounterEntryRequest
+    CounterEntryResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+          readOnly: true
+        counter_id:
+          type: integer
+          title: Counter Id
+          readOnly: true
+        value:
+          type: integer
+          title: Value
+        date:
+          type: string
+          format: date
+          title: Date
+        note:
+          type: string
+          title: Note
+      type: object
+      required:
+      - id
+      - counter_id
+      - value
+      - date
+      - note
+      title: CounterEntryResponse
+    CounterRequest:
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          minLength: 1
+          title: Name
+      type: object
+      required:
+      - name
+      title: CounterRequest
+    CounterResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+          readOnly: true
+        name:
+          type: string
+          title: Name
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+          readOnly: true
+        entry_count:
+          type: integer
+          title: Entry Count
+          readOnly: true
+        total:
+          type: integer
+          title: Total
+          readOnly: true
+      type: object
+      required:
+      - id
+      - name
+      - created_at
+      - entry_count
+      - total
+      title: CounterResponse
     LoginRequest:
       properties:
         username:
@@ -1071,6 +1380,40 @@ components:
           title: Icon
       type: object
       title: PatchedCategoryRequest
+    PatchedCounterEntryRequest:
+      properties:
+        value:
+          anyOf:
+          - type: integer
+            maximum: 1000000000.0
+            minimum: -1000000000.0
+          - type: 'null'
+          title: Value
+        date:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Date
+        note:
+          anyOf:
+          - type: string
+            maxLength: 1000
+          - type: 'null'
+          title: Note
+      type: object
+      title: PatchedCounterEntryRequest
+    PatchedCounterRequest:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 100
+            minLength: 1
+          - type: 'null'
+          title: Name
+      type: object
+      title: PatchedCounterRequest
     PatchedProjectRequest:
       properties:
         name:

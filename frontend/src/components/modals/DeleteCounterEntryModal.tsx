@@ -1,0 +1,65 @@
+import { useState } from "react";
+
+import { apiErrorMessage } from "@/apiErrorMessage";
+import { signedValue } from "@/counterFormat";
+import { Button, ErrorAlert, Modal, ModalFooter } from "@/design-system";
+import type { CounterEntryResponse } from "@/generated/api";
+import { useCountersStore } from "@/stores/counters";
+
+type DeleteCounterEntryModalProps = {
+  entry: CounterEntryResponse;
+  onClose: () => void;
+};
+
+const dayFormatter = new Intl.DateTimeFormat("pl-PL", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+
+export function DeleteCounterEntryModal({ entry, onClose }: DeleteCounterEntryModalProps) {
+  const deleteEntry = useCountersStore((state) => state.deleteEntry);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+
+  function close() {
+    if (!isDeleting) onClose();
+  }
+
+  async function handleDelete() {
+    setIsDeleting(true);
+    setDeleteError("");
+    try {
+      await deleteEntry(entry);
+      onClose();
+    } catch (error) {
+      setDeleteError(await apiErrorMessage(error));
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  return (
+    <Modal
+      kicker="POTWIERDŹ USUNIĘCIE"
+      title="Usunąć wpis?"
+      titleId="counter-entry-delete-title"
+      onClose={close}
+      size="md"
+    >
+      <p className="m-0 mt-5 text-[13px] leading-relaxed text-ink-soft break-words">
+        Wpis {signedValue(entry.value)} z dnia {dayFormatter.format(entry.date)} zostanie
+        trwale usunięty.
+      </p>
+      {deleteError && <ErrorAlert>{deleteError}</ErrorAlert>}
+      <ModalFooter>
+        <Button variant="secondary" onClick={close} disabled={isDeleting}>
+          Anuluj
+        </Button>
+        <Button variant="danger" onClick={() => void handleDelete()} disabled={isDeleting}>
+          {isDeleting ? "Usuwanie…" : "Usuń wpis"}
+        </Button>
+      </ModalFooter>
+    </Modal>
+  );
+}

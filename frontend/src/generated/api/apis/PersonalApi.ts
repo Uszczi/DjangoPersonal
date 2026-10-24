@@ -30,6 +30,26 @@ import {
     CategoryResponseToJSON,
 } from '../models/CategoryResponse';
 import {
+    type CounterEntryRequest,
+    CounterEntryRequestFromJSON,
+    CounterEntryRequestToJSON,
+} from '../models/CounterEntryRequest';
+import {
+    type CounterEntryResponse,
+    CounterEntryResponseFromJSON,
+    CounterEntryResponseToJSON,
+} from '../models/CounterEntryResponse';
+import {
+    type CounterRequest,
+    CounterRequestFromJSON,
+    CounterRequestToJSON,
+} from '../models/CounterRequest';
+import {
+    type CounterResponse,
+    CounterResponseFromJSON,
+    CounterResponseToJSON,
+} from '../models/CounterResponse';
+import {
     type LoginRequest,
     LoginRequestFromJSON,
     LoginRequestToJSON,
@@ -44,6 +64,16 @@ import {
     PatchedCategoryRequestFromJSON,
     PatchedCategoryRequestToJSON,
 } from '../models/PatchedCategoryRequest';
+import {
+    type PatchedCounterEntryRequest,
+    PatchedCounterEntryRequestFromJSON,
+    PatchedCounterEntryRequestToJSON,
+} from '../models/PatchedCounterEntryRequest';
+import {
+    type PatchedCounterRequest,
+    PatchedCounterRequestFromJSON,
+    PatchedCounterRequestToJSON,
+} from '../models/PatchedCounterRequest';
 import {
     type PatchedProjectRequest,
     PatchedProjectRequestFromJSON,
@@ -232,6 +262,77 @@ export interface CategoriesUpdateRequest {
      *
      */
     categoryRequest: CategoryRequest;
+}
+
+export interface CounterEntriesCreateRequest {
+    /**
+     *
+     */
+    counterEntryRequest: CounterEntryRequest;
+}
+
+export interface CounterEntriesDestroyRequest {
+    /**
+     *
+     */
+    id: number;
+}
+
+export interface CounterEntriesListRequest {
+    /**
+     *
+     */
+    counter: number;
+}
+
+export interface CounterEntriesPartialUpdateRequest {
+    /**
+     *
+     */
+    id: number;
+    /**
+     *
+     */
+    patchedCounterEntryRequest: PatchedCounterEntryRequest;
+}
+
+export interface CounterEntriesRetrieveRequest {
+    /**
+     *
+     */
+    id: number;
+}
+
+export interface CountersCreateRequest {
+    /**
+     *
+     */
+    counterRequest: CounterRequest;
+}
+
+export interface CountersDestroyRequest {
+    /**
+     *
+     */
+    id: number;
+}
+
+export interface CountersPartialUpdateRequest {
+    /**
+     *
+     */
+    id: number;
+    /**
+     *
+     */
+    patchedCounterRequest: PatchedCounterRequest;
+}
+
+export interface CountersRetrieveRequest {
+    /**
+     *
+     */
+    id: number;
 }
 
 export interface ProjectsCreateRequest {
@@ -1044,6 +1145,553 @@ export class PersonalApi extends runtime.BaseAPI {
      */
     async categoriesUpdate(requestParameters: CategoriesUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CategoryResponse> {
         const response = await this.categoriesUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for counterEntriesCreate without sending the request
+     */
+    async counterEntriesCreateRequestOpts(requestParameters: CounterEntriesCreateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['counterEntryRequest'] == null) {
+            throw new runtime.RequiredError(
+                'counterEntryRequest',
+                'Required parameter "counterEntryRequest" was null or undefined when calling counterEntriesCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/counter-entries/`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: CounterEntryRequestToJSON(requestParameters['counterEntryRequest']),
+        };
+    }
+
+    /**
+     * Create Counter Entry
+     */
+    async counterEntriesCreateRaw(requestParameters: CounterEntriesCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CounterEntryResponse>> {
+        const requestOptions = await this.counterEntriesCreateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => CounterEntryResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Create Counter Entry
+     */
+    async counterEntriesCreate(requestParameters: CounterEntriesCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CounterEntryResponse> {
+        const response = await this.counterEntriesCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for counterEntriesDestroy without sending the request
+     */
+    async counterEntriesDestroyRequestOpts(requestParameters: CounterEntriesDestroyRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling counterEntriesDestroy().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/counter-entries/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Delete Counter Entry
+     */
+    async counterEntriesDestroyRaw(requestParameters: CounterEntriesDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.counterEntriesDestroyRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Delete Counter Entry
+     */
+    async counterEntriesDestroy(requestParameters: CounterEntriesDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.counterEntriesDestroyRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Creates request options for counterEntriesList without sending the request
+     */
+    async counterEntriesListRequestOpts(requestParameters: CounterEntriesListRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['counter'] == null) {
+            throw new runtime.RequiredError(
+                'counter',
+                'Required parameter "counter" was null or undefined when calling counterEntriesList().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['counter'] != null) {
+            queryParameters['counter'] = requestParameters['counter'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/counter-entries/`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * List Counter Entries
+     */
+    async counterEntriesListRaw(requestParameters: CounterEntriesListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<CounterEntryResponse>>> {
+        const requestOptions = await this.counterEntriesListRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(CounterEntryResponseFromJSON));
+    }
+
+    /**
+     * List Counter Entries
+     */
+    async counterEntriesList(requestParameters: CounterEntriesListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<CounterEntryResponse>> {
+        const response = await this.counterEntriesListRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for counterEntriesPartialUpdate without sending the request
+     */
+    async counterEntriesPartialUpdateRequestOpts(requestParameters: CounterEntriesPartialUpdateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling counterEntriesPartialUpdate().'
+            );
+        }
+
+        if (requestParameters['patchedCounterEntryRequest'] == null) {
+            throw new runtime.RequiredError(
+                'patchedCounterEntryRequest',
+                'Required parameter "patchedCounterEntryRequest" was null or undefined when calling counterEntriesPartialUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/counter-entries/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedCounterEntryRequestToJSON(requestParameters['patchedCounterEntryRequest']),
+        };
+    }
+
+    /**
+     * Update Counter Entry
+     */
+    async counterEntriesPartialUpdateRaw(requestParameters: CounterEntriesPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CounterEntryResponse>> {
+        const requestOptions = await this.counterEntriesPartialUpdateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => CounterEntryResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Update Counter Entry
+     */
+    async counterEntriesPartialUpdate(requestParameters: CounterEntriesPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CounterEntryResponse> {
+        const response = await this.counterEntriesPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for counterEntriesRetrieve without sending the request
+     */
+    async counterEntriesRetrieveRequestOpts(requestParameters: CounterEntriesRetrieveRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling counterEntriesRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/counter-entries/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Get Counter Entry
+     */
+    async counterEntriesRetrieveRaw(requestParameters: CounterEntriesRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CounterEntryResponse>> {
+        const requestOptions = await this.counterEntriesRetrieveRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => CounterEntryResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get Counter Entry
+     */
+    async counterEntriesRetrieve(requestParameters: CounterEntriesRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CounterEntryResponse> {
+        const response = await this.counterEntriesRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for countersCreate without sending the request
+     */
+    async countersCreateRequestOpts(requestParameters: CountersCreateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['counterRequest'] == null) {
+            throw new runtime.RequiredError(
+                'counterRequest',
+                'Required parameter "counterRequest" was null or undefined when calling countersCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/counters/`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: CounterRequestToJSON(requestParameters['counterRequest']),
+        };
+    }
+
+    /**
+     * Create Counter
+     */
+    async countersCreateRaw(requestParameters: CountersCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CounterResponse>> {
+        const requestOptions = await this.countersCreateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => CounterResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Create Counter
+     */
+    async countersCreate(requestParameters: CountersCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CounterResponse> {
+        const response = await this.countersCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for countersDestroy without sending the request
+     */
+    async countersDestroyRequestOpts(requestParameters: CountersDestroyRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling countersDestroy().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/counters/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Delete Counter
+     */
+    async countersDestroyRaw(requestParameters: CountersDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.countersDestroyRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Delete Counter
+     */
+    async countersDestroy(requestParameters: CountersDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.countersDestroyRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Creates request options for countersList without sending the request
+     */
+    async countersListRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/counters/`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * List Counters
+     */
+    async countersListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<CounterResponse>>> {
+        const requestOptions = await this.countersListRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(CounterResponseFromJSON));
+    }
+
+    /**
+     * List Counters
+     */
+    async countersList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<CounterResponse>> {
+        const response = await this.countersListRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for countersPartialUpdate without sending the request
+     */
+    async countersPartialUpdateRequestOpts(requestParameters: CountersPartialUpdateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling countersPartialUpdate().'
+            );
+        }
+
+        if (requestParameters['patchedCounterRequest'] == null) {
+            throw new runtime.RequiredError(
+                'patchedCounterRequest',
+                'Required parameter "patchedCounterRequest" was null or undefined when calling countersPartialUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/counters/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedCounterRequestToJSON(requestParameters['patchedCounterRequest']),
+        };
+    }
+
+    /**
+     * Update Counter
+     */
+    async countersPartialUpdateRaw(requestParameters: CountersPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CounterResponse>> {
+        const requestOptions = await this.countersPartialUpdateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => CounterResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Update Counter
+     */
+    async countersPartialUpdate(requestParameters: CountersPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CounterResponse> {
+        const response = await this.countersPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for countersRetrieve without sending the request
+     */
+    async countersRetrieveRequestOpts(requestParameters: CountersRetrieveRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling countersRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/counters/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Get Counter
+     */
+    async countersRetrieveRaw(requestParameters: CountersRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CounterResponse>> {
+        const requestOptions = await this.countersRetrieveRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => CounterResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get Counter
+     */
+    async countersRetrieve(requestParameters: CountersRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CounterResponse> {
+        const response = await this.countersRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

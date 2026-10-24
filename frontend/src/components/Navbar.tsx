@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Button, Drawer } from "@/design-system";
 import { useAuthStore } from "@/stores/auth";
 
-type TopTabPath = "/" | "/tasks" | "/projects" | "/timer" | "/whiteboard" | "/expenses";
+type TopTabPath = "/" | "/tasks" | "/projects" | "/timer" | "/whiteboard" | "/expenses" | "/counters";
 
 /** Link colors for the dark header bar and for the light mobile drawer. */
 const tabToneClasses = {
@@ -47,6 +47,7 @@ const NAV_ITEMS: Array<{ to: TopTabPath; label: string }> = [
   { to: "/timer", label: "Czas" },
   { to: "/whiteboard", label: "Notatki" },
   { to: "/expenses", label: "Wydatki" },
+  { to: "/counters", label: "Liczniki" },
 ];
 
 export function Navbar() {

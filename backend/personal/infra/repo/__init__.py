@@ -17,6 +17,7 @@ composition root (``personal.wiring``) build a fresh repository per use case.
 from personal.infra.rules import day_start
 
 from .categories import CategoryRepository
+from .counters import CounterEntryRepository, CounterRepository
 from .errors import (
     DuplicateCategoryName,
     DuplicateProjectName,
@@ -37,6 +38,8 @@ from .whiteboards import WhiteboardRepository
 
 __all__ = [
     'CategoryRepository',
+    'CounterEntryRepository',
+    'CounterRepository',
     'DuplicateCategoryName',
     'DuplicateProjectName',
     'DuplicateUsername',

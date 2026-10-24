@@ -6,6 +6,7 @@ const NAV_TILES = [
   { to: "/timer", label: "Czas", icon: "◷" },
   { to: "/whiteboard", label: "Notatki", icon: "✎" },
   { to: "/expenses", label: "Wydatki", icon: "€" },
+  { to: "/counters", label: "Liczniki", icon: "#" },
 ] as const;
 
 export function NavTiles() {

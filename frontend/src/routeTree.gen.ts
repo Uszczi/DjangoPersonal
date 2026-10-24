@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SplatRouteImport } from './routes/$'
+import { Route as CountersRouteImport } from './routes/counters'
 import { Route as ExpensesRouteImport } from './routes/expenses'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProjectsRouteImport } from './routes/projects'
@@ -19,6 +20,8 @@ import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as TimerRouteImport } from './routes/timer'
 import { Route as UserRouteImport } from './routes/user'
 import { Route as WhiteboardRouteImport } from './routes/whiteboard'
+import { Route as CountersIndexRouteImport } from './routes/counters/index'
+import { Route as CountersCounterIdRouteImport } from './routes/counters/$counterId'
 import { Route as ExpensesIndexRouteImport } from './routes/expenses/index'
 import { Route as ExpensesWalletIdRouteImport } from './routes/expenses/$walletId'
 import { Route as WhiteboardIndexRouteImport } from './routes/whiteboard/index'
@@ -32,6 +35,11 @@ const IndexRoute = IndexRouteImport.update({
 const SplatRoute = SplatRouteImport.update({
   id: '/$',
   path: '/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CountersRoute = CountersRouteImport.update({
+  id: '/counters',
+  path: '/counters',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExpensesRoute = ExpensesRouteImport.update({
@@ -74,6 +82,16 @@ const WhiteboardRoute = WhiteboardRouteImport.update({
   path: '/whiteboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CountersIndexRoute = CountersIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CountersRoute,
+} as any)
+const CountersCounterIdRoute = CountersCounterIdRouteImport.update({
+  id: '/$counterId',
+  path: '/$counterId',
+  getParentRoute: () => CountersRoute,
+} as any)
 const ExpensesIndexRoute = ExpensesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -98,6 +116,7 @@ const WhiteboardBoardIdRoute = WhiteboardBoardIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
+  '/counters': typeof CountersRouteWithChildren
   '/expenses': typeof ExpensesRouteWithChildren
   '/login': typeof LoginRoute
   '/projects': typeof ProjectsRoute
@@ -106,8 +125,10 @@ export interface FileRoutesByFullPath {
   '/timer': typeof TimerRoute
   '/user': typeof UserRoute
   '/whiteboard': typeof WhiteboardRouteWithChildren
+  '/counters/$counterId': typeof CountersCounterIdRoute
   '/expenses/$walletId': typeof ExpensesWalletIdRoute
   '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
+  '/counters/': typeof CountersIndexRoute
   '/expenses/': typeof ExpensesIndexRoute
   '/whiteboard/': typeof WhiteboardIndexRoute
 }
@@ -120,8 +141,10 @@ export interface FileRoutesByTo {
   '/tasks': typeof TasksRoute
   '/timer': typeof TimerRoute
   '/user': typeof UserRoute
+  '/counters/$counterId': typeof CountersCounterIdRoute
   '/expenses/$walletId': typeof ExpensesWalletIdRoute
   '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
+  '/counters': typeof CountersIndexRoute
   '/expenses': typeof ExpensesIndexRoute
   '/whiteboard': typeof WhiteboardIndexRoute
 }
@@ -129,6 +152,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
+  '/counters': typeof CountersRouteWithChildren
   '/expenses': typeof ExpensesRouteWithChildren
   '/login': typeof LoginRoute
   '/projects': typeof ProjectsRoute
@@ -137,8 +161,10 @@ export interface FileRoutesById {
   '/timer': typeof TimerRoute
   '/user': typeof UserRoute
   '/whiteboard': typeof WhiteboardRouteWithChildren
+  '/counters/$counterId': typeof CountersCounterIdRoute
   '/expenses/$walletId': typeof ExpensesWalletIdRoute
   '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
+  '/counters/': typeof CountersIndexRoute
   '/expenses/': typeof ExpensesIndexRoute
   '/whiteboard/': typeof WhiteboardIndexRoute
 }
@@ -147,6 +173,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$'
+    | '/counters'
     | '/expenses'
     | '/login'
     | '/projects'
@@ -155,8 +182,10 @@ export interface FileRouteTypes {
     | '/timer'
     | '/user'
     | '/whiteboard'
+    | '/counters/$counterId'
     | '/expenses/$walletId'
     | '/whiteboard/$boardId'
+    | '/counters/'
     | '/expenses/'
     | '/whiteboard/'
   fileRoutesByTo: FileRoutesByTo
@@ -169,14 +198,17 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/timer'
     | '/user'
+    | '/counters/$counterId'
     | '/expenses/$walletId'
     | '/whiteboard/$boardId'
+    | '/counters'
     | '/expenses'
     | '/whiteboard'
   id:
     | '__root__'
     | '/'
     | '/$'
+    | '/counters'
     | '/expenses'
     | '/login'
     | '/projects'
@@ -185,8 +217,10 @@ export interface FileRouteTypes {
     | '/timer'
     | '/user'
     | '/whiteboard'
+    | '/counters/$counterId'
     | '/expenses/$walletId'
     | '/whiteboard/$boardId'
+    | '/counters/'
     | '/expenses/'
     | '/whiteboard/'
   fileRoutesById: FileRoutesById
@@ -194,6 +228,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SplatRoute: typeof SplatRoute
+  CountersRoute: typeof CountersRouteWithChildren
   ExpensesRoute: typeof ExpensesRouteWithChildren
   LoginRoute: typeof LoginRoute
   ProjectsRoute: typeof ProjectsRoute
@@ -218,6 +253,13 @@ declare module '@tanstack/react-router' {
       path: '/$'
       fullPath: '/$'
       preLoaderRoute: typeof SplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/counters': {
+      id: '/counters'
+      path: '/counters'
+      fullPath: '/counters'
+      preLoaderRoute: typeof CountersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/expenses': {
@@ -276,6 +318,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WhiteboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/counters/': {
+      id: '/counters/'
+      path: '/'
+      fullPath: '/counters/'
+      preLoaderRoute: typeof CountersIndexRouteImport
+      parentRoute: typeof CountersRoute
+    }
+    '/counters/$counterId': {
+      id: '/counters/$counterId'
+      path: '/$counterId'
+      fullPath: '/counters/$counterId'
+      preLoaderRoute: typeof CountersCounterIdRouteImport
+      parentRoute: typeof CountersRoute
+    }
     '/expenses/': {
       id: '/expenses/'
       path: '/'
@@ -306,6 +362,20 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface CountersRouteChildren {
+  CountersCounterIdRoute: typeof CountersCounterIdRoute
+  CountersIndexRoute: typeof CountersIndexRoute
+}
+
+const CountersRouteChildren: CountersRouteChildren = {
+  CountersCounterIdRoute: CountersCounterIdRoute,
+  CountersIndexRoute: CountersIndexRoute,
+}
+
+const CountersRouteWithChildren = CountersRoute._addFileChildren(
+  CountersRouteChildren,
+)
 
 interface ExpensesRouteChildren {
   ExpensesWalletIdRoute: typeof ExpensesWalletIdRoute
@@ -338,6 +408,7 @@ const WhiteboardRouteWithChildren = WhiteboardRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
+  CountersRoute: CountersRouteWithChildren,
   ExpensesRoute: ExpensesRouteWithChildren,
   LoginRoute: LoginRoute,
   ProjectsRoute: ProjectsRoute,

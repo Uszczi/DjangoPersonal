@@ -40,3 +40,9 @@ A per-user label for classifying Transactions. Has a required name (trimmed, uni
 **System category**:
 The reserved Category (`is_system`) that holds a Wallet's balance ledger — the opening balance on creation and the difference recorded whenever the current balance is set. It is seeded with the base categories, cannot be renamed or deleted, and the interface keeps it out of the category list.
 
+
+**Counter** (Licznik):
+A named tally a user keeps of anything countable — coffees, push-ups, days without sugar. Has a required name (trimmed) and owns its Counter entries. A Counter's total is the sum of its entries' values; like a Wallet balance it is never stored, only computed. Deleting a Counter cascades to its entries.
+
+**Counter entry**:
+One change to a Counter: a non-zero whole-number value (default 1; negative values subtract), a required date, and an optional note. An entry stays in the Counter it was added to.

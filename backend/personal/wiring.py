@@ -15,6 +15,8 @@ from personal.core.accounts.ports import InvalidToken, PasswordHasher, PasswordP
 from personal.infra.models import User
 from personal.infra.repo import (
     CategoryRepository,
+    CounterEntryRepository,
+    CounterRepository,
     ProjectRepository,
     TaskRepository,
     TimeEntryRepository,
@@ -57,6 +59,14 @@ def category_repository(session: Session) -> CategoryRepository:
 
 def transaction_repository(session: Session) -> TransactionRepository:
     return TransactionRepository(session)
+
+
+def counter_repository(session: Session) -> CounterRepository:
+    return CounterRepository(session)
+
+
+def counter_entry_repository(session: Session) -> CounterEntryRepository:
+    return CounterEntryRepository(session)
 
 
 def password_hasher() -> PasswordHasher:

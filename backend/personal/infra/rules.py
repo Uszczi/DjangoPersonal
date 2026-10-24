@@ -112,6 +112,10 @@ def category_name_key(name: str) -> str:
     return normalize_category_name(name).casefold()
 
 
+def normalize_counter_name(name: str) -> str:
+    return name.strip()
+
+
 def day_start(day: date_type) -> datetime:
     """Midnight UTC on the given calendar day.
 

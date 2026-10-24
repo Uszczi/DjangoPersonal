@@ -4,9 +4,15 @@ index.ts
 models/AuthResponse.ts
 models/CategoryRequest.ts
 models/CategoryResponse.ts
+models/CounterEntryRequest.ts
+models/CounterEntryResponse.ts
+models/CounterRequest.ts
+models/CounterResponse.ts
 models/LoginRequest.ts
 models/LoginResponse.ts
 models/PatchedCategoryRequest.ts
+models/PatchedCounterEntryRequest.ts
+models/PatchedCounterRequest.ts
 models/PatchedProjectRequest.ts
 models/PatchedTaskUpdateRequest.ts
 models/PatchedTimeEntryRequest.ts

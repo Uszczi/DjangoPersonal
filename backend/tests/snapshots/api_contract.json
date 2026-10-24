@@ -89,6 +89,86 @@
   },
   {
     "method": "GET",
+    "path": "/api/v1/counter-entries/",
+    "operation_id": "counter_entries_list",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/counter-entries/",
+    "operation_id": "counter_entries_create",
+    "status_codes": [
+      "201"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/counter-entries/{id}/",
+    "operation_id": "counter_entries_destroy",
+    "status_codes": [
+      "204"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/counter-entries/{id}/",
+    "operation_id": "counter_entries_retrieve",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/counter-entries/{id}/",
+    "operation_id": "counter_entries_partial_update",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/counters/",
+    "operation_id": "counters_list",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/counters/",
+    "operation_id": "counters_create",
+    "status_codes": [
+      "201"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/counters/{id}/",
+    "operation_id": "counters_destroy",
+    "status_codes": [
+      "204"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/counters/{id}/",
+    "operation_id": "counters_retrieve",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/counters/{id}/",
+    "operation_id": "counters_partial_update",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "GET",
     "path": "/api/v1/projects/",
     "operation_id": "projects_list",
     "status_codes": [

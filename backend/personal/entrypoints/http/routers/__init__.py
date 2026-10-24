@@ -10,6 +10,7 @@ from fastapi import APIRouter
 from . import (
     auth,
     categories,
+    counters,
     projects,
     tasks,
     time_entries,
@@ -31,6 +32,7 @@ for module in (
     wallets,
     categories,
     transactions,
+    counters,
 ):
     router.include_router(module.router)
 

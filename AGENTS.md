@@ -4,7 +4,7 @@ Guidance for AI coding agents working in this repository. The reader is assumed 
 
 ## Project overview
 
-DjangoPersonal is a personal work organizer: it groups a person's work into **Projects** and their **Tasks**, tracks time with **Time entries** and a single **Running timer**, provides freeform **Whiteboards** (and Markdown-based **Notatki**/notes), and tracks **expenses** through **Wallets**, **Transactions**, and **Categories**. Domain vocabulary is defined precisely in `GLOSSARY.md` — use those terms in issues, tests, and code.
+DjangoPersonal is a personal work organizer: it groups a person's work into **Projects** and their **Tasks**, tracks time with **Time entries** and a single **Running timer**, provides freeform **Whiteboards** (and Markdown-based **Notatki**/notes), tracks **expenses** through **Wallets**, **Transactions**, and **Categories**, and keeps **Counters** (named tallies) made of **Counter entries**. Domain vocabulary is defined precisely in `GLOSSARY.md` — use those terms in issues, tests, and code.
 
 The name is historical: the backend was Django until the move to FastAPI + SQLAlchemy (`docs/adr/0002-fastapi-sqlalchemy-instead-of-django.md`). The repository contains five deliverables:
 
@@ -88,7 +88,7 @@ One package, `backend/personal/`, split by role: `core` (use cases), `infra` (st
 
 ```
 personal/
-  core/<feature>/   handlers/ contracts/      work, accounts, expenses, whiteboard; core/shared/
+  core/<feature>/   handlers/ contracts/      work, accounts, expenses, whiteboard, counters; core/shared/
   infra/            models/ repo/ rules.py db.py security.py factories.py
   wiring.py         composition root (plain functions)
   settings.py       Settings
@@ -98,7 +98,7 @@ personal/
 
 - `personal/infra/` — **the only package that touches the ORM directly.** SQLAlchemy models live in `infra/models/` (the user is `infra.models.User`; all data is scoped per user). Model invariants are pure functions in `infra/rules.py` (name/status normalization, the Inbox guards), applied by mapper events (`before_insert`/`before_update`/`before_delete`), so every writer gets them; the database constraints are the safety net. Repositories live in `infra/repo/` — one class per entity, constructed with a `Session`, owning all queries, writes and storage errors. They only flush, never commit: a write that may hit a constraint goes through `_flush.flush`, which turns the `IntegrityError` into a repository error. A failed flush ends the unit of work — the use case turns the error into a domain error and the request (or tool call) rolls back. `UserRepository.create` creates the user's Inbox. `infra/db.py` holds `Database` (engine + session factory; `Database.transaction()` is one unit of work: commit when the block ends, rollback if it raised). `infra/security.py` implements the accounts ports: a stdlib scrypt hasher with a self-describing `scrypt$n$r$p$salt$hash` encoding and rehash-on-login, a small password policy, PyJWT HS256 tokens with `sub`/`type`/`iat`/`exp`/`jti`. `infra/factories.py` holds factory_boy factories (bound to a session with `bind_session`).
 - `backend/alembic/` — the schema. `just makemigrations "msg"` autogenerates a revision from the models, `just migrate` applies it; `tests/test_migrations.py` checks that `upgrade head` produces exactly the models' metadata.
-- `personal/core/` — the use cases, transport-agnostic (never imports FastAPI, MCP or sqladmin). Features: `core/work/` (projects, tasks, time entries, timer), `core/accounts/` (register/login/refresh/me/delete), `core/whiteboard/`, `core/expenses/`. Each has:
+- `personal/core/` — the use cases, transport-agnostic (never imports FastAPI, MCP or sqladmin). Features: `core/work/` (projects, tasks, time entries, timer), `core/accounts/` (register/login/refresh/me/delete), `core/whiteboard/`, `core/expenses/`, `core/counters/` (counters and their entries). Each has:
   - `contracts/` — Pydantic request/response schemas. `Patched*` classes are PATCH payloads (all fields optional); an explicit `null` for a non-nullable field is a validation error (422), not "leave it alone". Contracts subclass `personal.core.shared.base.BaseModel` (`from_attributes=True`, so they validate straight off ORM instances).
   - `handlers/` — the use cases: plain classes (`CreateProject`, `UpdateTask`, `AuthenticateUser`, …) that receive repositories (and, in `accounts`, ports) via constructor and expose `execute()`. Domain rules live here. PATCH handlers apply only provided fields via `core/shared/patch.py:apply_provided`.
   - `core/accounts/ports.py` — the `PasswordHasher`, `PasswordPolicy`, `TokenService` protocols (implemented in `infra/security.py`). `core/work/clock.py` — the single time seam (`clock.now()`); every timestamp in the handler layer flows through it so tests can control the clock. Never call `datetime.now()` directly in handlers.
@@ -127,7 +127,7 @@ A separate `sqladmin` service (`admin` container, :8002, published on the host's
 ## Frontend architecture (`frontend/`)
 
 - **Routing**: TanStack Router, file-based — routes are files in `src/routes/` (`routeTree.gen.ts` is generated; never hand-edit it). See `docs/adr/0001-client-side-routing.md` `autoCodeSplitting` (in `vite.config.ts`) puts each route's component in its own lazy chunk — the whiteboard's Konva stays out of the main bundle — so import route components only through the route tree, never from another module.
-- **State**: Zustand stores in `src/stores/` (one per domain: auth, projects, tasks, timer, wallets, …). Components fetch after mount; the router handles navigation only.
+- **State**: Zustand stores in `src/stores/` (one per domain: auth, projects, tasks, timer, wallets, counters, …). Components fetch after mount; the router handles navigation only.
 - **Design system**: presentational components (`Button`, `IconButton`, `Modal`, `Field`, `TextInput`, `TextArea`, `Select`, `ErrorAlert`, …) live in `src/design-system/components/`, each with a colocated Storybook story (`*.stories.tsx`). Import them only through the barrel `@/design-system`. Colors come from semantic tokens in the `@theme` block of `src/index.css` (`text-danger`, `border-control-border`, `bg-overlay`, …) — add a token instead of a new `[#hex]`. `Field` takes `hint`/`error` and wires `aria-describedby`/`aria-invalid` into the control inside it; `Modal` and `Drawer` are native `<dialog>`s sharing `useModalDialog` (`showModal()` on mount, Escape/backdrop → `onClose`; polyfilled for jsdom in `tests/setup.ts`), rendered only while open. Stories are discovered from `src/**/*.stories.*`; the Tailwind theme comes from `src/index.css` via `.storybook/preview.ts`.
 - **API**: a single generated `PersonalApi` client in `src/generated/api/` (created by `just generate-api` from `backend/openapi.yaml`, post-processed by `scripts/postprocess-openapi.mjs`). **Never hand-edit generated files.** `src/api.ts` instantiates it with `basePath: ""` (requests stay relative so the Vite proxy applies) plus a middleware that attaches the JWT and transparently refreshes on 401.
 - **Path alias**: `@/` → `src/` (also in tests).

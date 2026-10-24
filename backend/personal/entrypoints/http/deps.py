@@ -18,6 +18,8 @@ from personal.infra.db import Database
 from personal.infra.models import User
 from personal.infra.repo import (
     CategoryRepository,
+    CounterEntryRepository,
+    CounterRepository,
     ProjectRepository,
     TaskRepository,
     TimeEntryRepository,
@@ -71,6 +73,10 @@ WalletRepositoryDep = Annotated[WalletRepository, _per_session(wiring.wallet_rep
 CategoryRepositoryDep = Annotated[CategoryRepository, _per_session(wiring.category_repository)]
 TransactionRepositoryDep = Annotated[
     TransactionRepository, _per_session(wiring.transaction_repository)
+]
+CounterRepositoryDep = Annotated[CounterRepository, _per_session(wiring.counter_repository)]
+CounterEntryRepositoryDep = Annotated[
+    CounterEntryRepository, _per_session(wiring.counter_entry_repository)
 ]
 PasswordHasherDep = Annotated[PasswordHasher, Depends(wiring.password_hasher)]
 PasswordPolicyDep = Annotated[PasswordPolicy, Depends(wiring.password_policy)]

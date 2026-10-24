@@ -8,6 +8,7 @@ objects. The schema itself is owned by the Alembic revisions in
 
 from .base import Base
 from .category import Category
+from .counter import Counter, CounterEntry
 from .project import Project
 from .task import Task
 from .time_entry import TimeEntry
@@ -19,6 +20,8 @@ from .whiteboard import Whiteboard
 __all__ = [
     'Base',
     'Category',
+    'Counter',
+    'CounterEntry',
     'Project',
     'Task',
     'TimeEntry',
