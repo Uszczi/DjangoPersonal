@@ -1,18 +1,21 @@
-import { Configuration, PersonalApi } from "@/generated/api";
-import type { Middleware } from "@/generated/api/runtime";
+import { Configuration, PersonalApi } from "./generated/api";
+import type { Middleware } from "./generated/api/runtime";
+import { apiBaseUrl } from "./platform";
 
 /**
  * The single API client shared by every store. The backend exposes all
  * operations under one OpenAPI tag, so the generated client is one class.
- * `basePath: ""` keeps requests relative, so the Vite dev proxy applies.
+ * The base URL comes from `configurePlatform`: "" on the web keeps requests
+ * relative (so the Vite dev proxy applies); the mobile app sets the backend
+ * origin.
  */
 
-type AuthStoreModule = typeof import("@/stores/auth");
+type AuthStoreModule = typeof import("./stores/auth");
 
 let authStorePromise: Promise<AuthStoreModule> | null = null;
 function loadAuthStore() {
   if (authStorePromise === null) {
-    authStorePromise = import("@/stores/auth");
+    authStorePromise = import("./stores/auth");
   }
   return authStorePromise;
 }
@@ -46,7 +49,7 @@ const authMiddleware: Middleware = {
     }
 
     try {
-      const refreshResponse = await fetch("/api/v1/auth/refresh/", {
+      const refreshResponse = await fetch(`${apiBaseUrl()}/api/v1/auth/refresh/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refresh }),
@@ -68,5 +71,12 @@ const authMiddleware: Middleware = {
 };
 
 export const api = new PersonalApi(
-  new Configuration({ basePath: "", middleware: [authMiddleware] }),
+  new Configuration({
+    // A getter, because the generated Configuration reads basePath on every
+    // request and the host may configure the platform after this module loads.
+    get basePath() {
+      return apiBaseUrl();
+    },
+    middleware: [authMiddleware],
+  }),
 );

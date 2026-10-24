@@ -40,14 +40,14 @@ import { ProjectNavList, ProjectsSidebar } from "@/components/ProjectsSidebar";
 import { TaskEditorModal } from "@/components/modals/TaskEditorModal";
 import { rememberedProjectId, rememberProject } from "@/lastProject";
 import { validateProjectSearch } from "@/projectSearch";
-import { useAuthStore } from "@/stores/auth";
+import { useAuthStore } from "@personal/shared/stores/auth";
 import { useLayoutStore } from "@/stores/layout";
 import { ShowModal } from "@/stores/modal";
-import { defaultProject, useProjectsStore } from "@/stores/projects";
-import { useTasksStore } from "@/stores/tasks";
+import { defaultProject, useProjectsStore } from "@personal/shared/stores/projects";
+import { useTasksStore } from "@personal/shared/stores/tasks";
 import { useSortSensors } from "@/useSortSensors";
-import { api } from "@/api";
-import type { TaskResponse } from "@/generated/api";
+import { api } from "@personal/shared/api";
+import type { TaskResponse } from "@personal/shared/generated/api";
 
 export const Route = createFileRoute("/tasks")({
   validateSearch: validateProjectSearch,

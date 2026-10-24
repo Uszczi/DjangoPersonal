@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { ExpensesPage } from "@/components/ExpensesPage";
-import { useWalletsStore } from "@/stores/wallets";
+import { useWalletsStore } from "@personal/shared/stores/wallets";
 import { LoadingStatus } from "@/design-system";
 
 export const Route = createFileRoute("/expenses/$walletId")({

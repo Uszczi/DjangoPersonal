@@ -1,4 +1,4 @@
-import type { WalletResponse } from "@/generated/api";
+import type { WalletResponse } from "@personal/shared/generated/api";
 import { NamedIcon } from "@/design-system";
 import { WalletColorDot } from "@/components/WalletColorDot";
 

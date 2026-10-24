@@ -1,18 +1,18 @@
 import { useState, type FormEvent } from "react";
 
-import { apiErrorMessage } from "@/apiErrorMessage";
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { DeleteTransactionModal } from "@/components/modals/DeleteTransactionModal";
 import { Button, ErrorAlert, Field, Modal, ModalFooter, Select, TextArea, TextInput } from "@/design-system";
 import { ShowModal } from "@/stores/modal";
-import type { TransactionResponse } from "@/generated/api";
+import type { TransactionResponse } from "@personal/shared/generated/api";
 import { DEFAULT_CATEGORY_ICON } from "@/categoryIcons";
 import { CategoryIcon } from "@/components/CategoryIcon";
-import { useCategoriesStore } from "@/stores/categories";
+import { useCategoriesStore } from "@personal/shared/stores/categories";
 import {
   useTransactionsStore,
   type TransactionInput,
-} from "@/stores/transactions";
-import { useWalletsStore } from "@/stores/wallets";
+} from "@personal/shared/stores/transactions";
+import { useWalletsStore } from "@personal/shared/stores/wallets";
 
 type TransactionEditorModalProps = {
   /** Omit (or pass `null`) to create a new transaction; pass one to edit it. */

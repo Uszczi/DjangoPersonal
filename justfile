@@ -2,12 +2,17 @@ default:
     @just --list
 
 install:
-    cd frontend && npm install
+    npm install
     cd backend && uv sync
 
 # Run the API (FastAPI) on port 8000 with auto-reload.
 backend:
     cd backend && uv run uvicorn --factory personal.entrypoints.http.app:create_served_app --reload --port 8000
+
+# Run the API on the LAN (0.0.0.0:8000) so a phone running the mobile app can
+# reach it; this machine's LAN address is added to ALLOWED_HOSTS.
+backend-lan:
+    cd backend && ALLOWED_HOSTS="localhost,127.0.0.1,$(ip -4 route get 1.1.1.1 | awk '{for (i = 1; i <= NF; i++) if ($i == "src") print $(i + 1)}')" uv run uvicorn --factory personal.entrypoints.http.app:create_served_app --reload --host 0.0.0.0 --port 8000
 
 # Run the MCP server (streamable HTTP) on port 8001.
 mcp:
@@ -33,7 +38,7 @@ migrate:
 seed:
     cd backend && uv run python -m personal.entrypoints.seed_dev
 
-# Generate the OpenAPI schema and the TypeScript API client.
+# Generate the OpenAPI schema and the TypeScript API client (into packages/shared).
 generate-api:
     cd backend && uv run python -c "import yaml; from personal.entrypoints.http.app import create_app; schema = create_app().openapi(); open('openapi.yaml', 'w').write(yaml.safe_dump(schema, allow_unicode=True, sort_keys=False))"
     cd frontend && npm run generate:api
@@ -41,11 +46,15 @@ generate-api:
 # Regenerate the TypeScript client and fail if it differs from the committed one
 # (the API contract baseline).
 check-api-client: generate-api
-    git diff --exit-code --stat -- frontend/src/generated/api
+    git diff --exit-code --stat -- packages/shared/src/generated/api
 
 # Run the Vite development server.
 frontend:
     cd frontend && npm run dev
+
+# Run the Expo dev server for the mobile app (pair with `just backend-lan`).
+mobile:
+    cd mobile && npx expo start
 
 # Run Storybook (component workshop) on port 6006.
 storybook:
@@ -74,6 +83,8 @@ check:
     cd frontend && npm test
     cd frontend && npm run lint
     cd frontend && npm run build
+    npm run typecheck --workspace @personal/shared --workspace mobile
+    npx oxlint --config frontend/.oxlintrc.json packages/shared/src mobile/app mobile/src
 
 # --- Deployment -------------------------------------------------------------
 

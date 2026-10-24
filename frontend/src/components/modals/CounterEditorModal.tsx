@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from "react";
 
-import { apiErrorMessage } from "@/apiErrorMessage";
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { Button, ErrorAlert, Field, Modal, ModalFooter, TextInput } from "@/design-system";
-import type { CounterResponse } from "@/generated/api";
-import { useCountersStore } from "@/stores/counters";
+import type { CounterResponse } from "@personal/shared/generated/api";
+import { useCountersStore } from "@personal/shared/stores/counters";
 
 type CounterEditorModalProps = {
   /** Omit to create a new counter; pass one to rename it. */

@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
-import { apiErrorMessage } from "@/apiErrorMessage";
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { DeleteTaskModal } from "@/components/modals/DeleteTaskModal";
 import { Button, ErrorAlert, Field, Modal, ModalFooter, Select, TextArea } from "@/design-system";
 import { ShowModal } from "@/stores/modal";
-import type { TaskResponse } from "@/generated/api";
-import { useProjectsStore } from "@/stores/projects";
-import { useTasksStore, type TaskInput } from "@/stores/tasks";
+import type { TaskResponse } from "@personal/shared/generated/api";
+import { useProjectsStore } from "@personal/shared/stores/projects";
+import { useTasksStore, type TaskInput } from "@personal/shared/stores/tasks";
 
 type TaskEditorModalProps = {
   /** Omit (or pass `null`) to create a new TaskResponse; pass a TaskResponse to edit it. */

@@ -1,9 +1,9 @@
 import { create } from "zustand";
 
-import { apiErrorMessage } from "@/apiErrorMessage";
-import { api } from "@/api";
-import { type TaskResponse, type TimeEntryResponse, type TimerResponse } from "@/generated/api";
-import { createLoadGuard } from "@/stores/loadGuard";
+import { apiErrorMessage } from "../apiErrorMessage";
+import { api } from "../api";
+import { type TaskResponse, type TimeEntryResponse, type TimerResponse } from "../generated/api";
+import { createLoadGuard } from "./loadGuard";
 
 export type ManualEntryInput = {
   date: string;

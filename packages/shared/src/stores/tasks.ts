@@ -1,10 +1,10 @@
 import { create } from "zustand";
 
-import { apiErrorMessage } from "@/apiErrorMessage";
-import { api } from "@/api";
-import { type TaskResponse } from "@/generated/api";
-import { useProjectsStore } from "@/stores/projects";
-import { createLoadGuard } from "@/stores/loadGuard";
+import { apiErrorMessage } from "../apiErrorMessage";
+import { api } from "../api";
+import { type TaskResponse } from "../generated/api";
+import { useProjectsStore } from "./projects";
+import { createLoadGuard } from "./loadGuard";
 
 export type TaskInput = {
   title: string;

@@ -1,6 +1,6 @@
 import { redirect } from "@tanstack/react-router";
 
-import { useAuthStore } from "@/stores/auth";
+import { useAuthStore } from "@personal/shared/stores/auth";
 
 /**
  * Route guard that redirects unauthenticated users away from protected pages

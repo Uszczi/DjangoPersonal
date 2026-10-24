@@ -2,7 +2,7 @@ import { readdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const generatedDirectory = fileURLToPath(new URL('../src/generated/api/', import.meta.url))
+const generatedDirectory = fileURLToPath(new URL('../../packages/shared/src/generated/api/', import.meta.url))
 
 async function postProcessGeneratedFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true })

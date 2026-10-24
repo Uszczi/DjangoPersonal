@@ -1,9 +1,9 @@
 import { useState } from "react";
 
-import { apiErrorMessage } from "@/apiErrorMessage";
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { Button, ErrorAlert, Modal, ModalFooter } from "@/design-system";
-import { useAuthStore } from "@/stores/auth";
-import { api } from "@/api";
+import { useAuthStore } from "@personal/shared/stores/auth";
+import { api } from "@personal/shared/api";
 import { useNavigate } from "@tanstack/react-router";
 
 type DeleteAccountModalProps = {

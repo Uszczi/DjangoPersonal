@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { Button, PageHeader } from "@/design-system";
 import { DeleteAccountModal } from "@/components/modals/DeleteAccountModal";
-import { useAuthStore } from "@/stores/auth";
+import { useAuthStore } from "@personal/shared/stores/auth";
 import { ShowModal } from "@/stores/modal";
 
 export const Route = createFileRoute("/user")({

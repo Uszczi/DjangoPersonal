@@ -1,9 +1,9 @@
 import { useState } from "react";
 
-import { apiErrorMessage } from "@/apiErrorMessage";
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { Button, ErrorAlert, Modal, ModalFooter } from "@/design-system";
-import type { TaskResponse } from "@/generated/api";
-import { useTasksStore } from "@/stores/tasks";
+import type { TaskResponse } from "@personal/shared/generated/api";
+import { useTasksStore } from "@personal/shared/stores/tasks";
 
 type DeleteTaskModalProps = {
   task: TaskResponse;

@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { DeleteProjectModal } from '@/components/modals/DeleteProjectModal'
 import { ProjectEditorModal } from '@/components/modals/ProjectEditorModal'
-import type { ProjectResponse } from '@/generated/api'
+import type { ProjectResponse } from '@personal/shared/generated/api'
 import { ShowModal } from '@/stores/modal'
 import { renderApp } from './renderApp'
 

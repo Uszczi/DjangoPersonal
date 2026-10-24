@@ -1,9 +1,9 @@
 import { useState } from "react";
 
-import { apiErrorMessage } from "@/apiErrorMessage";
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { Button, ErrorAlert, Modal, ModalFooter } from "@/design-system";
-import type { CounterResponse } from "@/generated/api";
-import { useCountersStore } from "@/stores/counters";
+import type { CounterResponse } from "@personal/shared/generated/api";
+import { useCountersStore } from "@personal/shared/stores/counters";
 
 type DeleteCounterModalProps = {
   counter: CounterResponse;

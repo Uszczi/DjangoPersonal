@@ -1,9 +1,9 @@
 import { create } from "zustand";
 
-import { api } from "@/api";
-import { type WalletResponse } from "@/generated/api";
-import { createLoadGuard } from "@/stores/loadGuard";
-import { useTransactionsStore } from "@/stores/transactions";
+import { api } from "../api";
+import { type WalletResponse } from "../generated/api";
+import { createLoadGuard } from "./loadGuard";
+import { useTransactionsStore } from "./transactions";
 
 /** What the create modal collects: a name, a colour and, optionally, an icon and an opening balance. */
 export type WalletCreateInput = {

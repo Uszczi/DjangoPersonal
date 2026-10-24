@@ -2,7 +2,7 @@ import { createFileRoute, useSearch } from "@tanstack/react-router";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
-import { apiErrorMessage } from "@/apiErrorMessage";
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { validateProjectSearch } from "@/projectSearch";
 import {
   Button,
@@ -19,9 +19,9 @@ import {
   Select,
   TextInput,
 } from "@/design-system";
-import { defaultProject, useProjectsStore } from "@/stores/projects";
-import { useTimerStore } from "@/stores/timer";
-import type { TimeEntryResponse } from "@/generated/api";
+import { defaultProject, useProjectsStore } from "@personal/shared/stores/projects";
+import { useTimerStore } from "@personal/shared/stores/timer";
+import type { TimeEntryResponse } from "@personal/shared/generated/api";
 
 export const Route = createFileRoute("/timer")({
   validateSearch: validateProjectSearch,

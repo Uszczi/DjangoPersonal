@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 
-import { apiErrorMessage } from "@/apiErrorMessage";
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import {
   Button,
   ErrorAlert,
@@ -15,8 +15,8 @@ import { CATEGORY_ICON_SUGGESTIONS, DEFAULT_CATEGORY_ICON } from "@/categoryIcon
 import { CategoryIcon } from "@/components/CategoryIcon";
 import { DeleteCategoryModal } from "@/components/modals/DeleteCategoryModal";
 import { ShowModal } from "@/stores/modal";
-import { useCategoriesStore, type CategoryInput } from "@/stores/categories";
-import type { CategoryResponse } from "@/generated/api";
+import { useCategoriesStore, type CategoryInput } from "@personal/shared/stores/categories";
+import type { CategoryResponse } from "@personal/shared/generated/api";
 
 /** Panel below the wallet: inline create, edit (name and icon), and delete. */
 export function CategoryPanel() {

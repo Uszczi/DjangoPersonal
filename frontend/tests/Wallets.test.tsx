@@ -4,7 +4,7 @@ import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
-import { useWalletsStore } from '@/stores/wallets'
+import { useWalletsStore } from '@personal/shared/stores/wallets'
 
 import { renderApp } from './renderApp'
 

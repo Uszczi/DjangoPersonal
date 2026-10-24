@@ -1,4 +1,4 @@
-import { ResponseError } from '@/generated/api'
+import { ResponseError } from './generated/api'
 
 export async function apiErrorMessage(error: unknown) {
   if (error instanceof ResponseError && error.response) {

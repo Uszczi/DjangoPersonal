@@ -1,8 +1,8 @@
 import { create } from "zustand";
 
-import { api } from "@/api";
-import { parseDate, type TransactionResponse } from "@/generated/api";
-import { createLoadGuard } from "@/stores/loadGuard";
+import { api } from "../api";
+import { parseDate, type TransactionResponse } from "../generated/api";
+import { createLoadGuard } from "./loadGuard";
 
 export type TransactionInput = {
   title: string;

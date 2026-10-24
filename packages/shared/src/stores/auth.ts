@@ -1,8 +1,9 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 
-import { api } from "@/api";
-import type { AuthResponse, LoginResponse, UserResponse } from "@/generated/api";
+import { api } from "../api";
+import { platformStorage } from "../platform";
+import type { AuthResponse, LoginResponse, UserResponse } from "../generated/api";
 
 type TokenPayload = { access: string; refresh?: string | null };
 
@@ -64,7 +65,7 @@ export const useAuthStore = create<AuthState>()(
 
       logout: () => {
         set({ user: null, access: null, refresh: null });
-        window.localStorage.removeItem("auth");
+        void useAuthStore.persist.clearStorage();
       },
 
       applyTokens: (...args: unknown[]) => {
@@ -84,6 +85,6 @@ export const useAuthStore = create<AuthState>()(
         }));
       },
     }),
-    { name: "auth" },
+    { name: "auth", storage: createJSONStorage(() => platformStorage) },
   ),
 );

@@ -1,9 +1,9 @@
 import { useState } from "react";
 
-import { apiErrorMessage } from "@/apiErrorMessage";
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { Button, ErrorAlert, Modal, ModalFooter } from "@/design-system";
-import type { CategoryResponse } from "@/generated/api";
-import { useCategoriesStore } from "@/stores/categories";
+import type { CategoryResponse } from "@personal/shared/generated/api";
+import { useCategoriesStore } from "@personal/shared/stores/categories";
 
 type DeleteCategoryModalProps = {
   category: CategoryResponse;

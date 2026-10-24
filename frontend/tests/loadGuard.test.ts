@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createLoadGuard, useLoadGuard } from '@/stores/loadGuard'
+import { createLoadGuard, useLoadGuard } from '@personal/shared/stores/loadGuard'
 import { renderHook } from '@testing-library/react'
 
 type Deferred = { promise: Promise<void>; resolve: () => void }

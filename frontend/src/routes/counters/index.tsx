@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { CounterEditorModal } from "@/components/modals/CounterEditorModal";
-import { entryCountLabel } from "@/counterFormat";
+import { entryCountLabel } from "@personal/shared/counterFormat";
 import {
   type CounterViewMode,
   rememberCounterViewMode,
@@ -18,8 +18,8 @@ import {
   LoadingStatus,
   PageHeader,
 } from "@/design-system";
-import type { CounterResponse } from "@/generated/api";
-import { useCountersStore } from "@/stores/counters";
+import type { CounterResponse } from "@personal/shared/generated/api";
+import { useCountersStore } from "@personal/shared/stores/counters";
 import { ShowModal } from "@/stores/modal";
 
 export const Route = createFileRoute("/counters/")({

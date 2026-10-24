@@ -6,19 +6,23 @@ Guidance for AI coding agents working in this repository. The reader is assumed 
 
 DjangoPersonal is a personal work organizer: it groups a person's work into **Projects** and their **Tasks**, tracks time with **Time entries** and a single **Running timer**, provides freeform **Whiteboards** (and Markdown-based **Notatki**/notes), tracks **expenses** through **Wallets**, **Transactions**, and **Categories**, and keeps **Counters** (named tallies) made of **Counter entries**. Domain vocabulary is defined precisely in `GLOSSARY.md` — use those terms in issues, tests, and code.
 
-The name is historical: the backend was Django until the move to FastAPI + SQLAlchemy (`docs/adr/0002-fastapi-sqlalchemy-instead-of-django.md`). The repository contains five deliverables:
+The name is historical: the backend was Django until the move to FastAPI + SQLAlchemy (`docs/adr/0002-fastapi-sqlalchemy-instead-of-django.md`). The repository contains six deliverables (the two JS clients share `packages/shared`, see `docs/adr/0004-mobile-app-and-shared-package.md`):
 
 1. **`backend/`** — the primary application: a FastAPI JSON API on SQLAlchemy 2.0 (sync) and Alembic, served by uvicorn, with JWT auth.
 2. **`frontend/`** — a React 19 + TypeScript single-page app (Vite, TanStack Router, Zustand, Tailwind, Konva for the whiteboard).
-3. **MCP server (`backend/personal/entrypoints/mcp/`)** — a FastMCP server exposing the same use cases over streamable HTTP with OAuth.
-4. **Admin panel (`backend/personal/entrypoints/admin/`)** — a `sqladmin` admin panel for staff, a separate service.
-5. **`cpp_backend/`** — a hand-written C++ (Oat++) mirror of the API, written by the user for learning C++. It still reads the old Django-era `infra_*` tables, so it no longer matches the schema. **Read-only for agents: do not generate, modify, format, or test anything in `cpp_backend/` without an explicit instruction from the user** (see `cpp_backend/AGENTS.md`).
+3. **`mobile/`** — a React Native app (Expo, Expo Router). Early stage: sign in, Projects, a Project's Tasks.
+4. **MCP server (`backend/personal/entrypoints/mcp/`)** — a FastMCP server exposing the same use cases over streamable HTTP with OAuth.
+5. **Admin panel (`backend/personal/entrypoints/admin/`)** — a `sqladmin` admin panel for staff, a separate service.
+6. **`cpp_backend/`** — a hand-written C++ (Oat++) mirror of the API, written by the user for learning C++. It still reads the old Django-era `infra_*` tables, so it no longer matches the schema. **Read-only for agents: do not generate, modify, format, or test anything in `cpp_backend/` without an explicit instruction from the user** (see `cpp_backend/AGENTS.md`).
 
 ## Repository layout
 
 ```
 ├── backend/            Python backend (personal/{core,infra,entrypoints}, alembic/, tests/)
 ├── frontend/           React SPA (src/routes, src/stores, src/components, tests/)
+├── mobile/             Expo / React Native app (app/ routes, src/)
+├── packages/shared/    @personal/shared: generated API client, api, platform, domain stores
+├── package.json        npm workspaces root (packages/*, frontend, mobile); one package-lock.json
 ├── cpp_backend/        C++/Oat++ mirror — agent read-only
 ├── deployment/         Dockerfile, compose files, nginx configs, deploy.sh
 ├── docs/               adr/ (architecture decision records), agents/ (workflow docs)
@@ -40,11 +44,12 @@ The name is historical: the backend was Django until the move to FastAPI + SQLAl
 | MCP server | Python `mcp` SDK (FastMCP), streamable HTTP |
 | Admin panel | sqladmin (Starlette) |
 | Frontend | React 19, TypeScript ~6, Vite 8, TanStack Router (file-based), Zustand, Tailwind 4, react-konva, dnd-kit |
+| Mobile | Expo SDK 58, React Native 0.88, Expo Router, expo-secure-store |
 | API client codegen | openapi-generator-cli (`typescript-fetch`) |
 | Databases | SQLite locally (`backend/db.sqlite3`); PostgreSQL 17 when `POSTGRES_HOST` is set (Docker) |
 | Type checking / lint | mypy strict (backend), oxlint + `tsc` (frontend) |
 | Tests | pytest + pytest-xdist + factory_boy, FastAPI `TestClient` (backend), Vitest + jsdom + Testing Library (frontend) |
-| Packaging | `uv` (`backend/pyproject.toml`, `uv.lock`); npm (`frontend/package.json`) |
+| Packaging | `uv` (`backend/pyproject.toml`, `uv.lock`); npm workspaces (root `package.json` + `package-lock.json`) |
 | Deploy | Docker Compose on a VPS; GitHub Actions rsyncs and runs `deployment/deploy.sh` |
 
 ## Build and test commands
@@ -56,14 +61,17 @@ just backend          # FastAPI app on :8000 (SQLite unless POSTGRES_HOST is set
 just mcp              # MCP server (streamable HTTP) on :8001
 just admin            # admin panel (sqladmin) on :8002/admin/
 just createsuperuser NAME  # create or promote a staff account for the admin panel
+just install          # npm install (root, all workspaces) + uv sync
 just frontend         # Vite dev server; proxies /api to the backend on :8000
+just backend-lan      # API on 0.0.0.0:8000 with the LAN IP allowed (for the phone)
+just mobile           # Expo dev server for mobile/ (scan the QR code with Expo Go)
 just storybook        # Storybook component workshop on :6006 (build via npm run build-storybook)
 just makemigrations "msg"  # Alembic revision from model changes
 just migrate          # alembic upgrade head
 just seed             # seed the dev DB with demo data (refuses if DB not empty)
 just typecheck        # mypy (strict) over backend/
-just check            # full gate: mypy + pytest + npm test + lint + build
-just generate-api     # regenerate backend/openapi.yaml + the TypeScript client
+just check            # full gate: mypy + pytest + npm test + lint + build (+ shared/mobile typecheck and lint)
+just generate-api     # regenerate backend/openapi.yaml + the TypeScript client (packages/shared)
 just backend-cpp      # build + run the C++ backend on :8080
 just frontend-cpp     # Vite dev proxy pointed at the C++ backend (:8080)
 ```
@@ -127,17 +135,25 @@ A separate `sqladmin` service (`admin` container, :8002, published on the host's
 ## Frontend architecture (`frontend/`)
 
 - **Routing**: TanStack Router, file-based — routes are files in `src/routes/` (`routeTree.gen.ts` is generated; never hand-edit it). See `docs/adr/0001-client-side-routing.md` `autoCodeSplitting` (in `vite.config.ts`) puts each route's component in its own lazy chunk — the whiteboard's Konva stays out of the main bundle — so import route components only through the route tree, never from another module.
-- **State**: Zustand stores in `src/stores/` (one per domain: auth, projects, tasks, timer, wallets, counters, …). Components fetch after mount; the router handles navigation only.
+- **State**: Zustand stores, one per domain. The domain stores (auth, projects, tasks, timer, categories, counters, transactions, wallets) and `loadGuard` live in `packages/shared/src/stores/` and are imported as `@personal/shared/stores/<name>`; web-only stores (layout, modal, whiteboards) stay in `src/stores/`. Components fetch after mount; the router handles navigation only.
 - **Design system**: presentational components (`Button`, `IconButton`, `Modal`, `Field`, `TextInput`, `TextArea`, `Select`, `DateTimePicker`, `ErrorAlert`, …) live in `src/design-system/components/`, each with a colocated Storybook story (`*.stories.tsx`). Import them only through the barrel `@/design-system`. Colors come from semantic tokens in the `@theme` block of `src/index.css` (`text-danger`, `border-control-border`, `bg-overlay`, …) — add a token instead of a new `[#hex]`. `Field` takes `hint`/`error` and wires `aria-describedby`/`aria-invalid` into the control inside it; `Modal` and `Drawer` are native `<dialog>`s sharing `useModalDialog` (`showModal()` on mount, Escape/backdrop → `onClose`; polyfilled for jsdom in `tests/setup.ts`), rendered only while open. Stories are discovered from `src/**/*.stories.*`; the Tailwind theme comes from `src/index.css` via `.storybook/preview.ts`.
-- **API**: a single generated `PersonalApi` client in `src/generated/api/` (created by `just generate-api` from `backend/openapi.yaml`, post-processed by `scripts/postprocess-openapi.mjs`). **Never hand-edit generated files.** `src/api.ts` instantiates it with `basePath: ""` (requests stay relative so the Vite proxy applies) plus a middleware that attaches the JWT and transparently refreshes on 401.
+- **API**: a single generated `PersonalApi` client in `packages/shared/src/generated/api/` (created by `just generate-api` from `backend/openapi.yaml`, post-processed by `frontend/scripts/postprocess-openapi.mjs`). **Never hand-edit generated files.** `packages/shared/src/api.ts` (`@personal/shared/api`) instantiates it with the base URL from `configurePlatform` ("" on the web, so requests stay relative and the Vite proxy applies) plus a middleware that attaches the JWT and transparently refreshes on 401. `apiErrorMessage`, `money` and `counterFormat` are shared too.
 - **Path alias**: `@/` → `src/` (also in tests).
 - Dev proxy: `/api` → `http://127.0.0.1:8000` (the FastAPI backend), override with `VITE_PROXY_TARGET` (e.g. the C++ backend on :8080 via `just frontend-cpp`).
-- Money is handled as Decimal strings; see `src/money.ts`. The whiteboard document model lives in `src/whiteboard/boardDocument.ts` with autosave in `useAutosave.ts`.
+- Money is handled as Decimal strings; see `packages/shared/src/money.ts`. The whiteboard document model lives in `src/whiteboard/boardDocument.ts` with autosave in `useAutosave.ts`.
+
+## Shared package and mobile app (`packages/shared/`, `mobile/`)
+
+- `@personal/shared` ships TypeScript sources through its `exports` map (no build step); Vite, Vitest, `tsc` and Metro read them directly. Only DOM-free code belongs here: no `window`, `document`, `localStorage`, router or design-system imports. Use relative imports inside the package (no `@/`).
+- `platform.ts` is the single host seam: `configurePlatform({ apiBaseUrl, storage })`. Persisted stores use `platformStorage`, which delegates to the configured storage. The mobile app configures it in `mobile/src/setup.ts` (backend from `EXPO_PUBLIC_API_URL`, else the Expo dev host on :8000; tokens in `expo-secure-store`) and rehydrates the auth store in `app/_layout.tsx`.
+- React is pinned to the exact version the Expo SDK requires (currently `19.3.0`) in `frontend`, `mobile` and the shared peer dependency, so the workspace has one React copy. Upgrade Expo with `npx expo install --fix` and bump React for the web in the same change.
+- `mobile/` uses Expo Router (`app/` is the route tree) and plain `StyleSheet` styling (`src/theme.ts`). UI strings are Polish, like the web. Checks: `npm run typecheck` and `npm run export` in `mobile/`.
 
 ## Testing
 
 - **Backend** (`backend/tests/`, pytest with xdist, config in `pyproject.toml`): every test gets a throwaway SQLite database with the models' schema (`create_all`; `test_migrations.py` checks Alembic agrees). Repository tests use the `session` fixture; API tests go through the transport-agnostic `ApiClient` (`tests/harness.py`, FastAPI's `TestClient` underneath) with the fixtures `api_client`, `anon_client`, `client_for`, `post_json`/`patch_json`/`put_json`, `auth_headers`, `make_user`, `token_for`. Factories come from `personal.infra.factories` (bound to the test session; committed for API tests). `test_api_contract.py` freezes every operation (method, path, `operation_id`, status codes) in `tests/snapshots/api_contract.json` (`--snapshot-update` to accept a change). MCP tools and the admin panel have their own tests (`test_mcp_server.py`, `test_admin_panel.py`). Run: `cd backend && uv run pytest` (or `just check`).
-- **Frontend** (`frontend/tests/`, Vitest + jsdom + Testing Library): render the whole app through a memory-history router via the `renderApp()` helper, which resets every Zustand store first. Run: `cd frontend && npm test`.
+- **Frontend** (`frontend/tests/`, Vitest + jsdom + Testing Library): render the whole app through a memory-history router via the `renderApp()` helper, which resets every Zustand store first. These tests also cover the shared stores. Run: `cd frontend && npm test`.
+- **Mobile**: no test runner yet; `tsc --noEmit` and `expo export` are the gate.
 - **Type checking**: `just typecheck` (mypy strict over all of `backend/`; `personal.infra.factories` relaxed because factory_boy constructors are untyped).
 - Note: as of 2026-10-24 the `frontend` suite is green and oxlint reports 1 warning (`WhiteboardCanvas.tsx` exhaustive-deps). Backend suite is green.
 
@@ -179,6 +195,6 @@ Use the single-context layout: `GLOSSARY.md` at the repo root + `docs/adr/`. Rea
 ### Working rules for agents
 
 - **`cpp_backend/` is read-only** until the user explicitly asks for a change there.
-- Regenerate — never hand-edit — generated artifacts: `frontend/src/generated/api/`, `frontend/src/routeTree.gen.ts`, `backend/openapi.yaml` (via `just generate-api`).
+- Regenerate — never hand-edit — generated artifacts: `packages/shared/src/generated/api/`, `frontend/src/routeTree.gen.ts`, `backend/openapi.yaml` (via `just generate-api`).
 - Run `just check` before declaring backend/frontend work done (mind the known frontend failures above).
 - Repo docs and comments are in English; seeded demo data contains Polish strings by design.

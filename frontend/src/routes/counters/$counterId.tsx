@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { CounterEditorModal } from "@/components/modals/CounterEditorModal";
 import { CounterEntryEditorModal } from "@/components/modals/CounterEntryEditorModal";
 import { DeleteCounterModal } from "@/components/modals/DeleteCounterModal";
-import { entryCountLabel, formatEntryTime, signedValue } from "@/counterFormat";
+import { entryCountLabel, formatEntryTime, signedValue } from "@personal/shared/counterFormat";
 import {
   Button,
   ErrorMessage,
@@ -15,7 +15,7 @@ import {
   LoadingStatus,
   PageHeader,
 } from "@/design-system";
-import { useCountersStore } from "@/stores/counters";
+import { useCountersStore } from "@personal/shared/stores/counters";
 import { ShowModal } from "@/stores/modal";
 
 export const Route = createFileRoute("/counters/$counterId")({

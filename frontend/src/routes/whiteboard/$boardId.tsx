@@ -1,7 +1,7 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { api } from "@/api";
+import { api } from "@personal/shared/api";
 import {
   Button,
   ErrorMessage,
@@ -12,7 +12,7 @@ import {
 } from "@/design-system";
 import { WhiteboardCanvas } from "@/components/WhiteboardCanvas";
 import { MarkdownHighlightEditor } from "@/components/MarkdownHighlightEditor";
-import { apiErrorMessage } from "@/apiErrorMessage";
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { NotFoundPage } from "@/components/NotFoundPage";
 import type { BoardDocument } from "@/whiteboard/boardDocument";
 import {
@@ -25,7 +25,7 @@ import {
   type HistoryState,
 } from "@/whiteboard/boardDocument";
 import type { Tool } from "@/components/WhiteboardCanvas";
-import { useLoadGuard } from "@/stores/loadGuard";
+import { useLoadGuard } from "@personal/shared/stores/loadGuard";
 import { useAutosave, type SavePayload } from "@/whiteboard/useAutosave";
 
 function renderMarkdown(md: string): string {

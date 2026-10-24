@@ -1,10 +1,10 @@
 import { create } from "zustand";
 
-import { api } from "@/api";
-import type { WhiteboardResponse } from "@/generated/api";
+import { api } from "@personal/shared/api";
+import type { WhiteboardResponse } from "@personal/shared/generated/api";
 import type { BoardDocument } from "@/whiteboard/boardDocument";
 import { parseBoard } from "@/whiteboard/boardDocument";
-import { createLoadGuard } from "@/stores/loadGuard";
+import { createLoadGuard } from "@personal/shared/stores/loadGuard";
 import type { SaveState } from "@/whiteboard/useAutosave";
 
 export type { SaveState };

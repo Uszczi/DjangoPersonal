@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 
-import { apiErrorMessage } from "@/apiErrorMessage";
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { DeleteCounterEntryModal } from "@/components/modals/DeleteCounterEntryModal";
 import {
   Button,
@@ -12,8 +12,8 @@ import {
   TextArea,
   TextInput,
 } from "@/design-system";
-import type { CounterEntryResponse } from "@/generated/api";
-import { useCountersStore } from "@/stores/counters";
+import type { CounterEntryResponse } from "@personal/shared/generated/api";
+import { useCountersStore } from "@personal/shared/stores/counters";
 import { ShowModal } from "@/stores/modal";
 
 type CounterEntryEditorModalProps = {

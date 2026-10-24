@@ -1,10 +1,10 @@
 import { useState } from "react";
 
-import { apiErrorMessage } from "@/apiErrorMessage";
-import { formatEntryTime, signedValue } from "@/counterFormat";
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
+import { formatEntryTime, signedValue } from "@personal/shared/counterFormat";
 import { Button, ErrorAlert, Modal, ModalFooter } from "@/design-system";
-import type { CounterEntryResponse } from "@/generated/api";
-import { useCountersStore } from "@/stores/counters";
+import type { CounterEntryResponse } from "@personal/shared/generated/api";
+import { useCountersStore } from "@personal/shared/stores/counters";
 
 type DeleteCounterEntryModalProps = {
   entry: CounterEntryResponse;

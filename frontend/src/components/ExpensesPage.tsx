@@ -5,7 +5,7 @@ import { WalletCreateModal } from "@/components/modals/WalletCreateModal";
 import { WalletView } from "@/components/WalletView";
 import { Button, ErrorMessage, LoadingStatus, PageHeader } from "@/design-system";
 import { ShowModal } from "@/stores/modal";
-import { useWalletsStore } from "@/stores/wallets";
+import { useWalletsStore } from "@personal/shared/stores/wallets";
 
 type ExpensesPageProps = {
   /** The wallet named by the URL; without one the page shows the store's selected wallet. */

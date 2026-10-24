@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from "react";
 
-import { apiErrorMessage } from "@/apiErrorMessage";
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { Button, ErrorAlert, Field, Modal, ModalFooter, TextInput } from "@/design-system";
 import { WalletColorPicker } from "@/components/WalletColorPicker";
 import { WalletIconPicker } from "@/components/WalletIconPicker";
-import { balanceError } from "@/money";
-import { useWalletsStore } from "@/stores/wallets";
+import { balanceError } from "@personal/shared/money";
+import { useWalletsStore } from "@personal/shared/stores/wallets";
 import { DEFAULT_WALLET_COLOR } from "@/walletColors";
 
 type WalletCreateModalProps = {

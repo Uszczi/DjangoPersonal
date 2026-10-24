@@ -1,0 +1,12 @@
+{
+  "name": "djangopersonal",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "frontend",
+    "mobile"
+  ],
+  "overrides": {
+    "basic-ftp": "^6.2.3"
+  }
+}

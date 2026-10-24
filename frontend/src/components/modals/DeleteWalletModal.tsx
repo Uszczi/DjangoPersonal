@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
-import { apiErrorMessage } from "@/apiErrorMessage";
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { Button, ErrorAlert, Modal, ModalFooter } from "@/design-system";
-import type { WalletResponse } from "@/generated/api";
-import { useWalletsStore } from "@/stores/wallets";
+import type { WalletResponse } from "@personal/shared/generated/api";
+import { useWalletsStore } from "@personal/shared/stores/wallets";
 
 type DeleteWalletModalProps = {
   wallet: WalletResponse;

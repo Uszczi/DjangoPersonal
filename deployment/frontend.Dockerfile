@@ -3,16 +3,23 @@ FROM node:22-alpine AS build
 
 WORKDIR /app
 
-COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+# npm workspaces: the root lockfile covers every workspace, but only the
+# frontend and the shared package it imports are installed here (the mobile
+# app's Expo/React Native toolchain is not needed to build the web bundle).
+COPY package.json package-lock.json ./
+COPY packages/shared/package.json packages/shared/
+COPY frontend/package.json frontend/
+COPY mobile/package.json mobile/
+RUN npm ci --workspace frontend
 
-COPY frontend/ ./
-RUN npm run build
+COPY packages/shared/ packages/shared/
+COPY frontend/ frontend/
+RUN npm run build --workspace frontend
 
 
 FROM nginx:1.27-alpine
 
 COPY deployment/frontend-nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /app/frontend/dist /usr/share/nginx/html
 
 EXPOSE 3000

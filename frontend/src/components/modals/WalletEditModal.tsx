@@ -1,14 +1,14 @@
 import { useState, type FormEvent } from "react";
 
-import { apiErrorMessage } from "@/apiErrorMessage";
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { Button, ErrorAlert, Field, Modal, ModalFooter, TextInput } from "@/design-system";
-import type { WalletResponse } from "@/generated/api";
+import type { WalletResponse } from "@personal/shared/generated/api";
 import { DeleteWalletModal } from "@/components/modals/DeleteWalletModal";
 import { WalletColorPicker } from "@/components/WalletColorPicker";
 import { WalletIconPicker } from "@/components/WalletIconPicker";
-import { balanceError } from "@/money";
+import { balanceError } from "@personal/shared/money";
 import { ShowModal } from "@/stores/modal";
-import { useWalletsStore } from "@/stores/wallets";
+import { useWalletsStore } from "@personal/shared/stores/wallets";
 
 type WalletEditModalProps = {
   wallet: WalletResponse;

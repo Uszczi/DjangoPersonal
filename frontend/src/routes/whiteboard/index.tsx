@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
-import { api } from "@/api";
+import { api } from "@personal/shared/api";
 import {
   Button,
   DeleteButton,

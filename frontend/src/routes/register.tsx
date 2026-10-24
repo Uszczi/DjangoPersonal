@@ -1,9 +1,9 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 
-import { apiErrorMessage } from "@/apiErrorMessage";
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { Button, PageHeader, TextInput } from "@/design-system";
-import { useAuthStore } from "@/stores/auth";
+import { useAuthStore } from "@personal/shared/stores/auth";
 
 export const Route = createFileRoute("/register")({
   component: RegisterPage,

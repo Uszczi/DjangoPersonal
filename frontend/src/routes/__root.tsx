@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import { ModalHost } from "@/components/modals/ModalHost";
 import { Navbar } from "@/components/Navbar";
 import { authGuard } from "@/guards/auth";
-import { useAuthStore } from "@/stores/auth";
-import { useProjectsStore } from "@/stores/projects";
+import { useAuthStore } from "@personal/shared/stores/auth";
+import { useProjectsStore } from "@personal/shared/stores/projects";
 
 export const Route = createRootRoute({
   beforeLoad: authGuard,

@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { ProjectEditorModal } from "@/components/modals/ProjectEditorModal";
 import { InboxIcon } from "@/design-system";
 import { ShowModal } from "@/stores/modal";
-import { useProjectsStore } from "@/stores/projects";
+import { useProjectsStore } from "@personal/shared/stores/projects";
 
 const toggleButtonClasses =
   "inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md border bg-transparent text-[20px] leading-none text-[#f3f7f3] transition-colors hover:border-[#6e8b8d] hover:bg-[#29474d]";

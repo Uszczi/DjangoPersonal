@@ -1,10 +1,10 @@
 import { useState } from "react";
 
-import { apiErrorMessage } from "@/apiErrorMessage";
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { Button, ErrorAlert, Modal, ModalFooter } from "@/design-system";
-import type { TransactionResponse } from "@/generated/api";
-import { useTransactionsStore } from "@/stores/transactions";
-import { useWalletsStore } from "@/stores/wallets";
+import type { TransactionResponse } from "@personal/shared/generated/api";
+import { useTransactionsStore } from "@personal/shared/stores/transactions";
+import { useWalletsStore } from "@personal/shared/stores/wallets";
 
 type DeleteTransactionModalProps = {
   transaction: TransactionResponse;

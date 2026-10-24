@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { renderApp } from './renderApp'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '@personal/shared/stores/auth'
 
 function jsonResponse(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {

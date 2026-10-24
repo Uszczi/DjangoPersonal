@@ -9,12 +9,12 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-import { apiErrorMessage } from "@/apiErrorMessage";
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { DeleteProjectModal } from "@/components/modals/DeleteProjectModal";
 import { Button, DragHandle, ErrorAlert, Field, Modal, ModalFooter, Select, TextArea, TextInput } from "@/design-system";
-import type { ProjectResponse } from "@/generated/api";
+import type { ProjectResponse } from "@personal/shared/generated/api";
 import { ShowModal } from "@/stores/modal";
-import { useProjectsStore, type ProjectInput } from "@/stores/projects";
+import { useProjectsStore, type ProjectInput } from "@personal/shared/stores/projects";
 import { useSortSensors } from "@/useSortSensors";
 
 type ProjectEditorModalProps = {

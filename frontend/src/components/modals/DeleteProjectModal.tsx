@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
-import { apiErrorMessage } from "@/apiErrorMessage";
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { Button, ErrorAlert, Modal, ModalFooter } from "@/design-system";
-import type { ProjectResponse } from "@/generated/api";
-import { useProjectsStore } from "@/stores/projects";
+import type { ProjectResponse } from "@personal/shared/generated/api";
+import { useProjectsStore } from "@personal/shared/stores/projects";
 
 type DeleteProjectModalProps = {
   project: ProjectResponse;

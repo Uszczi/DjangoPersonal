@@ -26,9 +26,9 @@ import {
 } from "@/design-system";
 import { ProjectEditorModal } from "@/components/modals/ProjectEditorModal";
 import { ShowModal } from "@/stores/modal";
-import { useProjectsStore } from "@/stores/projects";
+import { useProjectsStore } from "@personal/shared/stores/projects";
 import { useSortSensors } from "@/useSortSensors";
-import { api } from "@/api";
+import { api } from "@personal/shared/api";
 
 export const Route = createFileRoute("/projects")({
   component: ProjectsPage,

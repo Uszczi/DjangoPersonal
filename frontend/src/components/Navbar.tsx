@@ -3,7 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { Button, Drawer } from "@/design-system";
-import { useAuthStore } from "@/stores/auth";
+import { useAuthStore } from "@personal/shared/stores/auth";
 
 type TopTabPath = "/" | "/tasks" | "/projects" | "/timer" | "/whiteboard" | "/expenses" | "/counters";
 

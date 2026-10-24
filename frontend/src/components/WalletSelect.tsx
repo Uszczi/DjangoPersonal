@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 
 import { WalletMark } from "@/components/WalletMark";
-import { useWalletsStore } from "@/stores/wallets";
+import { useWalletsStore } from "@personal/shared/stores/wallets";
 
 type WalletSelectProps = {
   /** The wallet highlighted in the list, if one is active. */

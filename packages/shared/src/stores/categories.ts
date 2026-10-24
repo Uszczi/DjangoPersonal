@@ -1,8 +1,8 @@
 import { create } from "zustand";
 
-import { api } from "@/api";
-import { type CategoryResponse } from "@/generated/api";
-import { createLoadGuard } from "@/stores/loadGuard";
+import { api } from "../api";
+import { type CategoryResponse } from "../generated/api";
+import { createLoadGuard } from "./loadGuard";
 
 /** What the panel's create and edit forms collect. */
 export type CategoryInput = { name: string; icon: string };

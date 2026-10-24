@@ -13,10 +13,10 @@ import {
   ListRowSubtitle,
   ListRowTitle,
 } from "@/design-system";
-import { type TransactionResponse, type WalletResponse } from "@/generated/api";
+import { type TransactionResponse, type WalletResponse } from "@personal/shared/generated/api";
 import { ShowModal } from "@/stores/modal";
-import { useCategoriesStore } from "@/stores/categories";
-import { useTransactionsStore } from "@/stores/transactions";
+import { useCategoriesStore } from "@personal/shared/stores/categories";
+import { useTransactionsStore } from "@personal/shared/stores/transactions";
 
 const dayFormatter = new Intl.DateTimeFormat("pl-PL", {
   day: "numeric",

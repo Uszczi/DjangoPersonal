@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useEffect } from "react";
 
-import { useCountersStore } from "@/stores/counters";
+import { useCountersStore } from "@personal/shared/stores/counters";
 
 export const Route = createFileRoute("/counters")({
   component: CountersLayout,
