@@ -21,6 +21,10 @@ class Whiteboard(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
+    #: The Folder it sits in, if any; deleting the Folder deletes it too.
+    folder_id: Mapped[int | None] = mapped_column(
+        ForeignKey('folders.id', ondelete='CASCADE'), index=True, default=None
+    )
     kind: Mapped[str] = mapped_column(String(20), default=KIND_WHITEBOARD)
     name: Mapped[str] = mapped_column(String(200), default='Bez tytułu')
     content: Mapped[dict[str, Any]] = mapped_column(

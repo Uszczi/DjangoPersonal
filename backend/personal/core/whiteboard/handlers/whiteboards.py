@@ -5,8 +5,10 @@ from personal.core.whiteboard.contracts import (
 )
 from personal.infra.models import User
 from personal.infra.models import Whiteboard as WhiteboardModel
-from personal.infra.repo import WhiteboardRepository
+from personal.infra.repo import FolderRepository, WhiteboardRepository
 from personal.infra.rules import default_board_content
+
+from .folders import get_folder
 
 
 def _get_whiteboard(
@@ -37,11 +39,16 @@ class GetWhiteboard:
 
 
 class CreateWhiteboard:
-    def __init__(self, whiteboards: WhiteboardRepository, user: User):
+    def __init__(
+        self, whiteboards: WhiteboardRepository, folders: FolderRepository, user: User
+    ):
         self.whiteboards = whiteboards
+        self.folders = folders
         self.user = user
 
     def execute(self, data: WhiteboardRequest) -> WhiteboardModel:
+        if data.folder_id is not None:
+            get_folder(self.folders, data.folder_id, user=self.user)
         name = (data.name or 'Bez tytułu').strip() or 'Bez tytułu'
         kind = data.kind or 'whiteboard'
         content = data.content
@@ -54,6 +61,7 @@ class CreateWhiteboard:
             user=self.user, name=name, content=content
         )
         whiteboard.kind = kind
+        whiteboard.folder_id = data.folder_id
         return self.whiteboards.save(whiteboard)
 
 

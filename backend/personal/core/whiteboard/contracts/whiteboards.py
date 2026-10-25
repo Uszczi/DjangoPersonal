@@ -21,6 +21,8 @@ class WhiteboardRequest(_WhiteboardPayload):
     kind: str = Field(default='whiteboard', pattern='^(whiteboard|markdown)$')
     name: str = Field(default='Bez tytułu', min_length=1, max_length=200)
     content: dict[str, Any] | None = None
+    #: The Folder to create it in; without one it stays at the top level.
+    folder_id: int | None = None
 
 
 class PatchedWhiteboardRequest(_WhiteboardPayload):
@@ -34,5 +36,6 @@ class WhiteboardResponse(BaseModel):
     kind: str = Field(..., json_schema_extra={'readOnly': True})
     name: str
     content: dict[str, Any]
+    folder_id: int | None = None
     created_at: datetime = Field(..., json_schema_extra={'readOnly': True})
     updated_at: datetime = Field(..., json_schema_extra={'readOnly': True})

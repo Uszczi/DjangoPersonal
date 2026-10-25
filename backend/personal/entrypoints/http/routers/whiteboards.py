@@ -8,7 +8,11 @@ from personal.core.whiteboard.contracts import (
     WhiteboardRequest,
     WhiteboardResponse,
 )
-from personal.entrypoints.http.deps import CurrentUser, WhiteboardRepositoryDep
+from personal.entrypoints.http.deps import (
+    CurrentUser,
+    FolderRepositoryDep,
+    WhiteboardRepositoryDep,
+)
 
 router = APIRouter(tags=['personal'])
 
@@ -29,9 +33,12 @@ def list_whiteboards(
     operation_id='whiteboards_create',
 )
 def create_whiteboard(
-    payload: WhiteboardRequest, user: CurrentUser, whiteboards: WhiteboardRepositoryDep
+    payload: WhiteboardRequest,
+    user: CurrentUser,
+    whiteboards: WhiteboardRepositoryDep,
+    folders: FolderRepositoryDep,
 ) -> WhiteboardResponse:
-    whiteboard = handlers.CreateWhiteboard(whiteboards, user).execute(payload)
+    whiteboard = handlers.CreateWhiteboard(whiteboards, folders, user).execute(payload)
     return WhiteboardResponse.model_validate(whiteboard)
 
 

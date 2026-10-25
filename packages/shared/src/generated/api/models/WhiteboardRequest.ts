@@ -32,6 +32,10 @@ export interface WhiteboardRequest {
      *
      */
     content?: { [key: string]: any; } | null;
+    /**
+     *
+     */
+    folderId?: number | null;
 }
 
 /**
@@ -54,6 +58,7 @@ export function WhiteboardRequestFromJSONTyped(json: any, ignoreDiscriminator: b
         'kind': json['kind'] == null ? undefined : json['kind'],
         'name': json['name'] == null ? undefined : json['name'],
         'content': json['content'] === undefined ? undefined : json['content'] === null ? null : json['content'],
+        'folderId': json['folder_id'] === undefined ? undefined : json['folder_id'] === null ? null : json['folder_id'],
     };
 }
 
@@ -71,6 +76,7 @@ export function WhiteboardRequestToJSONTyped(value?: WhiteboardRequest | null, i
         'kind': value['kind'],
         'name': value['name'],
         'content': value['content'],
+        'folder_id': value['folderId'],
     };
 }
 

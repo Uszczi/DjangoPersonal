@@ -2184,6 +2184,11 @@ components:
             type: object
           - type: 'null'
           title: Content
+        folder_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Folder Id
       type: object
       title: WhiteboardRequest
     WhiteboardResponse:
@@ -2203,6 +2208,11 @@ components:
           additionalProperties: true
           type: object
           title: Content
+        folder_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Folder Id
         created_at:
           type: string
           format: date-time

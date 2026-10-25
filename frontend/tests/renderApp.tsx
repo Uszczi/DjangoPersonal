@@ -16,9 +16,12 @@ import { useWalletsStore } from '@personal/shared/stores/wallets'
 import { useWhiteboardsStore } from '@/stores/whiteboards'
 import { useFoldersStore } from '@/stores/folders'
 
-/** Reset every Zustand store so each render starts from a clean slate. */
-export function resetStores() {
-  window.localStorage.clear()
+/**
+ * Reset every Zustand store so each render starts from a clean slate. Browser storage is
+ * cleared too unless `preserveStorage`, for tests of what a page remembers between visits.
+ */
+export function resetStores(options?: { preserveStorage?: boolean }) {
+  if (!options?.preserveStorage) window.localStorage.clear()
   useAuthStore.setState(useAuthStore.getInitialState())
   useCategoriesStore.setState(useCategoriesStore.getInitialState())
   useCountersStore.setState(useCountersStore.getInitialState())
@@ -33,8 +36,11 @@ export function resetStores() {
   useFoldersStore.setState(useFoldersStore.getInitialState())
 }
 
-export function renderApp(path = '/', options?: { authenticated?: boolean }) {
-  resetStores()
+export function renderApp(
+  path = '/',
+  options?: { authenticated?: boolean; preserveStorage?: boolean },
+) {
+  resetStores({ preserveStorage: options?.preserveStorage })
 
   if (options?.authenticated !== false) {
     useAuthStore.setState({

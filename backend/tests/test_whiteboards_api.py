@@ -64,3 +64,39 @@ def test_openapi_schema_describes_whiteboard_endpoints(api_client: Any) -> None:
     schema = api_client.get('/api/v1/schema/').json()
     assert '/api/v1/whiteboards/' in schema['paths']
     assert '/api/v1/whiteboards/{id}/' in schema['paths']
+
+
+def test_whiteboard_has_no_folder_by_default(post_json: Any) -> None:
+    response = post_json('/api/v1/whiteboards/', {'name': 'Loose'})
+    assert response.json()['folder_id'] is None
+
+
+def test_whiteboard_can_be_created_in_a_folder(api_client: Any, post_json: Any) -> None:
+    folder = post_json('/api/v1/folders/', {'name': 'Praca'}).json()
+
+    response = post_json(
+        '/api/v1/whiteboards/', {'kind': 'markdown', 'name': 'Plan', 'folder_id': folder['id']}
+    )
+
+    assert response.status_code == HTTPStatus.CREATED
+    assert response.json()['folder_id'] == folder['id']
+    listed = api_client.get('/api/v1/whiteboards/').json()
+    assert [(w['name'], w['folder_id']) for w in listed] == [('Plan', folder['id'])]
+
+
+def test_whiteboard_cannot_be_created_in_a_missing_folder(post_json: Any) -> None:
+    response = post_json('/api/v1/whiteboards/', {'name': 'X', 'folder_id': 9999})
+    assert response.status_code == HTTPStatus.NOT_FOUND
+
+
+def test_whiteboard_cannot_be_created_in_another_users_folder(
+    make_user: Any, client_for: Any
+) -> None:
+    owner = client_for(make_user('owner'))
+    stranger = client_for(make_user('stranger'))
+    folder = owner.post('/api/v1/folders/', {'name': 'Sekret'}).json()
+
+    response = stranger.post('/api/v1/whiteboards/', {'name': 'X', 'folder_id': folder['id']})
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert stranger.get('/api/v1/whiteboards/').json() == []

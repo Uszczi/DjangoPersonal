@@ -39,6 +39,10 @@ export interface WhiteboardResponse {
     /**
      *
      */
+    folderId?: number | null;
+    /**
+     *
+     */
     readonly createdAt: Date;
     /**
      *
@@ -73,6 +77,7 @@ export function WhiteboardResponseFromJSONTyped(json: any, ignoreDiscriminator: 
         'kind': json['kind'],
         'name': json['name'],
         'content': json['content'],
+        'folderId': json['folder_id'] === undefined ? undefined : json['folder_id'] === null ? null : json['folder_id'],
         'createdAt': (json['created_at'] == null ? json['created_at'] : parseDateTime(json['created_at'])),
         'updatedAt': (json['updated_at'] == null ? json['updated_at'] : parseDateTime(json['updated_at'])),
     };
@@ -91,6 +96,7 @@ export function WhiteboardResponseToJSONTyped(value?: Omit<WhiteboardResponse, '
 
         'name': value['name'],
         'content': value['content'],
+        'folder_id': value['folderId'],
     };
 }
 

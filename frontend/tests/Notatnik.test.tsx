@@ -205,4 +205,110 @@ describe('Notatnik folders', () => {
     expect(await screen.findByRole('region', { name: 'Folder: Praca' })).toBeInTheDocument()
     expect(within(document.body).queryByRole('heading', { name: 'Utwórz pierwszą notatkę' })).not.toBeInTheDocument()
   })
+
+  test('folders are collapsed until their header is clicked, newest item first', async () => {
+    fetchMock.mockImplementation(
+      fakeBackend({
+        folders: [work],
+        boards: [
+          board(5, 'Stary plan', 1, '2026-10-10T10:00:00Z', 'markdown'),
+          board(6, 'Nowy szkic', 1, '2026-10-20T10:00:00Z'),
+          board(7, 'Luźna', null, '2026-10-15T10:00:00Z'),
+        ],
+      }),
+    )
+    const user = userEvent.setup()
+
+    renderApp('/whiteboard')
+    const folder = await screen.findByRole('region', { name: 'Folder: Praca' })
+    const toggle = within(folder).getByRole('button', { name: 'Praca' })
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(within(folder).queryByRole('button', { name: /^Otwórz/ })).not.toBeInTheDocument()
+    // Loose items stay listed below the folders.
+    const loose = screen.getByRole('list', { name: 'Tablice' })
+    expect(
+      within(loose).getAllByRole('button', { name: /^Otwórz/ }).map((b) => b.getAttribute('aria-label')),
+    ).toEqual(['Otwórz tablicę: Luźna'])
+
+    await user.click(toggle)
+
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    const items = within(folder).getAllByRole('button', { name: /^Otwórz/ })
+    expect(items.map((b) => b.getAttribute('aria-label'))).toEqual([
+      'Otwórz tablicę: Nowy szkic',
+      'Otwórz notatkę: Stary plan',
+    ])
+    expect(within(folder).getByRole('button', { name: 'Usuń tablicę: Nowy szkic' })).toBeInTheDocument()
+
+    await user.click(toggle)
+    expect(within(folder).queryByRole('button', { name: /^Otwórz/ })).not.toBeInTheDocument()
+  })
+
+  test('"+ notatka" in a folder header creates the note in that folder and opens it', async () => {
+    const backend = fakeBackend({ folders: [work] })
+    fetchMock.mockImplementation(backend)
+    const user = userEvent.setup()
+
+    const { router } = renderApp('/whiteboard')
+    await user.click(await screen.findByRole('button', { name: 'Nowa notatka w folderze: Praca' }))
+
+    await vi.waitFor(() => expect(router.state.location.pathname).toMatch(/^\/whiteboard\/\d+$/))
+    const created = (await (await backend('/api/v1/whiteboards/')).json()) as Board[]
+    expect(created.map((b) => [b.kind, b.folder_id])).toEqual([['markdown', 1]])
+  })
+
+  test('"+ tablica" in a folder header creates the board in that folder', async () => {
+    const backend = fakeBackend({ folders: [work] })
+    fetchMock.mockImplementation(backend)
+    const user = userEvent.setup()
+
+    const { router } = renderApp('/whiteboard')
+    await user.click(await screen.findByRole('button', { name: 'Nowa tablica w folderze: Praca' }))
+
+    await vi.waitFor(() => expect(router.state.location.pathname).toMatch(/^\/whiteboard\/\d+$/))
+    const created = (await (await backend('/api/v1/whiteboards/')).json()) as Board[]
+    expect(created.map((b) => [b.kind, b.folder_id])).toEqual([['whiteboard', 1]])
+  })
+
+  test('the browser remembers which folders are expanded', async () => {
+    fetchMock.mockImplementation(
+      fakeBackend({ folders: [work], boards: [board(5, 'Plan', 1, '2026-10-10T10:00:00Z')] }),
+    )
+    const user = userEvent.setup()
+
+    renderApp('/whiteboard')
+    await user.click(await screen.findByRole('button', { name: 'Praca' }))
+    cleanup()
+
+    renderApp('/whiteboard', { preserveStorage: true })
+
+    expect(await screen.findByRole('button', { name: 'Otwórz tablicę: Plan' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Praca' })).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  test('folders still expand when browser storage is unavailable', async () => {
+    fetchMock.mockImplementation(
+      fakeBackend({ folders: [work], boards: [board(5, 'Plan', 1, '2026-10-10T10:00:00Z')] }),
+    )
+    const user = userEvent.setup()
+    // Only the Notatnik's own key fails, so the rest of the app is unaffected.
+    const { getItem: realGet, setItem: realSet } = Storage.prototype
+    const getItem = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(function (this: Storage, key) {
+      if (key.startsWith('notatnik.')) throw new Error('blocked')
+      return realGet.call(this, key)
+    })
+    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, key, value) {
+      if (key.startsWith('notatnik.')) throw new Error('blocked')
+      realSet.call(this, key, value)
+    })
+
+    try {
+      renderApp('/whiteboard')
+      await user.click(await screen.findByRole('button', { name: 'Praca' }))
+      expect(await screen.findByRole('button', { name: 'Otwórz tablicę: Plan' })).toBeInTheDocument()
+    } finally {
+      getItem.mockRestore()
+      setItem.mockRestore()
+    }
+  })
 })
