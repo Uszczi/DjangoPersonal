@@ -16,6 +16,7 @@ import { MarkdownHighlightEditor } from "@/components/MarkdownHighlightEditor";
 import { MarkdownPreview } from "@/components/MarkdownPreview";
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { NotFoundPage } from "@/components/NotFoundPage";
+import { useWhiteboardsStore } from "@/stores/whiteboards";
 import type { BoardDocument } from "@/whiteboard/boardDocument";
 import {
   createHistory,
@@ -38,7 +39,7 @@ const MARKDOWN_MODE_LABELS: Record<MarkdownViewMode, string> = {
   highlight: "Podświetlony",
 };
 
-const MARKDOWN_MODES: MarkdownViewMode[] = ["split", "edit", "highlight"];
+const MARKDOWN_MODES: MarkdownViewMode[] = ["highlight", "split", "edit"];
 
 export const Route = createFileRoute("/whiteboard/$boardId")({
   component: WhiteboardEditorPage,
@@ -49,7 +50,7 @@ function WhiteboardEditorPage() {
   const [board, setBoard] = useState<BoardDocument | null>(null);
   const [kind, setKind] = useState<string>("whiteboard");
   const [markdownText, setMarkdownText] = useState("");
-  const [markdownMode, setMarkdownMode] = useState<MarkdownViewMode>("split");
+  const [markdownMode, setMarkdownMode] = useState<MarkdownViewMode>("highlight");
   const [name, setName] = useState("");
   const [editingName, setEditingName] = useState(false);
   const nameBeforeEdit = useRef(name);
@@ -143,6 +144,9 @@ function WhiteboardEditorPage() {
       });
       setName(updated.name);
       nameBeforeEdit.current = updated.name;
+      useWhiteboardsStore.setState((s) => ({
+        whiteboards: s.whiteboards.map((wb) => (wb.id === updated.id ? updated : wb)),
+      }));
     } catch (error) {
       setName(nameBeforeEdit.current);
       setNameError(await apiErrorMessage(error));

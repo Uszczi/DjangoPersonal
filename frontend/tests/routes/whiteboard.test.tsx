@@ -1,4 +1,4 @@
-import { cleanup, screen } from '@testing-library/react'
+import { cleanup, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
@@ -110,5 +110,61 @@ describe('Whiteboard', () => {
     expect(screen.getByRole('heading', { name: 'Bez tytułu' })).toBeInTheDocument()
     const patches = fetchMock.mock.calls.filter(([input, init]) => (init?.method ?? (input instanceof Request ? input.method : 'GET')) === 'PATCH')
     expect(patches).toHaveLength(1)
+  })
+
+  describe('the Notatnik tree beside an open item', () => {
+    const folder = { id: 1, name: 'Praca', parent_id: null, created_at: wb.created_at, updated_at: wb.updated_at }
+    const inFolder = { ...wb, id: 5, name: 'Plan', kind: 'markdown', folder_id: 1, content: { markdown: '# Plan' } }
+    const loose = { ...wb, id: 6, name: 'Luźna', kind: 'markdown', folder_id: null, content: { markdown: 'Luźna treść' } }
+
+    beforeEach(() => {
+      fetchMock.mockImplementation((input: RequestInfo | URL) => {
+        const url = requestUrl(input)
+        if (url.includes('/api/v1/whiteboards/5/')) return Promise.resolve(jsonResponse(inFolder))
+        if (url.includes('/api/v1/whiteboards/6/')) return Promise.resolve(jsonResponse(loose))
+        if (url.startsWith('/api/v1/whiteboards/')) return Promise.resolve(jsonResponse([inFolder, loose]))
+        if (url.startsWith('/api/v1/folders/')) return Promise.resolve(jsonResponse([folder]))
+        if (url.startsWith('/api/v1/timer/')) return Promise.resolve(jsonResponse({ entry: null, server_now: '2026-10-15T12:00:00Z' }))
+        return Promise.resolve(jsonResponse([]))
+      })
+    })
+
+    test('reveals the open Notatka in its Folder and opens another on the right', async () => {
+      const user = userEvent.setup()
+      renderApp('/whiteboard/5')
+
+      const tree = await screen.findByRole('complementary', { name: 'Drzewo Notatnika' })
+      expect(await within(tree).findByRole('button', { name: 'Otwórz notatkę: Plan' })).toHaveAttribute('aria-current', 'page')
+      expect(within(tree).getByRole('button', { name: 'Praca' })).toHaveAttribute('aria-expanded', 'true')
+
+      await user.click(within(tree).getByRole('button', { name: 'Otwórz notatkę: Luźna' }))
+
+      expect(await screen.findByRole('heading', { name: 'Luźna' })).toBeInTheDocument()
+      expect(within(tree).getByRole('button', { name: 'Otwórz notatkę: Luźna' })).toHaveAttribute('aria-current', 'page')
+    })
+
+    test('a Notatka opens in the highlighted mode', async () => {
+      renderApp('/whiteboard/5')
+      expect(await screen.findByRole('button', { name: 'Podświetlony' })).toHaveAttribute('aria-pressed', 'true')
+    })
+
+    test('the tree is on the Notatnik page too', async () => {
+      renderApp('/whiteboard')
+      const tree = await screen.findByRole('complementary', { name: 'Drzewo Notatnika' })
+      expect(await within(tree).findByRole('button', { name: 'Otwórz notatkę: Luźna' })).not.toHaveAttribute('aria-current')
+      expect(within(tree).getByRole('searchbox', { name: 'Szukaj w Notatniku' })).toBeInTheDocument()
+      expect(screen.getByText(/Wybierz notatkę lub tablicę/)).toBeInTheDocument()
+    })
+
+    test('the tree collapses and expands', async () => {
+      const user = userEvent.setup()
+      renderApp('/whiteboard/5')
+
+      await user.click(await screen.findByRole('button', { name: 'Zwiń drzewo Notatnika' }))
+      expect(screen.queryByRole('searchbox', { name: 'Szukaj w Notatniku' })).not.toBeInTheDocument()
+
+      await user.click(screen.getByRole('button', { name: 'Rozwiń drzewo Notatnika' }))
+      expect(screen.getByRole('searchbox', { name: 'Szukaj w Notatniku' })).toBeInTheDocument()
+    })
   })
 })

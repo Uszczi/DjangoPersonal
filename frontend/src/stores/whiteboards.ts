@@ -9,12 +9,16 @@ import type { SaveState } from "@/whiteboard/useAutosave";
 
 export type { SaveState };
 
+/** A Tablica (`whiteboard`) or a Notatka (`markdown`). */
+export type ItemKind = "whiteboard" | "markdown";
+
 type WhiteboardsState = {
   whiteboards: WhiteboardResponse[];
   isLoading: boolean;
   pageError: string;
   loadWhiteboards: () => Promise<void>;
-  createWhiteboard: () => Promise<WhiteboardResponse | null>;
+  /** Create an untitled item, at the top level or in `folderId`; `null` if the server refused. */
+  createItem: (kind: ItemKind, folderId?: number | null) => Promise<WhiteboardResponse | null>;
   renameWhiteboard: (id: number, name: string) => Promise<void>;
   deleteWhiteboard: (id: number) => Promise<void>;
   /** Put an item in a Folder, or take it out of one with `null`. */
@@ -54,10 +58,10 @@ export const useWhiteboardsStore = create<WhiteboardsState>((set) => ({
     }
   },
 
-  createWhiteboard: async () => {
+  createItem: async (kind, folderId = null) => {
     try {
       const created = await api.whiteboardsCreate({
-        whiteboardRequest: { name: "Bez tytułu" },
+        whiteboardRequest: { kind, name: "Bez tytułu", folderId },
       });
       set((state) => ({ whiteboards: [created, ...state.whiteboards] }));
       return created;
