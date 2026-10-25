@@ -464,6 +464,7 @@ function TasksPage() {
       {isProjectsDrawerOpen && (
         <Drawer
           id="projects-drawer"
+          side="left"
           label="Projekty"
           title={
             <h2 className="font-display text-[18px] font-bold tracking-[-0.02em] text-ink">
