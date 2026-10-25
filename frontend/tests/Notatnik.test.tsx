@@ -140,6 +140,77 @@ function board(id: number, name: string, folderId: number | null, updatedAt: str
   }
 }
 
+describe('Notatnik search', () => {
+  const fetchMock = vi.fn()
+
+  beforeEach(() => {
+    fetchMock.mockReset()
+    vi.stubGlobal('fetch', fetchMock)
+  })
+
+  afterEach(() => {
+    cleanup()
+    vi.unstubAllGlobals()
+  })
+
+  const projects: Folder = { id: 2, name: 'Projekty', parent_id: 1, created_at: '2026-10-01T10:00:00Z' }
+
+  test('finds items and folders at any depth, ignoring case and Polish letters, with their path', async () => {
+    fetchMock.mockImplementation(
+      fakeBackend({
+        folders: [work, projects],
+        boards: [
+          board(5, 'Żółw szkic', 2, '2026-10-20T10:00:00Z', 'markdown'),
+          board(6, 'Zakupy', null, '2026-10-19T10:00:00Z'),
+        ],
+      }),
+    )
+    const user = userEvent.setup()
+
+    renderApp('/whiteboard')
+    await user.type(await screen.findByRole('searchbox', { name: 'Szukaj w Notatniku' }), 'zolw')
+
+    const results = screen.getByRole('list', { name: 'Wyniki wyszukiwania' })
+    const hit = within(results).getByRole('button', { name: 'Otwórz notatkę: Żółw szkic' })
+    expect(hit).toHaveTextContent('Praca / Projekty')
+    expect(within(results).queryByRole('button', { name: 'Otwórz tablicę: Zakupy' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Folder: Praca' })).not.toBeInTheDocument()
+
+    await user.clear(screen.getByRole('searchbox'))
+    await user.type(screen.getByRole('searchbox'), 'proj')
+    expect(screen.getByRole('button', { name: 'Pokaż folder: Projekty' })).toHaveTextContent('Praca')
+  })
+
+  test('says when nothing matches, and Escape brings the tree back', async () => {
+    fetchMock.mockImplementation(fakeBackend({ folders: [work] }))
+    const user = userEvent.setup()
+
+    renderApp('/whiteboard')
+    const search = await screen.findByRole('searchbox', { name: 'Szukaj w Notatniku' })
+    await user.type(search, 'xyz')
+    expect(screen.getByText('Nic nie pasuje do „xyz”.')).toBeInTheDocument()
+
+    await user.keyboard('{Escape}')
+    expect(search).toHaveValue('')
+    expect(screen.getByRole('region', { name: 'Folder: Praca' })).toBeInTheDocument()
+  })
+
+  test('picking a folder result shows it in the tree with its parents expanded', async () => {
+    fetchMock.mockImplementation(
+      fakeBackend({ folders: [work, projects], boards: [board(5, 'Plan', 2, '2026-10-20T10:00:00Z')] }),
+    )
+    const user = userEvent.setup()
+
+    renderApp('/whiteboard')
+    await user.type(await screen.findByRole('searchbox', { name: 'Szukaj w Notatniku' }), 'Projekty')
+    await user.click(screen.getByRole('button', { name: 'Pokaż folder: Projekty' }))
+
+    expect(screen.getByRole('button', { name: 'Praca' })).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('button', { name: 'Projekty' })).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('button', { name: 'Otwórz tablicę: Plan' })).toBeInTheDocument()
+  })
+})
+
 describe('Notatnik folders', () => {
   const fetchMock = vi.fn()
 

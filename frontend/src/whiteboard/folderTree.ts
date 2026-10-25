@@ -35,3 +35,36 @@ export function flattenTree(folders: FolderResponse[]) {
   visit(null, 0);
   return rows;
 }
+
+/** The Folders from the top level down to `folderId`, inclusive; empty for `null`. */
+export function folderPath(folders: FolderResponse[], folderId: number | null): FolderResponse[] {
+  const byId = new Map(folders.map((folder) => [folder.id, folder]));
+  const path: FolderResponse[] = [];
+  const seen = new Set<number>();
+  let current = folderId != null ? byId.get(folderId) : undefined;
+  while (current && !seen.has(current.id)) {
+    seen.add(current.id);
+    path.unshift(current);
+    current = current.parentId != null ? byId.get(current.parentId) : undefined;
+  }
+  return path;
+}
+
+/** Lowercase and without diacritics, so "zolw" finds "Żółw". */
+function searchKey(text: string) {
+  return text
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/ł/g, "l")
+    .replace(/Ł/g, "L")
+    .toLowerCase();
+}
+
+/** Whether `name` contains every word of `query`, ignoring case and diacritics. */
+export function matchesQuery(name: string, query: string) {
+  const key = searchKey(name);
+  return searchKey(query)
+    .split(/\s+/)
+    .filter(Boolean)
+    .every((word) => key.includes(word));
+}

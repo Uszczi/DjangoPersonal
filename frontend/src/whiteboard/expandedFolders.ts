@@ -36,5 +36,14 @@ export function useExpandedFolders() {
     });
   }
 
-  return { isExpanded: (folderId: number) => expanded.includes(folderId), toggle };
+  /** Expand every Folder in `folderIds`, leaving the others as they are. */
+  function expand(folderIds: number[]) {
+    setExpanded((current) => {
+      const next = [...current, ...folderIds.filter((id) => !current.includes(id))];
+      writeExpanded(next);
+      return next;
+    });
+  }
+
+  return { isExpanded: (folderId: number) => expanded.includes(folderId), toggle, expand };
 }

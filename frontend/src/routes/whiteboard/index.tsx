@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ChevronDown, ChevronRight, FolderInput, FolderPlus, Pencil } from "lucide-react";
-import { useEffect } from "react";
+import { ChevronDown, ChevronRight, FolderInput, FolderPlus, Pencil, Search } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { api } from "@personal/shared/api";
 import {
@@ -10,9 +10,11 @@ import {
   IconButton,
   ListRow,
   ListRowButton,
+  ListRowSubtitle,
   ListRowTitle,
   LoadingStatus,
   PageHeader,
+  TextInput,
 } from "@/design-system";
 import type { FolderResponse, WhiteboardResponse } from "@personal/shared/generated/api";
 import { DeleteFolderModal } from "@/components/modals/DeleteFolderModal";
@@ -22,7 +24,7 @@ import { useFoldersStore } from "@/stores/folders";
 import { ShowModal } from "@/stores/modal";
 import { useWhiteboardsStore } from "@/stores/whiteboards";
 import { useExpandedFolders } from "@/whiteboard/expandedFolders";
-import { childFolders, subtreeIds } from "@/whiteboard/folderTree";
+import { childFolders, folderPath, matchesQuery, subtreeIds } from "@/whiteboard/folderTree";
 
 export const Route = createFileRoute("/whiteboard/")({
   component: WhiteboardsPage,
@@ -39,7 +41,8 @@ function WhiteboardsPage() {
   const foldersLoading = useFoldersStore((s) => s.isLoading);
   const foldersError = useFoldersStore((s) => s.pageError);
   const loadFolders = useFoldersStore((s) => s.loadFolders);
-  const { isExpanded, toggle } = useExpandedFolders();
+  const { isExpanded, toggle, expand } = useExpandedFolders();
+  const [query, setQuery] = useState("");
 
   const navigate = useNavigate();
 
@@ -69,6 +72,13 @@ function WhiteboardsPage() {
   }
 
   const looseItems = whiteboards.filter((wb) => wb.folderId == null);
+  const searching = query.trim() !== "";
+
+  /** Leave the search and show `folder` in the tree, its ancestors expanded. */
+  function revealFolder(folder: FolderResponse) {
+    expand(folderPath(folders, folder.id).map((f) => f.id));
+    setQuery("");
+  }
 
   const createButtons = (
     <>
@@ -112,28 +122,99 @@ function WhiteboardsPage() {
         </div>
       ) : (
         <>
-          {childFolders(folders, null).map((folder) => (
-            <FolderSection
-              key={folder.id}
-              folder={folder}
+          <div className="relative mb-3">
+            <Search
+              aria-hidden="true"
+              className="pointer-events-none absolute top-1/2 left-3 size-[16px] -translate-y-1/2 text-muted"
+            />
+            <TextInput
+              type="search"
+              aria-label="Szukaj w Notatniku"
+              placeholder="Szukaj folderów, tablic i notatek…"
+              className="pl-9"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") setQuery("");
+              }}
+            />
+          </div>
+          {searching ? (
+            <SearchResults
+              query={query}
               folders={folders}
               whiteboards={whiteboards}
-              isExpanded={isExpanded}
-              onToggle={toggle}
-              onCreate={(kind, folderId) => void handleCreate(kind, folderId)}
+              onRevealFolder={revealFolder}
             />
-          ))}
-          <ul className="flex flex-col" aria-label="Tablice">
-            {looseItems.map((wb) => (
-              <WhiteboardRow key={wb.id} whiteboard={wb} />
-            ))}
-          </ul>
-          <div className="mt-4">
-            <div style={{ display: "flex", gap: 8 }}>{createButtons}</div>
-          </div>
+          ) : (
+            <>
+              {childFolders(folders, null).map((folder) => (
+                <FolderSection
+                  key={folder.id}
+                  folder={folder}
+                  folders={folders}
+                  whiteboards={whiteboards}
+                  isExpanded={isExpanded}
+                  onToggle={toggle}
+                  onCreate={(kind, folderId) => void handleCreate(kind, folderId)}
+                />
+              ))}
+              <ul className="flex flex-col" aria-label="Tablice">
+                {looseItems.map((wb) => (
+                  <WhiteboardRow key={wb.id} whiteboard={wb} />
+                ))}
+              </ul>
+              <div className="mt-4">
+                <div style={{ display: "flex", gap: 8 }}>{createButtons}</div>
+              </div>
+            </>
+          )}
         </>
       )}
     </>
+  );
+}
+
+type SearchResultsProps = {
+  query: string;
+  folders: FolderResponse[];
+  whiteboards: WhiteboardResponse[];
+  onRevealFolder: (folder: FolderResponse) => void;
+};
+
+/** The Folders and items whose names match `query`, flat, each with the Folders it sits in. */
+function SearchResults({ query, folders, whiteboards, onRevealFolder }: SearchResultsProps) {
+  const matchingFolders = folders.filter((folder) => matchesQuery(folder.name, query));
+  const matchingItems = whiteboards.filter((wb) => matchesQuery(wb.name, query));
+  const location = (folderId: number | null) =>
+    folderPath(folders, folderId)
+      .map((f) => f.name)
+      .join(" / ") || "Bez folderu";
+
+  if (matchingFolders.length === 0 && matchingItems.length === 0) {
+    return <p className="py-4 text-[13px] text-muted">Nic nie pasuje do „{query.trim()}”.</p>;
+  }
+
+  return (
+    <ul className="flex flex-col" aria-label="Wyniki wyszukiwania">
+      {matchingFolders.map((folder) => (
+        <ListRow key={`folder-${folder.id}`}>
+          <ListRowButton aria-label={`Pokaż folder: ${folder.name}`} onClick={() => onRevealFolder(folder)}>
+            <span className="text-[16px]" aria-hidden="true">
+              📁
+            </span>
+            <div className="min-w-0">
+              <ListRowTitle>{folder.name}</ListRowTitle>
+              <ListRowSubtitle>{location(folder.parentId ?? null)}</ListRowSubtitle>
+            </div>
+          </ListRowButton>
+          <></>
+        </ListRow>
+      ))}
+      {matchingItems.map((wb) => (
+        <WhiteboardRow key={wb.id} whiteboard={wb} location={location(wb.folderId ?? null)} />
+      ))}
+    </ul>
   );
 }
 
@@ -248,7 +329,7 @@ function FolderSection({ folder, folders, whiteboards, isExpanded, onToggle, onC
   );
 }
 
-function WhiteboardRow({ whiteboard: wb }: { whiteboard: WhiteboardResponse }) {
+function WhiteboardRow({ whiteboard: wb, location }: { whiteboard: WhiteboardResponse; location?: string }) {
   const remove = useWhiteboardsStore((s) => s.deleteWhiteboard);
   const navigate = useNavigate();
 
@@ -268,7 +349,14 @@ function WhiteboardRow({ whiteboard: wb }: { whiteboard: WhiteboardResponse }) {
         <span className="text-[16px]" aria-hidden="true">
           {wb.kind === "markdown" ? "📝" : "🎨"}
         </span>
-        <ListRowTitle>{wb.name}</ListRowTitle>
+        {location === undefined ? (
+          <ListRowTitle>{wb.name}</ListRowTitle>
+        ) : (
+          <div className="min-w-0">
+            <ListRowTitle>{wb.name}</ListRowTitle>
+            <ListRowSubtitle>{location}</ListRowSubtitle>
+          </div>
+        )}
       </ListRowButton>
       <>
         <span className="mr-2 text-[12px] text-muted">
