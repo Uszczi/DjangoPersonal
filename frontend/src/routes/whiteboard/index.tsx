@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
-import { Button, PageHeader } from "@/design-system";
+import { Button, EmptyState, PageHeader } from "@/design-system";
 import { FolderEditorModal } from "@/components/modals/FolderEditorModal";
 import { useFoldersStore } from "@/stores/folders";
 import { ShowModal } from "@/stores/modal";
@@ -29,24 +29,20 @@ function WhiteboardsPage() {
     <>
       <PageHeader title="Notatnik" />
       {isEmpty && noFolders ? (
-        <div className="pt-[40px] text-muted">
-          <p className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">BRAK NOTATEK</p>
-          <h2 className="mt-2 font-display text-[24px] font-bold tracking-[-0.02em] text-ink">Utwórz pierwszą notatkę</h2>
-          <div className="mt-5 flex flex-wrap gap-2">
-            <Button variant="primary" onClick={() => void handleCreate("markdown")}>
-              <span aria-hidden="true">+</span>
-              Nowa notatka
-            </Button>
-            <Button variant="secondary" onClick={() => void handleCreate("whiteboard")}>
-              <span aria-hidden="true">+</span>
-              Nowa tablica
-            </Button>
-            <Button variant="secondary" onClick={() => ShowModal(FolderEditorModal)}>
-              <span aria-hidden="true">+</span>
-              Nowy folder
-            </Button>
-          </div>
-        </div>
+        <EmptyState eyebrow="BRAK NOTATEK" title="Utwórz pierwszą notatkę">
+          <Button variant="primary" onClick={() => void handleCreate("markdown")}>
+            <span aria-hidden="true">+</span>
+            Nowa notatka
+          </Button>
+          <Button variant="secondary" onClick={() => void handleCreate("whiteboard")}>
+            <span aria-hidden="true">+</span>
+            Nowa tablica
+          </Button>
+          <Button variant="secondary" onClick={() => ShowModal(FolderEditorModal)}>
+            <span aria-hidden="true">+</span>
+            Nowy folder
+          </Button>
+        </EmptyState>
       ) : (
         <p className="pt-[40px] text-[14px] text-muted">Wybierz notatkę lub tablicę z drzewa po lewej albo utwórz nową.</p>
       )}

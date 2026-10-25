@@ -1,20 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
+import { CounterEntryList } from "@/components/counters/CounterEntryList";
 import { CounterEditorModal } from "@/components/modals/CounterEditorModal";
 import { CounterEntryEditorModal } from "@/components/modals/CounterEntryEditorModal";
 import { DeleteCounterModal } from "@/components/modals/DeleteCounterModal";
-import { entryCountLabel, formatEntryTime, signedValue } from "@personal/shared/counterFormat";
-import {
-  Button,
-  ErrorMessage,
-  ListRow,
-  ListRowButton,
-  ListRowSubtitle,
-  ListRowTitle,
-  LoadingStatus,
-  PageHeader,
-} from "@/design-system";
+import { entryCountLabel } from "@personal/shared/counterFormat";
+import { Button, ErrorMessage, LoadingStatus, PageHeader } from "@/design-system";
 import { useCountersStore } from "@personal/shared/stores/counters";
 import { ShowModal } from "@/stores/modal";
 
@@ -123,29 +115,11 @@ function CounterPage() {
         !entriesError && (
           <LoadingStatus variant="inline">Wczytywanie wpisów…</LoadingStatus>
         )
-      ) : entries.length === 0 ? (
-        <p className="py-4 text-[13px] text-muted">Brak wpisów. Dodaj pierwszy wpis.</p>
       ) : (
-        <ul className="flex flex-col" aria-label="Wpisy">
-          {entries.map((entry) => (
-            <ListRow key={entry.id}>
-              <ListRowButton
-                aria-label={`Edytuj wpis ${signedValue(entry.value)} z ${formatEntryTime(entry.occurredAt)}`}
-                onClick={() => ShowModal(CounterEntryEditorModal, { counterId: id, entry })}
-              >
-                <div className="min-w-0">
-                  <ListRowTitle>{formatEntryTime(entry.occurredAt)}</ListRowTitle>
-                  {entry.note && <ListRowSubtitle multiline>{entry.note}</ListRowSubtitle>}
-                </div>
-              </ListRowButton>
-              <span
-                className={`font-utility text-[14px] font-semibold ${entry.value < 0 ? "text-danger" : "text-ink"}`}
-              >
-                {signedValue(entry.value)}
-              </span>
-            </ListRow>
-          ))}
-        </ul>
+        <CounterEntryList
+          entries={entries}
+          onEdit={(entry) => ShowModal(CounterEntryEditorModal, { counterId: id, entry })}
+        />
       )}
     </section>
   );
