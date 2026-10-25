@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
+import { CounterCalendar } from "@/components/counters/CounterCalendar";
 import { CounterEntryList } from "@/components/counters/CounterEntryList";
 import { CounterEditorModal } from "@/components/modals/CounterEditorModal";
 import { CounterEntryEditorModal } from "@/components/modals/CounterEntryEditorModal";
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/counters/$counterId")({
   component: CounterPage,
 });
 
-/** One counter: its total, quick +1, and the entries to add, edit and delete. */
+/** One counter: its total, quick +1, the entries to add, edit and delete, and a calendar of the days they fall on. */
 function CounterPage() {
   const { counterId } = Route.useParams();
   const id = Number(counterId);
@@ -116,10 +117,13 @@ function CounterPage() {
           <LoadingStatus variant="inline">Wczytywanie wpisów…</LoadingStatus>
         )
       ) : (
-        <CounterEntryList
-          entries={entries}
-          onEdit={(entry) => ShowModal(CounterEntryEditorModal, { counterId: id, entry })}
-        />
+        <>
+          <CounterEntryList
+            entries={entries}
+            onEdit={(entry) => ShowModal(CounterEntryEditorModal, { counterId: id, entry })}
+          />
+          <CounterCalendar entries={entries} />
+        </>
       )}
     </section>
   );
