@@ -30,6 +30,8 @@
   --color-danger-pale: #fff0eb;
   --color-danger-ink: #873b2b;
   --color-overlay: rgb(12 29 33 / 52%);
+  --color-md-mark: #a4482a;
+  --color-md-code-bg: #eef3f1;
 
   --shadow-dialog: 0 24px 80px rgb(9 24 28 / 25%);
 
@@ -107,5 +109,28 @@
       scroll-behavior: auto !important;
       transition-duration: 0.01ms !important;
     }
+  }
+}
+
+/* Markdown source highlighting (MarkdownHighlightEditor). */
+@layer components {
+  .md-h,
+  .md-list {
+    color: var(--color-md-mark);
+    font-weight: 700;
+  }
+
+  .md-code {
+    background: var(--color-md-code-bg);
+    color: var(--color-accent);
+  }
+
+  .md-bold {
+    color: var(--color-deep-ink);
+    font-weight: 700;
+  }
+
+  .md-italic {
+    color: var(--color-muted);
   }
 }
