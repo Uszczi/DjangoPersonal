@@ -5,13 +5,29 @@ from datetime import date as date_type
 from datetime import datetime
 from typing import Any
 
+from personal.core.accounts.contracts.auth import UserResponse
+from personal.core.counters.contracts import CounterEntryResponse, CounterResponse
+from personal.core.expenses.contracts import CategoryResponse, TransactionResponse, WalletResponse
+from personal.core.whiteboard.contracts import FolderResponse, WhiteboardResponse
 from personal.core.work.contracts import (
     ProjectResponse,
     TaskResponse,
     TimeEntryResponse,
     TimerResponse,
 )
-from personal.infra.models import Project, Task, TimeEntry
+from personal.infra.models import (
+    Category,
+    Counter,
+    CounterEntry,
+    Folder,
+    Project,
+    Task,
+    TimeEntry,
+    Transaction,
+    User,
+    Wallet,
+    Whiteboard,
+)
 
 
 def project(obj: Project) -> dict[str, Any]:
@@ -44,6 +60,71 @@ def timer(entry: TimeEntry | None, server_now: datetime) -> dict[str, Any]:
         server_now=server_now,
     )
     return state.model_dump(mode='json')
+
+
+def account(obj: User) -> dict[str, Any]:
+    return UserResponse.model_validate(obj).model_dump(mode='json')
+
+
+def wallet(obj: Wallet) -> dict[str, Any]:
+    return WalletResponse.model_validate(obj).model_dump(mode='json')
+
+
+def wallets(objs: Iterable[Wallet]) -> list[dict[str, Any]]:
+    return [wallet(o) for o in objs]
+
+
+def category(obj: Category) -> dict[str, Any]:
+    return CategoryResponse.model_validate(obj).model_dump(mode='json')
+
+
+def categories(objs: Iterable[Category]) -> list[dict[str, Any]]:
+    return [category(o) for o in objs]
+
+
+def transaction(obj: Transaction) -> dict[str, Any]:
+    return TransactionResponse.model_validate(obj).model_dump(mode='json')
+
+
+def transactions(objs: Iterable[Transaction]) -> list[dict[str, Any]]:
+    return [transaction(o) for o in objs]
+
+
+def counter(obj: Counter) -> dict[str, Any]:
+    return CounterResponse.model_validate(obj).model_dump(mode='json')
+
+
+def counters(objs: Iterable[Counter]) -> list[dict[str, Any]]:
+    return [counter(o) for o in objs]
+
+
+def counter_entry(obj: CounterEntry) -> dict[str, Any]:
+    return CounterEntryResponse.model_validate(obj).model_dump(mode='json')
+
+
+def counter_entries(objs: Iterable[CounterEntry]) -> list[dict[str, Any]]:
+    return [counter_entry(o) for o in objs]
+
+
+def folder(obj: Folder) -> dict[str, Any]:
+    return FolderResponse.model_validate(obj).model_dump(mode='json')
+
+
+def folders(objs: Iterable[Folder]) -> list[dict[str, Any]]:
+    return [folder(o) for o in objs]
+
+
+def whiteboard(obj: Whiteboard) -> dict[str, Any]:
+    return WhiteboardResponse.model_validate(obj).model_dump(mode='json')
+
+
+def whiteboard_summaries(objs: Iterable[Whiteboard]) -> list[dict[str, Any]]:
+    """Whiteboards without their ``content``: a board document can be large,
+    and a listing is for finding one — ``get_whiteboard`` returns it whole."""
+    return [
+        WhiteboardResponse.model_validate(o).model_dump(mode='json', exclude={'content'})
+        for o in objs
+    ]
 
 
 def parse_date(value: str | None) -> date_type | None:

@@ -121,6 +121,96 @@ def test_account_tools_issue_tokens(mcp_user: User, token_service: TokenService)
         call('login_user', username='mcp-user', password='wrong')
 
 
+def test_current_account_tool(mcp_user: User) -> None:
+    assert call('get_current_account') == {'id': mcp_user.id, 'username': 'mcp-user'}
+
+
+def test_expense_tools(mcp_user: User) -> None:
+    wallet = call('create_wallet', name='Konto', initial_balance='100.00')
+    food = call('create_category', name='Jedzenie')
+
+    spent = call(
+        'create_transaction',
+        wallet_id=wallet['id'],
+        title='Obiad',
+        amount='12.50',
+        date='2026-10-01',
+        category_id=food['id'],
+    )
+    assert spent['amount'] == '12.50'
+    assert spent['category_id'] == food['id']
+    titles = [t['title'] for t in call('list_transactions', wallet_id=wallet['id'])]
+    assert 'Obiad' in titles
+
+    renamed = call('update_transaction', transaction_id=spent['id'], title='Kolacja')
+    assert renamed['category_id'] == food['id']
+    cleared = call('update_transaction', transaction_id=spent['id'], clear_category=True)
+    assert cleared['category_id'] is None
+
+    corrected = call('update_wallet', wallet_id=wallet['id'], current_balance='50.00')
+    assert corrected['balance'] == '50.00'
+    assert [w['name'] for w in call('list_wallets')] == ['Konto']
+    assert 'Jedzenie' in [c['name'] for c in call('list_categories')]
+
+    assert call('delete_transaction', transaction_id=spent['id']) == 'deleted'
+    assert call('delete_wallet', wallet_id=wallet['id']) == 'deleted'
+    assert call('list_wallets') == []
+
+
+def test_counter_tools(mcp_user: User) -> None:
+    counter = call('create_counter', name='Kawa')
+
+    first = call('create_counter_entry', counter_id=counter['id'])
+    assert first['value'] == 1
+    call(
+        'create_counter_entry',
+        counter_id=counter['id'],
+        value=3,
+        occurred_at='2026-10-01T08:00:00+02:00',
+        note='rano',
+    )
+    assert call('get_counter', counter_id=counter['id'])['total'] == 4
+
+    call('update_counter_entry', entry_id=first['id'], value=2)
+    assert call('list_counters')[0]['total'] == 5
+    assert len(call('list_counter_entries', counter_id=counter['id'])) == 2
+
+    with pytest.raises(ToolError, match='zero'):
+        call('create_counter_entry', counter_id=counter['id'], value=0)
+
+    call('delete_counter_entry', entry_id=first['id'])
+    assert call('update_counter', counter_id=counter['id'], name='Herbata')['total'] == 3
+    call('delete_counter', counter_id=counter['id'])
+    assert call('list_counters') == []
+
+
+def test_notatnik_tools(mcp_user: User) -> None:
+    parent = call('create_folder', name='Praca')
+    child = call('create_folder', name='Spotkania', parent_id=parent['id'])
+    assert call('update_folder', folder_id=child['id'], move_to_top_level=True)['parent_id'] is None
+
+    note = call(
+        'create_whiteboard', name='Plan', kind='markdown', markdown='# Hej', folder_id=parent['id']
+    )
+    assert note['content'] == {'markdown': '# Hej'}
+
+    listed = call('list_whiteboards')
+    assert [w['name'] for w in listed] == ['Plan']
+    assert 'content' not in listed[0]
+
+    edited = call('update_whiteboard', whiteboard_id=note['id'], markdown='- punkt')
+    assert edited['folder_id'] == parent['id']
+    assert call('get_whiteboard', whiteboard_id=note['id'])['content'] == {'markdown': '- punkt'}
+    moved = call('update_whiteboard', whiteboard_id=note['id'], remove_from_folder=True)
+    assert moved['folder_id'] is None
+
+    board = call('create_whiteboard')
+    assert board['kind'] == 'whiteboard'
+    call('delete_whiteboard', whiteboard_id=board['id'])
+    call('delete_folder', folder_id=parent['id'])
+    assert [f['name'] for f in call('list_folders')] == ['Spotkania']
+
+
 # --- resolving the user -----------------------------------------------------
 
 

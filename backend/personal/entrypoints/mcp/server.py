@@ -26,6 +26,29 @@ from sqlalchemy.orm import Session
 from personal import wiring
 from personal.core.accounts import handlers as accounts_handlers
 from personal.core.accounts.contracts.auth import LoginRequest, RefreshRequest, RegisterRequest
+from personal.core.counters import handlers as counter_handlers
+from personal.core.counters.contracts import (
+    CounterEntryRequest,
+    CounterRequest,
+    PatchedCounterEntryRequest,
+    PatchedCounterRequest,
+)
+from personal.core.expenses import handlers as expense_handlers
+from personal.core.expenses.contracts import (
+    CategoryRequest,
+    PatchedCategoryRequest,
+    PatchedTransactionRequest,
+    PatchedWalletRequest,
+    TransactionRequest,
+    WalletCreateRequest,
+)
+from personal.core.whiteboard import handlers as whiteboard_handlers
+from personal.core.whiteboard.contracts import (
+    FolderRequest,
+    PatchedFolderRequest,
+    PatchedWhiteboardRequest,
+    WhiteboardRequest,
+)
 from personal.core.work import clock, handlers
 from personal.core.work.contracts import (
     PatchedProjectRequest,
@@ -42,6 +65,15 @@ from . import runtime
 from .auth import get_current_user
 from .oauth import login_get, login_post, provider
 from .serialization import (
+    account,
+    categories,
+    category,
+    counter,
+    counter_entries,
+    counter_entry,
+    counters,
+    folder,
+    folders,
     parse_date,
     project,
     projects,
@@ -50,6 +82,12 @@ from .serialization import (
     time_entries,
     time_entry,
     timer,
+    transaction,
+    transactions,
+    wallet,
+    wallets,
+    whiteboard,
+    whiteboard_summaries,
 )
 
 _ISSUER = os.environ.get('MCP_ISSUER_URL', 'http://localhost:8001')
@@ -395,3 +433,451 @@ def refresh_access_token(refresh: str) -> dict[str, Any]:
     payload = RefreshRequest(refresh=refresh)
     result = accounts_handlers.RefreshAccessToken(runtime.tokens).execute(payload)
     return result.model_dump(mode='json')
+
+
+@_tool
+def get_current_account(ctx: ToolContext) -> dict[str, Any]:
+    """The account the tools act for (id and username)."""
+    with _unit_of_work(ctx) as (_, user):
+        return account(user)
+
+
+# --- expenses: wallets ------------------------------------------------------
+
+
+@_tool
+def list_wallets(ctx: ToolContext) -> list[dict[str, Any]]:
+    """List wallets with their balance and transaction count."""
+    with _unit_of_work(ctx) as (session, user):
+        return wallets(expense_handlers.ListWallets(wiring.wallet_repository(session), user).execute())
+
+
+@_tool
+def get_wallet(ctx: ToolContext, wallet_id: int) -> dict[str, Any]:
+    """Fetch a single wallet by id."""
+    with _unit_of_work(ctx) as (session, user):
+        handler = expense_handlers.GetWallet(wiring.wallet_repository(session), user)
+        return wallet(handler.execute(wallet_id))
+
+
+@_tool
+def create_wallet(
+    ctx: ToolContext,
+    name: str,
+    color: str | None = None,
+    icon: str | None = None,
+    initial_balance: str | None = None,
+) -> dict[str, Any]:
+    """Create a wallet. ``color`` is ``#RRGGBB``, ``icon`` a lucide icon name,
+    ``initial_balance`` a decimal string such as ``"120.50"``."""
+    payload = WalletCreateRequest.model_validate(
+        {'name': name, **_provided(color=color, icon=icon, initial_balance=initial_balance)}
+    )
+    with _unit_of_work(ctx) as (session, user):
+        handler = expense_handlers.CreateWallet(
+            wiring.wallet_repository(session),
+            wiring.category_repository(session),
+            wiring.transaction_repository(session),
+            user,
+        )
+        return wallet(handler.execute(payload))
+
+
+@_tool
+def update_wallet(
+    ctx: ToolContext,
+    wallet_id: int,
+    name: str | None = None,
+    color: str | None = None,
+    icon: str | None = None,
+    remove_icon: bool = False,
+    current_balance: str | None = None,
+) -> dict[str, Any]:
+    """Update a wallet (partial). ``current_balance`` (decimal string) sets the
+    balance by recording the difference as a System transaction; ``remove_icon``
+    clears the icon."""
+    fields = _provided(name=name, color=color, icon=icon, current_balance=current_balance)
+    if remove_icon:
+        fields['icon'] = None
+    payload = PatchedWalletRequest.model_validate(fields)
+    with _unit_of_work(ctx) as (session, user):
+        handler = expense_handlers.UpdateWallet(
+            wiring.wallet_repository(session),
+            wiring.category_repository(session),
+            wiring.transaction_repository(session),
+            user,
+        )
+        return wallet(handler.execute(wallet_id, payload))
+
+
+@_tool
+def delete_wallet(ctx: ToolContext, wallet_id: int) -> str:
+    """Delete a wallet together with all its transactions."""
+    with _unit_of_work(ctx) as (session, user):
+        expense_handlers.DeleteWallet(wiring.wallet_repository(session), user).execute(wallet_id)
+        return 'deleted'
+
+
+# --- expenses: categories ---------------------------------------------------
+
+
+@_tool
+def list_categories(ctx: ToolContext) -> list[dict[str, Any]]:
+    """List transaction categories."""
+    with _unit_of_work(ctx) as (session, user):
+        handler = expense_handlers.ListCategories(wiring.category_repository(session), user)
+        return categories(handler.execute())
+
+
+@_tool
+def create_category(ctx: ToolContext, name: str, icon: str | None = None) -> dict[str, Any]:
+    """Create a category; ``icon`` is a lucide icon name."""
+    payload = CategoryRequest.model_validate({'name': name, **_provided(icon=icon)})
+    with _unit_of_work(ctx) as (session, user):
+        handler = expense_handlers.CreateCategory(wiring.category_repository(session), user)
+        return category(handler.execute(payload))
+
+
+@_tool
+def update_category(
+    ctx: ToolContext, category_id: int, name: str | None = None, icon: str | None = None
+) -> dict[str, Any]:
+    """Update a category (partial)."""
+    payload = PatchedCategoryRequest.model_validate(_provided(name=name, icon=icon))
+    with _unit_of_work(ctx) as (session, user):
+        handler = expense_handlers.UpdateCategory(wiring.category_repository(session), user)
+        return category(handler.execute(category_id, payload))
+
+
+@_tool
+def delete_category(ctx: ToolContext, category_id: int) -> str:
+    """Delete a category together with all its transactions (system categories are refused)."""
+    with _unit_of_work(ctx) as (session, user):
+        handler = expense_handlers.DeleteCategory(wiring.category_repository(session), user)
+        handler.execute(category_id)
+        return 'deleted'
+
+
+# --- expenses: transactions -------------------------------------------------
+
+
+@_tool
+def list_transactions(ctx: ToolContext, wallet_id: int) -> list[dict[str, Any]]:
+    """List a wallet's transactions."""
+    with _unit_of_work(ctx) as (session, user):
+        handler = expense_handlers.ListTransactions(
+            wiring.transaction_repository(session), wiring.wallet_repository(session), user
+        )
+        return transactions(handler.execute(wallet_id))
+
+
+@_tool
+def create_transaction(
+    ctx: ToolContext,
+    wallet_id: int,
+    title: str,
+    amount: str,
+    date: str,
+    description: str = '',
+    category_id: int | None = None,
+) -> dict[str, Any]:
+    """Record an expense in a wallet. ``amount`` is a positive decimal string
+    (``"12.50"``), ``date`` is YYYY-MM-DD."""
+    payload = TransactionRequest.model_validate(
+        {
+            'wallet': wallet_id,
+            'title': title,
+            'amount': amount,
+            'date': date,
+            'description': description,
+            'category': category_id,
+        }
+    )
+    with _unit_of_work(ctx) as (session, user):
+        handler = expense_handlers.CreateTransaction(
+            wiring.transaction_repository(session),
+            wiring.wallet_repository(session),
+            wiring.category_repository(session),
+            user,
+        )
+        return transaction(handler.execute(payload))
+
+
+@_tool
+def update_transaction(
+    ctx: ToolContext,
+    transaction_id: int,
+    title: str | None = None,
+    amount: str | None = None,
+    date: str | None = None,
+    description: str | None = None,
+    category_id: int | None = None,
+    clear_category: bool = False,
+    wallet_id: int | None = None,
+) -> dict[str, Any]:
+    """Update a transaction (partial); ``clear_category`` uncategorizes it."""
+    fields = _provided(
+        title=title,
+        amount=amount,
+        date=date,
+        description=description,
+        category=category_id,
+        wallet=wallet_id,
+    )
+    if clear_category:
+        fields['category'] = None
+    payload = PatchedTransactionRequest.model_validate(fields)
+    with _unit_of_work(ctx) as (session, user):
+        handler = expense_handlers.UpdateTransaction(
+            wiring.transaction_repository(session),
+            wiring.wallet_repository(session),
+            wiring.category_repository(session),
+            user,
+        )
+        return transaction(handler.execute(transaction_id, payload))
+
+
+@_tool
+def delete_transaction(ctx: ToolContext, transaction_id: int) -> str:
+    """Delete a transaction."""
+    with _unit_of_work(ctx) as (session, user):
+        handler = expense_handlers.DeleteTransaction(wiring.transaction_repository(session), user)
+        handler.execute(transaction_id)
+        return 'deleted'
+
+
+# --- counters ---------------------------------------------------------------
+
+
+@_tool
+def list_counters(ctx: ToolContext) -> list[dict[str, Any]]:
+    """List counters with their entry count and total."""
+    with _unit_of_work(ctx) as (session, user):
+        handler = counter_handlers.ListCounters(wiring.counter_repository(session), user)
+        return counters(handler.execute())
+
+
+@_tool
+def get_counter(ctx: ToolContext, counter_id: int) -> dict[str, Any]:
+    """Fetch a single counter by id."""
+    with _unit_of_work(ctx) as (session, user):
+        handler = counter_handlers.GetCounter(wiring.counter_repository(session), user)
+        return counter(handler.execute(counter_id))
+
+
+@_tool
+def create_counter(ctx: ToolContext, name: str) -> dict[str, Any]:
+    """Create a counter."""
+    payload = CounterRequest.model_validate({'name': name})
+    with _unit_of_work(ctx) as (session, user):
+        handler = counter_handlers.CreateCounter(wiring.counter_repository(session), user)
+        return counter(handler.execute(payload))
+
+
+@_tool
+def update_counter(ctx: ToolContext, counter_id: int, name: str | None = None) -> dict[str, Any]:
+    """Rename a counter."""
+    payload = PatchedCounterRequest.model_validate(_provided(name=name))
+    with _unit_of_work(ctx) as (session, user):
+        handler = counter_handlers.UpdateCounter(wiring.counter_repository(session), user)
+        return counter(handler.execute(counter_id, payload))
+
+
+@_tool
+def delete_counter(ctx: ToolContext, counter_id: int) -> str:
+    """Delete a counter and its entries."""
+    with _unit_of_work(ctx) as (session, user):
+        counter_handlers.DeleteCounter(wiring.counter_repository(session), user).execute(counter_id)
+        return 'deleted'
+
+
+@_tool
+def list_counter_entries(ctx: ToolContext, counter_id: int) -> list[dict[str, Any]]:
+    """List a counter's entries."""
+    with _unit_of_work(ctx) as (session, user):
+        handler = counter_handlers.ListCounterEntries(
+            wiring.counter_entry_repository(session), wiring.counter_repository(session), user
+        )
+        return counter_entries(handler.execute(counter_id))
+
+
+@_tool
+def create_counter_entry(
+    ctx: ToolContext,
+    counter_id: int,
+    value: int = 1,
+    occurred_at: str | None = None,
+    note: str = '',
+) -> dict[str, Any]:
+    """Add an entry to a counter (``value`` may be negative, not zero).
+    ``occurred_at`` is ISO 8601 with a time zone; it defaults to now."""
+    payload = CounterEntryRequest.model_validate(
+        {
+            'counter': counter_id,
+            'value': value,
+            'occurred_at': occurred_at if occurred_at is not None else clock.now(),
+            'note': note,
+        }
+    )
+    with _unit_of_work(ctx) as (session, user):
+        handler = counter_handlers.CreateCounterEntry(
+            wiring.counter_entry_repository(session), wiring.counter_repository(session), user
+        )
+        return counter_entry(handler.execute(payload))
+
+
+@_tool
+def update_counter_entry(
+    ctx: ToolContext,
+    entry_id: int,
+    value: int | None = None,
+    occurred_at: str | None = None,
+    note: str | None = None,
+) -> dict[str, Any]:
+    """Update a counter entry (partial)."""
+    payload = PatchedCounterEntryRequest.model_validate(
+        _provided(value=value, occurred_at=occurred_at, note=note)
+    )
+    with _unit_of_work(ctx) as (session, user):
+        handler = counter_handlers.UpdateCounterEntry(
+            wiring.counter_entry_repository(session), user
+        )
+        return counter_entry(handler.execute(entry_id, payload))
+
+
+@_tool
+def delete_counter_entry(ctx: ToolContext, entry_id: int) -> str:
+    """Delete a counter entry."""
+    with _unit_of_work(ctx) as (session, user):
+        handler = counter_handlers.DeleteCounterEntry(
+            wiring.counter_entry_repository(session), user
+        )
+        handler.execute(entry_id)
+        return 'deleted'
+
+
+# --- notatnik: folders, whiteboards and Notatki -----------------------------
+
+
+@_tool
+def list_folders(ctx: ToolContext) -> list[dict[str, Any]]:
+    """List Folders (``parent_id`` is null at the top level)."""
+    with _unit_of_work(ctx) as (session, user):
+        handler = whiteboard_handlers.ListFolders(wiring.folder_repository(session), user)
+        return folders(handler.execute())
+
+
+@_tool
+def create_folder(ctx: ToolContext, name: str, parent_id: int | None = None) -> dict[str, Any]:
+    """Create a Folder, inside ``parent_id`` or at the top level."""
+    payload = FolderRequest.model_validate({'name': name, 'parent_id': parent_id})
+    with _unit_of_work(ctx) as (session, user):
+        handler = whiteboard_handlers.CreateFolder(wiring.folder_repository(session), user)
+        return folder(handler.execute(payload))
+
+
+@_tool
+def update_folder(
+    ctx: ToolContext,
+    folder_id: int,
+    name: str | None = None,
+    parent_id: int | None = None,
+    move_to_top_level: bool = False,
+) -> dict[str, Any]:
+    """Rename a Folder or move it into ``parent_id`` (or to the top level)."""
+    fields = _provided(name=name, parent_id=parent_id)
+    if move_to_top_level:
+        fields['parent_id'] = None
+    payload = PatchedFolderRequest.model_validate(fields)
+    with _unit_of_work(ctx) as (session, user):
+        handler = whiteboard_handlers.UpdateFolder(wiring.folder_repository(session), user)
+        return folder(handler.execute(folder_id, payload))
+
+
+@_tool
+def delete_folder(ctx: ToolContext, folder_id: int) -> str:
+    """Delete a Folder with its subfolders and every whiteboard and Notatka in them."""
+    with _unit_of_work(ctx) as (session, user):
+        whiteboard_handlers.DeleteFolder(wiring.folder_repository(session), user).execute(folder_id)
+        return 'deleted'
+
+
+@_tool
+def list_whiteboards(ctx: ToolContext) -> list[dict[str, Any]]:
+    """List whiteboards and Notatki (``kind`` whiteboard/markdown), without content."""
+    with _unit_of_work(ctx) as (session, user):
+        handler = whiteboard_handlers.ListWhiteboards(wiring.whiteboard_repository(session), user)
+        return whiteboard_summaries(handler.execute())
+
+
+@_tool
+def get_whiteboard(ctx: ToolContext, whiteboard_id: int) -> dict[str, Any]:
+    """Fetch a whiteboard or Notatka with its content
+    (a Notatka's text is ``content.markdown``)."""
+    with _unit_of_work(ctx) as (session, user):
+        handler = whiteboard_handlers.GetWhiteboard(wiring.whiteboard_repository(session), user)
+        return whiteboard(handler.execute(whiteboard_id))
+
+
+def _content(markdown: str | None, content: dict[str, Any] | None) -> dict[str, Any] | None:
+    """``markdown`` is shorthand for a Notatka's ``{"markdown": ...}`` content."""
+    if markdown is not None and content is not None:
+        raise ValueError('Pass either markdown or content, not both.')
+    return {'markdown': markdown} if markdown is not None else content
+
+
+@_tool
+def create_whiteboard(
+    ctx: ToolContext,
+    name: str | None = None,
+    kind: str = 'whiteboard',
+    markdown: str | None = None,
+    content: dict[str, Any] | None = None,
+    folder_id: int | None = None,
+) -> dict[str, Any]:
+    """Create a whiteboard, or a Notatka with ``kind="markdown"`` and its text
+    in ``markdown``. ``content`` is the raw document, for whiteboards."""
+    payload = WhiteboardRequest.model_validate(
+        {
+            'kind': kind,
+            'folder_id': folder_id,
+            **_provided(name=name, content=_content(markdown, content)),
+        }
+    )
+    with _unit_of_work(ctx) as (session, user):
+        handler = whiteboard_handlers.CreateWhiteboard(
+            wiring.whiteboard_repository(session), wiring.folder_repository(session), user
+        )
+        return whiteboard(handler.execute(payload))
+
+
+@_tool
+def update_whiteboard(
+    ctx: ToolContext,
+    whiteboard_id: int,
+    name: str | None = None,
+    markdown: str | None = None,
+    content: dict[str, Any] | None = None,
+    folder_id: int | None = None,
+    remove_from_folder: bool = False,
+) -> dict[str, Any]:
+    """Update a whiteboard or Notatka (partial). ``markdown`` replaces a
+    Notatka's text; ``remove_from_folder`` moves it to the top level."""
+    fields = _provided(name=name, content=_content(markdown, content), folder_id=folder_id)
+    if remove_from_folder:
+        fields['folder_id'] = None
+    payload = PatchedWhiteboardRequest.model_validate(fields)
+    with _unit_of_work(ctx) as (session, user):
+        handler = whiteboard_handlers.UpdateWhiteboard(
+            wiring.whiteboard_repository(session), wiring.folder_repository(session), user
+        )
+        return whiteboard(handler.execute(whiteboard_id, payload))
+
+
+@_tool
+def delete_whiteboard(ctx: ToolContext, whiteboard_id: int) -> str:
+    """Delete a whiteboard or Notatka."""
+    with _unit_of_work(ctx) as (session, user):
+        handler = whiteboard_handlers.DeleteWhiteboard(wiring.whiteboard_repository(session), user)
+        handler.execute(whiteboard_id)
+        return 'deleted'
