@@ -45,7 +45,7 @@ const NAV_ITEMS: Array<{ to: TopTabPath; label: string }> = [
   { to: "/tasks", label: "Zadania" },
   { to: "/projects", label: "Projekty" },
   { to: "/timer", label: "Czas" },
-  { to: "/whiteboard", label: "Notatki" },
+  { to: "/whiteboard", label: "Notatnik" },
   { to: "/expenses", label: "Wydatki" },
   { to: "/counters", label: "Liczniki" },
 ];

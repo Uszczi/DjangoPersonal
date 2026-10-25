@@ -57,6 +57,12 @@ describe('Whiteboard', () => {
     expect(await screen.findByRole('heading', { name: 'Utwórz pierwszą notatkę' })).toBeInTheDocument()
   })
 
+  test('the section is called Notatnik', async () => {
+    renderApp('/whiteboard')
+    expect(await screen.findByRole('heading', { name: 'Notatnik' })).toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: 'Notatnik' }).length).toBeGreaterThan(0)
+  })
+
   test('not-found page for missing whiteboard', async () => {
     fetchMock.mockImplementation((input: RequestInfo | URL) => {
       const url = requestUrl(input)

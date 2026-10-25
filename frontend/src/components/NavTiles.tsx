@@ -4,7 +4,7 @@ const NAV_TILES = [
   { to: "/tasks", label: "Zadania", icon: "☑" },
   { to: "/projects", label: "Projekty", icon: "◆" },
   { to: "/timer", label: "Czas", icon: "◷" },
-  { to: "/whiteboard", label: "Notatki", icon: "✎" },
+  { to: "/whiteboard", label: "Notatnik", icon: "✎" },
   { to: "/expenses", label: "Wydatki", icon: "€" },
   { to: "/counters", label: "Liczniki", icon: "#" },
 ] as const;

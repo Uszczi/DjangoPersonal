@@ -63,7 +63,7 @@ function WhiteboardsPage() {
   return (
     <>
       <PageHeader
-        title="Notatki"
+        title="Notatnik"
         actions={
           <>
             <Button variant="primary" onClick={() => void handleCreate("whiteboard")}>
