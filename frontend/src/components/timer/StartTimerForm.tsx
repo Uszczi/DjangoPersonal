@@ -7,11 +7,11 @@ import { timerLimitOptions } from "@personal/shared/timerLimit";
 import { Button, Select } from "@/design-system";
 import { askForTimerNotifications } from "@/lib/timerNotification";
 
-import { ProjectSelect } from "./ProjectSelect";
+import { NO_PROJECT, ProjectSelect } from "./ProjectSelect";
 import { TaskTitleInput } from "./TaskTitleInput";
 import { FormLabel } from "./TimerPanel";
 
-/** Starts a timer on a title, optionally with a limit; shown while no timer runs. */
+/** Starts a timer on a title, optionally with a project and a limit; shown while no timer runs. */
 export function StartTimerForm({ projects, tasks, defaultProjectId, onStart }: {
   projects: ProjectResponse[];
   tasks: TaskResponse[];
@@ -24,9 +24,14 @@ export function StartTimerForm({ projects, tasks, defaultProjectId, onStart }: {
   const [error, setError] = useState("");
 
   const projectId = form.projectId || defaultProjectId;
-  const suggestions = tasks
-    .filter((task) => task.projectId === Number(projectId))
-    .map((task) => task.title);
+  // Without a project the timer still runs on its title; suggest every task's title.
+  const suggestions = [
+    ...new Set(
+      tasks
+        .filter((task) => projectId === NO_PROJECT || task.projectId === Number(projectId))
+        .map((task) => task.title),
+    ),
+  ];
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -57,6 +62,7 @@ export function StartTimerForm({ projects, tasks, defaultProjectId, onStart }: {
             projects={projects}
             value={projectId}
             onChange={(id) => setForm({ projectId: id, title: "" })}
+            allowNone
           />
         </FormLabel>
         <FormLabel text="Zadanie">

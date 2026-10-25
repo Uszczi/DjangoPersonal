@@ -22,6 +22,9 @@ import { card, colors, common, form } from "../../src/theme";
 
 type EntryRange = "today" | "7" | "30" | "all";
 
+/** The project chip for starting a timer with no project (project ids start at 1). */
+const NO_PROJECT = 0;
+
 const RANGES: { value: EntryRange; label: string }[] = [
   { value: "today", label: "Dziś" },
   { value: "7", label: "7 dni" },
@@ -150,8 +153,10 @@ export default function TimeScreen() {
     if (minutesByDay.has(key)) minutesByDay.set(key, (minutesByDay.get(key) ?? 0) + entryMinutes(entry));
   }
 
+  // Without a project the timer runs on its title alone; suggestions come from every project.
   const chosenProjectId = startProjectId ?? defaultProject(projects)?.id ?? null;
-  const startTasks = tasks.filter((task) => task.projectId === chosenProjectId);
+  const startTasks =
+    chosenProjectId === NO_PROJECT ? tasks : tasks.filter((task) => task.projectId === chosenProjectId);
 
   if (pageError) {
     return (
@@ -203,7 +208,10 @@ export default function TimeScreen() {
             <Text style={form.label}>Projekt</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <ChipGroup
-                options={projects.map((project) => ({ value: project.id, label: project.name }))}
+                options={[
+                  { value: NO_PROJECT, label: "Bez projektu" },
+                  ...projects.map((project) => ({ value: project.id, label: project.name })),
+                ]}
                 value={chosenProjectId ?? undefined}
                 onChange={(projectId) => {
                   setStartProjectId(projectId);

@@ -375,6 +375,38 @@ describe('Time tracking', () => {
     expect(withinSummary.getByText('1 h 30 min')).toBeInTheDocument()
   })
 
+  test('user can start a timer without a project and gets every project’s titles as suggestions', async () => {
+    const planning = { id: 2, name: 'Planning', description: '', is_inbox: false }
+    const planningTask = { ...task, id: 8, title: 'Plan release', project_id: planning.id }
+    const runningEntry = { id: 5, task_id: null, title: 'Plan release', start: '2026-10-15T12:00:00Z', end: null }
+    fetchMock.mockImplementation((input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url
+      if (url === '/api/v1/projects/') return Promise.resolve(jsonResponse([inbox, planning]))
+      if (url === '/api/v1/timer/') return Promise.resolve(timerResponse(null))
+      if (url === '/api/v1/time-entries/') return Promise.resolve(jsonResponse([]))
+      if (url === '/api/v1/tasks/?all=true') return Promise.resolve(jsonResponse([task, planningTask]))
+      if (url === '/api/v1/timer/start/') return Promise.resolve(timerResponse(runningEntry))
+      return Promise.reject(new Error(`Unexpected request: ${url}`))
+    })
+    const user = userEvent.setup()
+
+    renderApp('/timer')
+    const timerSection = await screen.findByRole('region', { name: 'Bieżący timer' })
+    await user.selectOptions(within(timerSection).getByLabelText('Projekt'), 'Bez projektu')
+
+    const suggestions = [...timerSection.querySelectorAll('datalist option')].map((option) => option.getAttribute('value'))
+    expect(suggestions).toEqual(['Prepare outline', 'Plan release'])
+
+    await user.type(within(timerSection).getByLabelText('Zadanie'), 'Plan release')
+    await user.click(within(timerSection).getByRole('button', { name: 'Rozpocznij timer' }))
+
+    expect(await screen.findByText('TIMER AKTYWNY')).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      '/api/v1/timer/start/',
+      expect.objectContaining({ method: 'POST', body: JSON.stringify({ title: 'Plan release' }) }),
+    )
+  })
+
   test('user can start a timer with a time limit', async () => {
     const runningEntry = {
       id: 5,
