@@ -1,4 +1,5 @@
 import { cleanup, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import { renderApp } from '../renderApp'
@@ -83,5 +84,31 @@ describe('Whiteboard', () => {
     renderApp('/whiteboard/5')
     expect(await screen.findByRole('heading', { name: 'Bez tytułu' })).toBeInTheDocument()
     expect(screen.getByText('Zapisano')).toBeInTheDocument()
+  })
+
+  test('a rename the server refuses shows why and keeps the old name', async () => {
+    const detail = 'A whiteboard or note with this name already exists in this folder.'
+    fetchMock.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = requestUrl(input)
+      const method = init?.method ?? (input instanceof Request ? input.method : 'GET')
+      if (url.includes('/api/v1/whiteboards/5/')) {
+        if (method === 'PATCH') return Promise.resolve(jsonResponse({ detail }, 400))
+        return Promise.resolve(jsonResponse(wb))
+      }
+      if (url.startsWith('/api/v1/timer/')) return Promise.resolve(jsonResponse({ entry: null, server_now: '2026-10-15T12:00:00Z' }))
+      return Promise.resolve(jsonResponse([]))
+    })
+    const user = userEvent.setup()
+    renderApp('/whiteboard/5')
+
+    await user.click(await screen.findByRole('button', { name: 'Kliknij, aby zmienić nazwę' }))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'Plan{Enter}')
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(detail)
+    expect(screen.getByRole('heading', { name: 'Bez tytułu' })).toBeInTheDocument()
+    const patches = fetchMock.mock.calls.filter(([input, init]) => (init?.method ?? (input instanceof Request ? input.method : 'GET')) === 'PATCH')
+    expect(patches).toHaveLength(1)
   })
 })

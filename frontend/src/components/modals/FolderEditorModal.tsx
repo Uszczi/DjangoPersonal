@@ -32,6 +32,10 @@ export function FolderEditorModal({ folder = null, parent = null, onClose }: Fol
       setFormError("Podaj nazwę folderu.");
       return;
     }
+    if (/[\s/]/.test(trimmed)) {
+      setFormError("Nazwa folderu nie może zawierać spacji ani „/”.");
+      return;
+    }
 
     setIsSaving(true);
     setFormError("");
@@ -55,7 +59,7 @@ export function FolderEditorModal({ folder = null, parent = null, onClose }: Fol
       size="lg"
     >
       <form onSubmit={handleSubmit} noValidate>
-        <Field label="Nazwa folderu">
+        <Field label="Nazwa folderu" hint="Bez spacji i znaku „/”.">
           <TextInput
             maxLength={100}
             value={name}

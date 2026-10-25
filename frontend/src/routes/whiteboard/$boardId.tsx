@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@personal/shared/api";
 import {
   Button,
+  ErrorAlert,
   ErrorMessage,
   LoadingStatus,
   PageHeader,
@@ -52,6 +53,7 @@ function WhiteboardEditorPage() {
   const [name, setName] = useState("");
   const [editingName, setEditingName] = useState(false);
   const nameBeforeEdit = useRef(name);
+  const [nameError, setNameError] = useState("");
   const [history, setHistory] = useState<HistoryState | null>(null);
   const [tool, setTool] = useState<Tool>("select");
   const [loadError, setLoadError] = useState("");
@@ -107,22 +109,17 @@ function WhiteboardEditorPage() {
             content: payload.doc as unknown as Record<string, unknown>,
           },
         });
-      } else if (payload.kind === "markdown") {
-        await api.whiteboardsPartialUpdate({
-          id: Number(boardId),
-          patchedWhiteboardRequest: { content: { markdown: payload.markdown } },
-        });
       } else {
         await api.whiteboardsPartialUpdate({
           id: Number(boardId),
-          patchedWhiteboardRequest: { name: payload.name },
+          patchedWhiteboardRequest: { content: { markdown: payload.markdown } },
         });
       }
     },
     [boardId],
   );
 
-  const { saveState, schedule, flush, saveNow } = useAutosave(save);
+  const { saveState, schedule, flush } = useAutosave(save);
 
   async function saveName(newName: string) {
     const trimmed = newName.trim();
@@ -135,9 +132,21 @@ function WhiteboardEditorPage() {
       setEditingName(false);
       return;
     }
-    saveNow({ kind: "name", name: trimmed });
     setName(trimmed);
     setEditingName(false);
+    setNameError("");
+    try {
+      // Not through autosave: a taken name must come back as a message, not "Błąd zapisu".
+      const updated = await api.whiteboardsPartialUpdate({
+        id: Number(boardId),
+        patchedWhiteboardRequest: { name: trimmed },
+      });
+      setName(updated.name);
+      nameBeforeEdit.current = updated.name;
+    } catch (error) {
+      setName(nameBeforeEdit.current);
+      setNameError(await apiErrorMessage(error));
+    }
   }
 
   function handleMarkdownChange(value: string) {
@@ -245,6 +254,7 @@ function WhiteboardEditorPage() {
           </>
         }
       />
+      {nameError && <ErrorAlert>{nameError}</ErrorAlert>}
       {kind === "markdown" ? (
         <>
           <div

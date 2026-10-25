@@ -23,24 +23,43 @@ def test_folder_name_may_not_be_blank(post_json: Any) -> None:
     assert response.status_code in (HTTPStatus.BAD_REQUEST, HTTPStatus.UNPROCESSABLE_ENTITY)
 
 
-def test_folder_names_are_unique_regardless_of_case(post_json: Any) -> None:
+def test_folder_names_are_unique(post_json: Any) -> None:
     post_json('/api/v1/folders/', {'name': 'Praca'})
 
-    response = post_json('/api/v1/folders/', {'name': 'PRACA'})
+    response = post_json('/api/v1/folders/', {'name': ' Praca '})
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response.json()['detail'] == 'A folder with this name already exists.'
 
 
-def test_folders_are_listed_alphabetically_ignoring_case(
-    post_json: Any, api_client: Any
-) -> None:
+def test_folder_names_differing_only_in_case_are_distinct(post_json: Any) -> None:
+    post_json('/api/v1/folders/', {'name': 'Praca'})
+
+    response = post_json('/api/v1/folders/', {'name': 'PRACA'})
+
+    assert response.status_code == HTTPStatus.CREATED
+
+
+def test_folders_are_listed_by_name(post_json: Any, api_client: Any) -> None:
     for name in ('zakupy', 'Praca', 'archiwum'):
         post_json('/api/v1/folders/', {'name': name})
 
     listing = api_client.get('/api/v1/folders/').json()
 
-    assert [folder['name'] for folder in listing] == ['archiwum', 'Praca', 'zakupy']
+    assert [folder['name'] for folder in listing] == sorted(['zakupy', 'Praca', 'archiwum'])
+
+
+def test_folder_names_may_not_contain_spaces_or_slashes(
+    post_json: Any, patch_json: Any
+) -> None:
+    folder = post_json('/api/v1/folders/', {'name': ' Praca '}).json()
+
+    for name in ('Klient A', 'Klient\tA', 'Praca/2026'):
+        created = post_json('/api/v1/folders/', {'name': name})
+        renamed = patch_json(f"/api/v1/folders/{folder['id']}/", {'name': name})
+        for response in (created, renamed):
+            assert response.status_code == HTTPStatus.BAD_REQUEST
+            assert response.json()['detail'] == 'A folder name may not contain spaces or "/".'
 
 
 def test_folder_can_be_renamed(post_json: Any, patch_json: Any) -> None:
@@ -57,7 +76,7 @@ def test_renaming_follows_the_same_name_rules(post_json: Any, patch_json: Any) -
     folder = post_json('/api/v1/folders/', {'name': 'Praca'}).json()
     url = f"/api/v1/folders/{folder['id']}/"
 
-    assert patch_json(url, {'name': 'dom'}).status_code == HTTPStatus.BAD_REQUEST
+    assert patch_json(url, {'name': 'Dom'}).status_code == HTTPStatus.BAD_REQUEST
     assert patch_json(url, {'name': ' '}).status_code in (
         HTTPStatus.BAD_REQUEST,
         HTTPStatus.UNPROCESSABLE_ENTITY,
@@ -133,11 +152,11 @@ def _folder(post_json: Any, name: str, parent: dict[str, Any] | None = None) -> 
 def test_folder_can_be_created_inside_another(post_json: Any, api_client: Any) -> None:
     work = _folder(post_json, 'Praca')
 
-    child = _folder(post_json, 'Klient A', work)
+    child = _folder(post_json, 'Klient-A', work)
 
     assert child['parent_id'] == work['id']
     listing = {f['name']: f['parent_id'] for f in api_client.get('/api/v1/folders/').json()}
-    assert listing == {'Praca': None, 'Klient A': work['id']}
+    assert listing == {'Praca': None, 'Klient-A': work['id']}
 
 
 def test_folder_names_are_unique_among_siblings_only(post_json: Any) -> None:
@@ -149,7 +168,7 @@ def test_folder_names_are_unique_among_siblings_only(post_json: Any) -> None:
     _folder(post_json, 'Notatki', home)
     _folder(post_json, 'Notatki')
 
-    clash = post_json('/api/v1/folders/', {'name': 'NOTATKI', 'parent_id': work['id']})
+    clash = post_json('/api/v1/folders/', {'name': 'Notatki', 'parent_id': work['id']})
     assert clash.status_code == HTTPStatus.BAD_REQUEST
     assert clash.json()['detail'] == 'A folder with this name already exists.'
 
@@ -174,7 +193,7 @@ def test_moving_a_folder_checks_names_in_its_new_place(
 ) -> None:
     work = _folder(post_json, 'Praca')
     _folder(post_json, 'Plany', work)
-    loose = _folder(post_json, 'plany')
+    loose = _folder(post_json, 'Plany')
 
     response = patch_json(f"/api/v1/folders/{loose['id']}/", {'parent_id': work['id']})
 

@@ -194,3 +194,86 @@ def test_search_sees_only_own_notatki(make_user: Any, client_for: Any) -> None:
 def test_search_requires_authentication(anon_client: Any) -> None:
     response = anon_client.get('/api/v1/whiteboards/search/?q=x')
     assert response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN)
+
+
+DUPLICATE = 'A whiteboard or note with this name already exists in this folder.'
+
+
+def test_names_are_unique_in_a_folder_across_kinds(post_json: Any) -> None:
+    folder = post_json('/api/v1/folders/', {'name': 'Praca'}).json()
+    post_json('/api/v1/whiteboards/', {'name': 'Plan', 'folder_id': folder['id']})
+
+    clash = post_json(
+        '/api/v1/whiteboards/', {'kind': 'markdown', 'name': ' Plan ', 'folder_id': folder['id']}
+    )
+
+    assert clash.status_code == HTTPStatus.BAD_REQUEST
+    assert clash.json()['detail'] == DUPLICATE
+
+
+def test_names_differing_only_in_case_are_distinct(post_json: Any) -> None:
+    post_json('/api/v1/whiteboards/', {'name': 'Plan'})
+
+    response = post_json('/api/v1/whiteboards/', {'name': 'PLAN'})
+
+    assert response.status_code == HTTPStatus.CREATED
+    assert response.json()['name'] == 'PLAN'
+
+
+def test_the_same_name_may_sit_in_different_folders(post_json: Any) -> None:
+    folder = post_json('/api/v1/folders/', {'name': 'Praca'}).json()
+    post_json('/api/v1/whiteboards/', {'name': 'Plan'})
+
+    response = post_json('/api/v1/whiteboards/', {'name': 'Plan', 'folder_id': folder['id']})
+
+    assert response.status_code == HTTPStatus.CREATED
+
+
+def test_untitled_boards_are_numbered_instead_of_clashing(post_json: Any) -> None:
+    folder = post_json('/api/v1/folders/', {'name': 'Praca'}).json()
+    names = [post_json('/api/v1/whiteboards/', {}).json()['name'] for _ in range(3)]
+    in_folder = post_json(
+        '/api/v1/whiteboards/', {'name': 'Bez tytułu', 'folder_id': folder['id']}
+    ).json()
+
+    assert names == ['Bez tytułu', 'Bez tytułu 2', 'Bez tytułu 3']
+    assert in_folder['name'] == 'Bez tytułu'
+
+
+def test_renaming_checks_the_folder(post_json: Any, patch_json: Any) -> None:
+    post_json('/api/v1/whiteboards/', {'name': 'Plan'})
+    other = post_json('/api/v1/whiteboards/', {'name': 'Szkic'}).json()
+
+    clash = patch_json(f"/api/v1/whiteboards/{other['id']}/", {'name': 'Plan'})
+    other_case = patch_json(f"/api/v1/whiteboards/{other['id']}/", {'name': 'plan'})
+
+    assert clash.status_code == HTTPStatus.BAD_REQUEST
+    assert clash.json()['detail'] == DUPLICATE
+    assert other_case.status_code == HTTPStatus.OK
+    assert other_case.json()['name'] == 'plan'
+
+
+def test_moving_checks_names_in_the_new_folder(
+    api_client: Any, post_json: Any, patch_json: Any
+) -> None:
+    folder = post_json('/api/v1/folders/', {'name': 'Praca'}).json()
+    post_json('/api/v1/whiteboards/', {'name': 'Plan', 'folder_id': folder['id']})
+    loose = post_json('/api/v1/whiteboards/', {'name': 'Plan'}).json()
+
+    clash = patch_json(f"/api/v1/whiteboards/{loose['id']}/", {'folder_id': folder['id']})
+    renamed_and_moved = patch_json(
+        f"/api/v1/whiteboards/{loose['id']}/", {'name': 'Plan B', 'folder_id': folder['id']}
+    )
+
+    assert clash.status_code == HTTPStatus.BAD_REQUEST
+    assert clash.json()['detail'] == DUPLICATE
+    assert renamed_and_moved.status_code == HTTPStatus.OK
+    assert renamed_and_moved.json()['folder_id'] == folder['id']
+
+
+def test_names_are_unique_per_user(make_user: Any, client_for: Any) -> None:
+    client_for(make_user('usera')).post('/api/v1/whiteboards/', {'name': 'Plan'})
+
+    response = client_for(make_user('userb')).post('/api/v1/whiteboards/', {'name': 'Plan'})
+
+    assert response.status_code == HTTPStatus.CREATED

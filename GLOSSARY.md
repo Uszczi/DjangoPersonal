@@ -26,13 +26,13 @@ The single Time entry that has a start but no end. At most one running timer exi
 An optional length chosen when starting a timer (stored as the entry's planned end). When it passes, the timer stops by itself and the Time entry ends exactly at the planned end, even if nobody is watching.
 
 **Whiteboard**:
-A named space that holds one freeform drawing — freehand strokes, shapes, and sticky notes. A user may keep several Whiteboards.
+A named space that holds one freeform drawing — freehand strokes, shapes, and sticky notes. A user may keep several Whiteboards. Its name is trimmed and unique (case matters: "Plan" and "plan" are different names) among the Whiteboards and Notatki in the same Folder (or at the top level); a new one without a name becomes "Bez tytułu", numbered ("Bez tytułu 2", …) when that is taken.
 
 **Notatki** (Notes):
 A Whiteboard whose content is a Markdown document instead of a drawing. Shares the Whiteboard API and editor; only the payload differs.
 
 **Folder**:
-A named group of Whiteboards, Notatki and other Folders (subfolders). Has a required name (trimmed, unique case-insensitively among the Folders that share a parent). Each Whiteboard, Notatka and Folder sits in at most one Folder; one without a Folder stays at the top level of the Notatnik. A Folder can't be moved into itself or one of its subfolders. Deleting a Folder cascades to its subfolders and every Whiteboard and Notatka in them.
+A named group of Whiteboards, Notatki and other Folders (subfolders). Has a required name: trimmed, with no spaces and no "/", and unique among the Folders that share a parent (case matters, so "Praca" and "praca" are different names). Each Whiteboard, Notatka and Folder sits in at most one Folder; one without a Folder stays at the top level of the Notatnik. A Folder can't be moved into itself or one of its subfolders. Deleting a Folder cascades to its subfolders and every Whiteboard and Notatka in them.
 _Avoid_: Directory, Katalog, Group, Grupa, Tag
 
 **Notatnik**:

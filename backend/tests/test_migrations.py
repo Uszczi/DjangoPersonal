@@ -6,7 +6,7 @@ import pytest
 from alembic.autogenerate import compare_metadata
 from alembic.config import Config
 from alembic.migration import MigrationContext
-from sqlalchemy import Engine, create_engine, inspect
+from sqlalchemy import Engine, create_engine, inspect, text
 
 from alembic import command
 from personal.infra.models import Base
@@ -56,9 +56,87 @@ def test_the_domain_constraints_exist_by_name(migrated: Engine) -> None:
     folder_indexes = {i['name']: i for i in schema.get_indexes('folders')}
     assert folder_indexes['folder_name_unique_at_top_level']['unique']
     assert folder_indexes['folder_name_unique_per_parent']['unique']
+    whiteboard_indexes = {i['name']: i for i in schema.get_indexes('whiteboards')}
+    assert whiteboard_indexes['whiteboard_name_unique_at_top_level']['unique']
+    assert whiteboard_indexes['whiteboard_name_unique_per_folder']['unique']
+
+
+def test_existing_duplicate_whiteboard_names_are_numbered(alembic_config: Config) -> None:
+    command.upgrade(alembic_config, '0009')
+    engine = create_engine(alembic_config.get_main_option('sqlalchemy.url') or '')
+    board = (
+        "INSERT INTO whiteboards (id, user_id, folder_id, kind, name, content, created_at, updated_at)"
+        " VALUES (:id, :user, :folder, 'whiteboard', :name, '{}', '2026-01-01', '2026-01-01')"
+    )
+    with engine.begin() as connection:
+        for user in (1, 2):
+            connection.execute(
+                text(
+                    "INSERT INTO users (id, username, password, is_active, is_staff, date_joined)"
+                    " VALUES (:id, :name, 'x', 1, 0, '2026-01-01')"
+                ),
+                {'id': user, 'name': f'user{user}'},
+            )
+        connection.execute(
+            text(
+                "INSERT INTO folders (id, user_id, name, normalized_name, created_at)"
+                " VALUES (1, 1, 'Praca', 'praca', '2026-01-01')"
+            )
+        )
+        for id_, user, folder, name in [
+            (1, 1, None, 'Plan'),
+            (2, 1, None, ' Plan '),
+            (6, 1, None, 'plan'),
+            (3, 1, None, 'Plan 2'),
+            (4, 1, 1, 'Plan'),
+            (5, 2, None, 'Plan'),
+        ]:
+            connection.execute(
+                text(board), {'id': id_, 'user': user, 'folder': folder, 'name': name}
+            )
+
+    command.upgrade(alembic_config, 'head')
+
+    with engine.connect() as connection:
+        rows = connection.execute(text('SELECT id, name FROM whiteboards')).all()
+    names: dict[int, str] = {row[0]: row[1] for row in rows}
+    assert names == {1: 'Plan', 2: 'Plan 3', 3: 'Plan 2', 4: 'Plan', 5: 'Plan', 6: 'plan'}
 
 
 def test_downgrade_removes_everything(alembic_config: Config, migrated: Engine) -> None:
     command.downgrade(alembic_config, 'base')
 
     assert inspect(migrated).get_table_names() == ['alembic_version']
+
+
+def test_folder_names_lose_spaces_and_slashes(alembic_config: Config) -> None:
+    command.upgrade(alembic_config, '0010')
+    engine = create_engine(alembic_config.get_main_option('sqlalchemy.url') or '')
+    folder = (
+        "INSERT INTO folders (id, user_id, parent_id, name, normalized_name, created_at)"
+        " VALUES (:id, 1, :parent, :name, :key, '2026-01-01')"
+    )
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO users (id, username, password, is_active, is_staff, date_joined)"
+                " VALUES (1, 'user1', 'x', 1, 0, '2026-01-01')"
+            )
+        )
+        for id_, parent, name in [
+            (1, None, 'Klient-A'),
+            (2, None, 'Klient A'),
+            (3, None, 'Praca / 2026'),
+            (4, 1, 'Klient A'),
+        ]:
+            connection.execute(
+                text(folder),
+                {'id': id_, 'parent': parent, 'name': name, 'key': name.casefold()},
+            )
+
+    command.upgrade(alembic_config, 'head')
+
+    with engine.connect() as connection:
+        rows = connection.execute(text('SELECT id, name FROM folders')).all()
+    names: dict[int, str] = {row[0]: row[1] for row in rows}
+    assert names == {1: 'Klient-A', 2: 'Klient-A-2', 3: 'Praca-2026', 4: 'Klient-A'}

@@ -15,13 +15,13 @@ class FolderRepository:
         self.session = session
 
     def list_all(self, *, user: User) -> list[FolderModel]:
-        """Every folder for ``user``, alphabetically regardless of case."""
-        query = (
-            select(FolderModel)
-            .where(FolderModel.user_id == user.id)
-            .order_by(FolderModel.normalized_name, FolderModel.id)
-        )
-        return list(self.session.scalars(query))
+        """Every folder for ``user``, by name character by character (so case matters).
+
+        Sorted here, not in SQL: Postgres collations ignore case and SQLite's don't,
+        and the frontend keeps the same order after its own edits.
+        """
+        query = select(FolderModel).where(FolderModel.user_id == user.id)
+        return sorted(self.session.scalars(query), key=lambda folder: (folder.name, folder.id))
 
     def find(self, folder_id: int, *, user: User) -> FolderModel | None:
         query = select(FolderModel).where(
@@ -38,15 +38,15 @@ class FolderRepository:
 
     def name_taken(
         self,
-        name_key: str,
+        name: str,
         *,
         user: User,
         parent_id: int | None,
         exclude: FolderModel | None = None,
     ) -> bool:
-        """Whether a sibling under ``parent_id`` (``None``: the top level) has this name."""
+        """Whether a sibling under ``parent_id`` (``None``: the top level) has exactly this name."""
         query = select(FolderModel.id).where(
-            FolderModel.normalized_name == name_key,
+            FolderModel.name == name,
             FolderModel.user_id == user.id,
             FolderModel.parent_id.is_(None)
             if parent_id is None

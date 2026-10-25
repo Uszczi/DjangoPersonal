@@ -22,6 +22,14 @@ class DuplicateFolderName(RepositoryError):
     """A unique-constraint clash: another folder already uses this name."""
 
 
+class InvalidFolderName(RepositoryError):
+    """A folder name with a space (or other whitespace) or a ``/`` in it."""
+
+
+class DuplicateWhiteboardName(RepositoryError):
+    """A unique-constraint clash: another Whiteboard or Notatka in the same Folder uses this name."""
+
+
 class DuplicateCategoryName(RepositoryError):
     """A unique-constraint clash: another category already uses this name."""
 

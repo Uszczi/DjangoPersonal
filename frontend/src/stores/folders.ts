@@ -23,10 +23,9 @@ type FoldersState = {
 
 const loadGuard = createLoadGuard();
 
+/** The server's order: by name, character by character, so case matters. */
 function byName(folders: FolderResponse[]) {
-  return [...folders].sort((a, b) =>
-    a.name.toLocaleLowerCase().localeCompare(b.name.toLocaleLowerCase()),
-  );
+  return [...folders].sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : a.id - b.id));
 }
 
 export const useFoldersStore = create<FoldersState>((set, get) => ({

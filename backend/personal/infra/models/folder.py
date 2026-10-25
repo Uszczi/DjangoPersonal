@@ -4,7 +4,7 @@ from typing import Any
 from sqlalchemy import ForeignKey, Index, String, event, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from personal.infra.rules import folder_name_key, normalize_folder_name
+from personal.infra.rules import ensure_valid_folder_name, normalize_folder_name
 
 from .base import Base, UTCDateTime, utc_now
 from .user import User
@@ -13,8 +13,9 @@ from .user import User
 class Folder(Base):
     """A group of Whiteboards, Notatki and other Folders in the Notatnik.
 
-    Names are unique among siblings: two partial indexes, because a plain unique
-    constraint treats every top-level ``NULL`` parent as distinct.
+    Names have no spaces or ``/`` and are unique among siblings, with case
+    mattering: two partial indexes, because a plain unique constraint treats every
+    top-level ``NULL`` parent as distinct.
     """
 
     __tablename__ = 'folders'
@@ -22,7 +23,7 @@ class Folder(Base):
         Index(
             'folder_name_unique_at_top_level',
             'user_id',
-            'normalized_name',
+            'name',
             unique=True,
             sqlite_where=text('parent_id IS NULL'),
             postgresql_where=text('parent_id IS NULL'),
@@ -30,7 +31,7 @@ class Folder(Base):
         Index(
             'folder_name_unique_per_parent',
             'parent_id',
-            'normalized_name',
+            'name',
             unique=True,
             sqlite_where=text('parent_id IS NOT NULL'),
             postgresql_where=text('parent_id IS NOT NULL'),
@@ -44,7 +45,6 @@ class Folder(Base):
         ForeignKey('folders.id', ondelete='CASCADE'), index=True, default=None
     )
     name: Mapped[str] = mapped_column(String(100))
-    normalized_name: Mapped[str] = mapped_column(String(100))
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utc_now)
 
     user: Mapped[User] = relationship()
@@ -58,4 +58,4 @@ class Folder(Base):
 @event.listens_for(Folder, 'before_update')
 def _normalize_folder(mapper: Any, connection: Any, folder: Folder) -> None:
     folder.name = normalize_folder_name(folder.name)
-    folder.normalized_name = folder_name_key(folder.name)
+    ensure_valid_folder_name(folder.name)

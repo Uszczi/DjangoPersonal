@@ -40,7 +40,7 @@ function fakeBackend(initial: { folders?: Folder[]; boards?: Board[] } = {}) {
 
   function nameTaken(name: string, parentId: number | null, except?: number) {
     return folders.some(
-      (f) => f.id !== except && f.parent_id === parentId && f.name.toLowerCase() === name.trim().toLowerCase(),
+      (f) => f.id !== except && f.parent_id === parentId && f.name === name.trim(),
     )
   }
   function subtree(id: number) {
@@ -90,7 +90,7 @@ function fakeBackend(initial: { folders?: Folder[]; boards?: Board[] } = {}) {
         return jsonResponse(folder, 201)
       }
       return jsonResponse(
-        [...folders].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase())),
+        [...folders].sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : a.id - b.id)),
       )
     }
     const folderMatch = path.match(/\/folders\/(\d+)\/$/)
@@ -330,10 +330,29 @@ describe('Notatnik folders', () => {
     await screen.findByRole('region', { name: 'Folder: Praca' })
 
     await user.click(screen.getByRole('button', { name: 'Nowy folder' }))
-    await user.type(await screen.findByLabelText('Nazwa folderu'), 'praca')
+    await user.type(await screen.findByLabelText('Nazwa folderu'), 'Praca')
     await user.click(screen.getByRole('button', { name: 'Utwórz folder' }))
 
     expect(await screen.findByText('A folder with this name already exists.')).toBeInTheDocument()
+  })
+
+  test('a folder name with a space or "/" is refused before it is sent', async () => {
+    fetchMock.mockImplementation(fakeBackend({ folders: [work] }))
+    const user = userEvent.setup()
+
+    renderApp('/whiteboard')
+    await screen.findByRole('region', { name: 'Folder: Praca' })
+    await user.click(screen.getByRole('button', { name: 'Nowy folder' }))
+    const input = await screen.findByLabelText('Nazwa folderu')
+
+    for (const name of ['Klient A', 'Praca/2026']) {
+      await user.clear(input)
+      await user.type(input, name)
+      await user.click(screen.getByRole('button', { name: 'Utwórz folder' }))
+      expect(await screen.findByRole('alert')).toHaveTextContent('Nazwa folderu nie może zawierać spacji ani „/”.')
+    }
+    const posts = fetchMock.mock.calls.filter(([input, init]) => (init?.method ?? (input instanceof Request ? input.method : 'GET')) === 'POST')
+    expect(posts).toHaveLength(0)
   })
 
   test('the pencil renames a folder', async () => {
@@ -581,15 +600,15 @@ describe('Notatnik folders', () => {
     renderApp('/whiteboard')
     await user.click(await screen.findByRole('button', { name: 'Nowy folder w folderze: Praca' }))
     expect(await screen.findByRole('dialog', { name: 'Nowy folder w „Praca”' })).toBeInTheDocument()
-    await user.type(screen.getByLabelText('Nazwa folderu'), 'Klient A')
+    await user.type(screen.getByLabelText('Nazwa folderu'), 'Klient-A')
     await user.click(screen.getByRole('button', { name: 'Utwórz folder' }))
     await vi.waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
     // Only top-level folders show while the parent is collapsed.
-    expect(screen.queryByRole('region', { name: 'Folder: Klient A' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Folder: Klient-A' })).not.toBeInTheDocument()
     const parent = screen.getByRole('region', { name: 'Folder: Praca' })
     await user.click(within(parent).getByRole('button', { name: 'Praca' }))
-    expect(within(parent).getByRole('region', { name: 'Folder: Klient A' })).toBeInTheDocument()
+    expect(within(parent).getByRole('region', { name: 'Folder: Klient-A' })).toBeInTheDocument()
   })
 
   test('a subfolder may share a name with a folder elsewhere', async () => {

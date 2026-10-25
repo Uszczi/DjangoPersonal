@@ -2,8 +2,8 @@ from personal.core.shared.errors import DomainError, NotFound
 from personal.core.whiteboard.contracts import FolderRequest, PatchedFolderRequest
 from personal.infra.models import Folder as FolderModel
 from personal.infra.models import User
-from personal.infra.repo import DuplicateFolderName, FolderRepository
-from personal.infra.rules import folder_name_key, normalize_folder_name
+from personal.infra.repo import DuplicateFolderName, FolderRepository, InvalidFolderName
+from personal.infra.rules import ensure_valid_folder_name, normalize_folder_name
 
 DUPLICATE_NAME = 'A folder with this name already exists.'
 INTO_ITSELF = 'A folder cannot be moved into itself or one of its subfolders.'
@@ -24,11 +24,14 @@ def _validate_name(
     *,
     user: User,
 ) -> str:
-    """Names are unique among the Folders that share a parent."""
+    """Names have no spaces or "/" and are unique among the Folders that share a
+    parent; case matters."""
     name = normalize_folder_name(name)
-    if repository.name_taken(
-        folder_name_key(name), user=user, parent_id=parent_id, exclude=current
-    ):
+    try:
+        ensure_valid_folder_name(name)
+    except InvalidFolderName as error:
+        raise DomainError(str(error)) from error
+    if repository.name_taken(name, user=user, parent_id=parent_id, exclude=current):
         raise DomainError(DUPLICATE_NAME)
     return name
 

@@ -10,7 +10,7 @@ from datetime import UTC, datetime, time
 from datetime import date as date_type
 from typing import Any
 
-from personal.infra.errors import InboxProtected
+from personal.infra.errors import InboxProtected, InvalidFolderName
 
 DEFAULT_PROJECT_STATUSES: tuple[str, ...] = ("Todo", "Zrobione")
 DEFAULT_TERMINAL_STATUS = DEFAULT_PROJECT_STATUSES[-1]
@@ -120,8 +120,21 @@ def normalize_folder_name(name: str) -> str:
     return name.strip()
 
 
-def folder_name_key(name: str) -> str:
-    return normalize_folder_name(name).casefold()
+INVALID_FOLDER_NAME = 'A folder name may not contain spaces or "/".'
+
+
+def ensure_valid_folder_name(name: str) -> None:
+    """A folder name is one word: no spaces (or other whitespace) and no ``/``."""
+    if '/' in name or any(character.isspace() for character in name):
+        raise InvalidFolderName(INVALID_FOLDER_NAME)
+
+
+#: The name a Whiteboard or Notatka gets when none is given; repeats are numbered.
+UNTITLED_WHITEBOARD_NAME = 'Bez tytułu'
+
+
+def normalize_whiteboard_name(name: str) -> str:
+    return name.strip()
 
 
 def day_start(day: date_type) -> datetime:

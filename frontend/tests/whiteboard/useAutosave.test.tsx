@@ -117,10 +117,10 @@ describe('useAutosave', () => {
     const { result } = renderHook(() => useAutosave(save))
 
     act(() => {
-      result.current.saveNow({ kind: 'name', name: 'Nowa nazwa' })
+      result.current.saveNow({ kind: 'markdown', markdown: 'Nowa treść' })
     })
     expect(save).toHaveBeenCalledTimes(1)
-    expect(save).toHaveBeenCalledWith({ kind: 'name', name: 'Nowa nazwa' })
+    expect(save).toHaveBeenCalledWith({ kind: 'markdown', markdown: 'Nowa treść' })
 
     await act(async () => {})
     expect(result.current.saveState).toBe('saved')
