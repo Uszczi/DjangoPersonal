@@ -395,6 +395,14 @@ describe('Time tracking', () => {
     })
     const user = userEvent.setup()
 
+    const arc = vi.fn()
+    const fakeContext = new Proxy({ arc } as Record<string | symbol, unknown>, {
+      get: (target, key) => (key in target ? target[key] : vi.fn()),
+      set: () => true,
+    })
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
+      fakeContext as unknown as CanvasRenderingContext2D,
+    )
     const requestPermission = vi.fn().mockResolvedValue('granted')
     vi.stubGlobal('Notification', Object.assign(vi.fn(), { permission: 'default', requestPermission }))
 
@@ -407,6 +415,9 @@ describe('Time tracking', () => {
     expect(await screen.findByText('0:25:00')).toBeInTheDocument()
     expect(screen.getByText(/^Pozostało · zatrzyma się o/)).toBeInTheDocument()
     expect(requestPermission).toHaveBeenCalledOnce()
+    // The countdown dial is drawn, with the wedge spanning the whole limit.
+    expect(timerSection.querySelector('canvas')).toBeInTheDocument()
+    expect(arc).toHaveBeenCalledWith(expect.any(Number), expect.any(Number), expect.any(Number), -Math.PI / 2, (3 * Math.PI) / 2)
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/v1/timer/start/',
       expect.objectContaining({

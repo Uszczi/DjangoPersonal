@@ -11,6 +11,7 @@ import { timerRemaining } from "@personal/shared/timerLimit";
 import { Button } from "@/design-system";
 import { notifyTimerFinished } from "@/lib/timerNotification";
 
+import { CountdownDial } from "./CountdownDial";
 import { StartTimerForm } from "./StartTimerForm";
 import { TimerPanel } from "./TimerPanel";
 
@@ -57,18 +58,28 @@ export function CurrentTimerPanel({ runningEntry, runningTitle, now, projects, t
     <TimerPanel label="Bieżący timer">
       {runningEntry ? (
         <>
-          <p className="font-utility text-[11px] font-semibold tracking-[0.08em] text-signal">
-            TIMER AKTYWNY
-          </p>
-          <p className="mt-1 font-display text-[20px] font-bold text-ink">{runningTitle}</p>
-          <p className="mt-2 font-utility text-[36px] font-bold tracking-tight text-ink">
-            {formatElapsed(remaining ?? now - runningEntry.start.getTime())}
-          </p>
-          {plannedEnd && (
-            <p className="text-[13px] text-muted">
-              Pozostało · zatrzyma się o {formatClock(plannedEnd)}
-            </p>
-          )}
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-utility text-[11px] font-semibold tracking-[0.08em] text-signal">
+                TIMER AKTYWNY
+              </p>
+              <p className="mt-1 font-display text-[20px] font-bold text-ink">{runningTitle}</p>
+              <p className="mt-2 font-utility text-[36px] font-bold tracking-tight text-ink">
+                {formatElapsed(remaining ?? now - runningEntry.start.getTime())}
+              </p>
+              {plannedEnd && (
+                <p className="text-[13px] text-muted">
+                  Pozostało · zatrzyma się o {formatClock(plannedEnd)}
+                </p>
+              )}
+            </div>
+            {plannedEnd && remaining != null && (
+              <CountdownDial
+                remaining={remaining}
+                total={plannedEnd.getTime() - runningEntry.start.getTime()}
+              />
+            )}
+          </div>
           <div className="mt-4 flex items-center gap-3">
             <Button variant="primary" onClick={() => void stopTimer()}>
               Zatrzymaj timer
@@ -82,7 +93,7 @@ export function CurrentTimerPanel({ runningEntry, runningTitle, now, projects, t
         <>
           {finishedTitle && (
             <p
-              className="mb-4 rounded border border-signal bg-signal-pale px-3 py-2 text-[14px] font-semibold text-ink"
+              className="mb-4 rounded border border-accent bg-wash px-3 py-2 text-[14px] font-semibold text-ink"
               role="status"
             >
               Czas minął: {finishedTitle}

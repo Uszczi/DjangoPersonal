@@ -12,3 +12,8 @@ if (!HTMLDialogElement.prototype.showModal) {
     this.removeAttribute('open')
   }
 }
+
+// jsdom has no canvas without the native `canvas` package and logs on every
+// getContext(); return null quietly instead (components must cope with that).
+// Tests that check drawing spy on getContext themselves.
+HTMLCanvasElement.prototype.getContext = (() => null) as typeof HTMLCanvasElement.prototype.getContext
