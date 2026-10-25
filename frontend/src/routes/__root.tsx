@@ -26,7 +26,7 @@ function App() {
     <div className="flex min-h-screen flex-col">
       <Navbar />
 
-      <main className="mx-auto w-full max-w-app flex-1 sm:p-8">
+      <main className="mx-auto w-full max-w-app flex-1 p-2 sm:p-8">
         <Outlet />
       </main>
 
