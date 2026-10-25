@@ -13,6 +13,7 @@ import {
   formatDuration,
   formatElapsed,
 } from "@personal/shared/timeFormat";
+import { timerLimitOptions, timerRemaining } from "@personal/shared/timerLimit";
 
 import { Button } from "../../src/Button";
 import { ChipGroup } from "../../src/ChipGroup";
@@ -49,10 +50,13 @@ export default function TimeScreen() {
   const startTimer = useTimerStore((state) => state.startTimer);
   const stopTimer = useTimerStore((state) => state.stopTimer);
   const discardTimer = useTimerStore((state) => state.discardTimer);
+  const refreshTimer = useTimerStore((state) => state.refreshTimer);
 
   const [nowTick, setNowTick] = useState(() => Date.now());
   const [startProjectId, setStartProjectId] = useState<number | null>(null);
   const [startTitle, setStartTitle] = useState("");
+  /** Minutes, or 0 for a timer that runs until stopped. */
+  const [startLimit, setStartLimit] = useState(0);
   const [startError, setStartError] = useState("");
   const [isBusy, setIsBusy] = useState(false);
   const [entryRange, setEntryRange] = useState<EntryRange>("today");
@@ -74,6 +78,16 @@ export default function TimeScreen() {
     return () => clearInterval(interval);
   }, [runningEntry]);
 
+  // The server stops a limited timer by itself; fetch the new state just after
+  // that moment (the extra second covers clock jitter).
+  const plannedEndMs = runningEntry?.plannedEnd?.getTime() ?? null;
+  useEffect(() => {
+    if (plannedEndMs == null) return;
+    const delay = Math.max(0, plannedEndMs - (Date.now() + serverOffset)) + 1000;
+    const timeout = setTimeout(() => void refreshTimer(), delay);
+    return () => clearTimeout(timeout);
+  }, [plannedEndMs, serverOffset, refreshTimer]);
+
   async function refresh() {
     setIsRefreshing(true);
     await loadData();
@@ -90,7 +104,7 @@ export default function TimeScreen() {
     setStartError("");
     setIsBusy(true);
     try {
-      await startTimer(title);
+      await startTimer(title, startLimit || undefined);
       setStartTitle("");
       setNowTick(Date.now());
     } catch (error) {
@@ -163,8 +177,16 @@ export default function TimeScreen() {
             <Text style={[card.kicker, { color: colors.success }]}>TIMER AKTYWNY</Text>
             <Text style={card.title}>{entryTitle(runningEntry)}</Text>
             <Text style={styles.elapsed}>
-              {formatElapsed(nowTick + serverOffset - runningEntry.start.getTime())}
+              {formatElapsed(
+                timerRemaining(runningEntry, nowTick + serverOffset) ??
+                  nowTick + serverOffset - runningEntry.start.getTime(),
+              )}
             </Text>
+            {runningEntry.plannedEnd && (
+              <Text style={common.muted}>
+                Pozostało · zatrzyma się o {formatClock(runningEntry.plannedEnd)}
+              </Text>
+            )}
             <View style={form.actions}>
               <Button label="Zatrzymaj" isBusy={isBusy} onPress={() => void run(stopTimer)} />
               <Button
@@ -200,6 +222,21 @@ export default function TimeScreen() {
               onSubmitEditing={() => void start()}
             />
             <TitleSuggestions tasks={startTasks} query={startTitle} onPick={setStartTitle} />
+            <Text style={form.label}>Limit czasu</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <ChipGroup
+                options={[
+                  { value: 0, label: "Bez limitu" },
+                  ...timerLimitOptions.map((option) => ({
+                    value: option.minutes,
+                    label: option.label,
+                  })),
+                ]}
+                value={startLimit}
+                onChange={setStartLimit}
+                nowrap
+              />
+            </ScrollView>
             {startError !== "" && <Text style={form.error}>{startError}</Text>}
             <View style={form.actions}>
               <Button label="Rozpocznij timer" isBusy={isBusy} onPress={() => void start()} />

@@ -27,7 +27,10 @@ type TimerStoreState = {
   editingEntry: TimeEntryResponse | null;
   actionError: string;
   loadData: () => Promise<void>;
-  startTimer: (title: string) => Promise<void>;
+  /** Starts a timer; with `durationMinutes` the server stops it by itself after that long. */
+  startTimer: (title: string, durationMinutes?: number) => Promise<void>;
+  /** Re-reads the timer and entries without the loading state, e.g. once a limited timer runs out. */
+  refreshTimer: () => Promise<void>;
   stopTimer: () => Promise<void>;
   discardTimer: () => Promise<void>;
   addManualEntry: (input: ManualEntryInput) => Promise<void>;
@@ -86,11 +89,21 @@ export const useTimerStore = create<TimerStoreState>((set, get) => ({
     }
   },
 
-  startTimer: async (title) => {
+  startTimer: async (title, durationMinutes) => {
     applyTimerState(
       set,
-      await api.timerStart({ timerStartRequest: { title } }),
+      await api.timerStart({ timerStartRequest: { title, durationMinutes } }),
     );
+  },
+
+  refreshTimer: async () => {
+    try {
+      // The timer first: reading it is what stops an expired one on the server.
+      applyTimerState(set, await api.timerRetrieve());
+      set({ entries: await api.timeEntriesList({}) });
+    } catch (error) {
+      set({ actionError: await apiErrorMessage(error) });
+    }
   },
 
   stopTimer: async () => {

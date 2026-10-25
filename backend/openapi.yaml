@@ -1821,6 +1821,13 @@ components:
             format: date-time
           - type: 'null'
           title: End
+        planned_end:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Planned End
+          readOnly: true
       type: object
       required:
       - id
@@ -1853,6 +1860,13 @@ components:
           type: string
           title: Title
           default: ''
+        duration_minutes:
+          anyOf:
+          - type: integer
+            maximum: 1440.0
+            minimum: 1.0
+          - type: 'null'
+          title: Duration Minutes
       type: object
       title: TimerStartRequest
     TransactionRequest:

@@ -10,6 +10,7 @@ from personal.infra.models import User
 from personal.infra.repo import TaskRepository, TimeEntryRepository, day_start
 
 from .tasks import _resolve_task
+from .timer import settle_expired_timer
 
 
 def _ensure_not_future(value: datetime_date) -> None:
@@ -35,6 +36,7 @@ class ListTimeEntries:
     def execute(
         self, task_id: int | None = None, day: datetime_date | None = None
     ) -> Sequence[TimeEntryModel]:
+        settle_expired_timer(self.time_entries, self.user)
         return self.time_entries.list(task_id=task_id, day=day, user=self.user)
 
 
@@ -81,6 +83,7 @@ class UpdateTimeEntry:
         self.user = user
 
     def execute(self, entry_id: int, data: PatchedTimeEntryRequest) -> TimeEntryModel:
+        settle_expired_timer(self.time_entries, self.user)
         entry = _get_time_entry(self.time_entries, entry_id, user=self.user)
         if entry.end is None:
             raise DomainError('The running timer cannot be edited.')

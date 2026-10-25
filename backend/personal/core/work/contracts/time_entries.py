@@ -30,3 +30,4 @@ class TimeEntryResponse(BaseModel):
     title: str = Field(..., json_schema_extra={'readOnly': True})
     start: datetime
     end: datetime | None = None
+    planned_end: datetime | None = Field(default=None, json_schema_extra={'readOnly': True})

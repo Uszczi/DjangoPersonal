@@ -54,8 +54,11 @@ class TimeEntryRepository:
         title: str = '',
         start: datetime,
         end: datetime | None = None,
+        planned_end: datetime | None = None,
     ) -> TimeEntryModel:
-        entry = TimeEntryModel(user=user, task=task, title=title, start=start, end=end)
+        entry = TimeEntryModel(
+            user=user, task=task, title=title, start=start, end=end, planned_end=planned_end
+        )
         self.session.add(entry)
         self.session.flush()
         return entry
@@ -81,6 +84,7 @@ class TimeEntryRepository:
         task: TaskModel | None = None,
         title: str = '',
         at: datetime,
+        planned_end: datetime | None = None,
     ) -> TimeEntryModel:
         """End any running entry and start a fresh one.
 
@@ -94,4 +98,4 @@ class TimeEntryRepository:
         ).first()
         if running is not None:
             self.close(running, at=at)
-        return self.create(user=user, task=task, title=title, start=at)
+        return self.create(user=user, task=task, title=title, start=at, planned_end=planned_end)

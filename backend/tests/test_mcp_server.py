@@ -93,6 +93,14 @@ def test_timer_tools(mcp_user: User) -> None:
     assert call('get_timer')['entry'] is None
 
 
+def test_timer_tool_takes_a_limit(mcp_user: User) -> None:
+    task = call('create_task', title='Focus')
+
+    started = call('start_timer', task_id=task['id'], duration_minutes=25)
+
+    assert started['entry']['planned_end'] is not None
+
+
 def test_domain_errors_become_tool_errors(mcp_user: User) -> None:
     with pytest.raises(ToolError, match='Project not found.'):
         call('get_project', project_id=999)

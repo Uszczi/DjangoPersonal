@@ -331,15 +331,18 @@ def delete_time_entry(ctx: ToolContext, entry_id: int) -> str:
 
 
 @_tool
-def start_timer(ctx: ToolContext, task_id: int) -> dict[str, Any]:
-    """Start a timer for a task."""
+def start_timer(
+    ctx: ToolContext, task_id: int, duration_minutes: int | None = None
+) -> dict[str, Any]:
+    """Start a timer for a task; with ``duration_minutes`` it stops by itself after that long."""
     with _unit_of_work(ctx) as (session, user):
         handler = handlers.StartTimer(
             tasks=wiring.task_repository(session),
             time_entries=wiring.time_entry_repository(session),
             user=user,
         )
-        return timer(handler.execute(TimerStartRequest(task=task_id)), clock.now())
+        request = TimerStartRequest(task=task_id, duration_minutes=duration_minutes)
+        return timer(handler.execute(request), clock.now())
 
 
 @_tool

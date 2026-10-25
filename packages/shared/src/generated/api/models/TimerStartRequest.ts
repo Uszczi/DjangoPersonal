@@ -28,6 +28,10 @@ export interface TimerStartRequest {
      *
      */
     title?: string;
+    /**
+     *
+     */
+    durationMinutes?: number | null;
 }
 
 /**
@@ -49,6 +53,7 @@ export function TimerStartRequestFromJSONTyped(json: any, ignoreDiscriminator: b
 
         'task': json['task'] === undefined ? undefined : json['task'] === null ? null : json['task'],
         'title': json['title'] == null ? undefined : json['title'],
+        'durationMinutes': json['duration_minutes'] === undefined ? undefined : json['duration_minutes'] === null ? null : json['duration_minutes'],
     };
 }
 
@@ -65,6 +70,7 @@ export function TimerStartRequestToJSONTyped(value?: TimerStartRequest | null, i
 
         'task': value['task'],
         'title': value['title'],
+        'duration_minutes': value['durationMinutes'],
     };
 }
 

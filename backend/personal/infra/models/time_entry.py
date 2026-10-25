@@ -24,6 +24,8 @@ class TimeEntry(Base):
     title: Mapped[str] = mapped_column(String(200), default='')
     start: Mapped[datetime] = mapped_column(UTCDateTime)
     end: Mapped[datetime | None] = mapped_column(UTCDateTime, default=None)
+    #: When a timer started with a limit stops by itself; ``None`` runs until stopped.
+    planned_end: Mapped[datetime | None] = mapped_column(UTCDateTime, default=None)
 
     user: Mapped[User] = relationship()
     task: Mapped[Task | None] = relationship()

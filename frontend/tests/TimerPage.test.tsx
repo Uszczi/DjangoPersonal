@@ -374,4 +374,136 @@ describe('Time tracking', () => {
     expect(withinSummary.getByText(daysAgoKey(1))).toBeInTheDocument()
     expect(withinSummary.getByText('1 h 30 min')).toBeInTheDocument()
   })
+
+  test('user can start a timer with a time limit', async () => {
+    const runningEntry = {
+      id: 5,
+      task_id: null,
+      title: 'Deep work',
+      start: '2026-10-15T12:00:00Z',
+      end: null,
+      planned_end: '2026-10-15T12:25:00Z',
+    }
+    fetchMock.mockImplementation((input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url
+      if (url === '/api/v1/projects/') return Promise.resolve(jsonResponse([inbox]))
+      if (url === '/api/v1/timer/') return Promise.resolve(timerResponse(null))
+      if (url === '/api/v1/time-entries/') return Promise.resolve(jsonResponse([]))
+      if (url === '/api/v1/tasks/?all=true') return Promise.resolve(jsonResponse([task]))
+      if (url === '/api/v1/timer/start/') return Promise.resolve(timerResponse(runningEntry))
+      return Promise.reject(new Error(`Unexpected request: ${url}`))
+    })
+    const user = userEvent.setup()
+
+    const requestPermission = vi.fn().mockResolvedValue('granted')
+    vi.stubGlobal('Notification', Object.assign(vi.fn(), { permission: 'default', requestPermission }))
+
+    renderApp('/timer')
+    const timerSection = await screen.findByRole('region', { name: 'Bieżący timer' })
+    await user.type(within(timerSection).getByLabelText('Zadanie'), 'Deep work')
+    await user.selectOptions(within(timerSection).getByLabelText('Limit czasu'), '25 min')
+    await user.click(within(timerSection).getByRole('button', { name: 'Rozpocznij timer' }))
+
+    expect(await screen.findByText('0:25:00')).toBeInTheDocument()
+    expect(screen.getByText(/^Pozostało · zatrzyma się o/)).toBeInTheDocument()
+    expect(requestPermission).toHaveBeenCalledOnce()
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/timer/start/',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ title: 'Deep work', duration_minutes: 25 }),
+      }),
+    )
+  })
+
+  test('a limited timer counts down, stops and notifies once it runs out', async () => {
+    vi.useFakeTimers()
+    const notification = vi.fn()
+    vi.stubGlobal('Notification', Object.assign(notification, { permission: 'granted' }))
+    try {
+      const runningEntry = {
+        id: 5,
+        task_id: task.id,
+        start: '2026-10-15T11:59:55Z',
+        end: null,
+        planned_end: '2026-10-15T12:00:03Z',
+      }
+      const stoppedEntry = { ...runningEntry, end: runningEntry.planned_end }
+      let expired = false
+      fetchMock.mockImplementation((input: RequestInfo | URL) => {
+        const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url
+        if (url === '/api/v1/projects/') return Promise.resolve(jsonResponse([inbox]))
+        if (url === '/api/v1/tasks/?all=true') return Promise.resolve(jsonResponse([task]))
+        if (url === '/api/v1/timer/') {
+          return Promise.resolve(timerResponse(expired ? null : runningEntry))
+        }
+        if (url === '/api/v1/time-entries/') {
+          return Promise.resolve(jsonResponse(expired ? [stoppedEntry] : [runningEntry]))
+        }
+        return Promise.reject(new Error(`Unexpected request: ${url}`))
+      })
+
+      renderApp('/timer')
+      await vi.waitFor(() => expect(screen.getByText('0:00:03')).toBeInTheDocument())
+
+      expired = true
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(4500)
+      })
+
+      await vi.waitFor(() =>
+        expect(
+          screen.getByText('Brak aktywnego timera. Wybierz projekt i zadanie, aby go uruchomić.'),
+        ).toBeInTheDocument(),
+      )
+      expect(screen.getByRole('status')).toHaveTextContent('Czas minął: Prepare outline')
+      expect(notification).toHaveBeenCalledWith('Czas minął', {
+        body: 'Prepare outline',
+        tag: 'timer-finished',
+      })
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  test('a timer stopped elsewhere before its limit does not notify', async () => {
+    vi.useFakeTimers()
+    const notification = vi.fn()
+    vi.stubGlobal('Notification', Object.assign(notification, { permission: 'granted' }))
+    try {
+      const runningEntry = {
+        id: 5,
+        task_id: task.id,
+        start: '2026-10-15T11:59:55Z',
+        end: null,
+        planned_end: '2026-10-15T12:00:03Z',
+      }
+      const stoppedEarly = { ...runningEntry, end: '2026-10-15T12:00:01Z' }
+      let stopped = false
+      fetchMock.mockImplementation((input: RequestInfo | URL) => {
+        const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url
+        if (url === '/api/v1/projects/') return Promise.resolve(jsonResponse([inbox]))
+        if (url === '/api/v1/tasks/?all=true') return Promise.resolve(jsonResponse([task]))
+        if (url === '/api/v1/timer/') return Promise.resolve(timerResponse(stopped ? null : runningEntry))
+        if (url === '/api/v1/time-entries/') {
+          return Promise.resolve(jsonResponse(stopped ? [stoppedEarly] : [runningEntry]))
+        }
+        return Promise.reject(new Error(`Unexpected request: ${url}`))
+      })
+
+      renderApp('/timer')
+      await vi.waitFor(() => expect(screen.getByText('0:00:03')).toBeInTheDocument())
+
+      stopped = true
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(4500)
+      })
+
+      await vi.waitFor(() => expect(screen.getByText('Brak aktywnego timera. Wybierz projekt i zadanie, aby go uruchomić.')).toBeInTheDocument())
+      expect(screen.queryByRole('status')).not.toBeInTheDocument()
+      expect(notification).not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 })

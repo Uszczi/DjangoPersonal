@@ -91,7 +91,7 @@ class TimeEntryView(_AppView, model=TimeEntry):
     name_plural = 'Time entries'
     icon = 'fa-solid fa-clock'
     can_edit = False
-    column_list = [TimeEntry.id, TimeEntry.user, TimeEntry.task, TimeEntry.title, TimeEntry.start, TimeEntry.end]
+    column_list = [TimeEntry.id, TimeEntry.user, TimeEntry.task, TimeEntry.title, TimeEntry.start, TimeEntry.end, TimeEntry.planned_end]
     column_searchable_list = [TimeEntry.title]
     column_sortable_list = [TimeEntry.id, TimeEntry.start]
 

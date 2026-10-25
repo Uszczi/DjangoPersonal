@@ -301,3 +301,95 @@ def test_task_list_can_span_all_projects(api_client: Any, post_json: Any) -> Non
     assert all(
         task['project_id'] != second_project['id'] for task in inbox_only.json()
     )
+
+
+def test_timer_started_with_a_limit_reports_its_planned_end(
+    post_json: Any, fixed_clock: Any
+) -> None:
+    task = create_task(post_json)
+
+    response = post_json('/api/v1/timer/start/', {'task': task['id'], 'duration_minutes': 25})
+
+    assert response.status_code == HTTPStatus.OK
+    entry = response.json()['entry']
+    assert entry['end'] is None
+    assert datetime.fromisoformat(entry['planned_end']) == FIXED_NOW + timedelta(minutes=25)
+
+
+def test_timer_without_a_limit_has_no_planned_end(post_json: Any, fixed_clock: Any) -> None:
+    task = create_task(post_json)
+
+    entry = post_json('/api/v1/timer/start/', {'task': task['id']}).json()['entry']
+
+    assert entry['planned_end'] is None
+
+
+@pytest.mark.parametrize('minutes', [0, 24 * 60 + 1])
+def test_timer_limit_must_be_between_one_minute_and_a_day(
+    post_json: Any, fixed_clock: Any, minutes: int
+) -> None:
+    task = create_task(post_json)
+
+    response = post_json('/api/v1/timer/start/', {'task': task['id'], 'duration_minutes': minutes})
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_limited_timer_stops_itself_at_its_planned_end(
+    api_client: Any, post_json: Any, monkeypatch: Any
+) -> None:
+    monkeypatch.setattr(clock, 'now', lambda: FIXED_NOW)
+    task = create_task(post_json)
+    post_json('/api/v1/timer/start/', {'task': task['id'], 'duration_minutes': 25})
+
+    monkeypatch.setattr(clock, 'now', lambda: FIXED_NOW + timedelta(minutes=24))
+    assert api_client.get('/api/v1/timer/').json()['entry'] is not None
+
+    monkeypatch.setattr(clock, 'now', lambda: FIXED_NOW + timedelta(hours=3))
+    assert api_client.get('/api/v1/timer/').json()['entry'] is None
+    [entry] = api_client.get('/api/v1/time-entries/').json()
+    assert datetime.fromisoformat(entry['end']) == FIXED_NOW + timedelta(minutes=25)
+
+
+def test_expired_timer_shows_as_stopped_in_the_entry_list(
+    api_client: Any, post_json: Any, monkeypatch: Any
+) -> None:
+    monkeypatch.setattr(clock, 'now', lambda: FIXED_NOW)
+    task = create_task(post_json)
+    post_json('/api/v1/timer/start/', {'task': task['id'], 'duration_minutes': 10})
+
+    monkeypatch.setattr(clock, 'now', lambda: FIXED_NOW + timedelta(minutes=30))
+    [entry] = api_client.get('/api/v1/time-entries/').json()
+
+    assert datetime.fromisoformat(entry['end']) == FIXED_NOW + timedelta(minutes=10)
+
+
+def test_stopping_an_expired_timer_records_only_its_limit(
+    post_json: Any, monkeypatch: Any
+) -> None:
+    monkeypatch.setattr(clock, 'now', lambda: FIXED_NOW)
+    task = create_task(post_json)
+    post_json('/api/v1/timer/start/', {'task': task['id'], 'duration_minutes': 15})
+
+    monkeypatch.setattr(clock, 'now', lambda: FIXED_NOW + timedelta(minutes=40))
+    response = post_json('/api/v1/timer/stop/', {})
+
+    assert response.status_code == HTTPStatus.OK
+    assert datetime.fromisoformat(response.json()['entry']['end']) == FIXED_NOW + timedelta(
+        minutes=15
+    )
+
+
+def test_starting_after_an_expired_timer_closes_it_at_its_limit(
+    api_client: Any, post_json: Any, monkeypatch: Any
+) -> None:
+    monkeypatch.setattr(clock, 'now', lambda: FIXED_NOW)
+    first = create_task(post_json)
+    second = create_task(post_json, title='Second', project_name='Other')
+    post_json('/api/v1/timer/start/', {'task': first['id'], 'duration_minutes': 5})
+
+    monkeypatch.setattr(clock, 'now', lambda: FIXED_NOW + timedelta(hours=1))
+    post_json('/api/v1/timer/start/', {'task': second['id']})
+
+    entries = api_client.get(f"/api/v1/time-entries/?task={first['id']}").json()
+    assert datetime.fromisoformat(entries[0]['end']) == FIXED_NOW + timedelta(minutes=5)

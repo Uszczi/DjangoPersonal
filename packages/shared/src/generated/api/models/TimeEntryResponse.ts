@@ -40,6 +40,10 @@ export interface TimeEntryResponse {
      *
      */
     end?: Date | null;
+    /**
+     *
+     */
+    readonly plannedEnd?: Date | null;
 }
 
 /**
@@ -68,6 +72,7 @@ export function TimeEntryResponseFromJSONTyped(json: any, ignoreDiscriminator: b
         'title': json['title'],
         'start': (json['start'] == null ? json['start'] : parseDateTime(json['start'])),
         'end': json['end'] === undefined ? undefined : json['end'] === null ? null : (parseDateTime(json['end'])),
+        'plannedEnd': json['planned_end'] === undefined ? undefined : json['planned_end'] === null ? null : (parseDateTime(json['planned_end'])),
     };
 }
 
@@ -75,7 +80,7 @@ export function TimeEntryResponseToJSON(json: any): TimeEntryResponse {
     return TimeEntryResponseToJSONTyped(json, false);
 }
 
-export function TimeEntryResponseToJSONTyped(value?: Omit<TimeEntryResponse, 'id'|'taskId'|'title'> | null, ignoreDiscriminator: boolean = false): any {
+export function TimeEntryResponseToJSONTyped(value?: Omit<TimeEntryResponse, 'id'|'taskId'|'title'|'plannedEnd'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
