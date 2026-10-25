@@ -29,7 +29,7 @@ from personal.infra.models import (
     Wallet,
     Whiteboard,
 )
-from personal.infra.repo import ProjectRepository, UserRepository
+from personal.infra.repo import FolderRepository, ProjectRepository, UserRepository
 
 
 class _Deletes(Protocol):
@@ -106,12 +106,15 @@ class WhiteboardView(_AppView, model=Whiteboard):
     form_columns = [Whiteboard.name]
 
 
-class FolderView(_AppView, model=Folder):
-    icon = 'fa-solid fa-folder'
+class FolderView(_RepositoryDeleteView, model=Folder):
+    icon = 'fa-solid fa-folder-open'
     column_list = [Folder.id, Folder.user, Folder.name, Folder.created_at]
     column_searchable_list = [Folder.name]
     column_sortable_list = [Folder.id, Folder.name]
     form_columns = [Folder.name]
+
+    def repository(self, session: Session) -> FolderRepository:
+        return FolderRepository(session)
 
 
 class WalletView(_AppView, model=Wallet):

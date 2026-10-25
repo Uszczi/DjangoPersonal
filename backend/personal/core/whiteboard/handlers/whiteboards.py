@@ -20,6 +20,12 @@ def _get_whiteboard(
     return whiteboard
 
 
+def _ensure_folder(repository: FolderRepository, folder_id: int | None, *, user: User) -> None:
+    """A Whiteboard may only go into one of its owner's Folders (``None`` is no Folder)."""
+    if folder_id is not None:
+        get_folder(repository, folder_id, user=user)
+
+
 class ListWhiteboards:
     def __init__(self, whiteboards: WhiteboardRepository, user: User):
         self.whiteboards = whiteboards
@@ -47,8 +53,7 @@ class CreateWhiteboard:
         self.user = user
 
     def execute(self, data: WhiteboardRequest) -> WhiteboardModel:
-        if data.folder_id is not None:
-            get_folder(self.folders, data.folder_id, user=self.user)
+        _ensure_folder(self.folders, data.folder_id, user=self.user)
         name = (data.name or 'Bez tytułu').strip() or 'Bez tytułu'
         kind = data.kind or 'whiteboard'
         content = data.content
@@ -86,8 +91,7 @@ class UpdateWhiteboard:
             whiteboard.content = data.content
         # ``null`` is meaningful here (no Folder), so presence decides.
         if 'folder_id' in data.model_fields_set:
-            if data.folder_id is not None:
-                get_folder(self.folders, data.folder_id, user=self.user)
+            _ensure_folder(self.folders, data.folder_id, user=self.user)
             whiteboard.folder_id = data.folder_id
         return self.whiteboards.save(whiteboard)
 

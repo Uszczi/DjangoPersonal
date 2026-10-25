@@ -31,6 +31,14 @@ A named space that holds one freeform drawing — freehand strokes, shapes, and 
 **Notatki** (Notes):
 A Whiteboard whose content is a Markdown document instead of a drawing. Shares the Whiteboard API and editor; only the payload differs.
 
+**Folder**:
+A named, single-level group of Whiteboards and Notatki. Has a required name (trimmed, unique case-insensitively per user). Each one sits in at most one Folder; one without a Folder stays at the top level of the Notatnik. Deleting a Folder cascades to the Whiteboards and Notatki in it.
+_Avoid_: Directory, Katalog, Group, Grupa, Tag
+
+**Notatnik**:
+The section of the app that holds a user's Whiteboards, Notatki and Folders.
+_Avoid_: Notatki (for the section — Notatki are the Markdown documents in it)
+
 **Wallet**:
 A named purse a user creates to separate money by purpose. Has a required name (trimmed, unique case-insensitively per user) and owns its Transactions. There is no default wallet — the user creates the first one. A Wallet's balance is the sum of its ledger: the opening balance it was created with, plus later corrections, minus its spending. The balance is never stored; it is computed from the Transactions.
 
