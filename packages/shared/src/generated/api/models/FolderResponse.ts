@@ -31,6 +31,10 @@ export interface FolderResponse {
     /**
      *
      */
+    parentId?: number | null;
+    /**
+     *
+     */
     readonly createdAt: Date;
 }
 
@@ -56,6 +60,7 @@ export function FolderResponseFromJSONTyped(json: any, ignoreDiscriminator: bool
 
         'id': json['id'],
         'name': json['name'],
+        'parentId': json['parent_id'] === undefined ? undefined : json['parent_id'] === null ? null : json['parent_id'],
         'createdAt': (json['created_at'] == null ? json['created_at'] : parseDateTime(json['created_at'])),
     };
 }
@@ -72,6 +77,7 @@ export function FolderResponseToJSONTyped(value?: Omit<FolderResponse, 'id'|'cre
     return {
 
         'name': value['name'],
+        'parent_id': value['parentId'],
     };
 }
 

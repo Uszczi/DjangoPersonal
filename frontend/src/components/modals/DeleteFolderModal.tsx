@@ -8,8 +8,10 @@ import { useWhiteboardsStore } from "@/stores/whiteboards";
 
 type DeleteFolderModalProps = {
   folder: FolderResponse;
-  /** How many Whiteboards and Notatki go with it. */
+  /** How many Whiteboards and Notatki go with it, its subfolders' included. */
   itemCount: number;
+  /** How many Folders below it go with it. */
+  subfolderCount?: number;
   onClose: () => void;
 };
 
@@ -28,7 +30,7 @@ function itemCountLabel(count: number) {
  * Deleting a Folder destroys what is in it, and there is no undo, so the question
  * says how many items will go.
  */
-export function DeleteFolderModal({ folder, itemCount, onClose }: DeleteFolderModalProps) {
+export function DeleteFolderModal({ folder, itemCount, subfolderCount = 0, onClose }: DeleteFolderModalProps) {
   const deleteFolder = useFoldersStore((state) => state.deleteFolder);
   const dropFolderItems = useWhiteboardsStore((state) => state.dropFolderItems);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -47,8 +49,7 @@ export function DeleteFolderModal({ folder, itemCount, onClose }: DeleteFolderMo
     setIsDeleting(true);
     setDeleteError("");
     try {
-      await deleteFolder(folder.id);
-      dropFolderItems(folder.id);
+      dropFolderItems(await deleteFolder(folder.id));
       onClose();
     } catch (error) {
       setDeleteError(await apiErrorMessage(error));
@@ -65,9 +66,11 @@ export function DeleteFolderModal({ folder, itemCount, onClose }: DeleteFolderMo
       onClose={close}
       size="md"
     >
-      {itemCount > 0 && (
+      {(itemCount > 0 || subfolderCount > 0) && (
         <p className="m-0 mt-5 text-[13px] leading-relaxed text-ink-soft break-words">
-          Tablice i notatki z tego folderu zostaną trwale usunięte.
+          {subfolderCount > 0
+            ? `Podfoldery (${subfolderCount}) oraz tablice i notatki w nich zostaną trwale usunięte.`
+            : "Tablice i notatki z tego folderu zostaną trwale usunięte."}
         </p>
       )}
       {deleteError && <ErrorAlert>{deleteError}</ErrorAlert>}

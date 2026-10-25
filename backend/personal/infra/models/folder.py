@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import ForeignKey, String, UniqueConstraint, event
+from sqlalchemy import ForeignKey, Index, String, event, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from personal.infra.rules import folder_name_key, normalize_folder_name
@@ -11,20 +11,44 @@ from .user import User
 
 
 class Folder(Base):
-    """A single-level group of Whiteboards and Notatki in the Notatnik."""
+    """A group of Whiteboards, Notatki and other Folders in the Notatnik.
+
+    Names are unique among siblings: two partial indexes, because a plain unique
+    constraint treats every top-level ``NULL`` parent as distinct.
+    """
 
     __tablename__ = 'folders'
     __table_args__ = (
-        UniqueConstraint('user_id', 'normalized_name', name='folder_name_unique_per_user'),
+        Index(
+            'folder_name_unique_at_top_level',
+            'user_id',
+            'normalized_name',
+            unique=True,
+            sqlite_where=text('parent_id IS NULL'),
+            postgresql_where=text('parent_id IS NULL'),
+        ),
+        Index(
+            'folder_name_unique_per_parent',
+            'parent_id',
+            'normalized_name',
+            unique=True,
+            sqlite_where=text('parent_id IS NOT NULL'),
+            postgresql_where=text('parent_id IS NOT NULL'),
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
+    #: The Folder it sits in; ``None`` at the top level. Deleting the parent deletes it too.
+    parent_id: Mapped[int | None] = mapped_column(
+        ForeignKey('folders.id', ondelete='CASCADE'), index=True, default=None
+    )
     name: Mapped[str] = mapped_column(String(100))
     normalized_name: Mapped[str] = mapped_column(String(100))
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utc_now)
 
     user: Mapped[User] = relationship()
+    parent: Mapped['Folder | None'] = relationship(remote_side=[id])
 
     def __repr__(self) -> str:
         return f'<Folder {self.id} {self.name!r}>'

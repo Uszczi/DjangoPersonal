@@ -19,8 +19,8 @@ type WhiteboardsState = {
   deleteWhiteboard: (id: number) => Promise<void>;
   /** Put an item in a Folder, or take it out of one with `null`. */
   moveWhiteboard: (id: number, folderId: number | null) => Promise<void>;
-  /** Drop a deleted Folder's items, which the backend deleted with it. */
-  dropFolderItems: (folderId: number) => void;
+  /** Drop the items of deleted Folders, which the backend deleted with them. */
+  dropFolderItems: (folderIds: Set<number>) => void;
 };
 
 function newestFirst(items: WhiteboardResponse[]) {
@@ -96,9 +96,11 @@ export const useWhiteboardsStore = create<WhiteboardsState>((set) => ({
     }));
   },
 
-  dropFolderItems: (folderId) => {
+  dropFolderItems: (folderIds) => {
     set((state) => ({
-      whiteboards: state.whiteboards.filter((item) => item.folderId !== folderId),
+      whiteboards: state.whiteboards.filter(
+        (item) => item.folderId == null || !folderIds.has(item.folderId),
+      ),
     }));
   },
 }));

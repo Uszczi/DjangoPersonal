@@ -32,7 +32,7 @@ A named space that holds one freeform drawing — freehand strokes, shapes, and 
 A Whiteboard whose content is a Markdown document instead of a drawing. Shares the Whiteboard API and editor; only the payload differs.
 
 **Folder**:
-A named, single-level group of Whiteboards and Notatki. Has a required name (trimmed, unique case-insensitively per user). Each one sits in at most one Folder; one without a Folder stays at the top level of the Notatnik. Deleting a Folder cascades to the Whiteboards and Notatki in it.
+A named group of Whiteboards, Notatki and other Folders (subfolders). Has a required name (trimmed, unique case-insensitively among the Folders that share a parent). Each Whiteboard, Notatka and Folder sits in at most one Folder; one without a Folder stays at the top level of the Notatnik. A Folder can't be moved into itself or one of its subfolders. Deleting a Folder cascades to its subfolders and every Whiteboard and Notatka in them.
 _Avoid_: Directory, Katalog, Group, Grupa, Tag
 
 **Notatnik**:

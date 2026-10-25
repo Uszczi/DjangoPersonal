@@ -24,6 +24,10 @@ export interface PatchedFolderRequest {
      *
      */
     name?: string | null;
+    /**
+     *
+     */
+    parentId?: number | null;
 }
 
 /**
@@ -44,6 +48,7 @@ export function PatchedFolderRequestFromJSONTyped(json: any, ignoreDiscriminator
     return {
 
         'name': json['name'] === undefined ? undefined : json['name'] === null ? null : json['name'],
+        'parentId': json['parent_id'] === undefined ? undefined : json['parent_id'] === null ? null : json['parent_id'],
     };
 }
 
@@ -59,6 +64,7 @@ export function PatchedFolderRequestToJSONTyped(value?: PatchedFolderRequest | n
     return {
 
         'name': value['name'],
+        'parent_id': value['parentId'],
     };
 }
 

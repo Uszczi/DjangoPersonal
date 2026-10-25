@@ -24,6 +24,10 @@ export interface FolderRequest {
      *
      */
     name: string;
+    /**
+     *
+     */
+    parentId?: number | null;
 }
 
 /**
@@ -45,6 +49,7 @@ export function FolderRequestFromJSONTyped(json: any, ignoreDiscriminator: boole
     return {
 
         'name': json['name'],
+        'parentId': json['parent_id'] === undefined ? undefined : json['parent_id'] === null ? null : json['parent_id'],
     };
 }
 
@@ -60,6 +65,7 @@ export function FolderRequestToJSONTyped(value?: FolderRequest | null, ignoreDis
     return {
 
         'name': value['name'],
+        'parent_id': value['parentId'],
     };
 }
 

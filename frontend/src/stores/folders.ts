@@ -4,15 +4,21 @@ import { api } from "@personal/shared/api";
 import type { FolderResponse } from "@personal/shared/generated/api";
 import { createLoadGuard } from "@personal/shared/stores/loadGuard";
 
-/** The Notatnik's Folders, alphabetically like the API lists them. */
+import { subtreeIds } from "@/whiteboard/folderTree";
+
+/** The Notatnik's Folders, flat and alphabetically like the API lists them; `parentId` makes the tree. */
 type FoldersState = {
   folders: FolderResponse[];
   isLoading: boolean;
   pageError: string;
   loadFolders: () => Promise<void>;
-  createFolder: (name: string) => Promise<FolderResponse>;
+  /** Create a Folder at the top level, or inside `parentId`. */
+  createFolder: (name: string, parentId?: number | null) => Promise<FolderResponse>;
   renameFolder: (id: number, name: string) => Promise<FolderResponse>;
-  deleteFolder: (id: number) => Promise<void>;
+  /** Move a Folder into another one, or to the top level with `null`. */
+  moveFolder: (id: number, parentId: number | null) => Promise<FolderResponse>;
+  /** Delete a Folder; resolves to the ids of it and every subfolder, which went with it. */
+  deleteFolder: (id: number) => Promise<Set<number>>;
 };
 
 const loadGuard = createLoadGuard();
@@ -23,7 +29,7 @@ function byName(folders: FolderResponse[]) {
   );
 }
 
-export const useFoldersStore = create<FoldersState>((set) => ({
+export const useFoldersStore = create<FoldersState>((set, get) => ({
   folders: [],
   isLoading: true,
   pageError: "",
@@ -46,8 +52,8 @@ export const useFoldersStore = create<FoldersState>((set) => ({
     }
   },
 
-  createFolder: async (name) => {
-    const created = await api.foldersCreate({ folderRequest: { name } });
+  createFolder: async (name, parentId = null) => {
+    const created = await api.foldersCreate({ folderRequest: { name, parentId } });
     set((state) => ({ folders: byName([...state.folders, created]) }));
     return created;
   },
@@ -63,8 +69,21 @@ export const useFoldersStore = create<FoldersState>((set) => ({
     return updated;
   },
 
+  moveFolder: async (id, parentId) => {
+    const updated = await api.foldersPartialUpdate({
+      id,
+      patchedFolderRequest: { parentId },
+    });
+    set((state) => ({
+      folders: state.folders.map((item) => (item.id === id ? updated : item)),
+    }));
+    return updated;
+  },
+
   deleteFolder: async (id) => {
     await api.foldersDestroy({ id });
-    set((state) => ({ folders: state.folders.filter((item) => item.id !== id) }));
+    const removed = subtreeIds(get().folders, id);
+    set((state) => ({ folders: state.folders.filter((item) => !removed.has(item.id)) }));
+    return removed;
   },
 }));

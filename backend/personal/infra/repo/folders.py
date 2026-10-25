@@ -29,11 +29,28 @@ class FolderRepository:
         )
         return self.session.scalars(query).first()
 
+    def parent_ids(self, *, user: User) -> dict[int, int | None]:
+        """Each of ``user``'s folders mapped to its parent: the tree, without the rows."""
+        query = select(FolderModel.id, FolderModel.parent_id).where(
+            FolderModel.user_id == user.id
+        )
+        return {folder_id: parent_id for folder_id, parent_id in self.session.execute(query)}
+
     def name_taken(
-        self, name_key: str, *, user: User, exclude: FolderModel | None = None
+        self,
+        name_key: str,
+        *,
+        user: User,
+        parent_id: int | None,
+        exclude: FolderModel | None = None,
     ) -> bool:
+        """Whether a sibling under ``parent_id`` (``None``: the top level) has this name."""
         query = select(FolderModel.id).where(
-            FolderModel.normalized_name == name_key, FolderModel.user_id == user.id
+            FolderModel.normalized_name == name_key,
+            FolderModel.user_id == user.id,
+            FolderModel.parent_id.is_(None)
+            if parent_id is None
+            else FolderModel.parent_id == parent_id,
         )
         if exclude is not None and exclude.id is not None:
             query = query.where(FolderModel.id != exclude.id)
@@ -46,6 +63,6 @@ class FolderRepository:
         return folder
 
     def delete(self, folder: FolderModel) -> None:
-        """Delete a folder; its Whiteboards and Notatki cascade away in the database."""
+        """Delete a folder; its subfolders, Whiteboards and Notatki cascade away in the database."""
         self.session.delete(folder)
         self.session.flush()

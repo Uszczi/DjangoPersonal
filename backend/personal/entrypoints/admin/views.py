@@ -108,7 +108,7 @@ class WhiteboardView(_AppView, model=Whiteboard):
 
 class FolderView(_RepositoryDeleteView, model=Folder):
     icon = 'fa-solid fa-folder-open'
-    column_list = [Folder.id, Folder.user, Folder.name, Folder.created_at]
+    column_list = [Folder.id, Folder.user, Folder.parent, Folder.name, Folder.created_at]
     column_searchable_list = [Folder.name]
     column_sortable_list = [Folder.id, Folder.name]
     form_columns = [Folder.name]

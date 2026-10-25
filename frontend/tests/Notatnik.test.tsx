@@ -10,7 +10,7 @@ vi.mock('@/components/WhiteboardCanvas', () => ({
   WhiteboardCanvas: () => <div data-testid="whiteboard-canvas" />,
 }))
 
-type Folder = { id: number; name: string; created_at: string }
+type Folder = { id: number; name: string; parent_id?: number | null; created_at: string }
 type Board = {
   id: number
   kind: 'whiteboard' | 'markdown'
@@ -30,14 +30,29 @@ function jsonResponse(data: unknown, status = 200) {
 
 /** Answers the folders and whiteboards endpoints the way the backend does. */
 function fakeBackend(initial: { folders?: Folder[]; boards?: Board[] } = {}) {
-  const folders = (initial.folders ?? []).map((f) => ({ ...f }))
+  let folders = (initial.folders ?? []).map((f) => ({ parent_id: null, ...f }))
   let boards = (initial.boards ?? []).map((b) => ({ ...b }))
   let nextId = 100
   let clock = Date.parse('2026-10-25T12:00:00Z')
   const now = () => new Date((clock += 1000)).toISOString()
 
-  function nameTaken(name: string, except?: number) {
-    return folders.some((f) => f.id !== except && f.name.toLowerCase() === name.trim().toLowerCase())
+  function nameTaken(name: string, parentId: number | null, except?: number) {
+    return folders.some(
+      (f) => f.id !== except && f.parent_id === parentId && f.name.toLowerCase() === name.trim().toLowerCase(),
+    )
+  }
+  function subtree(id: number) {
+    const ids = new Set([id])
+    for (let grew = true; grew; ) {
+      grew = false
+      for (const f of folders) {
+        if (f.parent_id != null && ids.has(f.parent_id) && !ids.has(f.id)) {
+          ids.add(f.id)
+          grew = true
+        }
+      }
+    }
+    return ids
   }
   const duplicate = () => jsonResponse({ detail: 'A folder with this name already exists.' }, 400)
 
@@ -48,8 +63,9 @@ function fakeBackend(initial: { folders?: Folder[]; boards?: Board[] } = {}) {
 
     if (path.endsWith('/folders/')) {
       if (method === 'POST') {
-        if (nameTaken(body.name)) return duplicate()
-        const folder = { id: nextId++, name: body.name.trim(), created_at: now() }
+        const parentId = body.parent_id ?? null
+        if (nameTaken(body.name, parentId)) return duplicate()
+        const folder = { id: nextId++, name: body.name.trim(), parent_id: parentId, created_at: now() }
         folders.push(folder)
         return jsonResponse(folder, 201)
       }
@@ -62,11 +78,17 @@ function fakeBackend(initial: { folders?: Folder[]; boards?: Board[] } = {}) {
       const folder = folders.find((f) => f.id === Number(folderMatch[1]))
       if (!folder) return jsonResponse({ detail: 'Folder not found.' }, 404)
       if (method === 'DELETE') {
-        folders.splice(folders.indexOf(folder), 1)
-        boards = boards.filter((b) => b.folder_id !== folder.id)
+        const removed = subtree(folder.id)
+        folders = folders.filter((f) => !removed.has(f.id))
+        boards = boards.filter((b) => b.folder_id == null || !removed.has(b.folder_id))
         return jsonResponse(null, 204)
       }
-      if (body.name !== undefined && nameTaken(body.name, folder.id)) return duplicate()
+      const parentId = body.parent_id !== undefined ? body.parent_id : folder.parent_id
+      if (parentId != null && subtree(folder.id).has(parentId)) {
+        return jsonResponse({ detail: 'A folder cannot be moved into itself or one of its subfolders.' }, 400)
+      }
+      if (nameTaken(body.name ?? folder.name, parentId, folder.id)) return duplicate()
+      folder.parent_id = parentId
       if (body.name !== undefined) folder.name = body.name.trim()
       return jsonResponse(folder)
     }
@@ -402,5 +424,86 @@ describe('Notatnik folders', () => {
     )
     expect(screen.queryByRole('button', { name: 'Otwórz tablicę: Plan' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Otwórz tablicę: Luźna' })).toBeInTheDocument()
+  })
+
+  test('"Nowy folder w folderze" creates a subfolder shown inside its parent', async () => {
+    fetchMock.mockImplementation(fakeBackend({ folders: [work] }))
+    const user = userEvent.setup()
+
+    renderApp('/whiteboard')
+    await user.click(await screen.findByRole('button', { name: 'Nowy folder w folderze: Praca' }))
+    expect(await screen.findByRole('dialog', { name: 'Nowy folder w „Praca”' })).toBeInTheDocument()
+    await user.type(screen.getByLabelText('Nazwa folderu'), 'Klient A')
+    await user.click(screen.getByRole('button', { name: 'Utwórz folder' }))
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+
+    // Only top-level folders show while the parent is collapsed.
+    expect(screen.queryByRole('region', { name: 'Folder: Klient A' })).not.toBeInTheDocument()
+    const parent = screen.getByRole('region', { name: 'Folder: Praca' })
+    await user.click(within(parent).getByRole('button', { name: 'Praca' }))
+    expect(within(parent).getByRole('region', { name: 'Folder: Klient A' })).toBeInTheDocument()
+  })
+
+  test('a subfolder may share a name with a folder elsewhere', async () => {
+    const home: Folder = { id: 2, name: 'Dom', created_at: '2026-10-01T10:00:00Z' }
+    const notes: Folder = { id: 3, name: 'Notatki', parent_id: 1, created_at: '2026-10-01T10:00:00Z' }
+    fetchMock.mockImplementation(fakeBackend({ folders: [work, home, notes] }))
+    const user = userEvent.setup()
+
+    renderApp('/whiteboard')
+    await user.click(await screen.findByRole('button', { name: 'Nowy folder w folderze: Dom' }))
+    await user.type(await screen.findByLabelText('Nazwa folderu'), 'Notatki')
+    await user.click(screen.getByRole('button', { name: 'Utwórz folder' }))
+
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+
+  test('a folder moves into another one but never into itself or below itself', async () => {
+    const home: Folder = { id: 2, name: 'Dom', created_at: '2026-10-01T10:00:00Z' }
+    const client: Folder = { id: 3, name: 'Klient', parent_id: 1, created_at: '2026-10-01T10:00:00Z' }
+    fetchMock.mockImplementation(fakeBackend({ folders: [work, home, client] }))
+    const user = userEvent.setup()
+
+    renderApp('/whiteboard')
+    await user.click(await screen.findByRole('button', { name: 'Przenieś folder do…: Praca' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Przenieś do…' })
+    expect(within(dialog).queryByRole('button', { name: 'Praca' })).not.toBeInTheDocument()
+    expect(within(dialog).queryByRole('button', { name: 'Praca / Klient' })).not.toBeInTheDocument()
+    // Already at the top level.
+    expect(within(dialog).queryByRole('button', { name: 'Bez folderu' })).not.toBeInTheDocument()
+    await user.click(within(dialog).getByRole('button', { name: 'Dom' }))
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+
+    const homeFolder = screen.getByRole('region', { name: 'Folder: Dom' })
+    await user.click(within(homeFolder).getByRole('button', { name: 'Dom' }))
+    expect(within(homeFolder).getByRole('region', { name: 'Folder: Praca' })).toBeInTheDocument()
+  })
+
+  test('deleting a folder counts and removes what is in its subfolders', async () => {
+    const client: Folder = { id: 3, name: 'Klient', parent_id: 1, created_at: '2026-10-01T10:00:00Z' }
+    fetchMock.mockImplementation(
+      fakeBackend({
+        folders: [work, client],
+        boards: [
+          board(5, 'Plan', 1, '2026-10-10T10:00:00Z'),
+          board(6, 'Umowa', 3, '2026-10-11T10:00:00Z'),
+          board(7, 'Luźna', null, '2026-10-12T10:00:00Z'),
+        ],
+      }),
+    )
+    const user = userEvent.setup()
+
+    renderApp('/whiteboard')
+    await user.click(await screen.findByRole('button', { name: 'Usuń folder: Praca' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Usunąć folder „Praca” i 2 elementy w nim?' })
+    expect(within(dialog).getByText(/Podfoldery \(1\)/)).toBeInTheDocument()
+    await user.click(within(dialog).getByRole('button', { name: 'Usuń folder' }))
+
+    await vi.waitFor(() =>
+      expect(screen.queryByRole('region', { name: 'Folder: Praca' })).not.toBeInTheDocument(),
+    )
+    expect(screen.getAllByRole('button', { name: /^Otwórz (tablicę|notatkę)/ }).map((b) => b.getAttribute('aria-label'))).toEqual([
+      'Otwórz tablicę: Luźna',
+    ])
   })
 })

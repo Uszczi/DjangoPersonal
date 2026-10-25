@@ -67,7 +67,7 @@ The user can create named Folders in the Notatnik and keep Whiteboards and Notat
 
 ## Out of Scope
 
-- Nested Folders (Folders inside Folders).
+- Nested Folders (Folders inside Folders). _Added later (2026-10-25): subfolders, with names unique among siblings, folder moves without cycles, and subtree deletes; Alembic revision 0009._
 - Drag-and-drop to move items.
 - An item in more than one Folder, or tags.
 - A trash or undo for deleted Folders.

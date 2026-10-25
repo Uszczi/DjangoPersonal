@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ChevronDown, ChevronRight, FolderInput, Pencil } from "lucide-react";
+import { ChevronDown, ChevronRight, FolderInput, FolderPlus, Pencil } from "lucide-react";
 import { useEffect } from "react";
 
 import { api } from "@personal/shared/api";
@@ -17,11 +17,12 @@ import {
 import type { FolderResponse, WhiteboardResponse } from "@personal/shared/generated/api";
 import { DeleteFolderModal } from "@/components/modals/DeleteFolderModal";
 import { FolderEditorModal } from "@/components/modals/FolderEditorModal";
-import { MoveWhiteboardModal } from "@/components/modals/MoveWhiteboardModal";
+import { MoveFolderModal, MoveWhiteboardModal } from "@/components/modals/MoveToFolderModal";
 import { useFoldersStore } from "@/stores/folders";
 import { ShowModal } from "@/stores/modal";
 import { useWhiteboardsStore } from "@/stores/whiteboards";
 import { useExpandedFolders } from "@/whiteboard/expandedFolders";
+import { childFolders, subtreeIds } from "@/whiteboard/folderTree";
 
 export const Route = createFileRoute("/whiteboard/")({
   component: WhiteboardsPage,
@@ -111,14 +112,15 @@ function WhiteboardsPage() {
         </div>
       ) : (
         <>
-          {folders.map((folder) => (
+          {childFolders(folders, null).map((folder) => (
             <FolderSection
               key={folder.id}
               folder={folder}
-              items={whiteboards.filter((wb) => wb.folderId === folder.id)}
-              expanded={isExpanded(folder.id)}
-              onToggle={() => toggle(folder.id)}
-              onCreate={(kind) => void handleCreate(kind, folder.id)}
+              folders={folders}
+              whiteboards={whiteboards}
+              isExpanded={isExpanded}
+              onToggle={toggle}
+              onCreate={(kind, folderId) => void handleCreate(kind, folderId)}
             />
           ))}
           <ul className="flex flex-col" aria-label="Tablice">
@@ -137,23 +139,31 @@ function WhiteboardsPage() {
 
 type FolderSectionProps = {
   folder: FolderResponse;
-  /** The folder's Whiteboards and Notatki, most recently changed first. */
-  items: WhiteboardResponse[];
-  expanded: boolean;
-  onToggle: () => void;
-  onCreate: (kind: Kind) => void;
+  /** Every Folder and item of the Notatnik; the section picks its own children. */
+  folders: FolderResponse[];
+  whiteboards: WhiteboardResponse[];
+  isExpanded: (folderId: number) => boolean;
+  onToggle: (folderId: number) => void;
+  onCreate: (kind: Kind, folderId: number) => void;
 };
 
-function FolderSection({ folder, items, expanded, onToggle, onCreate }: FolderSectionProps) {
+/** A collapsible Folder: its subfolders first, alphabetically, then its items, newest first. */
+function FolderSection({ folder, folders, whiteboards, isExpanded, onToggle, onCreate }: FolderSectionProps) {
+  const expanded = isExpanded(folder.id);
   const Chevron = expanded ? ChevronDown : ChevronRight;
+  const subfolders = childFolders(folders, folder.id);
+  const items = whiteboards.filter((wb) => wb.folderId === folder.id);
+  const subtree = subtreeIds(folders, folder.id);
+  const totalItems = whiteboards.filter((wb) => wb.folderId != null && subtree.has(wb.folderId)).length;
+
   return (
-    <section aria-label={`Folder: ${folder.name}`} className="border-b border-line">
+    <section aria-label={`Folder: ${folder.name}`} className="border-b border-line last:border-b-0">
       <div className="flex items-center gap-1 py-2">
         <button
           type="button"
           aria-expanded={expanded}
           aria-label={folder.name}
-          onClick={onToggle}
+          onClick={() => onToggle(folder.id)}
           className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded px-1 py-1 text-left hover:bg-wash"
         >
           <Chevron aria-hidden="true" className="size-[16px] shrink-0 text-muted" />
@@ -161,22 +171,38 @@ function FolderSection({ folder, items, expanded, onToggle, onCreate }: FolderSe
             📁
           </span>
           <span className="min-w-0 truncate font-semibold text-ink">{folder.name}</span>
-          <span className="text-[12px] text-muted">{items.length}</span>
+          <span className="text-[12px] text-muted">{totalItems}</span>
         </button>
         <Button
           variant="secondary"
           aria-label={`Nowa tablica w folderze: ${folder.name}`}
-          onClick={() => onCreate("whiteboard")}
+          onClick={() => onCreate("whiteboard", folder.id)}
         >
           + tablica
         </Button>
         <Button
           variant="secondary"
           aria-label={`Nowa notatka w folderze: ${folder.name}`}
-          onClick={() => onCreate("markdown")}
+          onClick={() => onCreate("markdown", folder.id)}
         >
           + notatka
         </Button>
+        <IconButton
+          title="Nowy podfolder"
+          aria-label={`Nowy folder w folderze: ${folder.name}`}
+          className="text-[18px]"
+          onClick={() => ShowModal(FolderEditorModal, { parent: folder })}
+        >
+          <FolderPlus aria-hidden="true" className="size-[16px]" />
+        </IconButton>
+        <IconButton
+          title="Przenieś do…"
+          aria-label={`Przenieś folder do…: ${folder.name}`}
+          className="text-[18px]"
+          onClick={() => ShowModal(MoveFolderModal, { folder })}
+        >
+          <FolderInput aria-hidden="true" className="size-[16px]" />
+        </IconButton>
         <IconButton
           title="Zmień nazwę"
           aria-label={`Zmień nazwę folderu: ${folder.name}`}
@@ -187,17 +213,36 @@ function FolderSection({ folder, items, expanded, onToggle, onCreate }: FolderSe
         </IconButton>
         <DeleteButton
           aria-label={`Usuń folder: ${folder.name}`}
-          onClick={() => ShowModal(DeleteFolderModal, { folder, itemCount: items.length })}
+          onClick={() =>
+            ShowModal(DeleteFolderModal, {
+              folder,
+              itemCount: totalItems,
+              subfolderCount: subtree.size - 1,
+            })
+          }
         />
       </div>
       {expanded && (
-        <ul className="flex flex-col pb-2 pl-6" aria-label={`Zawartość folderu: ${folder.name}`}>
-          {items.length === 0 ? (
-            <li className="py-2 text-[13px] text-muted">Folder jest pusty.</li>
-          ) : (
-            items.map((wb) => <WhiteboardRow key={wb.id} whiteboard={wb} />)
-          )}
-        </ul>
+        <div className="pb-2 pl-6">
+          {subfolders.map((child) => (
+            <FolderSection
+              key={child.id}
+              folder={child}
+              folders={folders}
+              whiteboards={whiteboards}
+              isExpanded={isExpanded}
+              onToggle={onToggle}
+              onCreate={onCreate}
+            />
+          ))}
+          <ul className="flex flex-col" aria-label={`Zawartość folderu: ${folder.name}`}>
+            {items.length === 0 && subfolders.length === 0 ? (
+              <li className="py-2 text-[13px] text-muted">Folder jest pusty.</li>
+            ) : (
+              items.map((wb) => <WhiteboardRow key={wb.id} whiteboard={wb} />)
+            )}
+          </ul>
+        </div>
       )}
     </section>
   );

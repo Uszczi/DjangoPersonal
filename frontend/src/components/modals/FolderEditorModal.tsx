@@ -8,10 +8,12 @@ import { useFoldersStore } from "@/stores/folders";
 type FolderEditorModalProps = {
   /** Omit to create a new folder; pass one to rename it. */
   folder?: FolderResponse | null;
+  /** When creating: the Folder to create it in (omit for the top level). */
+  parent?: FolderResponse | null;
   onClose: () => void;
 };
 
-export function FolderEditorModal({ folder = null, onClose }: FolderEditorModalProps) {
+export function FolderEditorModal({ folder = null, parent = null, onClose }: FolderEditorModalProps) {
   const createFolder = useFoldersStore((state) => state.createFolder);
   const renameFolder = useFoldersStore((state) => state.renameFolder);
 
@@ -35,7 +37,7 @@ export function FolderEditorModal({ folder = null, onClose }: FolderEditorModalP
     setFormError("");
     try {
       if (folder) await renameFolder(folder.id, trimmed);
-      else await createFolder(trimmed);
+      else await createFolder(trimmed, parent?.id ?? null);
       onClose();
     } catch (error) {
       setFormError(await apiErrorMessage(error));
@@ -46,8 +48,8 @@ export function FolderEditorModal({ folder = null, onClose }: FolderEditorModalP
 
   return (
     <Modal
-      kicker={folder ? "ZMIANA NAZWY" : "NOWY FOLDER"}
-      title={folder ? "Zmień nazwę folderu" : "Nowy folder"}
+      kicker={folder ? "ZMIANA NAZWY" : parent ? "NOWY PODFOLDER" : "NOWY FOLDER"}
+      title={folder ? "Zmień nazwę folderu" : parent ? `Nowy folder w „${parent.name}”` : "Nowy folder"}
       titleId="folder-dialog-title"
       onClose={close}
       size="lg"

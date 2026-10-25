@@ -53,6 +53,9 @@ def test_the_domain_constraints_exist_by_name(migrated: Engine) -> None:
     assert {c['name'] for c in schema.get_unique_constraints('categories')} == {
         'category_name_unique_per_user'
     }
+    folder_indexes = {i['name']: i for i in schema.get_indexes('folders')}
+    assert folder_indexes['folder_name_unique_at_top_level']['unique']
+    assert folder_indexes['folder_name_unique_per_parent']['unique']
 
 
 def test_downgrade_removes_everything(alembic_config: Config, migrated: Engine) -> None:

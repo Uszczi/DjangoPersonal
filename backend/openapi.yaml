@@ -1426,6 +1426,11 @@ components:
           maxLength: 100
           minLength: 1
           title: Name
+        parent_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Parent Id
       type: object
       required:
       - name
@@ -1439,6 +1444,11 @@ components:
         name:
           type: string
           title: Name
+        parent_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Parent Id
         created_at:
           type: string
           format: date-time
@@ -1537,6 +1547,11 @@ components:
             minLength: 1
           - type: 'null'
           title: Name
+        parent_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Parent Id
       type: object
       title: PatchedFolderRequest
     PatchedProjectRequest:

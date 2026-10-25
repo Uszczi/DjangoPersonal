@@ -117,3 +117,109 @@ def test_another_users_folder_with_items_cannot_be_deleted(
 
     assert stranger.delete(f"/api/v1/folders/{folder['id']}/").status_code == HTTPStatus.NOT_FOUND
     assert [w['name'] for w in owner.get('/api/v1/whiteboards/').json()] == ['Plan']
+
+
+def _folder(post_json: Any, name: str, parent: dict[str, Any] | None = None) -> dict[str, Any]:
+    payload: dict[str, Any] = {'name': name}
+    if parent is not None:
+        payload['parent_id'] = parent['id']
+    response = post_json('/api/v1/folders/', payload)
+    assert response.status_code == HTTPStatus.CREATED, response.json()
+    return dict(response.json())
+
+
+def test_folder_can_be_created_inside_another(post_json: Any, api_client: Any) -> None:
+    work = _folder(post_json, 'Praca')
+
+    child = _folder(post_json, 'Klient A', work)
+
+    assert child['parent_id'] == work['id']
+    listing = {f['name']: f['parent_id'] for f in api_client.get('/api/v1/folders/').json()}
+    assert listing == {'Praca': None, 'Klient A': work['id']}
+
+
+def test_folder_names_are_unique_among_siblings_only(post_json: Any) -> None:
+    work = _folder(post_json, 'Praca')
+    home = _folder(post_json, 'Dom')
+    _folder(post_json, 'Notatki', work)
+
+    # The same name is fine under another parent and at the top level.
+    _folder(post_json, 'Notatki', home)
+    _folder(post_json, 'Notatki')
+
+    clash = post_json('/api/v1/folders/', {'name': 'NOTATKI', 'parent_id': work['id']})
+    assert clash.status_code == HTTPStatus.BAD_REQUEST
+    assert clash.json()['detail'] == 'A folder with this name already exists.'
+
+
+def test_folder_can_move_between_parents_and_to_the_top(
+    post_json: Any, patch_json: Any
+) -> None:
+    work = _folder(post_json, 'Praca')
+    home = _folder(post_json, 'Dom')
+    child = _folder(post_json, 'Plany', work)
+    url = f"/api/v1/folders/{child['id']}/"
+
+    assert patch_json(url, {'parent_id': home['id']}).json()['parent_id'] == home['id']
+    assert patch_json(url, {'parent_id': None}).json()['parent_id'] is None
+    # Renaming alone leaves it where it is.
+    moved = patch_json(url, {'parent_id': work['id']}).json()
+    assert patch_json(url, {'name': 'Cele'}).json()['parent_id'] == moved['parent_id']
+
+
+def test_moving_a_folder_checks_names_in_its_new_place(
+    post_json: Any, patch_json: Any, api_client: Any
+) -> None:
+    work = _folder(post_json, 'Praca')
+    _folder(post_json, 'Plany', work)
+    loose = _folder(post_json, 'plany')
+
+    response = patch_json(f"/api/v1/folders/{loose['id']}/", {'parent_id': work['id']})
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    listing = {f['id']: f['parent_id'] for f in api_client.get('/api/v1/folders/').json()}
+    assert listing[loose['id']] is None
+
+
+def test_folder_cannot_move_into_itself_or_its_subfolders(
+    post_json: Any, patch_json: Any
+) -> None:
+    top = _folder(post_json, 'Praca')
+    middle = _folder(post_json, 'Klient', top)
+    bottom = _folder(post_json, 'Faktury', middle)
+    url = f"/api/v1/folders/{top['id']}/"
+
+    for target in (top, middle, bottom):
+        response = patch_json(url, {'parent_id': target['id']})
+        assert response.status_code == HTTPStatus.BAD_REQUEST
+        assert response.json()['detail'] == (
+            'A folder cannot be moved into itself or one of its subfolders.'
+        )
+
+
+def test_deleting_a_folder_deletes_its_whole_subtree(post_json: Any, api_client: Any) -> None:
+    work = _folder(post_json, 'Praca')
+    client = _folder(post_json, 'Klient', work)
+    invoices = _folder(post_json, 'Faktury', client)
+    other = _folder(post_json, 'Dom')
+    post_json('/api/v1/whiteboards/', {'name': 'W kliencie', 'folder_id': client['id']})
+    post_json('/api/v1/whiteboards/', {'name': 'Głęboko', 'folder_id': invoices['id']})
+    post_json('/api/v1/whiteboards/', {'name': 'W domu', 'folder_id': other['id']})
+
+    assert api_client.delete(f"/api/v1/folders/{work['id']}/").status_code == HTTPStatus.NO_CONTENT
+
+    assert [f['name'] for f in api_client.get('/api/v1/folders/').json()] == ['Dom']
+    assert [w['name'] for w in api_client.get('/api/v1/whiteboards/').json()] == ['W domu']
+
+
+def test_another_users_folder_cannot_be_a_parent(make_user: Any, client_for: Any) -> None:
+    owner = client_for(make_user('owner'))
+    stranger = client_for(make_user('stranger'))
+    secret = owner.post('/api/v1/folders/', {'name': 'Sekret'}).json()
+    mine = stranger.post('/api/v1/folders/', {'name': 'Moje'}).json()
+
+    created = stranger.post('/api/v1/folders/', {'name': 'X', 'parent_id': secret['id']})
+    moved = stranger.patch(f"/api/v1/folders/{mine['id']}/", {'parent_id': secret['id']})
+
+    assert created.status_code == HTTPStatus.NOT_FOUND
+    assert moved.status_code == HTTPStatus.NOT_FOUND
