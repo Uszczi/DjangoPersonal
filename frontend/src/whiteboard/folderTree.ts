@@ -51,7 +51,7 @@ export function folderPath(folders: FolderResponse[], folderId: number | null): 
 }
 
 /** Lowercase and without diacritics, so "zolw" finds "Żółw". */
-function searchKey(text: string) {
+export function searchKey(text: string) {
   return text
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")

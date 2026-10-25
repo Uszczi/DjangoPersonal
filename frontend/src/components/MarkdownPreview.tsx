@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+import { cloneElement, isValidElement, type ReactNode } from "react";
+
+import { findMatches } from "@/whiteboard/textSearch";
 
 /**
  * A small Markdown renderer for Notatki previews. It builds React elements
@@ -261,15 +263,50 @@ function renderBlock(block: Block, index: number): ReactNode {
   }
 }
 
+/**
+ * Wraps every match of the search in the rendered text in `<mark>`. It works
+ * on the finished elements, so a match is found within one run of text; one
+ * spanning formatting (half bold) is not marked.
+ */
+function markSearch(node: ReactNode, query: string, key: string): ReactNode {
+  if (typeof node === "string") {
+    const matches = findMatches(node, query);
+    if (matches.length === 0) return node;
+    const parts: ReactNode[] = [];
+    let last = 0;
+    for (const { start, end } of matches) {
+      parts.push(node.slice(last, start));
+      parts.push(
+        <mark key={`${key}-m${start}`} className="rounded-sm bg-search-match text-inherit">
+          {node.slice(start, end)}
+        </mark>,
+      );
+      last = end;
+    }
+    parts.push(node.slice(last));
+    return parts;
+  }
+  if (Array.isArray(node)) {
+    return node.map((child: ReactNode, i) => markSearch(child, query, `${key}-${i}`));
+  }
+  if (isValidElement<{ children?: ReactNode }>(node) && node.props.children !== undefined) {
+    return cloneElement(node, undefined, markSearch(node.props.children, query, key));
+  }
+  return node;
+}
+
 type MarkdownPreviewProps = {
   markdown: string;
   className?: string;
+  /** Text to mark wherever it appears, as the editor's search does. */
+  highlight?: string;
 };
 
-export function MarkdownPreview({ markdown, className }: MarkdownPreviewProps) {
+export function MarkdownPreview({ markdown, className, highlight }: MarkdownPreviewProps) {
+  const blocks: ReactNode = parseBlocks(markdown).map(renderBlock);
   return (
     <div className={`break-words [&>*:first-child]:mt-0 ${className ?? ""}`}>
-      {parseBlocks(markdown).map(renderBlock)}
+      {highlight ? markSearch(blocks, highlight, "s") : blocks}
     </div>
   );
 }
