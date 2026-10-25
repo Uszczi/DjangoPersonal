@@ -15,6 +15,7 @@ import {
   PageHeader,
 } from "@/design-system";
 import type { FolderResponse, WhiteboardResponse } from "@personal/shared/generated/api";
+import { DeleteFolderModal } from "@/components/modals/DeleteFolderModal";
 import { FolderEditorModal } from "@/components/modals/FolderEditorModal";
 import { MoveWhiteboardModal } from "@/components/modals/MoveWhiteboardModal";
 import { useFoldersStore } from "@/stores/folders";
@@ -184,6 +185,10 @@ function FolderSection({ folder, items, expanded, onToggle, onCreate }: FolderSe
         >
           <Pencil aria-hidden="true" className="size-[16px]" />
         </IconButton>
+        <DeleteButton
+          aria-label={`Usuń folder: ${folder.name}`}
+          onClick={() => ShowModal(DeleteFolderModal, { folder, itemCount: items.length })}
+        />
       </div>
       {expanded && (
         <ul className="flex flex-col pb-2 pl-6" aria-label={`Zawartość folderu: ${folder.name}`}>

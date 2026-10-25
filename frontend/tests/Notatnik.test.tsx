@@ -347,4 +347,60 @@ describe('Notatnik folders', () => {
     expect(within(loose).getByRole('button', { name: 'Otwórz tablicę: Plan' })).toBeInTheDocument()
     expect(within(homeFolder).queryByRole('button', { name: 'Otwórz tablicę: Plan' })).not.toBeInTheDocument()
   })
+
+  test.each([
+    [0, 'Usunąć folder „Praca”?'],
+    [1, 'Usunąć folder „Praca” i 1 element w nim?'],
+    [3, 'Usunąć folder „Praca” i 3 elementy w nim?'],
+    [5, 'Usunąć folder „Praca” i 5 elementów w nim?'],
+    [12, 'Usunąć folder „Praca” i 12 elementów w nim?'],
+    [22, 'Usunąć folder „Praca” i 22 elementy w nim?'],
+  ])('deleting a folder with %i items asks “%s”', async (count, question) => {
+    const items = Array.from({ length: count }, (_, i) => board(10 + i, `Plan ${i}`, 1, '2026-10-10T10:00:00Z'))
+    fetchMock.mockImplementation(fakeBackend({ folders: [work], boards: items }))
+    const user = userEvent.setup()
+
+    renderApp('/whiteboard')
+    await user.click(await screen.findByRole('button', { name: 'Usuń folder: Praca' }))
+
+    expect(await screen.findByRole('dialog', { name: question })).toBeInTheDocument()
+  })
+
+  test('cancelling a folder delete keeps everything', async () => {
+    fetchMock.mockImplementation(
+      fakeBackend({ folders: [work], boards: [board(5, 'Plan', 1, '2026-10-10T10:00:00Z')] }),
+    )
+    const user = userEvent.setup()
+
+    renderApp('/whiteboard')
+    await user.click(await screen.findByRole('button', { name: 'Usuń folder: Praca' }))
+    const dialog = await screen.findByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: 'Anuluj' }))
+
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'DELETE')).toBe(false)
+    await user.click(screen.getByRole('button', { name: 'Praca' }))
+    expect(screen.getByRole('button', { name: 'Otwórz tablicę: Plan' })).toBeInTheDocument()
+  })
+
+  test('confirming deletes the folder and its items but not loose ones', async () => {
+    fetchMock.mockImplementation(
+      fakeBackend({
+        folders: [work],
+        boards: [board(5, 'Plan', 1, '2026-10-10T10:00:00Z'), board(6, 'Luźna', null, '2026-10-11T10:00:00Z')],
+      }),
+    )
+    const user = userEvent.setup()
+
+    renderApp('/whiteboard')
+    await user.click(await screen.findByRole('button', { name: 'Usuń folder: Praca' }))
+    const dialog = await screen.findByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: 'Usuń folder' }))
+
+    await vi.waitFor(() =>
+      expect(screen.queryByRole('region', { name: 'Folder: Praca' })).not.toBeInTheDocument(),
+    )
+    expect(screen.queryByRole('button', { name: 'Otwórz tablicę: Plan' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Otwórz tablicę: Luźna' })).toBeInTheDocument()
+  })
 })

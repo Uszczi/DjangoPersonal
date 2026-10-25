@@ -89,3 +89,31 @@ def test_another_users_folder_is_out_of_reach(make_user: Any, client_for: Any) -
     # The same name is free for another user.
     assert stranger.post('/api/v1/folders/', {'name': 'Sekret'}).status_code == HTTPStatus.CREATED
     assert [f['name'] for f in owner.get('/api/v1/folders/').json()] == ['Sekret']
+
+
+def test_deleting_a_folder_deletes_only_its_items(post_json: Any, api_client: Any) -> None:
+    work = post_json('/api/v1/folders/', {'name': 'Praca'}).json()
+    home = post_json('/api/v1/folders/', {'name': 'Dom'}).json()
+    post_json('/api/v1/whiteboards/', {'name': 'Plan', 'folder_id': work['id']})
+    post_json('/api/v1/whiteboards/', {'kind': 'markdown', 'name': 'Notka', 'folder_id': work['id']})
+    post_json('/api/v1/whiteboards/', {'name': 'Zakupy', 'folder_id': home['id']})
+    post_json('/api/v1/whiteboards/', {'name': 'Luźna'})
+
+    response = api_client.delete(f"/api/v1/folders/{work['id']}/")
+
+    assert response.status_code == HTTPStatus.NO_CONTENT
+    remaining = api_client.get('/api/v1/whiteboards/').json()
+    assert sorted(w['name'] for w in remaining) == ['Luźna', 'Zakupy']
+    assert [f['name'] for f in api_client.get('/api/v1/folders/').json()] == ['Dom']
+
+
+def test_another_users_folder_with_items_cannot_be_deleted(
+    make_user: Any, client_for: Any
+) -> None:
+    owner = client_for(make_user('owner'))
+    stranger = client_for(make_user('stranger'))
+    folder = owner.post('/api/v1/folders/', {'name': 'Sekret'}).json()
+    owner.post('/api/v1/whiteboards/', {'name': 'Plan', 'folder_id': folder['id']})
+
+    assert stranger.delete(f"/api/v1/folders/{folder['id']}/").status_code == HTTPStatus.NOT_FOUND
+    assert [w['name'] for w in owner.get('/api/v1/whiteboards/').json()] == ['Plan']
