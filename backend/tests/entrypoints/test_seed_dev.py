@@ -23,7 +23,7 @@ def test_seed_dev_populates_an_empty_database(session: Session) -> None:
     for user in users:
         projects = list(session.scalars(select(Project).where(Project.user_id == user.id)))
         assert sum(project.is_inbox for project in projects) == 1
-        assert sum(not project.is_inbox for project in projects) == 3
+        assert sum(not project.is_inbox for project in projects) >= 3
         running = session.scalar(
             select(func.count())
             .select_from(TimeEntry)

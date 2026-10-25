@@ -8,7 +8,7 @@ every factory-made user has an Inbox, exactly like a registered one.
 """
 
 import random
-from datetime import UTC, date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -20,15 +20,19 @@ from sqlalchemy.orm import Session
 
 from personal.infra.models import (
     Category,
+    Counter,
+    CounterEntry,
+    Folder,
     Project,
     Task,
     TimeEntry,
     Transaction,
     User,
     Wallet,
+    Whiteboard,
 )
 from personal.infra.repo import UserRepository
-from personal.infra.rules import DEFAULT_PROJECT_STATUSES
+from personal.infra.rules import DEFAULT_PROJECT_STATUSES, default_board_content
 
 DEV_PASSWORD = 'devpass123'
 
@@ -143,3 +147,44 @@ class TransactionFactory(_Factory[Transaction]):
     title = Faker('sentence', nb_words=3, locale='pl_PL')
     amount = Decimal('10.00')
     date = LazyFunction(date.today)
+
+
+class FolderFactory(_Factory[Folder]):
+    class Meta:
+        model = Folder
+
+    user = SubFactory(UserFactory)
+    name = Sequence(lambda n: f'Folder{n}')
+    parent = None
+
+
+class WhiteboardFactory(_Factory[Whiteboard]):
+    """A drawing by default; pass ``kind=Whiteboard.KIND_MARKDOWN`` for a Notatka."""
+
+    class Meta:
+        model = Whiteboard
+
+    user = SubFactory(UserFactory)
+    name = Sequence(lambda n: f'Whiteboard {n}')
+    kind = Whiteboard.KIND_WHITEBOARD
+    content = LazyFunction(default_board_content)
+    folder_id = None
+
+
+class CounterFactory(_Factory[Counter]):
+    class Meta:
+        model = Counter
+
+    user = SubFactory(UserFactory)
+    name = Sequence(lambda n: f'Counter {n}')
+
+
+class CounterEntryFactory(_Factory[CounterEntry]):
+    class Meta:
+        model = CounterEntry
+
+    counter = SubFactory(CounterFactory)
+    user = LazyAttribute(lambda entry: entry.counter.user)
+    value = 1
+    occurred_at = LazyFunction(lambda: datetime.now(UTC))
+    note = ''
