@@ -811,6 +811,19 @@ def list_whiteboards(ctx: ToolContext) -> list[dict[str, Any]]:
 
 
 @_tool
+def search_notatnik(ctx: ToolContext, query: str) -> list[dict[str, Any]]:
+    """Grep the Notatnik: whiteboards and Notatki whose name matches ``query``,
+    and Notatki whose text does, most recently changed first. Each result has
+    ``lines`` — the matching lines of a Notatka with their 1-based ``number``
+    (empty when only the name matched). Case and Polish diacritics are ignored;
+    every word of ``query`` must appear on the same line. No content is
+    returned — use ``get_whiteboard`` for the whole text."""
+    with _unit_of_work(ctx) as (session, user):
+        handler = whiteboard_handlers.SearchWhiteboards(wiring.whiteboard_repository(session), user)
+        return [result.model_dump(mode='json') for result in handler.execute(query)]
+
+
+@_tool
 def get_whiteboard(ctx: ToolContext, whiteboard_id: int) -> dict[str, Any]:
     """Fetch a whiteboard or Notatka with its content
     (a Notatka's text is ``content.markdown``)."""

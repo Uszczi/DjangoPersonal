@@ -16,7 +16,7 @@ import {
   PageHeader,
   TextInput,
 } from "@/design-system";
-import type { FolderResponse, WhiteboardResponse } from "@personal/shared/generated/api";
+import type { FolderResponse, MatchingLine, WhiteboardResponse } from "@personal/shared/generated/api";
 import { DeleteFolderModal } from "@/components/modals/DeleteFolderModal";
 import { FolderEditorModal } from "@/components/modals/FolderEditorModal";
 import { MoveFolderModal, MoveWhiteboardModal } from "@/components/modals/MoveToFolderModal";
@@ -25,12 +25,16 @@ import { ShowModal } from "@/stores/modal";
 import { useWhiteboardsStore } from "@/stores/whiteboards";
 import { useExpandedFolders } from "@/whiteboard/expandedFolders";
 import { childFolders, folderPath, matchesQuery, subtreeIds } from "@/whiteboard/folderTree";
+import { useNotatnikSearch } from "@/whiteboard/useNotatnikSearch";
 
 export const Route = createFileRoute("/whiteboard/")({
   component: WhiteboardsPage,
 });
 
 type Kind = "whiteboard" | "markdown";
+
+/** How many matching lines a search result shows before "i N więcej". */
+const SHOWN_LINES = 3;
 
 function WhiteboardsPage() {
   const whiteboards = useWhiteboardsStore((s) => s.whiteboards);
@@ -182,16 +186,35 @@ type SearchResultsProps = {
   onRevealFolder: (folder: FolderResponse) => void;
 };
 
-/** The Folders and items whose names match `query`, flat, each with the Folders it sits in. */
+/**
+ * The Folders whose names match `query`, then the items the server found
+ * (by name, or a Notatka by its text), flat, each with the Folders it sits in
+ * and a Notatka's matching lines.
+ */
 function SearchResults({ query, folders, whiteboards, onRevealFolder }: SearchResultsProps) {
+  const search = useNotatnikSearch(query);
   const matchingFolders = folders.filter((folder) => matchesQuery(folder.name, query));
-  const matchingItems = whiteboards.filter((wb) => matchesQuery(wb.name, query));
+  // Rows come from the store, so a result moved or deleted here updates at once.
+  const byId = new Map(whiteboards.map((wb) => [wb.id, wb]));
+  const matchingItems =
+    search.status === "done"
+      ? search.results.flatMap((hit) => {
+          const wb = byId.get(hit.id);
+          return wb ? [{ wb, lines: hit.lines }] : [];
+        })
+      : [];
   const location = (folderId: number | null) =>
     folderPath(folders, folderId)
       .map((f) => f.name)
       .join(" / ") || "Bez folderu";
 
-  if (matchingFolders.length === 0 && matchingItems.length === 0) {
+  if (search.status === "error") {
+    return <ErrorMessage>Nie udało się przeszukać Notatnika.</ErrorMessage>;
+  }
+  if (search.status === "loading" && matchingFolders.length === 0) {
+    return <LoadingStatus>Szukanie…</LoadingStatus>;
+  }
+  if (search.status === "done" && matchingFolders.length === 0 && matchingItems.length === 0) {
     return <p className="py-4 text-[13px] text-muted">Nic nie pasuje do „{query.trim()}”.</p>;
   }
 
@@ -211,8 +234,8 @@ function SearchResults({ query, folders, whiteboards, onRevealFolder }: SearchRe
           <></>
         </ListRow>
       ))}
-      {matchingItems.map((wb) => (
-        <WhiteboardRow key={wb.id} whiteboard={wb} location={location(wb.folderId ?? null)} />
+      {matchingItems.map(({ wb, lines }) => (
+        <WhiteboardRow key={wb.id} whiteboard={wb} location={location(wb.folderId ?? null)} lines={lines} />
       ))}
     </ul>
   );
@@ -329,7 +352,15 @@ function FolderSection({ folder, folders, whiteboards, isExpanded, onToggle, onC
   );
 }
 
-function WhiteboardRow({ whiteboard: wb, location }: { whiteboard: WhiteboardResponse; location?: string }) {
+type WhiteboardRowProps = {
+  whiteboard: WhiteboardResponse;
+  /** The Folder path, shown under the name in search results. */
+  location?: string;
+  /** The lines of its text that matched a search. */
+  lines?: MatchingLine[];
+};
+
+function WhiteboardRow({ whiteboard: wb, location, lines = [] }: WhiteboardRowProps) {
   const remove = useWhiteboardsStore((s) => s.deleteWhiteboard);
   const navigate = useNavigate();
 
@@ -355,6 +386,7 @@ function WhiteboardRow({ whiteboard: wb, location }: { whiteboard: WhiteboardRes
           <div className="min-w-0">
             <ListRowTitle>{wb.name}</ListRowTitle>
             <ListRowSubtitle>{location}</ListRowSubtitle>
+            {lines.length > 0 && <MatchingLines lines={lines} />}
           </div>
         )}
       </ListRowButton>
@@ -373,5 +405,21 @@ function WhiteboardRow({ whiteboard: wb, location }: { whiteboard: WhiteboardRes
         <DeleteButton aria-label={`Usuń tablicę: ${wb.name}`} onClick={() => void handleDelete()} />
       </>
     </ListRow>
+  );
+}
+
+/** Grep-style: each matching line with its number, the first few only. */
+function MatchingLines({ lines }: { lines: MatchingLine[] }) {
+  const hidden = lines.length - SHOWN_LINES;
+  return (
+    <span role="list" aria-label="Pasujące linie" className="mt-1 block font-mono text-[12px] leading-relaxed">
+      {lines.slice(0, SHOWN_LINES).map((line) => (
+        <span role="listitem" key={line.number} className="flex min-w-0 gap-2">
+          <span className="w-8 shrink-0 text-right text-muted tabular-nums">{line.number}</span>
+          <span className="min-w-0 truncate text-ink">{line.text}</span>
+        </span>
+      ))}
+      {hidden > 0 && <span className="block pl-10 text-muted">i {hidden} więcej</span>}
+    </span>
   );
 }

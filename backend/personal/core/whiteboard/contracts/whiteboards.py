@@ -41,3 +41,23 @@ class WhiteboardResponse(BaseModel):
     folder_id: int | None = None
     created_at: datetime = Field(..., json_schema_extra={'readOnly': True})
     updated_at: datetime = Field(..., json_schema_extra={'readOnly': True})
+
+
+class MatchingLine(BaseModel):
+    """One line of a Notatka that matched a search, numbered from 1."""
+
+    number: int
+    text: str
+
+
+class WhiteboardSearchResult(BaseModel):
+    """A Whiteboard or Notatka found by a search: without its ``content``,
+    with the lines of a Notatka's text that matched (empty when only the name did)."""
+
+    id: int
+    kind: str
+    name: str
+    folder_id: int | None = None
+    created_at: datetime
+    updated_at: datetime
+    lines: list[MatchingLine]

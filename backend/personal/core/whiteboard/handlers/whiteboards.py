@@ -1,8 +1,11 @@
 from personal.core.shared.errors import DomainError, NotFound
 from personal.core.whiteboard.contracts import (
+    MatchingLine,
     PatchedWhiteboardRequest,
     WhiteboardRequest,
+    WhiteboardSearchResult,
 )
+from personal.core.whiteboard.search import matches, matching_lines, query_words
 from personal.infra.models import User
 from personal.infra.models import Whiteboard as WhiteboardModel
 from personal.infra.repo import FolderRepository, WhiteboardRepository
@@ -33,6 +36,49 @@ class ListWhiteboards:
 
     def execute(self) -> list[WhiteboardModel]:
         return self.whiteboards.list_all(user=self.user)
+
+
+class SearchWhiteboards:
+    """Grep over the Notatnik: the user's Whiteboards and Notatki whose name
+    matches ``query``, and the Notatki with matching lines, most recently
+    changed first. A blank query finds nothing.
+
+    The matching ignores diacritics, which SQL ``LIKE`` can't do portably, so
+    it runs here over the user's boards rather than in the database.
+    """
+
+    def __init__(self, whiteboards: WhiteboardRepository, user: User):
+        self.whiteboards = whiteboards
+        self.user = user
+
+    def execute(self, query: str) -> list[WhiteboardSearchResult]:
+        words = query_words(query)
+        if not words:
+            return []
+        results = []
+        for whiteboard in self.whiteboards.list_all(user=self.user):
+            lines = matching_lines(_markdown(whiteboard), words)
+            if lines or matches(whiteboard.name, words):
+                results.append(
+                    WhiteboardSearchResult(
+                        id=whiteboard.id,
+                        kind=whiteboard.kind,
+                        name=whiteboard.name,
+                        folder_id=whiteboard.folder_id,
+                        created_at=whiteboard.created_at,
+                        updated_at=whiteboard.updated_at,
+                        lines=[MatchingLine(number=n, text=t) for n, t in lines],
+                    )
+                )
+        return results
+
+
+def _markdown(whiteboard: WhiteboardModel) -> str:
+    """A Notatka's text; empty for a drawing."""
+    if whiteboard.kind != WhiteboardModel.KIND_MARKDOWN:
+        return ''
+    markdown = whiteboard.content.get('markdown')
+    return markdown if isinstance(markdown, str) else ''
 
 
 class GetWhiteboard:

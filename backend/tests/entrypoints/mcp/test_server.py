@@ -180,3 +180,25 @@ def test_notatnik_tools(mcp_user: User) -> None:
     call('delete_whiteboard', whiteboard_id=board['id'])
     call('delete_folder', folder_id=parent['id'])
     assert [f['name'] for f in call('list_folders')] == ['Spotkania']
+
+
+def test_search_notatnik_greps_notatki(mcp_user: User) -> None:
+    note = call(
+        'create_whiteboard', name='Zakupy', kind='markdown', markdown='# Lista\nmleko\nżółty ser'
+    )
+    call('create_whiteboard', name='Żółw')
+
+    hits = call('search_notatnik', query='zolt')
+    assert hits == [
+        {
+            'id': note['id'],
+            'kind': 'markdown',
+            'name': 'Zakupy',
+            'folder_id': None,
+            'created_at': note['created_at'],
+            'updated_at': note['updated_at'],
+            'lines': [{'number': 3, 'text': 'żółty ser'}],
+        }
+    ]
+    assert [(h['name'], h['lines']) for h in call('search_notatnik', query='ZOLW')] == [('Żółw', [])]
+    assert call('search_notatnik', query=' ') == []

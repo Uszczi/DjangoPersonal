@@ -1,12 +1,15 @@
 """Whiteboard endpoints: boards and Notatki alike (``kind``)."""
 
-from fastapi import APIRouter, Response, status
+from typing import Annotated
+
+from fastapi import APIRouter, Query, Response, status
 
 from personal.core.whiteboard import handlers
 from personal.core.whiteboard.contracts import (
     PatchedWhiteboardRequest,
     WhiteboardRequest,
     WhiteboardResponse,
+    WhiteboardSearchResult,
 )
 from personal.entrypoints.http.deps import (
     CurrentUser,
@@ -25,6 +28,18 @@ def list_whiteboards(
         WhiteboardResponse.model_validate(whiteboard)
         for whiteboard in handlers.ListWhiteboards(whiteboards, user).execute()
     ]
+
+
+# Declared before ``/whiteboards/{id}/``, which would otherwise claim "search".
+@router.get('/whiteboards/search/', operation_id='whiteboards_search')
+def search_whiteboards(
+    q: Annotated[str, Query(max_length=200)],
+    user: CurrentUser,
+    whiteboards: WhiteboardRepositoryDep,
+) -> list[WhiteboardSearchResult]:
+    """Whiteboards and Notatki whose name matches ``q``, and Notatki whose
+    text does, with the matching lines; case and diacritics are ignored."""
+    return handlers.SearchWhiteboards(whiteboards, user).execute(q)
 
 
 @router.post(

@@ -12,6 +12,7 @@ models/FolderRequest.ts
 models/FolderResponse.ts
 models/LoginRequest.ts
 models/LoginResponse.ts
+models/MatchingLine.ts
 models/PatchedCategoryRequest.ts
 models/PatchedCounterEntryRequest.ts
 models/PatchedCounterRequest.ts
@@ -41,5 +42,6 @@ models/WalletRequest.ts
 models/WalletResponse.ts
 models/WhiteboardRequest.ts
 models/WhiteboardResponse.ts
+models/WhiteboardSearchResult.ts
 models/index.ts
 runtime.ts

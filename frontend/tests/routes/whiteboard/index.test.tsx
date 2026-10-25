@@ -29,6 +29,8 @@ function jsonResponse(data: unknown, status = 200) {
 }
 
 /** Answers the folders and whiteboards endpoints the way the backend does. */
+const searches: string[] = []
+
 function fakeBackend(initial: { folders?: Folder[]; boards?: Board[] } = {}) {
   let folders = (initial.folders ?? []).map((f) => ({ parent_id: null, ...f }))
   let boards = (initial.boards ?? []).map((b) => ({ ...b }))
@@ -55,12 +57,30 @@ function fakeBackend(initial: { folders?: Folder[]; boards?: Board[] } = {}) {
     return ids
   }
   const duplicate = () => jsonResponse({ detail: 'A folder with this name already exists.' }, 400)
+  /** A rough stand-in for the server's grep: lowercase, Polish letters folded. */
+  const key = (text: string) => text.normalize('NFD').replace(/\p{Diacritic}/gu, '').replace(/ł/gi, 'l').toLowerCase()
+  function search(q: string) {
+    const words = key(q).split(/\s+/).filter(Boolean)
+    const hits = (text: string) => words.every((w) => key(text).includes(w))
+    return boards.flatMap(({ content, ...b }) => {
+      const markdown = b.kind === 'markdown' && typeof content.markdown === 'string' ? content.markdown : ''
+      const lines = markdown
+        .split('\n')
+        .map((text, i) => ({ number: i + 1, text: text.trim() }))
+        .filter((line) => hits(line.text))
+      return lines.length > 0 || hits(b.name) ? [{ ...b, lines }] : []
+    })
+  }
 
   return async (url: string | URL | Request, init?: RequestInit): Promise<Response> => {
     const path = String(url)
     const method = init?.method ?? 'GET'
     const body = init?.body ? JSON.parse(String(init.body)) : {}
 
+    if (path.includes('/whiteboards/search/')) {
+      searches.push(new URL(path, 'http://x').searchParams.get('q') ?? '')
+      return jsonResponse(search(new URL(path, 'http://x').searchParams.get('q') ?? ''))
+    }
     if (path.endsWith('/folders/')) {
       if (method === 'POST') {
         const parentId = body.parent_id ?? null
@@ -144,6 +164,7 @@ describe('Notatnik search', () => {
   const fetchMock = vi.fn()
 
   beforeEach(() => {
+    searches.length = 0
     fetchMock.mockReset()
     vi.stubGlobal('fetch', fetchMock)
   })
@@ -170,8 +191,8 @@ describe('Notatnik search', () => {
     renderApp('/whiteboard')
     await user.type(await screen.findByRole('searchbox', { name: 'Szukaj w Notatniku' }), 'zolw')
 
-    const results = screen.getByRole('list', { name: 'Wyniki wyszukiwania' })
-    const hit = within(results).getByRole('button', { name: 'Otwórz notatkę: Żółw szkic' })
+    const results = await screen.findByRole('list', { name: 'Wyniki wyszukiwania' })
+    const hit = await within(results).findByRole('button', { name: 'Otwórz notatkę: Żółw szkic' })
     expect(hit).toHaveTextContent('Praca / Projekty')
     expect(within(results).queryByRole('button', { name: 'Otwórz tablicę: Zakupy' })).not.toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Folder: Praca' })).not.toBeInTheDocument()
@@ -181,6 +202,62 @@ describe('Notatnik search', () => {
     expect(screen.getByRole('button', { name: 'Pokaż folder: Projekty' })).toHaveTextContent('Praca')
   })
 
+  test('asks the server for Notatki matching their text and shows the lines with their numbers', async () => {
+    const note = board(5, 'Dziennik', 2, '2026-10-20T10:00:00Z', 'markdown')
+    note.content = { markdown: '# Poniedziałek\nKupić mleko\nZadzwonić do Żanety\nmleko owsiane, nie krowie' }
+    const drawing = board(6, 'Szkic', null, '2026-10-19T10:00:00Z')
+    drawing.content = { version: 1, elements: [{ type: 'note', text: 'mleko' }] }
+    fetchMock.mockImplementation(fakeBackend({ folders: [work, projects], boards: [note, drawing] }))
+    const user = userEvent.setup()
+
+    renderApp('/whiteboard')
+    await user.type(await screen.findByRole('searchbox', { name: 'Szukaj w Notatniku' }), 'MLEKO')
+
+    const results = await screen.findByRole('list', { name: 'Wyniki wyszukiwania' })
+    const hit = await within(results).findByRole('button', { name: 'Otwórz notatkę: Dziennik' })
+    // One request once typing pauses, not one per keystroke.
+    expect(searches).toEqual(['MLEKO'])
+    expect(hit).toHaveTextContent('Praca / Projekty')
+    const lines = within(hit).getByRole('list', { name: 'Pasujące linie' })
+    expect(within(lines).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+      '2Kupić mleko',
+      '4mleko owsiane, nie krowie',
+    ])
+    expect(within(results).queryByRole('button', { name: 'Otwórz tablicę: Szkic' })).not.toBeInTheDocument()
+
+    await user.clear(screen.getByRole('searchbox'))
+    await user.type(screen.getByRole('searchbox'), 'zanet zadzwon')
+    expect(
+      await within(await screen.findByRole('list', { name: 'Pasujące linie' })).findByText('Zadzwonić do Żanety'),
+    ).toBeInTheDocument()
+  })
+
+  test('shows the first three matching lines and how many more there are', async () => {
+    const note = board(5, 'Lista', null, '2026-10-20T10:00:00Z', 'markdown')
+    note.content = { markdown: ['kawa 1', 'kawa 2', 'herbata', 'kawa 3', 'kawa 4', 'kawa 5'].join('\n') }
+    fetchMock.mockImplementation(fakeBackend({ boards: [note] }))
+    const user = userEvent.setup()
+
+    renderApp('/whiteboard')
+    await user.type(await screen.findByRole('searchbox', { name: 'Szukaj w Notatniku' }), 'kawa')
+
+    const lines = await screen.findByRole('list', { name: 'Pasujące linie' })
+    expect(within(lines).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['1kawa 1', '2kawa 2', '4kawa 3'])
+    expect(lines).toHaveTextContent('i 2 więcej')
+  })
+
+  test('says so when the search fails', async () => {
+    const backend = fakeBackend({ folders: [work] })
+    fetchMock.mockImplementation((url: string | URL | Request, init?: RequestInit) =>
+      String(url).includes('/whiteboards/search/') ? Promise.resolve(jsonResponse({}, 500)) : backend(url, init),
+    )
+    const user = userEvent.setup()
+
+    renderApp('/whiteboard')
+    await user.type(await screen.findByRole('searchbox', { name: 'Szukaj w Notatniku' }), 'cokolwiek')
+    expect(await screen.findByText('Nie udało się przeszukać Notatnika.')).toBeInTheDocument()
+  })
+
   test('says when nothing matches, and Escape brings the tree back', async () => {
     fetchMock.mockImplementation(fakeBackend({ folders: [work] }))
     const user = userEvent.setup()
@@ -188,7 +265,7 @@ describe('Notatnik search', () => {
     renderApp('/whiteboard')
     const search = await screen.findByRole('searchbox', { name: 'Szukaj w Notatniku' })
     await user.type(search, 'xyz')
-    expect(screen.getByText('Nic nie pasuje do „xyz”.')).toBeInTheDocument()
+    expect(await screen.findByText('Nic nie pasuje do „xyz”.')).toBeInTheDocument()
 
     await user.keyboard('{Escape}')
     expect(search).toHaveValue('')

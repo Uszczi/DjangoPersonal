@@ -214,6 +214,11 @@ import {
     WhiteboardResponseFromJSON,
     WhiteboardResponseToJSON,
 } from '../models/WhiteboardResponse';
+import {
+    type WhiteboardSearchResult,
+    WhiteboardSearchResultFromJSON,
+    WhiteboardSearchResultToJSON,
+} from '../models/WhiteboardSearchResult';
 
 export interface AuthLoginRequest {
     /**
@@ -620,6 +625,13 @@ export interface WhiteboardsRetrieveRequest {
      *
      */
     id: number;
+}
+
+export interface WhiteboardsSearchRequest {
+    /**
+     *
+     */
+    q: string;
 }
 
 /**
@@ -3810,6 +3822,64 @@ export class PersonalApi extends runtime.BaseAPI {
      */
     async whiteboardsRetrieve(requestParameters: WhiteboardsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<WhiteboardResponse> {
         const response = await this.whiteboardsRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for whiteboardsSearch without sending the request
+     */
+    async whiteboardsSearchRequestOpts(requestParameters: WhiteboardsSearchRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['q'] == null) {
+            throw new runtime.RequiredError(
+                'q',
+                'Required parameter "q" was null or undefined when calling whiteboardsSearch().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['q'] != null) {
+            queryParameters['q'] = requestParameters['q'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/whiteboards/search/`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Whiteboards and Notatki whose name matches ``q``, and Notatki whose text does, with the matching lines; case and diacritics are ignored.
+     * Search Whiteboards
+     */
+    async whiteboardsSearchRaw(requestParameters: WhiteboardsSearchRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<WhiteboardSearchResult>>> {
+        const requestOptions = await this.whiteboardsSearchRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(WhiteboardSearchResultFromJSON));
+    }
+
+    /**
+     * Whiteboards and Notatki whose name matches ``q``, and Notatki whose text does, with the matching lines; case and diacritics are ignored.
+     * Search Whiteboards
+     */
+    async whiteboardsSearch(requestParameters: WhiteboardsSearchRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<WhiteboardSearchResult>> {
+        const response = await this.whiteboardsSearchRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

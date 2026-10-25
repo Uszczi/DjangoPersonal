@@ -137,3 +137,60 @@ def test_whiteboard_cannot_be_moved_to_a_missing_or_foreign_folder(
     assert stranger.patch(url, {'folder_id': foreign['id']}).status_code == HTTPStatus.NOT_FOUND
     assert stranger.patch(url, {'folder_id': 9999}).status_code == HTTPStatus.NOT_FOUND
     assert stranger.get(url).json()['folder_id'] is None
+
+
+def test_search_greps_notatki_ignoring_case_and_polish_letters(
+    api_client: Any, post_json: Any
+) -> None:
+    note = post_json(
+        '/api/v1/whiteboards/',
+        {
+            'kind': 'markdown',
+            'name': 'Dziennik',
+            'content': {'markdown': '# Poniedziałek\r\nKupić MLEKO\n  Zadzwonić do Żanety  \nmleko owsiane'},
+        },
+    ).json()
+    post_json('/api/v1/whiteboards/', {'kind': 'markdown', 'name': 'Inne', 'content': {'markdown': 'chleb'}})
+
+    response = api_client.get('/api/v1/whiteboards/search/?q=mleko')
+    assert response.status_code == HTTPStatus.OK
+    [hit] = response.json()
+    assert hit['id'] == note['id']
+    assert hit['name'] == 'Dziennik'
+    assert 'content' not in hit
+    assert hit['lines'] == [
+        {'number': 2, 'text': 'Kupić MLEKO'},
+        {'number': 4, 'text': 'mleko owsiane'},
+    ]
+
+    # Every word must be on the same line, in any order.
+    lines = api_client.get('/api/v1/whiteboards/search/?q=zanet%20ZADZWON').json()[0]['lines']
+    assert lines == [{'number': 3, 'text': 'Zadzwonić do Żanety'}]
+    assert api_client.get('/api/v1/whiteboards/search/?q=mleko%20chleb').json() == []
+
+
+def test_search_matches_names_of_boards_but_not_their_drawings(api_client: Any, post_json: Any) -> None:
+    drawing = {'version': 1, 'elements': [{'id': 'e1', 'kind': 'text', 'text': 'żółw'}], 'viewport': {}}
+    post_json('/api/v1/whiteboards/', {'name': 'Szkic', 'content': drawing})
+    named = post_json('/api/v1/whiteboards/', {'name': 'Żółw szkic'}).json()
+
+    hits = api_client.get('/api/v1/whiteboards/search/?q=zolw').json()
+    assert [(h['id'], h['kind'], h['lines']) for h in hits] == [(named['id'], 'whiteboard', [])]
+
+
+def test_search_with_a_blank_query_finds_nothing(api_client: Any, post_json: Any) -> None:
+    post_json('/api/v1/whiteboards/', {'name': 'Coś'})
+    assert api_client.get('/api/v1/whiteboards/search/?q=%20%20%20').json() == []
+
+
+def test_search_sees_only_own_notatki(make_user: Any, client_for: Any) -> None:
+    client_a = client_for(make_user('usera'))
+    client_b = client_for(make_user('userb'))
+    client_a.post('/api/v1/whiteboards/', {'kind': 'markdown', 'name': 'A', 'content': {'markdown': 'sekret'}})
+    assert client_b.get('/api/v1/whiteboards/search/?q=sekret').json() == []
+    assert len(client_a.get('/api/v1/whiteboards/search/?q=sekret').json()) == 1
+
+
+def test_search_requires_authentication(anon_client: Any) -> None:
+    response = anon_client.get('/api/v1/whiteboards/search/?q=x')
+    assert response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN)

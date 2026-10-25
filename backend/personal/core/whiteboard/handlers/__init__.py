@@ -6,6 +6,7 @@ from .whiteboards import (
     DeleteWhiteboard,
     GetWhiteboard,
     ListWhiteboards,
+    SearchWhiteboards,
     UpdateWhiteboard,
 )
 
@@ -19,6 +20,7 @@ __all__ = [
     'ListFolders',
     'ListWhiteboards',
     'NotFound',
+    'SearchWhiteboards',
     'UpdateFolder',
     'UpdateWhiteboard',
 ]

@@ -506,6 +506,36 @@ paths:
                 $ref: '#/components/schemas/WhiteboardResponse'
       security:
       - JWTAuth: []
+  /api/v1/whiteboards/search/:
+    get:
+      tags:
+      - personal
+      summary: Search Whiteboards
+      description: 'Whiteboards and Notatki whose name matches ``q``, and Notatki
+        whose
+
+        text does, with the matching lines; case and diacritics are ignored.'
+      operationId: whiteboards_search
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: q
+        in: query
+        required: true
+        schema:
+          type: string
+          maxLength: 200
+          title: Q
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WhiteboardSearchResult'
+                title: Response Whiteboards Search
   /api/v1/whiteboards/{id}/:
     get:
       tags:
@@ -1486,6 +1516,20 @@ components:
       - access
       - refresh
       title: LoginResponse
+    MatchingLine:
+      properties:
+        number:
+          type: integer
+          title: Number
+        text:
+          type: string
+          title: Text
+      type: object
+      required:
+      - number
+      - text
+      title: MatchingLine
+      description: One line of a Notatka that matched a search, numbered from 1.
     PatchedCategoryRequest:
       properties:
         name:
@@ -2252,6 +2296,48 @@ components:
       - created_at
       - updated_at
       title: WhiteboardResponse
+    WhiteboardSearchResult:
+      properties:
+        id:
+          type: integer
+          title: Id
+        kind:
+          type: string
+          title: Kind
+        name:
+          type: string
+          title: Name
+        folder_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Folder Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        lines:
+          items:
+            $ref: '#/components/schemas/MatchingLine'
+          type: array
+          title: Lines
+      type: object
+      required:
+      - id
+      - kind
+      - name
+      - created_at
+      - updated_at
+      - lines
+      title: WhiteboardSearchResult
+      description: 'A Whiteboard or Notatka found by a search: without its ``content``,
+
+        with the lines of a Notatka''s text that matched (empty when only the name
+        did).'
   securitySchemes:
     JWTAuth:
       type: http

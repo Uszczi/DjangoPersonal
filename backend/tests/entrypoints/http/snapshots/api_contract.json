@@ -448,6 +448,14 @@
     ]
   },
   {
+    "method": "GET",
+    "path": "/api/v1/whiteboards/search/",
+    "operation_id": "whiteboards_search",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
     "method": "DELETE",
     "path": "/api/v1/whiteboards/{id}/",
     "operation_id": "whiteboards_destroy",
