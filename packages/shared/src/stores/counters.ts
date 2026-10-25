@@ -45,13 +45,15 @@ const countersGuard = createLoadGuard();
 const entriesGuard = createLoadGuard();
 
 export const useCountersStore = create<CountersState>((set, get) => {
-  /** The total and count are computed from the entries: refetch the counter after a change. */
-  async function refreshCounter(id: number) {
+  /**
+   * The totals, counts and order (latest entry added first) come from the entries:
+   * refetch the list after an entry changes.
+   */
+  async function refreshCounters() {
+    const requestId = countersGuard.nextRequestId();
     try {
-      const fresh = await api.countersRetrieve({ id });
-      set((state) => ({
-        counters: state.counters.map((item) => (item.id === id ? fresh : item)),
-      }));
+      const loaded = await api.countersList();
+      if (countersGuard.isLatest(requestId)) set({ counters: loaded });
     } catch {
       // The list keeps its old numbers; the next load fixes them.
     }
@@ -93,7 +95,8 @@ export const useCountersStore = create<CountersState>((set, get) => {
 
     createCounter: async (name) => {
       const created = await api.countersCreate({ counterRequest: { name } });
-      set((state) => ({ counters: [...state.counters, created] }));
+      // A counter with no entries yet sorts by its creation, so it goes first.
+      set((state) => ({ counters: [created, ...state.counters] }));
       return created;
     },
 
@@ -141,7 +144,7 @@ export const useCountersStore = create<CountersState>((set, get) => {
       replaceEntries(counterId, (entries) =>
         newestFirst([...entries.filter((item) => item.id !== saved.id), saved]),
       );
-      void refreshCounter(counterId);
+      void refreshCounters();
       return saved;
     },
 
@@ -150,7 +153,7 @@ export const useCountersStore = create<CountersState>((set, get) => {
       replaceEntries(entry.counterId, (entries) =>
         entries.filter((item) => item.id !== entry.id),
       );
-      void refreshCounter(entry.counterId);
+      void refreshCounters();
     },
   };
 });

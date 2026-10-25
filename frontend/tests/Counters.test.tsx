@@ -16,7 +16,10 @@ function jsonResponse(data: unknown, status = 200) {
   })
 }
 
-/** Answers the counters endpoints the way the backend does (totals computed from entries). */
+/**
+ * Answers the counters endpoints the way the backend does: totals computed from entries,
+ * counters listed latest entry added first (`counters` is kept in that order).
+ */
 function fakeBackend(initial: { counters?: Counter[]; entries?: Entry[] } = {}) {
   const counters = [...(initial.counters ?? [])]
   let entries = [...(initial.entries ?? [])]
@@ -41,7 +44,7 @@ function fakeBackend(initial: { counters?: Counter[]; entries?: Entry[] } = {}) 
     if (path.endsWith('/counters/')) {
       if (method === 'POST') {
         const counter = { id: nextId++, name: body.name, created_at: '2026-10-24T10:00:00Z' }
-        counters.push(counter)
+        counters.unshift(counter)
         return jsonResponse(withTotals(counter), 201)
       }
       return jsonResponse(counters.map(withTotals))
@@ -77,6 +80,8 @@ function fakeBackend(initial: { counters?: Counter[]; entries?: Entry[] } = {}) 
         note: body.note ?? '',
       }
       entries.push(entry)
+      const counter = counters.find((item) => item.id === entry.counter_id)
+      if (counter) counters.unshift(...counters.splice(counters.indexOf(counter), 1))
       return jsonResponse(entry, 201)
     }
     if (entryMatch) {
@@ -143,6 +148,22 @@ describe('Counters', () => {
 
     expect(await within(list).findByLabelText('Suma: 3')).toBeInTheDocument()
     expect(within(list).getByText('2 wpisy')).toBeInTheDocument()
+  })
+
+  test('a counter that gets an entry moves to the top of the list', async () => {
+    const water = { id: 2, name: 'Woda', created_at: '2026-10-02T10:00:00Z' }
+    fetchMock.mockImplementation(fakeBackend({ counters: [coffee, water] }))
+    const user = userEvent.setup()
+
+    renderApp('/counters')
+    const list = await screen.findByRole('list', { name: 'Liczniki' })
+    const names = () =>
+      within(list).getAllByRole('button', { name: /^Dodaj 1 do licznika:/ }).map((button) => button.getAttribute('aria-label'))
+    expect(names()).toEqual(['Dodaj 1 do licznika: Kawa', 'Dodaj 1 do licznika: Woda'])
+
+    await user.click(within(list).getByRole('button', { name: 'Dodaj 1 do licznika: Woda' }))
+
+    await waitFor(() => expect(names()).toEqual(['Dodaj 1 do licznika: Woda', 'Dodaj 1 do licznika: Kawa']))
   })
 
   test('user can switch the list to tiles, and the choice is remembered', async () => {

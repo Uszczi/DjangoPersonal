@@ -34,6 +34,21 @@ def test_create_counter_starts_empty(post_json: Any, api_client: ApiClient) -> N
     assert [c['name'] for c in api_client.get('/api/v1/counters/').json()] == ['Kawa']
 
 
+def test_counters_are_listed_by_latest_entry_added(
+    post_json: Any, api_client: ApiClient
+) -> None:
+    kawa = _counter(post_json, 'Kawa')
+    herbata = _counter(post_json, 'Herbata')
+    _counter(post_json, 'Woda')
+    _entry(post_json, kawa)
+    # An entry backdated in time still counts as added now.
+    _entry(post_json, herbata, occurred_at='2020-01-01T08:00:00Z')
+
+    names = [c['name'] for c in api_client.get('/api/v1/counters/').json()]
+
+    assert names == ['Herbata', 'Kawa', 'Woda']
+
+
 def test_counter_name_is_required(post_json: Any) -> None:
     assert post_json('/api/v1/counters/', {'name': '   '}).status_code == 422
     assert post_json('/api/v1/counters/', {}).status_code == 422

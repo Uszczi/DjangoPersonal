@@ -17,6 +17,11 @@ class CounterRepository:
         self.session = session
 
     def _with_totals(self, *conditions: ColumnElement[bool]) -> list[CounterModel]:
+        # Most recently used first: the newest entry added, or the counter's own
+        # creation while it has none.
+        last_activity = func.coalesce(
+            func.max(CounterEntryModel.created_at), CounterModel.created_at
+        )
         query = (
             select(
                 CounterModel,
@@ -26,7 +31,7 @@ class CounterRepository:
             .outerjoin(CounterEntryModel, CounterEntryModel.counter_id == CounterModel.id)
             .where(*conditions)
             .group_by(CounterModel.id)
-            .order_by(CounterModel.created_at, CounterModel.id)
+            .order_by(last_activity.desc(), CounterModel.id.desc())
         )
         counters = []
         for counter, count, total in self.session.execute(query):
@@ -36,7 +41,7 @@ class CounterRepository:
         return counters
 
     def list_all(self, *, user: User) -> list[CounterModel]:
-        """Every counter for ``user``, oldest first, with count and total."""
+        """Every counter for ``user``, latest entry added first, with count and total."""
         return self._with_totals(CounterModel.user_id == user.id)
 
     def find(self, counter_id: int, *, user: User) -> CounterModel | None:
