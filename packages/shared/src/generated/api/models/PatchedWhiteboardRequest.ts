@@ -32,6 +32,10 @@ export interface PatchedWhiteboardRequest {
      *
      */
     content?: { [key: string]: any; } | null;
+    /**
+     *
+     */
+    folderId?: number | null;
 }
 
 /**
@@ -54,6 +58,7 @@ export function PatchedWhiteboardRequestFromJSONTyped(json: any, ignoreDiscrimin
         'kind': json['kind'] === undefined ? undefined : json['kind'] === null ? null : json['kind'],
         'name': json['name'] === undefined ? undefined : json['name'] === null ? null : json['name'],
         'content': json['content'] === undefined ? undefined : json['content'] === null ? null : json['content'],
+        'folderId': json['folder_id'] === undefined ? undefined : json['folder_id'] === null ? null : json['folder_id'],
     };
 }
 
@@ -71,6 +76,7 @@ export function PatchedWhiteboardRequestToJSONTyped(value?: PatchedWhiteboardReq
         'kind': value['kind'],
         'name': value['name'],
         'content': value['content'],
+        'folder_id': value['folderId'],
     };
 }
 

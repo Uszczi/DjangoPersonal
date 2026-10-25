@@ -1719,6 +1719,11 @@ components:
             type: object
           - type: 'null'
           title: Content
+        folder_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Folder Id
       type: object
       title: PatchedWhiteboardRequest
     ProjectRequest:

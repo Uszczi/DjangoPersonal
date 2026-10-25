@@ -100,3 +100,38 @@ def test_whiteboard_cannot_be_created_in_another_users_folder(
 
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert stranger.get('/api/v1/whiteboards/').json() == []
+
+
+def test_whiteboard_can_be_moved_between_folders_and_out(
+    api_client: Any, post_json: Any, patch_json: Any
+) -> None:
+    work = post_json('/api/v1/folders/', {'name': 'Praca'}).json()
+    home = post_json('/api/v1/folders/', {'name': 'Dom'}).json()
+    created = post_json('/api/v1/whiteboards/', {'name': 'Plan'}).json()
+    url = f"/api/v1/whiteboards/{created['id']}/"
+
+    moved = patch_json(url, {'folder_id': work['id']})
+    assert moved.status_code == HTTPStatus.OK
+    assert moved.json()['folder_id'] == work['id']
+    assert moved.json()['updated_at'] > created['updated_at']
+
+    assert patch_json(url, {'folder_id': home['id']}).json()['folder_id'] == home['id']
+    # An omitted folder_id leaves it where it is.
+    assert patch_json(url, {'name': 'Plan B'}).json()['folder_id'] == home['id']
+    # An explicit null takes it out of its folder.
+    assert patch_json(url, {'folder_id': None}).json()['folder_id'] is None
+    assert api_client.get(url).json()['folder_id'] is None
+
+
+def test_whiteboard_cannot_be_moved_to_a_missing_or_foreign_folder(
+    make_user: Any, client_for: Any
+) -> None:
+    owner = client_for(make_user('owner'))
+    stranger = client_for(make_user('stranger'))
+    foreign = owner.post('/api/v1/folders/', {'name': 'Sekret'}).json()
+    created = stranger.post('/api/v1/whiteboards/', {'name': 'Plan'}).json()
+    url = f"/api/v1/whiteboards/{created['id']}/"
+
+    assert stranger.patch(url, {'folder_id': foreign['id']}).status_code == HTTPStatus.NOT_FOUND
+    assert stranger.patch(url, {'folder_id': 9999}).status_code == HTTPStatus.NOT_FOUND
+    assert stranger.get(url).json()['folder_id'] is None

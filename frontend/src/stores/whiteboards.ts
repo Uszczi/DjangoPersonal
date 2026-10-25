@@ -17,7 +17,17 @@ type WhiteboardsState = {
   createWhiteboard: () => Promise<WhiteboardResponse | null>;
   renameWhiteboard: (id: number, name: string) => Promise<void>;
   deleteWhiteboard: (id: number) => Promise<void>;
+  /** Put an item in a Folder, or take it out of one with `null`. */
+  moveWhiteboard: (id: number, folderId: number | null) => Promise<void>;
+  /** Drop a deleted Folder's items, which the backend deleted with it. */
+  dropFolderItems: (folderId: number) => void;
 };
+
+function newestFirst(items: WhiteboardResponse[]) {
+  return [...items].sort(
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+  );
+}
 
 const loadGuard = createLoadGuard();
 
@@ -31,12 +41,7 @@ export const useWhiteboardsStore = create<WhiteboardsState>((set) => ({
     try {
       const loaded = await api.whiteboardsList();
       if (!loadGuard.isLatest(requestId)) return;
-      const sorted = [...loaded].sort((a, b) => {
-        const ta = new Date(a.updatedAt).getTime();
-        const tb = new Date(b.updatedAt).getTime();
-        return tb - ta;
-      });
-      set({ whiteboards: sorted, pageError: "" });
+      set({ whiteboards: newestFirst(loaded), pageError: "" });
     } catch {
       if (loadGuard.isLatest(requestId)) {
         set({
@@ -77,6 +82,23 @@ export const useWhiteboardsStore = create<WhiteboardsState>((set) => ({
     await api.whiteboardsDestroy({ id });
     set((state) => ({
       whiteboards: state.whiteboards.filter((item) => item.id !== id),
+    }));
+  },
+
+  moveWhiteboard: async (id, folderId) => {
+    const updated = await api.whiteboardsPartialUpdate({
+      id,
+      patchedWhiteboardRequest: { folderId },
+    });
+    // A move counts as a change, so the item goes to the top of its new place.
+    set((state) => ({
+      whiteboards: newestFirst(state.whiteboards.map((item) => (item.id === id ? updated : item))),
+    }));
+  },
+
+  dropFolderItems: (folderId) => {
+    set((state) => ({
+      whiteboards: state.whiteboards.filter((item) => item.folderId !== folderId),
     }));
   },
 }));

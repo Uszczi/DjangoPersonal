@@ -311,4 +311,40 @@ describe('Notatnik folders', () => {
       setItem.mockRestore()
     }
   })
+
+  test('"Przenieś do…" moves an item into a folder, between folders and out', async () => {
+    const home: Folder = { id: 2, name: 'Dom', created_at: '2026-10-01T10:00:00Z' }
+    fetchMock.mockImplementation(
+      fakeBackend({ folders: [work, home], boards: [board(5, 'Plan', null, '2026-10-10T10:00:00Z')] }),
+    )
+    const user = userEvent.setup()
+
+    renderApp('/whiteboard')
+    const workFolder = await screen.findByRole('region', { name: 'Folder: Praca' })
+    const homeFolder = screen.getByRole('region', { name: 'Folder: Dom' })
+    await user.click(within(workFolder).getByRole('button', { name: 'Praca' }))
+    await user.click(within(homeFolder).getByRole('button', { name: 'Dom' }))
+    const loose = screen.getByRole('list', { name: 'Tablice' })
+
+    async function moveTo(target: string, excluded: string) {
+      await user.click(screen.getByRole('button', { name: 'Przenieś do…: Plan' }))
+      const dialog = await screen.findByRole('dialog', { name: 'Przenieś do…' })
+      // The item's current place is not offered.
+      expect(within(dialog).queryByRole('button', { name: excluded })).not.toBeInTheDocument()
+      await user.click(within(dialog).getByRole('button', { name: target }))
+      await vi.waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    }
+
+    await moveTo('Praca', 'Bez folderu')
+    expect(within(workFolder).getByRole('button', { name: 'Otwórz tablicę: Plan' })).toBeInTheDocument()
+    expect(within(loose).queryByRole('button', { name: 'Otwórz tablicę: Plan' })).not.toBeInTheDocument()
+
+    await moveTo('Dom', 'Praca')
+    expect(within(homeFolder).getByRole('button', { name: 'Otwórz tablicę: Plan' })).toBeInTheDocument()
+    expect(within(workFolder).queryByRole('button', { name: 'Otwórz tablicę: Plan' })).not.toBeInTheDocument()
+
+    await moveTo('Bez folderu', 'Dom')
+    expect(within(loose).getByRole('button', { name: 'Otwórz tablicę: Plan' })).toBeInTheDocument()
+    expect(within(homeFolder).queryByRole('button', { name: 'Otwórz tablicę: Plan' })).not.toBeInTheDocument()
+  })
 })

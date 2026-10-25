@@ -66,8 +66,11 @@ class CreateWhiteboard:
 
 
 class UpdateWhiteboard:
-    def __init__(self, whiteboards: WhiteboardRepository, user: User):
+    def __init__(
+        self, whiteboards: WhiteboardRepository, folders: FolderRepository, user: User
+    ):
         self.whiteboards = whiteboards
+        self.folders = folders
         self.user = user
 
     def execute(self, whiteboard_id: int, data: PatchedWhiteboardRequest) -> WhiteboardModel:
@@ -81,6 +84,11 @@ class UpdateWhiteboard:
             whiteboard.name = name
         if 'content' in data.model_fields_set and data.content is not None:
             whiteboard.content = data.content
+        # ``null`` is meaningful here (no Folder), so presence decides.
+        if 'folder_id' in data.model_fields_set:
+            if data.folder_id is not None:
+                get_folder(self.folders, data.folder_id, user=self.user)
+            whiteboard.folder_id = data.folder_id
         return self.whiteboards.save(whiteboard)
 
 

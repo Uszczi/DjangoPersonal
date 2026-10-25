@@ -29,6 +29,8 @@ class PatchedWhiteboardRequest(_WhiteboardPayload):
     kind: str | None = Field(default=None, pattern='^(whiteboard|markdown)$')
     name: str | None = Field(default=None, min_length=1, max_length=200)
     content: dict[str, Any] | None = None
+    #: Moves it to this Folder; an explicit ``null`` takes it out of its Folder.
+    folder_id: int | None = None
 
 
 class WhiteboardResponse(BaseModel):

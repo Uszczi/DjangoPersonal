@@ -55,8 +55,9 @@ def update_whiteboard(
     payload: PatchedWhiteboardRequest,
     user: CurrentUser,
     whiteboards: WhiteboardRepositoryDep,
+    folders: FolderRepositoryDep,
 ) -> WhiteboardResponse:
-    whiteboard = handlers.UpdateWhiteboard(whiteboards, user).execute(id, payload)
+    whiteboard = handlers.UpdateWhiteboard(whiteboards, folders, user).execute(id, payload)
     return WhiteboardResponse.model_validate(whiteboard)
 
 

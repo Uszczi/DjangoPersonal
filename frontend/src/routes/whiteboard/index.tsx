@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ChevronDown, ChevronRight, Pencil } from "lucide-react";
+import { ChevronDown, ChevronRight, FolderInput, Pencil } from "lucide-react";
 import { useEffect } from "react";
 
 import { api } from "@personal/shared/api";
@@ -16,6 +16,7 @@ import {
 } from "@/design-system";
 import type { FolderResponse, WhiteboardResponse } from "@personal/shared/generated/api";
 import { FolderEditorModal } from "@/components/modals/FolderEditorModal";
+import { MoveWhiteboardModal } from "@/components/modals/MoveWhiteboardModal";
 import { useFoldersStore } from "@/stores/folders";
 import { ShowModal } from "@/stores/modal";
 import { useWhiteboardsStore } from "@/stores/whiteboards";
@@ -223,6 +224,14 @@ function WhiteboardRow({ whiteboard: wb }: { whiteboard: WhiteboardResponse }) {
         <span className="mr-2 text-[12px] text-muted">
           {new Date(wb.updatedAt).toLocaleDateString("pl-PL")}
         </span>
+        <IconButton
+          title="Przenieś do…"
+          aria-label={`Przenieś do…: ${wb.name}`}
+          className="text-[18px]"
+          onClick={() => ShowModal(MoveWhiteboardModal, { whiteboard: wb })}
+        >
+          <FolderInput aria-hidden="true" className="size-[16px]" />
+        </IconButton>
         <DeleteButton aria-label={`Usuń tablicę: ${wb.name}`} onClick={() => void handleDelete()} />
       </>
     </ListRow>
