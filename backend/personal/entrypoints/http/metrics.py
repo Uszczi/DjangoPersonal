@@ -1,7 +1,7 @@
 """Framework-free Prometheus metrics, recorded by the middleware in ``ops``.
 
 The names carry an ``app_`` prefix; the Grafana dashboard
-(``prometheus/dashboards/app.json``) queries them by that name.
+(``deployment/observability/dashboards/app.json``) queries them by that name.
 
 Multiple workers: when ``PROMETHEUS_MULTIPROC_DIR`` is set, prometheus-client
 aggregates counters from every worker process, so the app can run with as many

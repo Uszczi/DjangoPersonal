@@ -22,15 +22,13 @@ The name is historical: the backend was Django until the move to FastAPI + SQLAl
 ├── mobile/             Expo / React Native app (app/ routes, src/)
 ├── packages/shared/    @personal/shared: generated API client, api, platform, domain stores
 ├── package.json        npm workspaces root (packages/*, frontend, mobile); one package-lock.json
-├── deployment/         Dockerfile, compose files, nginx configs, deploy.sh
+├── deployment/         Dockerfile, compose files, nginx configs, deploy.sh,
+│                       observability/ (Prometheus, Grafana dashboards, Loki, Tempo, Alloy)
 ├── docs/               adr/ (architecture decision records), agents/ (workflow docs)
-├── prometheus/         Prometheus scrape config + Grafana dashboards
 ├── .scratch/           Issue tracker: specs and tickets as Markdown (see below)
 ├── GLOSSARY.md         Domain terms
 ├── justfile            All common commands (task runner: `just`)
-├── alloy-config.river  OTel collector (logs/traces → Loki/Tempo)
-├── loki-config.yml     Loki config
-├── tempo-config.yml    Tempo config
+├── .agents/, skills-lock.json  Agent skills (installed by the skills CLI)
 └── opencode.json       MCP client config pointing at the deployed servers
 ```
 

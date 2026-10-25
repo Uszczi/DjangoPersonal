@@ -19,7 +19,5 @@ frontend/dist
 mobile
 !mobile/package.json
 
-vue/node_modules
-vue/dist
 
 **/.env*
