@@ -14,6 +14,7 @@ import { useTimerStore } from '@personal/shared/stores/timer'
 import { useTransactionsStore } from '@personal/shared/stores/transactions'
 import { useWalletsStore } from '@personal/shared/stores/wallets'
 import { useWhiteboardsStore } from '@/stores/whiteboards'
+import { useFoldersStore } from '@/stores/folders'
 
 /** Reset every Zustand store so each render starts from a clean slate. */
 export function resetStores() {
@@ -29,6 +30,7 @@ export function resetStores() {
   useTransactionsStore.setState(useTransactionsStore.getInitialState())
   useWalletsStore.setState(useWalletsStore.getInitialState())
   useWhiteboardsStore.setState(useWhiteboardsStore.getInitialState())
+  useFoldersStore.setState(useFoldersStore.getInitialState())
 }
 
 export function renderApp(path = '/', options?: { authenticated?: boolean }) {

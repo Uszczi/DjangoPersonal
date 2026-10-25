@@ -50,6 +50,16 @@ import {
     CounterResponseToJSON,
 } from '../models/CounterResponse';
 import {
+    type FolderRequest,
+    FolderRequestFromJSON,
+    FolderRequestToJSON,
+} from '../models/FolderRequest';
+import {
+    type FolderResponse,
+    FolderResponseFromJSON,
+    FolderResponseToJSON,
+} from '../models/FolderResponse';
+import {
     type LoginRequest,
     LoginRequestFromJSON,
     LoginRequestToJSON,
@@ -74,6 +84,11 @@ import {
     PatchedCounterRequestFromJSON,
     PatchedCounterRequestToJSON,
 } from '../models/PatchedCounterRequest';
+import {
+    type PatchedFolderRequest,
+    PatchedFolderRequestFromJSON,
+    PatchedFolderRequestToJSON,
+} from '../models/PatchedFolderRequest';
 import {
     type PatchedProjectRequest,
     PatchedProjectRequestFromJSON,
@@ -333,6 +348,31 @@ export interface CountersRetrieveRequest {
      *
      */
     id: number;
+}
+
+export interface FoldersCreateRequest {
+    /**
+     *
+     */
+    folderRequest: FolderRequest;
+}
+
+export interface FoldersDestroyRequest {
+    /**
+     *
+     */
+    id: number;
+}
+
+export interface FoldersPartialUpdateRequest {
+    /**
+     *
+     */
+    id: number;
+    /**
+     *
+     */
+    patchedFolderRequest: PatchedFolderRequest;
 }
 
 export interface ProjectsCreateRequest {
@@ -1692,6 +1732,221 @@ export class PersonalApi extends runtime.BaseAPI {
      */
     async countersRetrieve(requestParameters: CountersRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CounterResponse> {
         const response = await this.countersRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for foldersCreate without sending the request
+     */
+    async foldersCreateRequestOpts(requestParameters: FoldersCreateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['folderRequest'] == null) {
+            throw new runtime.RequiredError(
+                'folderRequest',
+                'Required parameter "folderRequest" was null or undefined when calling foldersCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/folders/`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: FolderRequestToJSON(requestParameters['folderRequest']),
+        };
+    }
+
+    /**
+     * Create Folder
+     */
+    async foldersCreateRaw(requestParameters: FoldersCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FolderResponse>> {
+        const requestOptions = await this.foldersCreateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => FolderResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Create Folder
+     */
+    async foldersCreate(requestParameters: FoldersCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FolderResponse> {
+        const response = await this.foldersCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for foldersDestroy without sending the request
+     */
+    async foldersDestroyRequestOpts(requestParameters: FoldersDestroyRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling foldersDestroy().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/folders/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Delete Folder
+     */
+    async foldersDestroyRaw(requestParameters: FoldersDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.foldersDestroyRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Delete Folder
+     */
+    async foldersDestroy(requestParameters: FoldersDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.foldersDestroyRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Creates request options for foldersList without sending the request
+     */
+    async foldersListRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/folders/`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * List Folders
+     */
+    async foldersListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<FolderResponse>>> {
+        const requestOptions = await this.foldersListRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(FolderResponseFromJSON));
+    }
+
+    /**
+     * List Folders
+     */
+    async foldersList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<FolderResponse>> {
+        const response = await this.foldersListRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for foldersPartialUpdate without sending the request
+     */
+    async foldersPartialUpdateRequestOpts(requestParameters: FoldersPartialUpdateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling foldersPartialUpdate().'
+            );
+        }
+
+        if (requestParameters['patchedFolderRequest'] == null) {
+            throw new runtime.RequiredError(
+                'patchedFolderRequest',
+                'Required parameter "patchedFolderRequest" was null or undefined when calling foldersPartialUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/folders/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedFolderRequestToJSON(requestParameters['patchedFolderRequest']),
+        };
+    }
+
+    /**
+     * Update Folder
+     */
+    async foldersPartialUpdateRaw(requestParameters: FoldersPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<FolderResponse>> {
+        const requestOptions = await this.foldersPartialUpdateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => FolderResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Update Folder
+     */
+    async foldersPartialUpdate(requestParameters: FoldersPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FolderResponse> {
+        const response = await this.foldersPartialUpdateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

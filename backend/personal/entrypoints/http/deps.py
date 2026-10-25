@@ -20,6 +20,7 @@ from personal.infra.repo import (
     CategoryRepository,
     CounterEntryRepository,
     CounterRepository,
+    FolderRepository,
     ProjectRepository,
     TaskRepository,
     TimeEntryRepository,
@@ -68,6 +69,7 @@ TimeEntryRepositoryDep = Annotated[TimeEntryRepository, _per_session(wiring.time
 WhiteboardRepositoryDep = Annotated[
     WhiteboardRepository, _per_session(wiring.whiteboard_repository)
 ]
+FolderRepositoryDep = Annotated[FolderRepository, _per_session(wiring.folder_repository)]
 WalletRepositoryDep = Annotated[WalletRepository, _per_session(wiring.wallet_repository)]
 CategoryRepositoryDep = Annotated[CategoryRepository, _per_session(wiring.category_repository)]
 TransactionRepositoryDep = Annotated[

@@ -572,6 +572,89 @@ paths:
       responses:
         '204':
           description: Successful Response
+  /api/v1/folders/:
+    get:
+      tags:
+      - personal
+      summary: List Folders
+      operationId: folders_list
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/FolderResponse'
+                type: array
+                title: Response Folders List
+      security:
+      - JWTAuth: []
+    post:
+      tags:
+      - personal
+      summary: Create Folder
+      operationId: folders_create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FolderRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderResponse'
+      security:
+      - JWTAuth: []
+  /api/v1/folders/{id}/:
+    patch:
+      tags:
+      - personal
+      summary: Update Folder
+      operationId: folders_partial_update
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFolderRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderResponse'
+    delete:
+      tags:
+      - personal
+      summary: Delete Folder
+      operationId: folders_destroy
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      responses:
+        '204':
+          description: Successful Response
   /api/v1/wallets/:
     get:
       tags:
@@ -1336,6 +1419,37 @@ components:
       - entry_count
       - total
       title: CounterResponse
+    FolderRequest:
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          minLength: 1
+          title: Name
+      type: object
+      required:
+      - name
+      title: FolderRequest
+    FolderResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+          readOnly: true
+        name:
+          type: string
+          title: Name
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+          readOnly: true
+      type: object
+      required:
+      - id
+      - name
+      - created_at
+      title: FolderResponse
     LoginRequest:
       properties:
         username:
@@ -1414,6 +1528,17 @@ components:
           title: Name
       type: object
       title: PatchedCounterRequest
+    PatchedFolderRequest:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 100
+            minLength: 1
+          - type: 'null'
+          title: Name
+      type: object
+      title: PatchedFolderRequest
     PatchedProjectRequest:
       properties:
         name:

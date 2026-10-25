@@ -116,6 +116,14 @@ def normalize_counter_name(name: str) -> str:
     return name.strip()
 
 
+def normalize_folder_name(name: str) -> str:
+    return name.strip()
+
+
+def folder_name_key(name: str) -> str:
+    return normalize_folder_name(name).casefold()
+
+
 def day_start(day: date_type) -> datetime:
     """Midnight UTC on the given calendar day.
 

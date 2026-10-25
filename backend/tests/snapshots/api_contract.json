@@ -169,6 +169,38 @@
   },
   {
     "method": "GET",
+    "path": "/api/v1/folders/",
+    "operation_id": "folders_list",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/folders/",
+    "operation_id": "folders_create",
+    "status_codes": [
+      "201"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/folders/{id}/",
+    "operation_id": "folders_destroy",
+    "status_codes": [
+      "204"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/folders/{id}/",
+    "operation_id": "folders_partial_update",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "GET",
     "path": "/api/v1/projects/",
     "operation_id": "projects_list",
     "status_codes": [

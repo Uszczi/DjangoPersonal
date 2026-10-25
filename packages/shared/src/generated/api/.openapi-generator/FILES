@@ -8,11 +8,14 @@ models/CounterEntryRequest.ts
 models/CounterEntryResponse.ts
 models/CounterRequest.ts
 models/CounterResponse.ts
+models/FolderRequest.ts
+models/FolderResponse.ts
 models/LoginRequest.ts
 models/LoginResponse.ts
 models/PatchedCategoryRequest.ts
 models/PatchedCounterEntryRequest.ts
 models/PatchedCounterRequest.ts
+models/PatchedFolderRequest.ts
 models/PatchedProjectRequest.ts
 models/PatchedTaskUpdateRequest.ts
 models/PatchedTimeEntryRequest.ts

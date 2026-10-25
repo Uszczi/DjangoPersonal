@@ -2,6 +2,7 @@
 
 from personal.infra.errors import (
     DuplicateCategoryName,
+    DuplicateFolderName,
     DuplicateProjectName,
     DuplicateUsername,
     DuplicateWalletName,
@@ -13,6 +14,7 @@ from personal.infra.errors import (
 
 __all__ = [
     'DuplicateCategoryName',
+    'DuplicateFolderName',
     'DuplicateProjectName',
     'DuplicateUsername',
     'DuplicateWalletName',

@@ -17,6 +17,7 @@ from personal.infra.repo import (
     CategoryRepository,
     CounterEntryRepository,
     CounterRepository,
+    FolderRepository,
     ProjectRepository,
     TaskRepository,
     TimeEntryRepository,
@@ -47,6 +48,10 @@ def time_entry_repository(session: Session) -> TimeEntryRepository:
 
 def whiteboard_repository(session: Session) -> WhiteboardRepository:
     return WhiteboardRepository(session)
+
+
+def folder_repository(session: Session) -> FolderRepository:
+    return FolderRepository(session)
 
 
 def wallet_repository(session: Session) -> WalletRepository:

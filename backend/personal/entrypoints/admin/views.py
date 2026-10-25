@@ -20,6 +20,7 @@ from personal.infra.models import (
     Category,
     Counter,
     CounterEntry,
+    Folder,
     Project,
     Task,
     TimeEntry,
@@ -105,6 +106,14 @@ class WhiteboardView(_AppView, model=Whiteboard):
     form_columns = [Whiteboard.name]
 
 
+class FolderView(_AppView, model=Folder):
+    icon = 'fa-solid fa-folder'
+    column_list = [Folder.id, Folder.user, Folder.name, Folder.created_at]
+    column_searchable_list = [Folder.name]
+    column_sortable_list = [Folder.id, Folder.name]
+    form_columns = [Folder.name]
+
+
 class WalletView(_AppView, model=Wallet):
     icon = 'fa-solid fa-wallet'
     column_list = [Wallet.id, Wallet.user, Wallet.name, Wallet.color]
@@ -168,6 +177,7 @@ VIEWS: list[type[ModelView]] = [
     TaskView,
     TimeEntryView,
     WhiteboardView,
+    FolderView,
     WalletView,
     CategoryView,
     TransactionView,

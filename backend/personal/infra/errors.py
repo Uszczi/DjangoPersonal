@@ -18,6 +18,10 @@ class DuplicateWalletName(RepositoryError):
     """A unique-constraint clash: another wallet already uses this name."""
 
 
+class DuplicateFolderName(RepositoryError):
+    """A unique-constraint clash: another folder already uses this name."""
+
+
 class DuplicateCategoryName(RepositoryError):
     """A unique-constraint clash: another category already uses this name."""
 

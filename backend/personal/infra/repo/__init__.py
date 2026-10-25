@@ -4,6 +4,7 @@ from .categories import CategoryRepository
 from .counters import CounterEntryRepository, CounterRepository
 from .errors import (
     DuplicateCategoryName,
+    DuplicateFolderName,
     DuplicateProjectName,
     DuplicateUsername,
     DuplicateWalletName,
@@ -12,6 +13,7 @@ from .errors import (
     RepositoryError,
     TaskHasTimeEntries,
 )
+from .folders import FolderRepository
 from .projects import ProjectRepository
 from .tasks import TaskRepository
 from .time_entries import TimeEntryRepository
@@ -25,6 +27,8 @@ __all__ = [
     'CounterEntryRepository',
     'CounterRepository',
     'DuplicateCategoryName',
+    'DuplicateFolderName',
+    'FolderRepository',
     'DuplicateProjectName',
     'DuplicateUsername',
     'DuplicateWalletName',
