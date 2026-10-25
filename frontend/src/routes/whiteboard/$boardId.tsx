@@ -12,6 +12,7 @@ import {
 } from "@/design-system";
 import { WhiteboardCanvas } from "@/components/WhiteboardCanvas";
 import { MarkdownHighlightEditor } from "@/components/MarkdownHighlightEditor";
+import { MarkdownPreview } from "@/components/MarkdownPreview";
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { NotFoundPage } from "@/components/NotFoundPage";
 import type { BoardDocument } from "@/whiteboard/boardDocument";
@@ -27,20 +28,6 @@ import {
 import type { Tool } from "@/components/WhiteboardCanvas";
 import { useLoadGuard } from "@personal/shared/stores/loadGuard";
 import { useAutosave, type SavePayload } from "@/whiteboard/useAutosave";
-
-function renderMarkdown(md: string): string {
-  // Minimal markdown -> html (escape first)
-  const esc = md.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  return esc
-    .replace(/^### (.*)$/gm, "<h3>$1</h3>")
-    .replace(/^## (.*)$/gm, "<h2>$1</h2>")
-    .replace(/^# (.*)$/gm, "<h1>$1</h1>")
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g, "<em>$1</em>")
-    .replace(/`(.+?)`/g, "<code>$1</code>")
-    .replace(/^- (.*)$/gm, "<li>$1</li>")
-    .replace(/\n/g, "<br/>");
-}
 
 type MarkdownViewMode = "split" | "edit" | "highlight";
 
@@ -284,9 +271,10 @@ function WhiteboardEditorPage() {
                 onChange={(e) => handleMarkdownChange(e.target.value)}
                 placeholder="Napisz notatkę w Markdown…"
               />
-              <div className="min-h-[300px] rounded border border-control-border bg-white px-[11px] py-[10px] text-sm leading-relaxed text-ink">
-                <div dangerouslySetInnerHTML={{ __html: renderMarkdown(markdownText) }} />
-              </div>
+              <MarkdownPreview
+                markdown={markdownText}
+                className="min-h-[300px] rounded border border-control-border bg-white px-[11px] py-[10px] text-sm leading-relaxed text-ink"
+              />
             </div>
           )}
           {markdownMode === "edit" && (
