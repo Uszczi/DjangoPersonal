@@ -7,7 +7,7 @@ import {
   type CounterViewMode,
   rememberCounterViewMode,
   rememberedCounterViewMode,
-} from "@/counterViewMode";
+} from "@/lib/counterViewMode";
 import {
   Button,
   ErrorMessage,

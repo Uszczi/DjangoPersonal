@@ -27,7 +27,7 @@ import {
 import { ProjectEditorModal } from "@/components/modals/ProjectEditorModal";
 import { ShowModal } from "@/stores/modal";
 import { useProjectsStore } from "@personal/shared/stores/projects";
-import { useSortSensors } from "@/useSortSensors";
+import { useSortSensors } from "@/lib/useSortSensors";
 import { api } from "@personal/shared/api";
 
 export const Route = createFileRoute("/projects")({

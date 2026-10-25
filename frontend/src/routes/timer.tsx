@@ -3,7 +3,7 @@ import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
-import { validateProjectSearch } from "@/projectSearch";
+import { validateProjectSearch } from "@/lib/projectSearch";
 import {
   Button,
   ErrorAlert,

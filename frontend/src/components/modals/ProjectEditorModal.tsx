@@ -15,7 +15,7 @@ import { Button, DragHandle, ErrorAlert, Field, Modal, ModalFooter, Select, Text
 import type { ProjectResponse } from "@personal/shared/generated/api";
 import { ShowModal } from "@/stores/modal";
 import { useProjectsStore, type ProjectInput } from "@personal/shared/stores/projects";
-import { useSortSensors } from "@/useSortSensors";
+import { useSortSensors } from "@/lib/useSortSensors";
 
 type ProjectEditorModalProps = {
   /** Omit (or pass `null`) to create a new ProjectResponse; pass a ProjectResponse to edit it. */

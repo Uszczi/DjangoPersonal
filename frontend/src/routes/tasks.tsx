@@ -38,14 +38,14 @@ import {
 import { ProjectEditorModal } from "@/components/modals/ProjectEditorModal";
 import { ProjectNavList, ProjectsSidebar } from "@/components/ProjectsSidebar";
 import { TaskEditorModal } from "@/components/modals/TaskEditorModal";
-import { rememberedProjectId, rememberProject } from "@/lastProject";
-import { validateProjectSearch } from "@/projectSearch";
+import { rememberedProjectId, rememberProject } from "@/lib/lastProject";
+import { validateProjectSearch } from "@/lib/projectSearch";
 import { useAuthStore } from "@personal/shared/stores/auth";
 import { useLayoutStore } from "@/stores/layout";
 import { ShowModal } from "@/stores/modal";
 import { defaultProject, useProjectsStore } from "@personal/shared/stores/projects";
 import { useTasksStore } from "@personal/shared/stores/tasks";
-import { useSortSensors } from "@/useSortSensors";
+import { useSortSensors } from "@/lib/useSortSensors";
 import { api } from "@personal/shared/api";
 import type { TaskResponse } from "@personal/shared/generated/api";
 
