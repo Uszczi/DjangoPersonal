@@ -6,7 +6,7 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from personal.infra.models import Transaction, User, Wallet
-from personal.infra.repo import TransactionRepository, WalletRepository
+from personal.infra.repo import TransactionKey, TransactionRepository, WalletRepository
 
 
 def _record(
@@ -30,10 +30,10 @@ def test_pages_continue_after_the_key_without_gaps_or_duplicates_on_one_date(
 
     first = transactions.list_for_wallet(wallet.id, user=user, limit=3)
     second = transactions.list_for_wallet(
-        wallet.id, user=user, limit=3, after=(first[-1].date, first[-1].id)
+        wallet.id, user=user, limit=3, after=TransactionKey(first[-1].date, first[-1].id)
     )
     third = transactions.list_for_wallet(
-        wallet.id, user=user, limit=3, after=(second[-1].date, second[-1].id)
+        wallet.id, user=user, limit=3, after=TransactionKey(second[-1].date, second[-1].id)
     )
 
     assert first == [newest, same_day[4], same_day[3]]

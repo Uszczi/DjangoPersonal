@@ -86,7 +86,6 @@ class TransactionResponse(BaseModel):
     wallet_id: int = Field(..., json_schema_extra={'readOnly': True})
 
 
-
 class TransactionPageResponse(BaseModel):
     """One page of a wallet's transactions, newest first.
 

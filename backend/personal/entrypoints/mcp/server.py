@@ -83,7 +83,7 @@ from .serialization import (
     time_entry,
     timer,
     transaction,
-    transactions,
+    transaction_page,
     wallet,
     wallets,
     whiteboard,
@@ -581,8 +581,7 @@ def list_transactions(
         handler = expense_handlers.ListTransactions(
             wiring.transaction_repository(session), wiring.wallet_repository(session), user
         )
-        page = handler.execute(wallet_id, limit=limit, cursor=cursor)
-        return {'items': transactions(page.items), 'next_cursor': page.next_cursor}
+        return transaction_page(handler.execute(wallet_id, limit=limit, cursor=cursor))
 
 
 @_tool
