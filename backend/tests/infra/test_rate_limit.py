@@ -54,6 +54,15 @@ def test_hits_count_within_the_window_the_first_hit_opens(limiter: RateLimiter) 
     assert 0 < window.seconds_left <= 15 * 60
 
 
+def test_a_hit_returns_the_window_it_counted_in(limiter: RateLimiter) -> None:
+    limiter.hit('key', window=WINDOW)
+
+    window = limiter.hit('key', window=WINDOW)
+
+    assert window.hits == 2
+    assert 0 < window.seconds_left <= 15 * 60
+
+
 def test_keys_are_counted_separately(limiter: RateLimiter) -> None:
     limiter.hit('one', window=WINDOW)
 

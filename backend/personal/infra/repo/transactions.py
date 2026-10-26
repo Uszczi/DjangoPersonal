@@ -1,10 +1,18 @@
 from datetime import date
+from typing import NamedTuple
 
 from sqlalchemy import select, tuple_
 from sqlalchemy.orm import Session
 
 from personal.infra.models import Transaction as TransactionModel
 from personal.infra.models import User
+
+
+class TransactionKey(NamedTuple):
+    """Where a transaction sits in a wallet's list: ordered by ``(date, id)``."""
+
+    date: date
+    id: int
 
 
 class TransactionRepository:
@@ -23,11 +31,11 @@ class TransactionRepository:
         *,
         user: User,
         limit: int | None = None,
-        after: tuple[date, int] | None = None,
+        after: TransactionKey | None = None,
     ) -> list[TransactionModel]:
         """The wallet's transactions of ``user``, newest first: ``(date, id)`` descending.
 
-        Keyset pagination: ``after`` is the ``(date, id)`` of the last row the
+        Keyset pagination: ``after`` is the key of the last row the
         caller already has, and the page starts right after it. Unlike an
         offset, this stays correct when rows are added between pages and reads
         the ``(wallet_id, date, id)`` index instead of skipping rows.

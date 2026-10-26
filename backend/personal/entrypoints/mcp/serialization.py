@@ -7,7 +7,13 @@ from typing import Any
 
 from personal.core.accounts.contracts.auth import UserResponse
 from personal.core.counters.contracts import CounterEntryResponse, CounterResponse
-from personal.core.expenses.contracts import CategoryResponse, TransactionResponse, WalletResponse
+from personal.core.expenses.contracts import (
+    CategoryResponse,
+    TransactionPageResponse,
+    TransactionResponse,
+    WalletResponse,
+)
+from personal.core.expenses.handlers import TransactionPage
 from personal.core.whiteboard.contracts import FolderResponse, WhiteboardResponse
 from personal.core.work.contracts import (
     ProjectResponse,
@@ -88,6 +94,10 @@ def transaction(obj: Transaction) -> dict[str, Any]:
 
 def transactions(objs: Iterable[Transaction]) -> list[dict[str, Any]]:
     return [transaction(o) for o in objs]
+
+
+def transaction_page(page: TransactionPage) -> dict[str, Any]:
+    return TransactionPageResponse.model_validate(page).model_dump(mode='json')
 
 
 def counter(obj: Counter) -> dict[str, Any]:

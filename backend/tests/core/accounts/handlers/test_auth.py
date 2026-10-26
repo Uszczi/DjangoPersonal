@@ -51,5 +51,69 @@ def test_the_username_is_counted_regardless_of_case(
 
     with pytest.raises(RateLimited) as refused:
         _authenticate(session, limiter, '203.0.113.7', 'target', 'wrong')
-    assert refused.value.status == 429
     assert 0 < refused.value.retry_after <= 15 * 60
+
+
+class _HasherRunningAttemptsDuringVerify:
+    """Starts ``attempts`` other failed logins while the first password is checked.
+
+    Stands in for parallel requests: they all arrive before the first one has
+    finished, so a throttle that only counts finished failures lets them all in.
+    """
+
+    def __init__(self, attempts: Callable[[], None]) -> None:
+        self.inner = wiring.password_hasher()
+        self.attempts: Callable[[], None] | None = attempts
+
+    def hash(self, password: str) -> str:
+        return self.inner.hash(password)
+
+    def needs_rehash(self, encoded: str) -> bool:
+        return self.inner.needs_rehash(encoded)
+
+    def verify(self, password: str, encoded: str) -> bool:
+        attempts, self.attempts = self.attempts, None
+        if attempts is not None:
+            attempts()
+        return self.inner.verify(password, encoded)
+
+
+def test_attempts_in_flight_count_against_the_limit(
+    session: Session, make_user: Callable[..., User]
+) -> None:
+    make_user('target')
+    limiter = InMemoryRateLimiter()
+    refused: list[RateLimited] = []
+
+    def five_more_failures() -> None:
+        for _ in range(5):
+            try:
+                _authenticate(session, limiter, '203.0.113.7', 'target', 'wrong')
+            except RateLimited as error:
+                refused.append(error)
+            except DomainError:
+                pass
+
+    handler = ThrottledAuthenticateUser(
+        wiring.user_repository(session),
+        _HasherRunningAttemptsDuringVerify(five_more_failures),
+        limiter,
+        client='203.0.113.7',
+    )
+    with pytest.raises(DomainError):
+        handler.execute(LoginRequest(username='target', password='wrong'))
+
+    assert len(refused) == 1
+
+
+def test_a_success_clears_the_count(session: Session, make_user: Callable[..., User]) -> None:
+    make_user('target')
+    limiter = InMemoryRateLimiter()
+    for _ in range(4):
+        with pytest.raises(DomainError):
+            _authenticate(session, limiter, '203.0.113.7', 'target', 'wrong')
+    _authenticate(session, limiter, '203.0.113.7', 'target', PASSWORD)
+
+    _fail_five_times(session, limiter, '203.0.113.7', 'target')
+    with pytest.raises(RateLimited):
+        _authenticate(session, limiter, '203.0.113.7', 'target', PASSWORD)

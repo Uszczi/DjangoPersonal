@@ -30,6 +30,7 @@ from personal.core.shared.errors import DomainError, RateLimited
 from personal.infra.repo import UserRepository
 
 from . import runtime
+from .auth import request_address
 
 _CLIENTS: dict[str, OAuthClientInformationFull] = {}
 _AUTH_CODES: dict[str, AuthorizationCode] = {}
@@ -289,10 +290,7 @@ def _login_sync(data: dict[str, str], *, client_address: str) -> Response:
 async def login_post(request: Request) -> Response:
     form = await request.form()
     data = {str(k): str(v) for k, v in form.items()}
-    # Behind the reverse proxy uvicorn reads X-Forwarded-For (see the compose
-    # file's FORWARDED_ALLOW_IPS), so this is the browser's address.
-    client_address = request.client.host if request.client else "unknown"
     response: Response = await anyio.to_thread.run_sync(
-        functools.partial(_login_sync, data, client_address=client_address)
+        functools.partial(_login_sync, data, client_address=request_address(request))
     )
     return response

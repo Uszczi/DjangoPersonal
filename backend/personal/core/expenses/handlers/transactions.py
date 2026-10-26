@@ -10,7 +10,12 @@ from personal.infra.models import Category as CategoryModel
 from personal.infra.models import Transaction as TransactionModel
 from personal.infra.models import User
 from personal.infra.models import Wallet as WalletModel
-from personal.infra.repo import CategoryRepository, TransactionRepository, WalletRepository
+from personal.infra.repo import (
+    CategoryRepository,
+    TransactionKey,
+    TransactionRepository,
+    WalletRepository,
+)
 
 from ..contracts import PatchedTransactionRequest, TransactionRequest
 
@@ -57,11 +62,11 @@ def encode_cursor(transaction: TransactionModel) -> str:
     return base64.urlsafe_b64encode(raw).decode().rstrip('=')
 
 
-def decode_cursor(cursor: str) -> tuple[date, int]:
+def decode_cursor(cursor: str) -> TransactionKey:
     try:
         padded = cursor + '=' * (-len(cursor) % 4)
         day, transaction_id = base64.urlsafe_b64decode(padded).decode().split('|')
-        return date.fromisoformat(day), int(transaction_id)
+        return TransactionKey(date.fromisoformat(day), int(transaction_id))
     except (binascii.Error, UnicodeDecodeError, ValueError):
         raise DomainError('Invalid cursor.') from None
 

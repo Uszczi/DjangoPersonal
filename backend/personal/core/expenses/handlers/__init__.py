@@ -30,7 +30,6 @@ from .wallets import (
 __all__ = [
     'DEFAULT_PAGE_SIZE',
     'MAX_PAGE_SIZE',
-    'TransactionPage',
     'CreateCategory',
     'CreateTransaction',
     'CreateWallet',
@@ -46,6 +45,7 @@ __all__ = [
     'ReplaceCategory',
     'ReplaceTransaction',
     'ReplaceWallet',
+    'TransactionPage',
     'UpdateCategory',
     'UpdateTransaction',
     'UpdateWallet',

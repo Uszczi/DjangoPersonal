@@ -526,6 +526,43 @@ describe('Transactions', () => {
     expect(await screen.findByText('Kawa')).toBeInTheDocument()
   })
 
+  test('short pages keep loading while the end of the list stays in view', async () => {
+    // Like the real observer: observing reports the element's current
+    // visibility at once, and the end of a short list is always visible.
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        callback: IntersectionObserverCallback
+        constructor(callback: IntersectionObserverCallback) {
+          this.callback = callback
+        }
+        observe() {
+          queueMicrotask(() =>
+            this.callback(
+              [{ isIntersecting: true } as IntersectionObserverEntry],
+              this as unknown as IntersectionObserver,
+            ),
+          )
+        }
+        disconnect() {}
+      },
+    )
+    const dinnerApi = { ...coffeeTransactionApi, id: 9, title: 'Kolacja', date: '2026-10-10' }
+    fetchMock.mockImplementation(
+      routeByUrl({
+        pages: {
+          '': { items: [lunchTransactionApi], next_cursor: 'page-2' },
+          'page-2': { items: [coffeeTransactionApi], next_cursor: 'page-3' },
+          'page-3': { items: [dinnerApi], next_cursor: null },
+        },
+      }),
+    )
+
+    renderApp('/expenses/1')
+
+    expect(await screen.findByText('Kolacja')).toBeInTheDocument()
+  })
+
   test('a new transaction older than every loaded one waits for its page', async () => {
     const olderApi = { ...coffeeTransactionApi, id: 12, title: 'Stary paragon', date: '2026-01-02' }
     fetchMock.mockImplementation(

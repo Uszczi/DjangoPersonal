@@ -27,12 +27,13 @@ class InMemoryRateLimiter:
         # key -> (hits, the clock reading at which the window closes)
         self._windows: dict[str, tuple[int, float]] = {}
 
-    def hit(self, key: str, *, window: timedelta) -> None:
+    def hit(self, key: str, *, window: timedelta) -> RateWindow:
         with self._lock:
             hits, closes_at = self._open(key)
             if hits == 0:
                 closes_at = self._clock() + window.total_seconds()
             self._windows[key] = (hits + 1, closes_at)
+        return RateWindow(hits + 1, math.ceil(closes_at - self._clock()))
 
     def window(self, key: str) -> RateWindow:
         with self._lock:
@@ -58,8 +59,8 @@ class RedisRateLimiter:
     """Counts in Redis: one key per counted key, expiring with its window.
 
     ``SET NX EX`` opens the window only if none is open, and ``INCR`` keeps the
-    key's expiry, so a hit is two commands in one ``MULTI`` and later hits
-    never extend the window.
+    key's expiry, so a hit is two commands in one ``MULTI`` (plus a ``PTTL`` to
+    report the window) and later hits never extend the window.
     """
 
     PREFIX = 'ratelimit:'
@@ -67,12 +68,14 @@ class RedisRateLimiter:
     def __init__(self, client: redis.Redis) -> None:
         self._client = client
 
-    def hit(self, key: str, *, window: timedelta) -> None:
+    def hit(self, key: str, *, window: timedelta) -> RateWindow:
         name = self.PREFIX + key
         pipe = self._client.pipeline()
         pipe.set(name, 0, ex=max(1, math.ceil(window.total_seconds())), nx=True)
         pipe.incr(name)
-        pipe.execute()
+        pipe.pttl(name)
+        _, hits, pttl = pipe.execute()
+        return _window(int(hits), pttl)
 
     def window(self, key: str) -> RateWindow:
         name = self.PREFIX + key
@@ -82,7 +85,12 @@ class RedisRateLimiter:
         value, pttl = pipe.execute()
         if value is None:
             return _CLOSED
-        return RateWindow(int(value), math.ceil(pttl / 1000) if pttl > 0 else 0)
+        return _window(int(value), pttl)
 
     def reset(self, key: str) -> None:
         self._client.delete(self.PREFIX + key)
+
+
+def _window(hits: int, pttl: int) -> RateWindow:
+    """A window from Redis's count and ``PTTL`` (milliseconds, negative when none)."""
+    return RateWindow(hits, math.ceil(pttl / 1000) if pttl > 0 else 0)

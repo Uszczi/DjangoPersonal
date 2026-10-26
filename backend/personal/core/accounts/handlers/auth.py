@@ -97,7 +97,11 @@ class ThrottledAuthenticateUser:
     one account's password is stopped after :attr:`MAX_FAILURES` failures in a
     :attr:`WINDOW`, without locking the account for its owner elsewhere. While
     blocked even the right password is refused (otherwise guessing could go
-    on); a success clears the count, and successes are never counted.
+    on); a success clears the count.
+
+    Every attempt is counted before the password is checked, and the count is
+    read back in the same step, so parallel attempts cannot all slip in under
+    the limit before any of them has failed.
     """
 
     MAX_FAILURES = 5
@@ -117,17 +121,13 @@ class ThrottledAuthenticateUser:
 
     def execute(self, data: LoginRequest) -> User:
         key = f'login:{self.client}:{data.username.casefold()}'
-        window = self.limiter.window(key)
-        if window.hits >= self.MAX_FAILURES:
+        window = self.limiter.hit(key, window=self.WINDOW)
+        if window.hits > self.MAX_FAILURES:
             raise RateLimited(
                 'Too many failed login attempts. Try again later.',
                 retry_after=max(1, window.seconds_left),
             )
-        try:
-            user = self.authenticate.execute(data)
-        except DomainError:
-            self.limiter.hit(key, window=self.WINDOW)
-            raise
+        user = self.authenticate.execute(data)
         self.limiter.reset(key)
         return user
 

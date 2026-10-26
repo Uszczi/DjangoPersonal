@@ -12,6 +12,7 @@ from typing import Any
 
 from mcp.server.auth.middleware.auth_context import get_access_token
 from sqlalchemy.orm import Session
+from starlette.requests import Request
 
 from personal.core.accounts.ports import InvalidToken, TokenService
 from personal.infra.models import User
@@ -31,6 +32,15 @@ def client_address(ctx: Any) -> str:
     request = _request(ctx)
     if request is None:
         return 'stdio'
+    return request_address(request)
+
+
+def request_address(request: Request) -> str:
+    """The IP of an HTTP request's client as Starlette reports it.
+
+    Behind the reverse proxy uvicorn reads ``X-Forwarded-For`` (see the compose
+    file's ``FORWARDED_ALLOW_IPS``), so this is the browser's address.
+    """
     return request.client.host if request.client else 'unknown'
 
 

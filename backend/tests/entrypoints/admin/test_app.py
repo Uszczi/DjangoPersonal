@@ -13,7 +13,7 @@ from personal.infra.db import Database
 from personal.infra.models import User
 from personal.settings import Settings
 from tests.entrypoints.admin.helpers import sign_in
-from tests.tracing import recorded_trace
+from tests.entrypoints.helpers import recorded_trace
 
 
 def test_a_sign_in_is_traced_with_its_sql_queries(

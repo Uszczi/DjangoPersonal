@@ -71,11 +71,15 @@ class TraceContextFilter(logging.Filter):
     """Puts the current trace and span ids on every log record.
 
     Loki's derived field picks ``trace_id=<hex>`` out of the line and links it
-    to Tempo. Outside a span (startup, tracing off) the ids are zeros.
+    to Tempo. Outside a span (startup, tracing off) the ids are ``-``: an
+    all-zero id would still match and link to a trace that does not exist.
     """
 
     def filter(self, record: logging.LogRecord) -> bool:
         context = trace.get_current_span().get_span_context()
-        record.trace_id = trace.format_trace_id(context.trace_id)
-        record.span_id = trace.format_span_id(context.span_id)
+        if context.is_valid:
+            record.trace_id = trace.format_trace_id(context.trace_id)
+            record.span_id = trace.format_span_id(context.span_id)
+        else:
+            record.trace_id = record.span_id = '-'
         return True

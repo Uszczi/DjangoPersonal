@@ -16,7 +16,7 @@ from personal.infra.db import Database
 from personal.infra.models import User
 from personal.settings import Settings
 from tests.harness import ApiClient, FastAPITransport
-from tests.tracing import recorded_trace
+from tests.entrypoints.helpers import recorded_trace
 
 
 @pytest.fixture

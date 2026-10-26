@@ -19,7 +19,7 @@ from .folders import FolderRepository
 from .projects import ProjectRepository
 from .tasks import TaskRepository
 from .time_entries import TimeEntryRepository
-from .transactions import TransactionRepository
+from .transactions import TransactionKey, TransactionRepository
 from .users import UserRepository
 from .wallets import WalletRepository
 from .whiteboards import WhiteboardRepository
@@ -43,6 +43,7 @@ __all__ = [
     'TaskHasTimeEntries',
     'TaskRepository',
     'TimeEntryRepository',
+    'TransactionKey',
     'TransactionRepository',
     'UserRepository',
     'WalletRepository',

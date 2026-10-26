@@ -43,10 +43,18 @@ generate-api:
     cd backend && uv run python -c "import yaml; from personal.entrypoints.http.app import create_app; schema = create_app().openapi(); open('openapi.yaml', 'w').write(yaml.safe_dump(schema, allow_unicode=True, sort_keys=False))"
     cd frontend && npm run generate:api
 
-# Regenerate the TypeScript client and fail if it differs from the committed one
-# (the API contract baseline).
+# Regenerate the schema and TypeScript client and fail if either differs from
+# the committed one (the API contract baseline). `git status` also catches new,
+# untracked generated files, which `git diff` would miss.
 check-api-client: generate-api
-    git diff --exit-code --stat -- packages/shared/src/generated/api
+    #!/usr/bin/env bash
+    set -euo pipefail
+    changes=$(git status --porcelain --untracked-files=all -- backend/openapi.yaml packages/shared/src/generated/api)
+    if [ -n "$changes" ]; then
+        echo "Generated API client out of date; run 'just generate-api' and commit:" >&2
+        echo "$changes" >&2
+        exit 1
+    fi
 
 # Run the Vite development server.
 frontend:

@@ -74,8 +74,12 @@ class RateLimiter(Protocol):
     thread-safe.
     """
 
-    def hit(self, key: str, *, window: timedelta) -> None:
-        """Count one hit for ``key``, opening a ``window``-long window if none is open."""
+    def hit(self, key: str, *, window: timedelta) -> RateWindow:
+        """Count one hit for ``key``, opening a ``window``-long window if none is open.
+
+        Returns the window including this hit, read in the same step, so
+        concurrent callers each see a distinct count.
+        """
         ...
 
     def window(self, key: str) -> RateWindow:

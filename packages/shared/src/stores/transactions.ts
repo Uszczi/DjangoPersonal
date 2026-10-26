@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 import { api } from "../api";
 import { parseDate, type TransactionResponse } from "../generated/api";
+import { TRANSACTIONS_LOAD_ERROR, withPlaced } from "../transactionList";
 import { createLoadGuard } from "./loadGuard";
 
 export type TransactionInput = {
@@ -16,26 +17,6 @@ export type TransactionInput = {
 /** The API contract types `date` as a Date; the form carries the wire string. */
 export function toTransactionRequest(input: TransactionInput) {
   return { ...input, date: parseDate(input.date) };
-}
-
-/** Newest first, matching the server's order (date desc, then id desc). */
-function compareNewestFirst(a: TransactionResponse, b: TransactionResponse) {
-  return b.date.getTime() - a.date.getTime() || b.id - a.id;
-}
-
-/**
- * The loaded pages, flattened, with `transaction` placed where the server
- * would list it. One older than every loaded row while more pages exist is
- * left for its own page, which the keyset cursor still brings in.
- */
-function withPlaced(
-  list: NonNullable<TransactionListState>,
-  transaction: TransactionResponse,
-): TransactionResponse[] {
-  const rest = list.transactions.filter((item) => item.id !== transaction.id);
-  const last = rest[rest.length - 1];
-  if (list.nextCursor && last && compareNewestFirst(transaction, last) > 0) return rest;
-  return [...rest, transaction].sort(compareNewestFirst);
 }
 
 /** The loaded pages of one wallet's transactions; `nextCursor` is null after the last. */
@@ -84,7 +65,7 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
         set({
           loadError: {
             walletId,
-            message: "Nie udało się wczytać transakcji. Spróbuj ponownie.",
+            message: TRANSACTIONS_LOAD_ERROR,
           },
         });
       }
@@ -118,7 +99,7 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
         set({
           loadError: {
             walletId,
-            message: "Nie udało się wczytać transakcji. Spróbuj ponownie.",
+            message: TRANSACTIONS_LOAD_ERROR,
           },
         });
       }
@@ -140,7 +121,7 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
         const belongsInList = updated.walletId === current.walletId;
         if (!wasVisible && !belongsInList) return {};
         const transactions = belongsInList
-          ? withPlaced(current, updated)
+          ? withPlaced(current.transactions, updated, current.nextCursor !== null)
           : current.transactions.filter((item) => item.id !== updated.id);
         return { transactionList: { ...current, transactions } };
       });
@@ -154,7 +135,10 @@ export const useTransactionsStore = create<TransactionsState>((set, get) => ({
       const current = state.transactionList;
       if (!current || current.walletId !== input.wallet) return {};
       return {
-        transactionList: { ...current, transactions: withPlaced(current, created) },
+        transactionList: {
+          ...current,
+          transactions: withPlaced(current.transactions, created, current.nextCursor !== null),
+        },
       };
     });
     return created;
