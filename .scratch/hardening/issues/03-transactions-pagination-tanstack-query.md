@@ -1,5 +1,5 @@
 Type: task
-Status: ready-for-agent
+Status: resolved
 Blocked by: none
 
 # Transactions: keyset pagination + TanStack Query
@@ -48,3 +48,5 @@ Keyset vs offset pagination, Postgres indexes and `EXPLAIN ANALYZE`, server-stat
 - Mobile: the shared store loads the first page, with "Pokaż więcej" for the rest.
 
 Postgres 17 EXPLAIN ANALYZE on 200k rows is in `docs/adr/0005-tanstack-query-for-server-state.md`: both pages run as one backward index scan, about 0.1 ms. The migration also upgrades and downgrades cleanly on Postgres.
+
+- 2026-10-26 (agent): Resolved on branch `hardening`, incl. review fixes (query cache cleared on account change, infinite scroll no longer stalls).

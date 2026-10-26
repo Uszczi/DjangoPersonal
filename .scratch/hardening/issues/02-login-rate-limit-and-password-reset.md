@@ -1,5 +1,5 @@
 Type: task
-Status: needs-triage
+Status: needs-info
 Blocked by: none
 
 # Login rate limiting and password reset
@@ -46,3 +46,5 @@ Ports/adapters with a real external dependency, Redis, single-use token design, 
 ## Comments
 
 - 2026-10-26 (agent): Part A (rate limiting) built on branch `hardening-02-rate-limit`. Failed logins counted per (client IP, case-folded username), 5 per 15 min; while blocked even the right password gets 429 + `Retry-After`; a success clears the count. Applied to `auth_login`, the MCP `/login` page and the MCP `login_user` tool (not the admin panel). Part B (password reset) deferred until the email/SMTP questions are answered.
+
+- 2026-10-26 (agent): Part A merged into `hardening` with review fixes (attempt counted atomically before the password check; app/mcp ports bound to loopback so `X-Forwarded-For` cannot be spoofed). Status set to `needs-info`: Part B (password reset) waits on the open questions above (email on `User`, SMTP provider). Part A acceptance criterion 1 is met.

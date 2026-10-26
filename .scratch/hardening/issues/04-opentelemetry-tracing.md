@@ -1,5 +1,5 @@
 Type: task
-Status: ready-for-agent
+Status: resolved
 Blocked by: none
 
 # OpenTelemetry tracing for the backend
@@ -30,3 +30,5 @@ The deployment runs Tempo and Alloy (OTLP on :4317/:4318), but the backend sends
 Distributed tracing, spans and context propagation, spotting N+1 queries, correlating logs and traces.
 
 ## Comments
+
+- 2026-10-26 (agent): Resolved on branch `hardening`. Manual checks left for `just local-up`: Tempo shows SQL child spans for `/api/v1/projects/`, Loki "View trace" link works, Alloy accepts `alloy.river`, Grafana accepts the new datasource uids on an existing volume.

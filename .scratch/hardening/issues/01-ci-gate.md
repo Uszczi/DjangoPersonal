@@ -1,5 +1,5 @@
 Type: task
-Status: ready-for-agent
+Status: resolved
 Blocked by: none
 
 # CI gate before deploy
@@ -31,3 +31,5 @@ Blocked by: none
 GitHub Actions (jobs, `needs:`, caching, matrix), branch protection rules on `master`.
 
 ## Comments
+
+- 2026-10-26 (agent): Resolved on branch `hardening` (`ci.yml` with `backend`/`frontend`/`api-client` jobs; `deploy` needs all three). Still to verify on GitHub after push: PR status check, red check blocks deploy, cache speed-up; branch protection on `master` is a manual step (see AGENTS.md).
