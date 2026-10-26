@@ -5,8 +5,13 @@ services:
       dockerfile: ./deployment/Dockerfile
     container_name: djangopersonal-app
     restart: unless-stopped
+    # Loopback only: the host nginx proxies to 127.0.0.1:8000, and uvicorn
+    # trusts X-Forwarded-For from any peer (the Dockerfile's
+    # --forwarded-allow-ips '*'; published traffic arrives from the docker
+    # bridge, not 127.0.0.1). Published publicly, anyone could pick the client
+    # IP the login throttle counts by.
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
       POSTGRES_HOST: db
       POSTGRES_PORT: "5432"
@@ -44,8 +49,9 @@ services:
       dockerfile: ./deployment/Dockerfile
     container_name: djangopersonal-mcp
     restart: unless-stopped
+    # Loopback only, like `app`: it trusts X-Forwarded-For from any peer.
     ports:
-      - "8001:8001"
+      - "127.0.0.1:8001:8001"
     environment:
       POSTGRES_HOST: db
       POSTGRES_PORT: "5432"
@@ -55,6 +61,7 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       # Trust X-Forwarded-For from the reverse proxy (as the app's
       # --forwarded-allow-ips does), so /login throttles the browser's IP.
+      # Safe only because the port is published on loopback (above).
       FORWARDED_ALLOW_IPS: "*"
     env_file:
       - path: .env
