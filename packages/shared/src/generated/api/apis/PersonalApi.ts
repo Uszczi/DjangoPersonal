@@ -175,6 +175,11 @@ import {
     TimerStartRequestToJSON,
 } from '../models/TimerStartRequest';
 import {
+    type TransactionPageResponse,
+    TransactionPageResponseFromJSON,
+    TransactionPageResponseToJSON,
+} from '../models/TransactionPageResponse';
+import {
     type TransactionRequest,
     TransactionRequestFromJSON,
     TransactionRequestToJSON,
@@ -521,6 +526,14 @@ export interface TransactionsListRequest {
      *
      */
     wallet: number;
+    /**
+     *
+     */
+    limit?: number;
+    /**
+     *
+     */
+    cursor?: string | null;
 }
 
 export interface TransactionsPartialUpdateRequest {
@@ -3008,6 +3021,14 @@ export class PersonalApi extends runtime.BaseAPI {
             queryParameters['wallet'] = requestParameters['wallet'];
         }
 
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
+        }
+
+        if (requestParameters['cursor'] != null) {
+            queryParameters['cursor'] = requestParameters['cursor'];
+        }
+
         const headerParameters: runtime.HTTPHeaders = {};
 
         if (this.configuration && this.configuration.accessToken) {
@@ -3032,17 +3053,17 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * List Transactions
      */
-    async transactionsListRaw(requestParameters: TransactionsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<TransactionResponse>>> {
+    async transactionsListRaw(requestParameters: TransactionsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TransactionPageResponse>> {
         const requestOptions = await this.transactionsListRequestOpts(requestParameters);
         const response = await this.request(requestOptions, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(TransactionResponseFromJSON));
+        return new runtime.JSONApiResponse(response, (jsonValue) => TransactionPageResponseFromJSON(jsonValue));
     }
 
     /**
      * List Transactions
      */
-    async transactionsList(requestParameters: TransactionsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<TransactionResponse>> {
+    async transactionsList(requestParameters: TransactionsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TransactionPageResponse> {
         const response = await this.transactionsListRaw(requestParameters, initOverrides);
         return await response.value();
     }

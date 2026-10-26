@@ -54,6 +54,8 @@ export default function ExpensesScreen() {
   const transactionList = useTransactionsStore((state) => state.transactionList);
   const transactionLoadError = useTransactionsStore((state) => state.loadError);
   const loadTransactions = useTransactionsStore((state) => state.loadTransactions);
+  const loadMoreTransactions = useTransactionsStore((state) => state.loadMoreTransactions);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useFocusEffect(
@@ -80,8 +82,16 @@ export default function ExpensesScreen() {
     setIsRefreshing(false);
   }
 
-  const transactions =
-    wallet && transactionList?.walletId === wallet.id ? transactionList.transactions : null;
+  async function loadMore() {
+    if (isLoadingMore) return;
+    setIsLoadingMore(true);
+    await loadMoreTransactions();
+    setIsLoadingMore(false);
+  }
+
+  const shownList = wallet && transactionList?.walletId === wallet.id ? transactionList : null;
+  const transactions = shownList ? shownList.transactions : null;
+  const hasMore = shownList?.nextCursor != null;
   const sections = groupByDay(transactions ?? []);
   const loadError =
     transactionLoadError && transactionLoadError.walletId === walletId
@@ -176,6 +186,18 @@ export default function ExpensesScreen() {
             <Text style={[common.muted, styles.empty]}>
               Brak transakcji. Dodaj pierwszą transakcję.
             </Text>
+          ) : undefined
+        }
+        ListFooterComponent={
+          hasMore ? (
+            <View style={[styles.actions, { marginHorizontal: 16, marginTop: 12 }]}>
+              <Button
+                label={isLoadingMore ? "Wczytywanie…" : "Pokaż więcej"}
+                variant="secondary"
+                disabled={isLoadingMore}
+                onPress={() => void loadMore()}
+              />
+            </View>
           ) : undefined
         }
         renderSectionHeader={({ section }) => (

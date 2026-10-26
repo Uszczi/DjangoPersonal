@@ -8,10 +8,8 @@ import type { TransactionResponse } from "@personal/shared/generated/api";
 import { DEFAULT_CATEGORY_ICON } from "@personal/shared/categoryIcons";
 import { CategoryIcon } from "@/components/CategoryIcon";
 import { useCategoriesStore } from "@personal/shared/stores/categories";
-import {
-  useTransactionsStore,
-  type TransactionInput,
-} from "@personal/shared/stores/transactions";
+import type { TransactionInput } from "@personal/shared/stores/transactions";
+import { useSaveTransaction } from "@/queries/transactions";
 import { useWalletsStore } from "@personal/shared/stores/wallets";
 
 type TransactionEditorModalProps = {
@@ -51,11 +49,8 @@ export function TransactionEditorModal({
   walletId,
   onClose,
 }: TransactionEditorModalProps) {
-  const saveTransaction = useTransactionsStore(
-    (state) => state.saveTransaction,
-  );
+  const saveTransaction = useSaveTransaction();
   const wallets = useWalletsStore((state) => state.wallets);
-  const refreshWallets = useWalletsStore((state) => state.refreshWallets);
   const categories = useCategoriesStore((state) => state.categories);
 
   const [form, setForm] = useState({
@@ -104,12 +99,8 @@ export function TransactionEditorModal({
     setFormError("");
 
     try {
-      await saveTransaction(input, transaction);
-      // The balance is computed from the ledger: refresh the wallet the
-      // transaction is in and, when it moved, the one it left.
-      void refreshWallets(
-        transaction ? [transaction.walletId, input.wallet] : [input.wallet],
-      );
+      // Also refreshes the wallet's balance, and the one it left when it moved.
+      await saveTransaction.mutateAsync({ input, transaction });
       onClose();
     } catch (error) {
       setFormError(await apiErrorMessage(error));

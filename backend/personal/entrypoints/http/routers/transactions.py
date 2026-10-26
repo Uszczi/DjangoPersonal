@@ -1,8 +1,11 @@
-from fastapi import APIRouter, Response, status
+from typing import Annotated
+
+from fastapi import APIRouter, Query, Response, status
 
 from personal.core.expenses import handlers
 from personal.core.expenses.contracts import (
     PatchedTransactionRequest,
+    TransactionPageResponse,
     TransactionRequest,
     TransactionResponse,
 )
@@ -22,9 +25,18 @@ def list_transactions(
     user: CurrentUser,
     transactions: TransactionRepositoryDep,
     wallets: WalletRepositoryDep,
-) -> list[TransactionResponse]:
-    found = handlers.ListTransactions(transactions, wallets, user).execute(wallet)
-    return [TransactionResponse.model_validate(transaction) for transaction in found]
+    limit: Annotated[
+        int, Query(ge=1, le=handlers.MAX_PAGE_SIZE)
+    ] = handlers.DEFAULT_PAGE_SIZE,
+    cursor: str | None = None,
+) -> TransactionPageResponse:
+    page = handlers.ListTransactions(transactions, wallets, user).execute(
+        wallet, limit=limit, cursor=cursor
+    )
+    return TransactionPageResponse(
+        items=[TransactionResponse.model_validate(t) for t in page.items],
+        next_cursor=page.next_cursor,
+    )
 
 
 @router.post(

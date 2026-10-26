@@ -38,3 +38,13 @@ Blocked by: none
 Keyset vs offset pagination, Postgres indexes and `EXPLAIN ANALYZE`, server-state caching with TanStack Query (query keys, invalidation, optimistic updates).
 
 ## Comments
+
+**Agent (2026-10-26):** Implemented on branch `hardening-03-pagination`.
+
+- Backend: `transactions_list` takes `limit`/`cursor` and returns `TransactionPageResponse` `{items, next_cursor}`. The cursor is base64url of `date|id`, and the keyset is a row-value comparison.
+- Migration `0012` replaces `ix_transactions_wallet_id` with `(wallet_id, date, id)`.
+- MCP: `list_transactions` takes `limit`/`cursor` and returns the page.
+- Web: a TanStack Query infinite query with a "Wczytaj więcej" button and an IntersectionObserver sentinel. Mutations write the saved row into the cached pages and refresh the wallet. A balance correction invalidates the list.
+- Mobile: the shared store loads the first page, with "Pokaż więcej" for the rest.
+
+Postgres 17 EXPLAIN ANALYZE on 200k rows is in `docs/adr/0005-tanstack-query-for-server-state.md`: both pages run as one backward index scan, about 0.1 ms. The migration also upgrades and downgrades cleanly on Postgres.

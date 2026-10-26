@@ -1,5 +1,6 @@
 """The Transaction endpoints."""
 
+from datetime import date
 from http import HTTPStatus
 from typing import Any
 
@@ -29,7 +30,7 @@ def test_create_transaction(post_json: Any, api_client: Any) -> None:
     assert body['wallet_id'] == wallet_id
 
     listing = api_client.get(f'/api/v1/transactions/?wallet={wallet_id}').json()
-    assert [t['title'] for t in listing] == ['Zakupy']
+    assert [t['title'] for t in listing['items']] == ['Zakupy']
 
 
 def test_transaction_with_category_and_description(post_json: Any) -> None:
@@ -126,7 +127,72 @@ def test_list_transactions_is_scoped_to_wallet_and_newest_first(
 
     listing = api_client.get(f'/api/v1/transactions/?wallet={first}').json()
 
-    assert [t['title'] for t in listing] == ['Newer', 'Older']
+    assert [t['title'] for t in listing['items']] == ['Newer', 'Older']
+    assert listing['next_cursor'] is None
+
+
+def test_list_transactions_pages_through_same_date_ties_without_gaps(
+    api_client: Any, api_user: Any
+) -> None:
+    wallet = WalletFactory.create(user=api_user, name='Cash')
+    created = TransactionFactory.create_batch(7, wallet=wallet, date=date(2026, 10, 18))
+    created.append(TransactionFactory.create(wallet=wallet, date=date(2026, 10, 1)))
+
+    seen: list[int] = []
+    pages = 0
+    url = f'/api/v1/transactions/?wallet={wallet.id}&limit=3'
+    cursor = None
+    while True:
+        page = api_client.get(url + (f'&cursor={cursor}' if cursor else '')).json()
+        seen += [t['id'] for t in page['items']]
+        pages += 1
+        cursor = page['next_cursor']
+        if cursor is None:
+            break
+
+    expected = sorted(
+        created, key=lambda t: (t.date, t.id), reverse=True
+    )
+    assert seen == [t.id for t in expected]
+    assert pages == 3
+
+
+def test_list_transactions_defaults_to_fifty_per_page(api_client: Any, api_user: Any) -> None:
+    wallet = WalletFactory.create(user=api_user, name='Cash')
+    TransactionFactory.create_batch(51, wallet=wallet)
+
+    page = api_client.get(f'/api/v1/transactions/?wallet={wallet.id}').json()
+
+    assert len(page['items']) == 50
+    assert page['next_cursor'] is not None
+
+
+def test_a_full_last_page_has_no_next_cursor(api_client: Any, api_user: Any) -> None:
+    wallet = WalletFactory.create(user=api_user, name='Cash')
+    TransactionFactory.create_batch(2, wallet=wallet)
+
+    page = api_client.get(f'/api/v1/transactions/?wallet={wallet.id}&limit=2').json()
+
+    assert len(page['items']) == 2
+    assert page['next_cursor'] is None
+
+
+def test_list_transactions_rejects_a_limit_out_of_range(api_client: Any, api_user: Any) -> None:
+    wallet = WalletFactory.create(user=api_user, name='Cash')
+
+    too_big = api_client.get(f'/api/v1/transactions/?wallet={wallet.id}&limit=201')
+    zero = api_client.get(f'/api/v1/transactions/?wallet={wallet.id}&limit=0')
+
+    assert too_big.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert zero.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_list_transactions_rejects_a_malformed_cursor(api_client: Any, api_user: Any) -> None:
+    wallet = WalletFactory.create(user=api_user, name='Cash')
+
+    response = api_client.get(f'/api/v1/transactions/?wallet={wallet.id}&cursor=nonsense')
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 def test_list_transactions_rejects_unknown_wallet(api_client: Any) -> None:
@@ -277,7 +343,10 @@ def test_delete_transaction(post_json: Any, api_client: Any) -> None:
     response = api_client.delete(f'/api/v1/transactions/{transaction_id}/')
 
     assert response.status_code == HTTPStatus.NO_CONTENT
-    assert api_client.get(f'/api/v1/transactions/?wallet={wallet_id}').json() == []
+    assert api_client.get(f'/api/v1/transactions/?wallet={wallet_id}').json() == {
+        'items': [],
+        'next_cursor': None,
+    }
 
 
 def test_foreign_wallet_and_category_are_rejected(post_json: Any, make_user: Any) -> None:
@@ -378,7 +447,10 @@ def test_deleting_category_cascades_to_transactions(post_json: Any, api_client: 
     response = api_client.delete(f'/api/v1/categories/{category_id}/')
 
     assert response.status_code == HTTPStatus.NO_CONTENT
-    assert api_client.get(f'/api/v1/transactions/?wallet={wallet_id}').json() == []
+    assert api_client.get(f'/api/v1/transactions/?wallet={wallet_id}').json() == {
+        'items': [],
+        'next_cursor': None,
+    }
 
 
 def test_wallet_list_reports_real_transaction_count(post_json: Any, api_client: Any) -> None:

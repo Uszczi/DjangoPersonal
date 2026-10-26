@@ -8,11 +8,14 @@ from .categories import (
     seed_base_categories,
 )
 from .transactions import (
+    DEFAULT_PAGE_SIZE,
+    MAX_PAGE_SIZE,
     CreateTransaction,
     DeleteTransaction,
     GetTransaction,
     ListTransactions,
     ReplaceTransaction,
+    TransactionPage,
     UpdateTransaction,
 )
 from .wallets import (
@@ -25,6 +28,9 @@ from .wallets import (
 )
 
 __all__ = [
+    'DEFAULT_PAGE_SIZE',
+    'MAX_PAGE_SIZE',
+    'TransactionPage',
     'CreateCategory',
     'CreateTransaction',
     'CreateWallet',
