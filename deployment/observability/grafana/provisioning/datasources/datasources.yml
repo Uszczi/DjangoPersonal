@@ -8,7 +8,8 @@ datasources:
     isDefault: true
 
   # The backend writes `trace_id=<32 hex>` into every log line
-  # (personal/log_config.py); the derived field turns it into a Tempo link.
+  # (personal/log_config.py; `trace_id=-` outside a span, which never
+  # matches); the derived field turns it into a Tempo link.
   - name: Loki
     type: loki
     uid: loki

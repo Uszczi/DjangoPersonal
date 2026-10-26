@@ -2,6 +2,7 @@
 
 import io
 import logging
+import re
 from collections.abc import Iterator
 
 import pytest
@@ -37,7 +38,9 @@ def test_a_line_logged_inside_a_span_carries_its_trace_id(output: io.StringIO) -
     assert 'slow query' in output.getvalue()
 
 
-def test_a_line_logged_outside_a_span_has_a_zero_trace_id(output: io.StringIO) -> None:
+def test_a_line_logged_outside_a_span_has_no_trace_id_to_link(output: io.StringIO) -> None:
     logging.getLogger('tests.log_config').warning('starting up')
 
-    assert f'trace_id={"0" * 32}' in output.getvalue()
+    # Grafana's derived field (datasources.yml) would link any 32-character id.
+    assert re.search(r'trace_id=(\w{32})', output.getvalue()) is None
+    assert 'trace_id=- starting up' in output.getvalue()
