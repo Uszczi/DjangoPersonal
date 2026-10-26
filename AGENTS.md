@@ -29,7 +29,7 @@ The name is historical: the backend was Django until the move to FastAPI + SQLAl
 ├── GLOSSARY.md         Domain terms
 ├── justfile            All common commands (task runner: `just`)
 ├── .agents/, skills-lock.json  Agent skills (installed by the skills CLI)
-└── opencode.json       MCP client config pointing at the deployed servers
+└── opencode.json       MCP client config for the deployed server (domain from $DJANGOPERSONAL_DOMAIN)
 ```
 
 ## Technology stack

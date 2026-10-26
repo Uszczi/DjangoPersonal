@@ -3,7 +3,7 @@
   "mcp": {
     "djangopersonal": {
       "type": "remote",
-      "url": "https://[[DOMAIN]]/mcp"
+      "url": "https://{env:DJANGOPERSONAL_DOMAIN}/mcp"
     }
   }
 }
