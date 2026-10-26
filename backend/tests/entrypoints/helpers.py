@@ -1,4 +1,7 @@
-"""Reading the spans an app under test recorded (the ``span_exporter`` fixture)."""
+"""Helpers shared by the entrypoint tests.
+
+Reading the spans an app under test recorded (the ``span_exporter`` fixture).
+"""
 
 from dataclasses import dataclass
 

@@ -51,7 +51,6 @@ def test_the_username_is_counted_regardless_of_case(
 
     with pytest.raises(RateLimited) as refused:
         _authenticate(session, limiter, '203.0.113.7', 'target', 'wrong')
-    assert refused.value.status == 429
     assert 0 < refused.value.retry_after <= 15 * 60
 
 

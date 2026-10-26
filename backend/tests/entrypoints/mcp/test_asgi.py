@@ -13,7 +13,7 @@ from personal.infra.db import Database
 from personal.infra.models import User
 from personal.settings import Settings
 from tests.conftest import DEFAULT_PASSWORD
-from tests.tracing import recorded_trace
+from tests.entrypoints.helpers import recorded_trace
 
 REDIRECT = 'http://localhost:9999/callback'
 
