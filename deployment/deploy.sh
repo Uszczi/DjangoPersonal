@@ -8,8 +8,9 @@ cp "$HOME/pp/.env.$DIRNAME" ./deployment/.env
 COMPOSE_FILE=./deployment/docker-compose.yml
 COMPOSE=(docker compose -f "$COMPOSE_FILE")
 
-# Without them the services would start on the insecure development keys.
-for key in SECRET_KEY ADMIN_SECRET_KEY; do
+# Without the keys the services would start on the insecure development keys;
+# without DOMAIN the nginx configs would keep the [[DOMAIN]] placeholder.
+for key in SECRET_KEY ADMIN_SECRET_KEY DOMAIN; do
     if ! grep -q "^$key=." ./deployment/.env; then
         echo "$key is not set in ~/pp/.env.$DIRNAME." >&2
         exit 1
@@ -26,7 +27,8 @@ echo "Applying migrations."
 "${COMPOSE[@]}" run --rm --no-deps app alembic upgrade head
 
 echo "Updating nginx."
-sudo ./deployment/update_nginx.sh
+DOMAIN=$(grep "^DOMAIN=" ./deployment/.env | tail -n 1 | cut -d= -f2-)
+sudo ./deployment/update_nginx.sh "$DOMAIN"
 
 echo "Running up"
 "${COMPOSE[@]}" up --detach --wait app mcp admin
