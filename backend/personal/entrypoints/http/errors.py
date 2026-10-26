@@ -15,11 +15,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
 
-from personal.core.shared.errors import DomainError, NotFound
+from personal.core.shared.errors import DomainError, NotFound, RateLimited
 
 STATUS_BY_CODE = {
     DomainError.code: 400,
     NotFound.code: 404,
+    RateLimited.code: 429,
 }
 
 UNPARSABLE_BODY_DETAIL = 'Cannot parse request body'
@@ -38,7 +39,12 @@ def register_fastapi_error_handlers(app: FastAPI) -> None:
 
 async def _handle_domain_error(request: Request, error: Exception) -> JSONResponse:
     assert isinstance(error, DomainError)
-    return JSONResponse({'detail': error.message}, status_code=status_for(error))
+    headers = None
+    if isinstance(error, RateLimited):
+        headers = {'Retry-After': str(error.retry_after)}
+    return JSONResponse(
+        {'detail': error.message}, status_code=status_for(error), headers=headers
+    )
 
 
 async def _handle_validation_error(request: Request, error: Exception) -> JSONResponse:
