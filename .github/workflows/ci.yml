@@ -1,0 +1,141 @@
+name: CI
+
+# The checks run on every pull request and every push to master; the deploy
+# job only runs for a push to master, and only after every check passed.
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+concurrency:
+  group: ci-${{ github.ref }}
+  # Never cancel a running deploy halfway; superseded PR runs can go.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  backend:
+    name: Backend (mypy + pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        python-version: "3.14"
+        enable-cache: true
+        cache-dependency-glob: backend/uv.lock
+
+    - name: Install dependencies
+      run: uv sync --locked
+
+    - name: Type-check (mypy strict)
+      run: uv run mypy .
+
+    - name: Test (pytest)
+      run: uv run pytest
+
+  frontend:
+    name: Frontend, shared and mobile (test + lint + build)
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: "24"
+        cache: npm
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Test (Vitest)
+      working-directory: frontend
+      run: npm test
+
+    - name: Lint (oxlint)
+      working-directory: frontend
+      run: npm run lint
+
+    - name: Build
+      working-directory: frontend
+      run: npm run build
+
+    - name: Type-check shared and mobile
+      run: npm run typecheck --workspace @personal/shared --workspace mobile
+
+    - name: Lint shared and mobile
+      run: npx oxlint --config frontend/.oxlintrc.json packages/shared/src mobile/app mobile/src
+
+  api-client:
+    name: Generated API client in sync
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v6
+      with:
+        python-version: "3.14"
+        enable-cache: true
+        cache-dependency-glob: backend/uv.lock
+
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: "24"
+        cache: npm
+
+    # openapi-generator-cli runs a Java jar.
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: "21"
+
+    - name: Set up just
+      uses: extractions/setup-just@v3
+
+    - name: Install dependencies
+      run: |
+        npm ci
+        cd backend && uv sync --locked
+
+    - name: Check the generated client
+      run: just check-api-client
+
+  deploy:
+    needs: [backend, frontend, api-client]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    environment: mikrus
+
+    steps:
+    - name: Set repo name as env
+      run: echo "REPO_NAME=${GITHUB_REPOSITORY##*/}" >> $GITHUB_ENV
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Copy files to VPS
+      run: |
+        rsync -e "ssh -p ${{ secrets.VPS_PORT }}" -avz --delete ./ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/${{ secrets.VPS_USER }}/pp/${{ env.REPO_NAME }}/
+
+    - name: Restart service on VPS
+      run: |
+        ssh -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} 'cd /${{ secrets.VPS_USER }}/pp/${{ env.REPO_NAME }} && ./deployment/deploy.sh'
