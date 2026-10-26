@@ -59,6 +59,10 @@ class Settings(BaseSettings):
     postgres_password: str = Field(default='supersecret', validation_alias='POSTGRES_PASSWORD')
     sqlite_path: Path = Field(default=BASE_DIR / 'db.sqlite3', validation_alias='SQLITE_PATH')
 
+    #: Shared state such as the login rate limits (``redis://host:6379/0``).
+    #: Unset, each process counts in its own memory.
+    redis_url: str | None = Field(default=None, validation_alias='REDIS_URL')
+
     # How long a pooled Postgres connection is reused.
     db_connection_max_age_seconds: int = 60
 

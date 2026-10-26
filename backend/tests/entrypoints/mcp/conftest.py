@@ -9,6 +9,7 @@ from personal.entrypoints.mcp import runtime
 from personal.infra import factories
 from personal.infra.db import Database
 from personal.infra.models import User
+from personal.infra.rate_limit import InMemoryRateLimiter
 
 
 @pytest.fixture
@@ -23,4 +24,6 @@ def mcp_user(
     user = make_user('mcp-user')
     monkeypatch.setattr(runtime, 'database', database)
     monkeypatch.setattr(runtime, 'default_user_id', user.id)
+    # Fresh counts per test: the process-wide limiter would carry them over.
+    monkeypatch.setattr(runtime, 'limiter', InMemoryRateLimiter())
     return user

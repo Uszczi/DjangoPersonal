@@ -13,7 +13,13 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from personal import wiring
-from personal.core.accounts.ports import InvalidToken, PasswordHasher, PasswordPolicy, TokenService
+from personal.core.accounts.ports import (
+    InvalidToken,
+    PasswordHasher,
+    PasswordPolicy,
+    RateLimiter,
+    TokenService,
+)
 from personal.infra.db import Database
 from personal.infra.models import User
 from personal.infra.repo import (
@@ -88,6 +94,27 @@ def token_service(settings: SettingsDep) -> TokenService:
 
 
 TokenServiceDep = Annotated[TokenService, Depends(token_service)]
+
+
+def get_rate_limiter(request: Request) -> RateLimiter:
+    """The app's one limiter (built at startup: its counts outlive a request)."""
+    limiter: RateLimiter = request.app.state.rate_limiter
+    return limiter
+
+
+RateLimiterDep = Annotated[RateLimiter, Depends(get_rate_limiter)]
+
+
+def client_address(request: Request) -> str:
+    """The client's IP as Starlette reports it.
+
+    Behind the reverse proxy uvicorn runs with ``--proxy-headers``, so this is
+    the address from ``X-Forwarded-For``, not the proxy's.
+    """
+    return request.client.host if request.client else 'unknown'
+
+
+ClientAddress = Annotated[str, Depends(client_address)]
 
 #: Documented in the OpenAPI schema as the ``JWTAuth`` bearer scheme, the name
 #: the generated TypeScript client asks its token provider for.

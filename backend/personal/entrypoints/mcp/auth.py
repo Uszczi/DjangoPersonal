@@ -26,6 +26,14 @@ def _request(ctx: Any) -> Any:
         return None
 
 
+def client_address(ctx: Any) -> str:
+    """The calling client's IP, or ``stdio`` when there is no HTTP request."""
+    request = _request(ctx)
+    if request is None:
+        return 'stdio'
+    return request.client.host if request.client else 'unknown'
+
+
 def _active_user(session: Session, user_id: int) -> User:
     user = UserRepository(session).find(user_id)
     if user is None or not user.is_active:

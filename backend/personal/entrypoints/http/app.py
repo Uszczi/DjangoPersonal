@@ -18,6 +18,7 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from personal import wiring
 from personal.entrypoints.http import ops
 from personal.entrypoints.http.errors import register_fastapi_error_handlers
 from personal.entrypoints.http.routers import router as api_router
@@ -76,6 +77,7 @@ def create_app(
     )
     app.state.settings = settings
     app.state.database = database
+    app.state.rate_limiter = wiring.rate_limiter(settings)
 
     _without_validation_responses(app)
     register_fastapi_error_handlers(app)

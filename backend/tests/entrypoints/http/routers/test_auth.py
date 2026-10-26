@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from personal.core.accounts.ports import TokenService
 from personal.infra.models import User
 from personal.infra.security import ScryptPasswordHasher
-from tests.harness import ApiClient
+from tests.harness import ApiClient, Response
 
 PASSWORD = 'StrongPass123!'
 
@@ -141,3 +141,62 @@ def test_login_upgrades_an_outdated_hash(
     assert response.status_code == HTTPStatus.OK
     session.refresh(user)
     assert user.password.startswith('scrypt$16384$')
+
+
+def _login(client: ApiClient, username: str, password: str) -> Response:
+    return client.post('/api/v1/auth/login/', {'username': username, 'password': password})
+
+
+def test_the_sixth_failed_login_within_the_window_is_refused_with_retry_after(
+    anon_client: ApiClient, make_user: Callable[..., User]
+) -> None:
+    make_user('target')
+    for _ in range(5):
+        assert _login(anon_client, 'target', 'wrong').status_code == HTTPStatus.UNAUTHORIZED
+
+    response = _login(anon_client, 'target', 'wrong')
+
+    assert response.status_code == HTTPStatus.TOO_MANY_REQUESTS
+    assert response.json() == {'detail': 'Too many failed login attempts. Try again later.'}
+    assert 0 < int(response.headers['retry-after']) <= 15 * 60
+
+
+def test_a_blocked_client_is_refused_even_with_the_right_password(
+    anon_client: ApiClient, make_user: Callable[..., User]
+) -> None:
+    make_user('target')
+    for _ in range(5):
+        _login(anon_client, 'target', 'wrong')
+
+    assert _login(anon_client, 'target', PASSWORD).status_code == HTTPStatus.TOO_MANY_REQUESTS
+
+
+def test_successful_logins_are_never_counted(
+    anon_client: ApiClient, make_user: Callable[..., User]
+) -> None:
+    make_user('regular')
+
+    for _ in range(8):
+        assert _login(anon_client, 'regular', PASSWORD).status_code == HTTPStatus.OK
+
+
+def test_a_successful_login_clears_earlier_failures(
+    anon_client: ApiClient, make_user: Callable[..., User]
+) -> None:
+    make_user('forgetful')
+    for _ in range(4):
+        _login(anon_client, 'forgetful', 'wrong')
+    assert _login(anon_client, 'forgetful', PASSWORD).status_code == HTTPStatus.OK
+
+    for _ in range(5):
+        assert _login(anon_client, 'forgetful', 'wrong').status_code == HTTPStatus.UNAUTHORIZED
+
+
+def test_failures_for_one_username_do_not_block_another(
+    anon_client: ApiClient, make_user: Callable[..., User]
+) -> None:
+    make_user('bystander')
+    for _ in range(6):
+        _login(anon_client, 'target', 'wrong')
+
+    assert _login(anon_client, 'bystander', PASSWORD).status_code == HTTPStatus.OK
