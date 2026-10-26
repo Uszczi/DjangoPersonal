@@ -62,6 +62,12 @@ class Settings(BaseSettings):
     # How long a pooled Postgres connection is reused.
     db_connection_max_age_seconds: int = 60
 
+    #: OTLP/HTTP collector base URL (Alloy, e.g. ``http://alloy:4318``). Unset
+    #: means tracing is off: local dev and the test suite export nothing.
+    otel_exporter_otlp_endpoint: str | None = Field(
+        default=None, validation_alias='OTEL_EXPORTER_OTLP_ENDPOINT'
+    )
+
     access_token_lifetime: timedelta = timedelta(minutes=15)
     refresh_token_lifetime: timedelta = timedelta(days=14)
 

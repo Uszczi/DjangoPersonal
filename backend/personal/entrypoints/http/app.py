@@ -14,11 +14,14 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.sdk.trace import TracerProvider
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from personal.entrypoints.http import ops
 from personal.entrypoints.http.errors import register_fastapi_error_handlers
 from personal.entrypoints.http.routers import router as api_router
+from personal.infra import tracing
 from personal.infra.db import Database
 from personal.log_config import configure_logging
 from personal.settings import Settings
@@ -49,9 +52,12 @@ def _without_validation_responses(app: FastAPI) -> None:
     app.openapi = openapi  # type: ignore[method-assign]
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None, tracer_provider: TracerProvider | None = None
+) -> FastAPI:
+    """The API; traced (requests and SQL) only when given a ``tracer_provider``."""
     settings = settings or Settings()
-    database = Database(settings)
+    database = Database(settings, tracer_provider)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -80,6 +86,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # Added last, so it runs first: the allowed-hosts check. Requests for
     # a foreign host are refused before routing and stay out of the metrics.
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.trusted_hosts)
+    if tracer_provider is not None:
+        FastAPIInstrumentor.instrument_app(
+            app, tracer_provider=tracer_provider, excluded_urls=tracing.EXCLUDED_URLS
+        )
     return app
 
 
@@ -88,7 +98,11 @@ def create_served_app() -> FastAPI:
 
     A factory rather than a module-level ``app`` so importing :func:`create_app`
     (tests, the MCP server) neither reconfigures logging nor opens the
-    database from the environment.
+    database from the environment. Each uvicorn worker calls it, so each gets
+    its own tracer provider (see ``personal.infra.tracing``).
     """
     configure_logging()
-    return create_app()
+    settings = Settings()
+    provider = tracing.tracer_provider(settings, tracing.API_SERVICE)
+    tracing.install(provider)
+    return create_app(settings, provider)

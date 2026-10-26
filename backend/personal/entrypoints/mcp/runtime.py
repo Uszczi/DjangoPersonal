@@ -10,11 +10,15 @@ import os
 
 from personal import wiring
 from personal.core.accounts.ports import PasswordHasher, TokenService
+from personal.infra import tracing
 from personal.infra.db import Database
 from personal.settings import Settings
 
 settings = Settings()
-database = Database(settings)
+# One process (no uvicorn workers), so building it at import is safe; ``None``
+# without an OTLP endpoint, as in the tests.
+tracer_provider = tracing.tracer_provider(settings, tracing.MCP_SERVICE)
+database = Database(settings, tracer_provider)
 tokens: TokenService = wiring.token_service(settings)
 hasher: PasswordHasher = wiring.password_hasher()
 
