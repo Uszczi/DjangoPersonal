@@ -3,7 +3,7 @@
   "mcp": {
     "djangopersonal": {
       "type": "remote",
-      "url": "https://djangopersonal.bluszczzone.pl/mcp"
+      "url": "https://{env:DJANGOPERSONAL_DOMAIN}/mcp"
     }
   }
 }
