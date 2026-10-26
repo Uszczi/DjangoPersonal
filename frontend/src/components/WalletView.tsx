@@ -48,9 +48,13 @@ function groupByDay(
 
 /**
  * Calls `onReach` whenever the returned element scrolls into view, for
- * infinite scrolling. Without IntersectionObserver the button still works.
+ * infinite scrolling. A change of `loaded` (the rows shown) observes it afresh,
+ * and observing reports the current visibility: if the element is still in
+ * view after a page loads (short pages, tall screen), `onReach` fires again
+ * instead of waiting for a scroll that cannot happen. Without
+ * IntersectionObserver the button still works.
  */
-function useOnScrolledIntoView(onReach: () => void, enabled: boolean) {
+function useOnScrolledIntoView(onReach: () => void, enabled: boolean, loaded: number) {
   const ref = useRef<HTMLDivElement>(null);
   const onReachRef = useRef(onReach);
   useEffect(() => {
@@ -64,7 +68,7 @@ function useOnScrolledIntoView(onReach: () => void, enabled: boolean) {
     });
     observer.observe(element);
     return () => observer.disconnect();
-  }, [enabled]);
+  }, [enabled, loaded]);
   return ref;
 }
 
@@ -87,7 +91,7 @@ export function WalletView({ wallet }: { wallet: WalletResponse }) {
   const loadMore = () => {
     if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
   };
-  const endOfList = useOnScrolledIntoView(loadMore, hasNextPage);
+  const endOfList = useOnScrolledIntoView(loadMore, hasNextPage, transactions.length);
   const groups = groupByDay(transactions);
 
   return (
