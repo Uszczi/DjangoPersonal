@@ -16,6 +16,7 @@ import {
 import { type TransactionResponse, type WalletResponse } from "@personal/shared/generated/api";
 import { ShowModal } from "@/stores/modal";
 import { useCategoriesStore } from "@personal/shared/stores/categories";
+import { TRANSACTIONS_LOAD_ERROR } from "@personal/shared/transactionList";
 import { useWalletTransactions } from "@/queries/transactions";
 
 const dayFormatter = new Intl.DateTimeFormat("pl-PL", {
@@ -127,7 +128,7 @@ export function WalletView({ wallet }: { wallet: WalletResponse }) {
       </div>
 
       {isError && (
-        <ErrorMessage>Nie udało się wczytać transakcji. Spróbuj ponownie.</ErrorMessage>
+        <ErrorMessage>{TRANSACTIONS_LOAD_ERROR}</ErrorMessage>
       )}
 
       {groups.length === 0 ? (

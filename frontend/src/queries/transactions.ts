@@ -16,6 +16,7 @@ import type {
   TransactionResponse,
 } from "@personal/shared/generated/api";
 import { toTransactionRequest, type TransactionInput } from "@personal/shared/stores/transactions";
+import { compareNewestFirst, withPlaced } from "@personal/shared/transactionList";
 import { useWalletsStore } from "@personal/shared/stores/wallets";
 
 type Pages = InfiniteData<TransactionPageResponse, string | null>;
@@ -35,11 +36,6 @@ export function useWalletTransactions(walletId: number) {
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     select: (data) => data.pages.flatMap((page) => page.items),
   });
-}
-
-/** Server order: `(date, id)` descending. Negative when `a` comes first. */
-function compareNewestFirst(a: TransactionResponse, b: TransactionResponse) {
-  return b.date.getTime() - a.date.getTime() || b.id - a.id;
 }
 
 function without(data: Pages, id: number): Pages {
@@ -74,7 +70,7 @@ function placed(data: Pages, transaction: TransactionResponse): Pages {
     ...data,
     pages: pages.map((page, n) =>
       n === target
-        ? { ...page, items: [...page.items, transaction].sort(compareNewestFirst) }
+        ? { ...page, items: withPlaced(page.items, transaction, false) }
         : page,
     ),
   };
