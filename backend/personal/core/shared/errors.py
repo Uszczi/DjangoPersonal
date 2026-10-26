@@ -31,3 +31,13 @@ class NotFound(DomainError):
     """The addressed resource does not exist."""
 
     code = 'not_found'
+
+
+class RateLimited(DomainError):
+    """Too many attempts; the caller may try again after :attr:`retry_after` seconds."""
+
+    code = 'rate_limited'
+
+    def __init__(self, message: str, *, retry_after: int) -> None:
+        super().__init__(message, status=429)
+        self.retry_after = retry_after

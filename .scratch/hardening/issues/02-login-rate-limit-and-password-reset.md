@@ -44,3 +44,5 @@ Blocked by: none
 Ports/adapters with a real external dependency, Redis, single-use token design, background work, brute-force protection.
 
 ## Comments
+
+- 2026-10-26 (agent): Part A (rate limiting) built on branch `hardening-02-rate-limit`. Failed logins counted per (client IP, case-folded username), 5 per 15 min; while blocked even the right password gets 429 + `Retry-After`; a success clears the count. Applied to `auth_login`, the MCP `/login` page and the MCP `login_user` tool (not the admin panel). Part B (password reset) deferred until the email/SMTP questions are answered.

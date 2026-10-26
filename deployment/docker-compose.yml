@@ -13,6 +13,8 @@ services:
       # `app` lets Prometheus scrape app:8000/metrics inside the compose network.
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1},app
       UVICORN_WORKERS: ${UVICORN_WORKERS:-2}
+      # Login rate limits, shared by every worker and the MCP server.
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
     env_file:
       - path: .env
         required: false
@@ -21,6 +23,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     healthcheck:
       test:
         - CMD
@@ -45,12 +49,18 @@ services:
       POSTGRES_PORT: "5432"
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1},mcp
       MCP_PORT: "8001"
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      # Trust X-Forwarded-For from the reverse proxy (as the app's
+      # --forwarded-allow-ips does), so /login throttles the browser's IP.
+      FORWARDED_ALLOW_IPS: "*"
     env_file:
       - path: .env
         required: false
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     command: ["sh", "-c", "exec python -m personal.entrypoints.mcp"]
 
   # Admin panel (sqladmin). Published on the host's loopback only: reach it
