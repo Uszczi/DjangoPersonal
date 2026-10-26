@@ -14,20 +14,35 @@ export type TransactionInput = {
 };
 
 /** The API contract types `date` as a Date; the form carries the wire string. */
-function toRequest(input: TransactionInput) {
+export function toTransactionRequest(input: TransactionInput) {
   return { ...input, date: parseDate(input.date) };
 }
 
 /** Newest first, matching the server's order (date desc, then id desc). */
-function newestFirst(transactions: TransactionResponse[]): TransactionResponse[] {
-  return [...transactions].sort(
-    (a, b) => b.date.getTime() - a.date.getTime() || b.id - a.id,
-  );
+function compareNewestFirst(a: TransactionResponse, b: TransactionResponse) {
+  return b.date.getTime() - a.date.getTime() || b.id - a.id;
 }
 
+/**
+ * The loaded pages, flattened, with `transaction` placed where the server
+ * would list it. One older than every loaded row while more pages exist is
+ * left for its own page, which the keyset cursor still brings in.
+ */
+function withPlaced(
+  list: NonNullable<TransactionListState>,
+  transaction: TransactionResponse,
+): TransactionResponse[] {
+  const rest = list.transactions.filter((item) => item.id !== transaction.id);
+  const last = rest[rest.length - 1];
+  if (list.nextCursor && last && compareNewestFirst(transaction, last) > 0) return rest;
+  return [...rest, transaction].sort(compareNewestFirst);
+}
+
+/** The loaded pages of one wallet's transactions; `nextCursor` is null after the last. */
 export type TransactionListState = {
   walletId: number;
   transactions: TransactionResponse[];
+  nextCursor: string | null;
 } | null;
 export type TransactionLoadError = {
   walletId: number;
@@ -37,7 +52,10 @@ export type TransactionLoadError = {
 type TransactionsState = {
   transactionList: TransactionListState;
   loadError: TransactionLoadError;
+  /** Load the first page of the wallet's transactions. */
   loadTransactions: (walletId: number) => Promise<void>;
+  /** Append the next page of the shown wallet, if there is one. */
+  loadMoreTransactions: () => Promise<void>;
   saveTransaction: (
     input: TransactionInput,
     transaction?: TransactionResponse | null,
@@ -47,7 +65,7 @@ type TransactionsState = {
 
 const loadGuard = createLoadGuard();
 
-export const useTransactionsStore = create<TransactionsState>((set) => ({
+export const useTransactionsStore = create<TransactionsState>((set, get) => ({
   transactionList: null,
   loadError: null,
 
@@ -55,11 +73,45 @@ export const useTransactionsStore = create<TransactionsState>((set) => ({
     const requestId = loadGuard.nextRequestId();
 
     try {
-      const loaded = await api.transactionsList({ wallet: walletId });
+      const page = await api.transactionsList({ wallet: walletId });
       if (!loadGuard.isLatest(requestId)) return;
       set({
-        transactionList: { walletId, transactions: loaded },
+        transactionList: { walletId, transactions: page.items, nextCursor: page.nextCursor },
         loadError: null,
+      });
+    } catch {
+      if (loadGuard.isLatest(requestId)) {
+        set({
+          loadError: {
+            walletId,
+            message: "Nie udało się wczytać transakcji. Spróbuj ponownie.",
+          },
+        });
+      }
+    }
+  },
+
+  loadMoreTransactions: async () => {
+    const current = get().transactionList;
+    if (!current?.nextCursor) return;
+    const requestId = loadGuard.nextRequestId();
+    const { walletId } = current;
+
+    try {
+      const page = await api.transactionsList({ wallet: walletId, cursor: current.nextCursor });
+      if (!loadGuard.isLatest(requestId)) return;
+      set((state) => {
+        const shown = state.transactionList;
+        if (shown?.walletId !== walletId) return {};
+        const known = new Set(shown.transactions.map((item) => item.id));
+        return {
+          transactionList: {
+            walletId,
+            transactions: [...shown.transactions, ...page.items.filter((item) => !known.has(item.id))],
+            nextCursor: page.nextCursor,
+          },
+          loadError: null,
+        };
       });
     } catch {
       if (loadGuard.isLatest(requestId)) {
@@ -77,7 +129,7 @@ export const useTransactionsStore = create<TransactionsState>((set) => ({
     if (transaction) {
       const updated = await api.transactionsPartialUpdate({
         id: transaction.id,
-        patchedTransactionRequest: toRequest(input),
+        patchedTransactionRequest: toTransactionRequest(input),
       });
       set((state) => {
         const current = state.transactionList;
@@ -88,27 +140,21 @@ export const useTransactionsStore = create<TransactionsState>((set) => ({
         const belongsInList = updated.walletId === current.walletId;
         if (!wasVisible && !belongsInList) return {};
         const transactions = belongsInList
-          ? newestFirst([
-              ...current.transactions.filter((item) => item.id !== updated.id),
-              updated,
-            ])
+          ? withPlaced(current, updated)
           : current.transactions.filter((item) => item.id !== updated.id);
-        return { transactionList: { walletId: current.walletId, transactions } };
+        return { transactionList: { ...current, transactions } };
       });
       return updated;
     }
 
     const created = await api.transactionsCreate({
-      transactionRequest: toRequest(input),
+      transactionRequest: toTransactionRequest(input),
     });
     set((state) => {
       const current = state.transactionList;
       if (!current || current.walletId !== input.wallet) return {};
       return {
-        transactionList: {
-          walletId: current.walletId,
-          transactions: newestFirst([...current.transactions, created]),
-        },
+        transactionList: { ...current, transactions: withPlaced(current, created) },
       };
     });
     return created;
@@ -122,7 +168,7 @@ export const useTransactionsStore = create<TransactionsState>((set) => ({
       if (!current) return {};
       return {
         transactionList: {
-          walletId: current.walletId,
+          ...current,
           transactions: current.transactions.filter(
             (item) => item.id !== transaction.id,
           ),

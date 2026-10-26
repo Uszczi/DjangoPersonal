@@ -52,6 +52,15 @@ function validSelection(wallets: WalletResponse[], selectedWalletId: number | nu
   return wallets[0]?.id ?? null;
 }
 
+/**
+ * The balance to send when editing a wallet, or undefined when it is unchanged.
+ * Only a changed balance is sent, so a plain rename never writes a System
+ * correction; callers that cache the ledger use it to know when to reload.
+ */
+export function balanceChange(wallet: WalletResponse, currentBalance: string): string | undefined {
+  return currentBalance === (wallet.balance ?? "") ? undefined : currentBalance.trim() || undefined;
+}
+
 export const useWalletsStore = create<WalletsState>((set) => ({
   wallets: [],
   isLoading: true,
@@ -106,10 +115,7 @@ export const useWalletsStore = create<WalletsState>((set) => ({
   },
 
   updateWallet: async (wallet, { name, color, icon, currentBalance }) => {
-    // Only send the balance when it actually changed, so a plain rename
-    // never writes a System correction.
-    const newBalance =
-      currentBalance === (wallet.balance ?? "") ? undefined : currentBalance.trim() || undefined;
+    const newBalance = balanceChange(wallet, currentBalance);
     const updatedWallet = await api.walletsPartialUpdate({
       id: wallet.id,
       patchedWalletRequest: {
