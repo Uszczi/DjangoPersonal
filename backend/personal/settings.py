@@ -59,8 +59,18 @@ class Settings(BaseSettings):
     postgres_password: str = Field(default='supersecret', validation_alias='POSTGRES_PASSWORD')
     sqlite_path: Path = Field(default=BASE_DIR / 'db.sqlite3', validation_alias='SQLITE_PATH')
 
+    #: Shared state such as the login rate limits (``redis://host:6379/0``).
+    #: Unset, each process counts in its own memory.
+    redis_url: str | None = Field(default=None, validation_alias='REDIS_URL')
+
     # How long a pooled Postgres connection is reused.
     db_connection_max_age_seconds: int = 60
+
+    #: OTLP/HTTP collector base URL (Alloy, e.g. ``http://alloy:4318``). Unset
+    #: means tracing is off: local dev and the test suite export nothing.
+    otel_exporter_otlp_endpoint: str | None = Field(
+        default=None, validation_alias='OTEL_EXPORTER_OTLP_ENDPOINT'
+    )
 
     access_token_lifetime: timedelta = timedelta(minutes=15)
     refresh_token_lifetime: timedelta = timedelta(days=14)

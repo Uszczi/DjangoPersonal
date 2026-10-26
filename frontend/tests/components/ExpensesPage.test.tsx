@@ -59,7 +59,9 @@ function routeByUrl({
       )
     }
     if (path.includes('/projects/')) return Promise.resolve(jsonResponse([inbox]))
-    if (path.includes('/transactions/')) return Promise.resolve(jsonResponse(transactions()))
+    if (path.includes('/transactions/')) {
+      return Promise.resolve(jsonResponse({ items: transactions(), next_cursor: null }))
+    }
     if (path.includes('/categories/')) return Promise.resolve(jsonResponse([]))
     return Promise.resolve(jsonResponse({ detail: 'Not found' }, 404))
   }

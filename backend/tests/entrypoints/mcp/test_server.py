@@ -92,6 +92,15 @@ def test_account_tools_issue_tokens(mcp_user: User, token_service: TokenService)
         call('login_user', username='mcp-user', password='wrong')
 
 
+def test_the_login_tool_is_throttled_too(mcp_user: User) -> None:
+    for _ in range(5):
+        with pytest.raises(ToolError, match='Invalid username or password.'):
+            call('login_user', username='mcp-user', password='wrong')
+
+    with pytest.raises(ToolError, match='Too many failed login attempts.'):
+        call('login_user', username='mcp-user', password=DEFAULT_PASSWORD)
+
+
 def test_current_account_tool(mcp_user: User) -> None:
     assert call('get_current_account') == {'id': mcp_user.id, 'username': 'mcp-user'}
 
@@ -110,8 +119,12 @@ def test_expense_tools(mcp_user: User) -> None:
     )
     assert spent['amount'] == '12.50'
     assert spent['category_id'] == food['id']
-    titles = [t['title'] for t in call('list_transactions', wallet_id=wallet['id'])]
-    assert 'Obiad' in titles
+    page = call('list_transactions', wallet_id=wallet['id'])
+    assert 'Obiad' in [t['title'] for t in page['items']]
+    first = call('list_transactions', wallet_id=wallet['id'], limit=1)
+    rest = call('list_transactions', wallet_id=wallet['id'], cursor=first['next_cursor'])
+    assert len(first['items']) == 1 and rest['next_cursor'] is None
+    assert first['items'] + rest['items'] == page['items']
 
     renamed = call('update_transaction', transaction_id=spent['id'], title='Kolacja')
     assert renamed['category_id'] == food['id']

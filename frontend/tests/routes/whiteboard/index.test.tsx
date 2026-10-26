@@ -232,6 +232,27 @@ describe('Notatnik search', () => {
     ).toBeInTheDocument()
   })
 
+  test('a Notatka found by its text opens with its own search already showing the query', async () => {
+    const note = board(5, 'Dziennik', null, '2026-10-20T10:00:00Z', 'markdown')
+    note.content = { markdown: 'Zadzwonić do Żanety\nnic\nżaneta oddzwoni' }
+    fetchMock.mockImplementation(fakeBackend({ boards: [note] }))
+    const user = userEvent.setup()
+
+    renderApp('/whiteboard')
+    await user.type(await screen.findByRole('searchbox', { name: 'Szukaj w Notatniku' }), 'zanet')
+    const results = await screen.findByRole('list', { name: 'Wyniki wyszukiwania' })
+    await user.click(await within(results).findByRole('button', { name: 'Otwórz notatkę: Dziennik' }))
+
+    expect(await screen.findByRole('searchbox', { name: 'Szukaj w notatce' })).toHaveValue('zanet')
+    // Ignoring case and Polish letters, like the Notatnik search.
+    expect(screen.getByText('1 z 2')).toBeInTheDocument()
+
+    // The preview marks the same matches.
+    await user.click(screen.getByRole('button', { name: 'Podgląd' }))
+    expect(screen.getByRole('searchbox', { name: 'Szukaj w notatce' })).toHaveValue('zanet')
+    expect(screen.getAllByText((_, el) => el?.tagName === 'MARK' && el.closest('pre') === null).map((m) => m.textContent)).toEqual(['Żanet', 'żanet'])
+  })
+
   test('shows the first three matching lines and how many more there are', async () => {
     const note = board(5, 'Lista', null, '2026-10-20T10:00:00Z', 'markdown')
     note.content = { markdown: ['kawa 1', 'kawa 2', 'herbata', 'kawa 3', 'kawa 4', 'kawa 5'].join('\n') }

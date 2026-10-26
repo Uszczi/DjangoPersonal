@@ -39,7 +39,7 @@ def test_create_wallet_with_initial_balance(post_json: Any, api_client: Any) -> 
     # The opening balance is a real System-category transaction, so the ledger
     # sums to the wallet's balance.
     wallet_id = response.json()['id']
-    transactions = api_client.get(f'/api/v1/transactions/?wallet={wallet_id}').json()
+    transactions = api_client.get(f'/api/v1/transactions/?wallet={wallet_id}').json()['items']
     assert [t['title'] for t in transactions] == ['Stan początkowy']
     assert transactions[0]['amount'] == '100.50'
     system_id = next(
@@ -81,7 +81,7 @@ def test_setting_current_balance_down_records_a_correction(
 
     assert response.status_code == HTTPStatus.OK
     assert response.json()['balance'] == '50.00'
-    transactions = api_client.get(f'/api/v1/transactions/?wallet={wallet_id}').json()
+    transactions = api_client.get(f'/api/v1/transactions/?wallet={wallet_id}').json()['items']
     correction = next(t for t in transactions if t['title'] == 'Korekta stanu')
     assert correction['amount'] == '-20.00'
 
@@ -97,7 +97,7 @@ def test_setting_current_balance_up_records_a_correction(
 
     assert response.status_code == HTTPStatus.OK
     assert response.json()['balance'] == '120.00'
-    transactions = api_client.get(f'/api/v1/transactions/?wallet={wallet_id}').json()
+    transactions = api_client.get(f'/api/v1/transactions/?wallet={wallet_id}').json()['items']
     correction = next(t for t in transactions if t['title'] == 'Korekta stanu')
     assert correction['amount'] == '20.00'
 

@@ -12,9 +12,11 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Any
 
+from opentelemetry.sdk.trace import TracerProvider
 from sqlalchemy import Connection, Engine, create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 
+from personal.infra.tracing import instrument_engine
 from personal.settings import Settings
 
 
@@ -52,8 +54,10 @@ def create_db_engine(settings: Settings) -> Engine:
 
 
 class Database:
-    def __init__(self, settings: Settings) -> None:
+    def __init__(self, settings: Settings, tracer_provider: TracerProvider | None = None) -> None:
         self.engine = create_db_engine(settings)
+        if tracer_provider is not None:
+            instrument_engine(self.engine, tracer_provider)
         # No autoflush: a change reaches the database when a repository writes
         # it, not as a side effect of the next query a use case happens to run
         # (which would surface constraint errors outside the repository).

@@ -1,4 +1,4 @@
-import { cleanup, screen, within } from '@testing-library/react'
+import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
@@ -146,6 +146,52 @@ describe('Whiteboard', () => {
     test('a Notatka opens in the highlighted mode', async () => {
       renderApp('/whiteboard/5')
       expect(await screen.findByRole('button', { name: 'Podświetlony' })).toHaveAttribute('aria-pressed', 'true')
+    })
+
+    test('the highlighted and editable modes share one field', async () => {
+      const user = userEvent.setup()
+      renderApp('/whiteboard/5')
+
+      const field = await screen.findByDisplayValue('# Plan')
+      await user.click(screen.getByRole('button', { name: 'Edycja' }))
+
+      expect(screen.getByRole('button', { name: 'Edycja' })).toHaveAttribute('aria-pressed', 'true')
+      expect(screen.getByDisplayValue('# Plan')).toBe(field)
+    })
+
+    test('searches the open Notatka and steps through the matches', async () => {
+      fetchMock.mockImplementation((input: RequestInfo | URL) => {
+        const url = requestUrl(input)
+        if (url.includes('/api/v1/whiteboards/5/')) return Promise.resolve(jsonResponse({ ...inFolder, content: { markdown: 'plan A\nPlan B\nreszta' } }))
+        if (url.startsWith('/api/v1/whiteboards/')) return Promise.resolve(jsonResponse([inFolder, loose]))
+        if (url.startsWith('/api/v1/folders/')) return Promise.resolve(jsonResponse([folder]))
+        if (url.startsWith('/api/v1/timer/')) return Promise.resolve(jsonResponse({ entry: null, server_now: '2026-10-15T12:00:00Z' }))
+        return Promise.resolve(jsonResponse([]))
+      })
+      const user = userEvent.setup()
+      renderApp('/whiteboard/5')
+
+      const field = await screen.findByDisplayValue(/plan A/)
+      field.focus()
+      await user.keyboard('{Control>}f{/Control}')
+      const search = await screen.findByRole('searchbox', { name: 'Szukaj w notatce' })
+      await waitFor(() => expect(search).toHaveFocus())
+      await user.type(search, 'plan')
+
+      expect(screen.getByText('1 z 2')).toBeInTheDocument()
+      await user.keyboard('{Enter}')
+      expect(screen.getByText('2 z 2')).toBeInTheDocument()
+      expect((field as HTMLTextAreaElement).selectionStart).toBe(7)
+      await user.click(screen.getByRole('button', { name: 'Następne trafienie' }))
+      expect(screen.getByText('1 z 2')).toBeInTheDocument()
+
+      await user.clear(search)
+      await user.type(search, 'xyz')
+      expect(screen.getByText('Brak wyników')).toBeInTheDocument()
+
+      await user.keyboard('{Escape}')
+      expect(screen.queryByRole('searchbox', { name: 'Szukaj w notatce' })).not.toBeInTheDocument()
+      expect(field).toHaveFocus()
     })
 
     test('the tree is on the Notatnik page too', async () => {

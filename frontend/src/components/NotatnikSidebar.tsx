@@ -275,6 +275,7 @@ function SearchResults({ query, folders, whiteboards, activeId, onRevealFolder }
           active={wb.id === activeId}
           location={location(wb.folderId ?? null)}
           lines={lines}
+          searchQuery={lines.length > 0 ? query.trim() : undefined}
         />
       ))}
     </ul>
@@ -413,9 +414,11 @@ type WhiteboardRowProps = {
   location?: string;
   /** The lines of its text that matched a search. */
   lines?: MatchingLine[];
+  /** The search its text matched; the Notatka opens searching for it. */
+  searchQuery?: string;
 };
 
-function WhiteboardRow({ whiteboard: wb, active, location, lines = [] }: WhiteboardRowProps) {
+function WhiteboardRow({ whiteboard: wb, active, location, lines = [], searchQuery }: WhiteboardRowProps) {
   const remove = useWhiteboardsStore((s) => s.deleteWhiteboard);
   const navigate = useNavigate();
 
@@ -432,7 +435,13 @@ function WhiteboardRow({ whiteboard: wb, active, location, lines = [] }: Whitebo
         aria-label={`Otwórz ${wb.kind === "markdown" ? "notatkę" : "tablicę"}: ${wb.name}`}
         aria-current={active ? "page" : undefined}
         className={`${rowButtonClasses} aria-[current]:bg-wash aria-[current]:font-semibold aria-[current]:text-ink`}
-        onClick={() => navigate({ to: "/whiteboard/$boardId", params: { boardId: String(wb.id) } })}
+        onClick={() =>
+          navigate({
+            to: "/whiteboard/$boardId",
+            params: { boardId: String(wb.id) },
+            search: searchQuery ? { q: searchQuery } : {},
+          })
+        }
       >
         <span className="w-[14px] shrink-0" aria-hidden="true" />
         <span aria-hidden="true">{wb.kind === "markdown" ? "📝" : "🎨"}</span>

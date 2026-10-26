@@ -27,10 +27,22 @@ loki.write "default" {
 	}
 }
 
+// The backend services export OTLP/HTTP to alloy:4318
+// (OTEL_EXPORTER_OTLP_ENDPOINT in docker-compose.yml).
 otelcol.receiver.otlp "default" {
-	grpc {}
-	http {}
+	grpc {
+		endpoint = "0.0.0.0:4317"
+	}
+	http {
+		endpoint = "0.0.0.0:4318"
+	}
 
+	output {
+		traces = [otelcol.processor.batch.default.input]
+	}
+}
+
+otelcol.processor.batch "default" {
 	output {
 		traces = [otelcol.exporter.otlp.tempo.input]
 	}
@@ -39,5 +51,10 @@ otelcol.receiver.otlp "default" {
 otelcol.exporter.otlp "tempo" {
 	client {
 		endpoint = "tempo:4317"
+
+		// Plain gRPC inside the compose network; Tempo has no TLS listener.
+		tls {
+			insecure = true
+		}
 	}
 }

@@ -15,8 +15,15 @@ const SAVE_LABELS = {
   saved: "Zapisano",
 } as const;
 
+type BoardEditorProps = {
+  boardId: string;
+  item: LoadedBoard;
+  /** Opens a Notatka with its search already showing this text. */
+  searchQuery?: string;
+};
+
 /** An open Notatnik item: renameable title, save status, and the editor for its kind. */
-export function BoardEditor({ boardId, item }: { boardId: string; item: LoadedBoard }) {
+export function BoardEditor({ boardId, item, searchQuery }: BoardEditorProps) {
   const [markdownText, setMarkdownText] = useState(item.markdown);
   const boardName = useBoardName(boardId, item.name);
 
@@ -91,7 +98,11 @@ export function BoardEditor({ boardId, item }: { boardId: string; item: LoadedBo
       />
       {boardName.error && <ErrorAlert>{boardName.error}</ErrorAlert>}
       {item.kind === "markdown" ? (
-        <MarkdownNoteEditor value={markdownText} onChange={handleMarkdownChange} />
+        <MarkdownNoteEditor
+          value={markdownText}
+          onChange={handleMarkdownChange}
+          searchQuery={searchQuery}
+        />
       ) : (
         <WhiteboardEditor
           initialBoard={item.board}

@@ -32,6 +32,8 @@
   --color-overlay: rgb(12 29 33 / 52%);
   --color-md-mark: #a4482a;
   --color-md-code-bg: #eef3f1;
+  --color-search-match: #f6e7a8;
+  --color-search-current: #f2b866;
 
   --shadow-dialog: 0 24px 80px rgb(9 24 28 / 25%);
 
@@ -112,7 +114,7 @@
   }
 }
 
-/* Markdown source highlighting (MarkdownHighlightEditor). */
+/* Markdown source highlighting (MarkdownSourceEditor). */
 @layer components {
   .md-h,
   .md-list {

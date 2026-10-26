@@ -85,3 +85,13 @@ class TransactionResponse(BaseModel):
     category_id: int | None = Field(..., json_schema_extra={'readOnly': True})
     wallet_id: int = Field(..., json_schema_extra={'readOnly': True})
 
+
+class TransactionPageResponse(BaseModel):
+    """One page of a wallet's transactions, newest first.
+
+    ``next_cursor`` is opaque: pass it back as ``cursor`` for the next page;
+    ``null`` means this was the last one.
+    """
+
+    items: list[TransactionResponse]
+    next_cursor: str | None

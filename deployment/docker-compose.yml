@@ -5,14 +5,23 @@ services:
       dockerfile: ./deployment/Dockerfile
     container_name: djangopersonal-app
     restart: unless-stopped
+    # Loopback only: the host nginx proxies to 127.0.0.1:8000, and uvicorn
+    # trusts X-Forwarded-For from any peer (the Dockerfile's
+    # --forwarded-allow-ips '*'; published traffic arrives from the docker
+    # bridge, not 127.0.0.1). Published publicly, anyone could pick the client
+    # IP the login throttle counts by.
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
       POSTGRES_HOST: db
       POSTGRES_PORT: "5432"
       # `app` lets Prometheus scrape app:8000/metrics inside the compose network.
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1},app
       UVICORN_WORKERS: ${UVICORN_WORKERS:-2}
+      # Traces go to Alloy (→ Tempo); set it empty in .env to turn tracing off.
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT-http://alloy:4318}
+      # Login rate limits, shared by every worker and the MCP server.
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
     env_file:
       - path: .env
         required: false
@@ -21,6 +30,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     healthcheck:
       test:
         - CMD
@@ -38,19 +49,28 @@ services:
       dockerfile: ./deployment/Dockerfile
     container_name: djangopersonal-mcp
     restart: unless-stopped
+    # Loopback only, like `app`: it trusts X-Forwarded-For from any peer.
     ports:
-      - "8001:8001"
+      - "127.0.0.1:8001:8001"
     environment:
       POSTGRES_HOST: db
       POSTGRES_PORT: "5432"
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1},mcp
       MCP_PORT: "8001"
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT-http://alloy:4318}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      # Trust X-Forwarded-For from the reverse proxy (as the app's
+      # --forwarded-allow-ips does), so /login throttles the browser's IP.
+      # Safe only because the port is published on loopback (above).
+      FORWARDED_ALLOW_IPS: "*"
     env_file:
       - path: .env
         required: false
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
     command: ["sh", "-c", "exec python -m personal.entrypoints.mcp"]
 
   # Admin panel (sqladmin). Published on the host's loopback only: reach it
@@ -66,6 +86,7 @@ services:
     environment:
       POSTGRES_HOST: db
       POSTGRES_PORT: "5432"
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT-http://alloy:4318}
     env_file:
       - path: .env
         required: false

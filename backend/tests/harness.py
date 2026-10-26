@@ -1,14 +1,15 @@
 """Transport-agnostic HTTP client for the API tests.
 
 The suite talks to the API only through :class:`ApiClient`, which sends JSON and
-hands back a :class:`Response` with ``status_code``, ``json()`` and ``text``.
+hands back a :class:`Response` with ``status_code``, ``headers``, ``json()`` and
+``text``.
 What actually serves the request is a :class:`Transport` (FastAPI's
 ``TestClient``). Tests do not reach past this module for anything
 framework-specific, so the suite describes the HTTP contract and nothing else.
 """
 
 import json as jsonlib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol
 
 if TYPE_CHECKING:
@@ -19,6 +20,8 @@ if TYPE_CHECKING:
 class Response:
     status_code: int
     body: bytes
+    #: Header names in lower case.
+    headers: dict[str, str] = field(default_factory=dict)
 
     @property
     def text(self) -> str:
@@ -100,4 +103,8 @@ class FastAPITransport:
         self, method: str, path: str, *, body: bytes | None, headers: dict[str, str]
     ) -> Response:
         response = self.client.request(method, path, content=body, headers=headers)
-        return Response(status_code=response.status_code, body=response.content)
+        return Response(
+            status_code=response.status_code,
+            body=response.content,
+            headers={name.lower(): value for name, value in response.headers.items()},
+        )

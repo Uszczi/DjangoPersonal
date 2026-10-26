@@ -44,15 +44,21 @@ function jsonResponse(data: unknown, status = 200) {
   })
 }
 
+type TransactionPageApi = { items: unknown[]; next_cursor: string | null }
+
 /** Route mocks by URL so tests do not depend on fetch call order. */
 function routeByUrl({
   transactions = [coffeeTransactionApi, lunchTransactionApi],
+  pages,
   created,
   patched,
   categories = categoriesApi,
   wallet = () => personalWalletApi,
 }: {
+  /** A wallet whose transactions fit on one page. */
   transactions?: unknown[]
+  /** The pages of a longer list, by the `cursor` asked for ("" for the first page). */
+  pages?: Record<string, TransactionPageApi>
   created?: unknown
   patched?: unknown
   categories?: unknown[]
@@ -71,7 +77,11 @@ function routeByUrl({
       if (init?.method === 'DELETE') {
         return Promise.resolve(jsonResponse(null, 204))
       }
-      return Promise.resolve(jsonResponse(transactions))
+      if (pages) {
+        const cursor = new URL(path, 'http://test').searchParams.get('cursor') ?? ''
+        return Promise.resolve(jsonResponse(pages[cursor]))
+      }
+      return Promise.resolve(jsonResponse({ items: transactions, next_cursor: null }))
     }
     if (path.includes('/categories/')) {
       return Promise.resolve(jsonResponse(categories))
@@ -441,12 +451,171 @@ describe('Transactions', () => {
     const header = await screen.findByRole('button', { name: 'Edytuj portfel: Personal' })
     expect(header).toHaveTextContent('-8.00')
 
-    await user.click(screen.getByRole('button', { name: 'Edytuj transakcję: Kawa' }))
+    await user.click(await screen.findByRole('button', { name: 'Edytuj transakcję: Kawa' }))
     await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Usuń' }))
     balance = '0.00'
     await user.click(await screen.findByRole('button', { name: 'Usuń transakcję' }))
 
     await waitFor(() => expect(header).toHaveTextContent('0.00'))
+  })
+  test('a long list shows the first page and loads the next one on request', async () => {
+    const firstPage = Array.from({ length: 50 }, (_, n) => ({
+      ...lunchTransactionApi,
+      id: 1000 - n,
+      title: `Zakup ${n + 1}`,
+    }))
+    fetchMock.mockImplementation(
+      routeByUrl({
+        pages: {
+          '': { items: firstPage, next_cursor: 'page-2' },
+          'page-2': { items: [coffeeTransactionApi], next_cursor: null },
+        },
+      }),
+    )
+    const user = userEvent.setup()
+
+    renderApp('/expenses/1')
+
+    await screen.findByText('Zakup 50')
+    expect(screen.getAllByRole('button', { name: /^Edytuj transakcję: / })).toHaveLength(50)
+    expect(screen.queryByText('Kawa')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Wczytaj więcej' }))
+
+    expect(await screen.findByText('Kawa')).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /^Edytuj transakcję: / })).toHaveLength(51)
+    expect(screen.queryByRole('button', { name: 'Wczytaj więcej' })).not.toBeInTheDocument()
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/transactions/?wallet=1&cursor=page-2',
+      expect.anything(),
+    )
+  })
+
+  test('scrolling to the end of the list loads the next page', async () => {
+    let reachEnd: (() => void) | undefined
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        constructor(callback: IntersectionObserverCallback) {
+          reachEnd = () =>
+            callback(
+              [{ isIntersecting: true } as IntersectionObserverEntry],
+              this as unknown as IntersectionObserver,
+            )
+        }
+        observe() {}
+        disconnect() {}
+      },
+    )
+    fetchMock.mockImplementation(
+      routeByUrl({
+        pages: {
+          '': { items: [lunchTransactionApi], next_cursor: 'page-2' },
+          'page-2': { items: [coffeeTransactionApi], next_cursor: null },
+        },
+      }),
+    )
+
+    renderApp('/expenses/1')
+    await screen.findByText('Obiad')
+    await waitFor(() => expect(reachEnd).toBeDefined())
+
+    reachEnd?.()
+
+    expect(await screen.findByText('Kawa')).toBeInTheDocument()
+  })
+
+  test('short pages keep loading while the end of the list stays in view', async () => {
+    // Like the real observer: observing reports the element's current
+    // visibility at once, and the end of a short list is always visible.
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        callback: IntersectionObserverCallback
+        constructor(callback: IntersectionObserverCallback) {
+          this.callback = callback
+        }
+        observe() {
+          queueMicrotask(() =>
+            this.callback(
+              [{ isIntersecting: true } as IntersectionObserverEntry],
+              this as unknown as IntersectionObserver,
+            ),
+          )
+        }
+        disconnect() {}
+      },
+    )
+    const dinnerApi = { ...coffeeTransactionApi, id: 9, title: 'Kolacja', date: '2026-10-10' }
+    fetchMock.mockImplementation(
+      routeByUrl({
+        pages: {
+          '': { items: [lunchTransactionApi], next_cursor: 'page-2' },
+          'page-2': { items: [coffeeTransactionApi], next_cursor: 'page-3' },
+          'page-3': { items: [dinnerApi], next_cursor: null },
+        },
+      }),
+    )
+
+    renderApp('/expenses/1')
+
+    expect(await screen.findByText('Kolacja')).toBeInTheDocument()
+  })
+
+  test('a new transaction older than every loaded one waits for its page', async () => {
+    const olderApi = { ...coffeeTransactionApi, id: 12, title: 'Stary paragon', date: '2026-01-02' }
+    fetchMock.mockImplementation(
+      routeByUrl({
+        pages: { '': { items: [lunchTransactionApi], next_cursor: 'page-2' } },
+        created: olderApi,
+      }),
+    )
+    const user = userEvent.setup()
+
+    renderApp('/expenses/1')
+    await screen.findByText('Obiad')
+    await user.click(screen.getByRole('button', { name: 'Nowa transakcja' }))
+    await user.type(await screen.findByLabelText('Tytuł'), 'Stary paragon')
+    await user.type(screen.getByLabelText('Kwota'), '8.00')
+    await user.click(screen.getByRole('button', { name: 'Dodaj transakcję' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.queryByText('Stary paragon')).not.toBeInTheDocument()
+  })
+
+  test('a transaction moved to another wallet leaves this list', async () => {
+    const businessWalletApi = { ...personalWalletApi, id: 2, name: 'Business' }
+    const movedApi = { ...coffeeTransactionApi, wallet_id: 2 }
+    fetchMock.mockImplementation((url: string | URL | Request, init?: RequestInit) => {
+      if (String(url) === '/api/v1/wallets/') {
+        return Promise.resolve(jsonResponse([personalWalletApi, businessWalletApi]))
+      }
+      return routeByUrl({ transactions: [coffeeTransactionApi], patched: movedApi })(url, init)
+    })
+    const user = userEvent.setup()
+
+    renderApp('/expenses/1')
+    await screen.findByText('Kawa')
+    await user.click(screen.getByRole('button', { name: 'Edytuj transakcję: Kawa' }))
+    await user.click(await screen.findByRole('button', { name: 'Edytuj' }))
+    await user.selectOptions(screen.getByLabelText('Portfel'), '2')
+    await user.click(screen.getByRole('button', { name: 'Zapisz zmiany' }))
+
+    expect(await screen.findByText('Brak transakcji. Dodaj pierwszą transakcję.')).toBeInTheDocument()
+  })
+
+  test('a failed load says so', async () => {
+    fetchMock.mockImplementation((url: string | URL | Request, init?: RequestInit) =>
+      String(url).includes('/transactions/')
+        ? Promise.resolve(jsonResponse({ detail: 'Server error' }, 500))
+        : routeByUrl()(url, init),
+    )
+
+    renderApp('/expenses/1')
+
+    expect(
+      await screen.findByText('Nie udało się wczytać transakcji. Spróbuj ponownie.'),
+    ).toBeInTheDocument()
   })
 })

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { CategoryIcon } from "@/components/CategoryIcon";
 import { TransactionEditorModal } from "@/components/modals/TransactionEditorModal";
@@ -16,7 +16,8 @@ import {
 import { type TransactionResponse, type WalletResponse } from "@personal/shared/generated/api";
 import { ShowModal } from "@/stores/modal";
 import { useCategoriesStore } from "@personal/shared/stores/categories";
-import { useTransactionsStore } from "@personal/shared/stores/transactions";
+import { TRANSACTIONS_LOAD_ERROR } from "@personal/shared/transactionList";
+import { useWalletTransactions } from "@/queries/transactions";
 
 const dayFormatter = new Intl.DateTimeFormat("pl-PL", {
   day: "numeric",
@@ -46,22 +47,53 @@ function groupByDay(
   return [...groups.entries()];
 }
 
+/**
+ * Calls `onReach` whenever the returned element scrolls into view, for
+ * infinite scrolling. A change of `loaded` (the rows shown) observes it afresh,
+ * and observing reports the current visibility: if the element is still in
+ * view after a page loads (short pages, tall screen), `onReach` fires again
+ * instead of waiting for a scroll that cannot happen. Without
+ * IntersectionObserver the button still works.
+ */
+function useOnScrolledIntoView(onReach: () => void, enabled: boolean, loaded: number) {
+  const ref = useRef<HTMLDivElement>(null);
+  const onReachRef = useRef(onReach);
+  useEffect(() => {
+    onReachRef.current = onReach;
+  });
+  useEffect(() => {
+    const element = ref.current;
+    if (!enabled || !element || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) onReachRef.current();
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [enabled, loaded]);
+  return ref;
+}
+
 /** One wallet: the switcher, its name (opening the edit modal) and its transactions grouped by day. */
 export function WalletView({ wallet }: { wallet: WalletResponse }) {
   const categories = useCategoriesStore((state) => state.categories);
   const loadCategories = useCategoriesStore((state) => state.loadCategories);
-  const transactionList = useTransactionsStore((state) => state.transactionList);
-  const transactionLoadError = useTransactionsStore((state) => state.loadError);
-  const loadTransactions = useTransactionsStore((state) => state.loadTransactions);
+  const {
+    data: transactions = [],
+    isError,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useWalletTransactions(wallet.id);
 
   useEffect(() => {
-    void loadTransactions(wallet.id);
     void loadCategories();
-  }, [wallet.id, loadTransactions, loadCategories]);
+  }, [loadCategories]);
 
-  const visible =
-    transactionList?.walletId === wallet.id ? transactionList.transactions : [];
-  const groups = groupByDay(visible);
+  const loadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
+  };
+  const endOfList = useOnScrolledIntoView(loadMore, hasNextPage, transactions.length);
+  const groups = groupByDay(transactions);
 
   return (
     <section aria-label={`Portfel: ${wallet.name}`}>
@@ -95,10 +127,8 @@ export function WalletView({ wallet }: { wallet: WalletResponse }) {
         </Button>
       </div>
 
-      {transactionLoadError?.walletId === wallet.id && (
-        <ErrorMessage>
-          {transactionLoadError.message}
-        </ErrorMessage>
+      {isError && (
+        <ErrorMessage>{TRANSACTIONS_LOAD_ERROR}</ErrorMessage>
       )}
 
       {groups.length === 0 ? (
@@ -152,6 +182,14 @@ export function WalletView({ wallet }: { wallet: WalletResponse }) {
             </ul>
           </section>
         ))
+      )}
+
+      {hasNextPage && (
+        <div ref={endOfList} className="flex justify-center py-4">
+          <Button variant="secondary" onClick={loadMore} disabled={isFetchingNextPage}>
+            {isFetchingNextPage ? "Wczytywanie…" : "Wczytaj więcej"}
+          </Button>
+        </div>
       )}
     </section>
   );

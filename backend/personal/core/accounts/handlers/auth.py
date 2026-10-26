@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from personal.core.accounts.contracts.auth import (
     AuthResponse,
     LoginRequest,
@@ -6,9 +8,15 @@ from personal.core.accounts.contracts.auth import (
     RefreshResponse,
     RegisterRequest,
 )
-from personal.core.accounts.ports import InvalidToken, PasswordHasher, PasswordPolicy, TokenService
+from personal.core.accounts.ports import (
+    InvalidToken,
+    PasswordHasher,
+    PasswordPolicy,
+    RateLimiter,
+    TokenService,
+)
 from personal.core.expenses.handlers.categories import seed_base_categories
-from personal.core.shared.errors import DomainError
+from personal.core.shared.errors import DomainError, RateLimited
 from personal.infra.models import User
 from personal.infra.repo import CategoryRepository, DuplicateUsername, UserRepository
 
@@ -82,9 +90,59 @@ class AuthenticateUser:
         return user
 
 
-class LoginUser:
-    def __init__(self, users: UserRepository, hasher: PasswordHasher, tokens: TokenService):
+class ThrottledAuthenticateUser:
+    """:class:`AuthenticateUser`, refused after too many recent failures.
+
+    Failures are counted per (client address, username): one client guessing
+    one account's password is stopped after :attr:`MAX_FAILURES` failures in a
+    :attr:`WINDOW`, without locking the account for its owner elsewhere. While
+    blocked even the right password is refused (otherwise guessing could go
+    on); a success clears the count.
+
+    Every attempt is counted before the password is checked, and the count is
+    read back in the same step, so parallel attempts cannot all slip in under
+    the limit before any of them has failed.
+    """
+
+    MAX_FAILURES = 5
+    WINDOW = timedelta(minutes=15)
+
+    def __init__(
+        self,
+        users: UserRepository,
+        hasher: PasswordHasher,
+        limiter: RateLimiter,
+        *,
+        client: str,
+    ):
         self.authenticate = AuthenticateUser(users, hasher)
+        self.limiter = limiter
+        self.client = client
+
+    def execute(self, data: LoginRequest) -> User:
+        key = f'login:{self.client}:{data.username.casefold()}'
+        window = self.limiter.hit(key, window=self.WINDOW)
+        if window.hits > self.MAX_FAILURES:
+            raise RateLimited(
+                'Too many failed login attempts. Try again later.',
+                retry_after=max(1, window.seconds_left),
+            )
+        user = self.authenticate.execute(data)
+        self.limiter.reset(key)
+        return user
+
+
+class LoginUser:
+    def __init__(
+        self,
+        users: UserRepository,
+        hasher: PasswordHasher,
+        tokens: TokenService,
+        limiter: RateLimiter,
+        *,
+        client: str,
+    ):
+        self.authenticate = ThrottledAuthenticateUser(users, hasher, limiter, client=client)
         self.tokens = tokens
 
     def execute(self, data: LoginRequest) -> LoginResponse:

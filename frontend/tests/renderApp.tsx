@@ -2,6 +2,7 @@
 import { render } from '@testing-library/react'
 import { RouterProvider, createMemoryHistory, createRouter } from '@tanstack/react-router'
 
+import { queryClient } from '@/queryClient'
 import { routeTree } from '@/routeTree.gen'
 import { useAuthStore } from '@personal/shared/stores/auth'
 import { useCategoriesStore } from '@personal/shared/stores/categories'
@@ -34,6 +35,9 @@ export function resetStores(options?: { preserveStorage?: boolean }) {
   useWalletsStore.setState(useWalletsStore.getInitialState())
   useWhiteboardsStore.setState(useWhiteboardsStore.getInitialState())
   useFoldersStore.setState(useFoldersStore.getInitialState())
+  // The server-state cache too; no retries, so a mocked failure shows at once.
+  queryClient.clear()
+  queryClient.setDefaultOptions({ queries: { retry: false } })
 }
 
 export function renderApp(

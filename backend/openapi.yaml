@@ -962,16 +962,30 @@ paths:
         schema:
           type: integer
           title: Wallet
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cursor
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TransactionResponse'
-                title: Response Transactions List
+                $ref: '#/components/schemas/TransactionPageResponse'
     post:
       tags:
       - personal
@@ -2058,6 +2072,29 @@ components:
           title: Duration Minutes
       type: object
       title: TimerStartRequest
+    TransactionPageResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/TransactionResponse'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+      type: object
+      required:
+      - items
+      - next_cursor
+      title: TransactionPageResponse
+      description: 'One page of a wallet''s transactions, newest first.
+
+
+        ``next_cursor`` is opaque: pass it back as ``cursor`` for the next page;
+
+        ``null`` means this was the last one.'
     TransactionRequest:
       properties:
         title:
