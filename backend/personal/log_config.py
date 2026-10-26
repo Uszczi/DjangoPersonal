@@ -7,9 +7,14 @@ from typing import Any
 LOGGING: dict[str, Any] = {
     'version': 1,
     'disable_existing_loggers': False,
+    'filters': {
+        # Adds ``trace_id``/``span_id``; Grafana's Loki derived field turns
+        # ``trace_id=<hex>`` into a link to the trace in Tempo.
+        'trace_context': {'()': 'personal.infra.tracing.TraceContextFilter'},
+    },
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
+            'format': '{levelname} {asctime} {module} trace_id={trace_id} {message}',
             'style': '{',
         },
     },
@@ -17,6 +22,7 @@ LOGGING: dict[str, Any] = {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
+            'filters': ['trace_context'],
         },
     },
     'root': {

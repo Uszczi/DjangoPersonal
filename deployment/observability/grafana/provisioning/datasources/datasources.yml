@@ -7,12 +7,33 @@ datasources:
     url: http://prometheus:9090
     isDefault: true
 
+  # The backend writes `trace_id=<32 hex>` into every log line
+  # (personal/log_config.py); the derived field turns it into a Tempo link.
   - name: Loki
     type: loki
+    uid: loki
     access: proxy
     url: http://loki:3100
+    jsonData:
+      derivedFields:
+        - name: TraceID
+          matcherRegex: 'trace_id=(\w{32})'
+          url: '$${__value.raw}'
+          datasourceUid: tempo
+          urlDisplayLabel: View trace
 
+  # Traces from the API, MCP server and admin panel (service.name
+  # personal-api / personal-mcp / personal-admin), sent through Alloy.
   - name: Tempo
     type: tempo
+    uid: tempo
     access: proxy
     url: http://tempo:3200
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        # Alloy labels every container's logs job="docker".
+        customQuery: true
+        query: '{job="docker"} |= "trace_id=$${__trace.traceId}"'
+        spanStartTimeShift: '-5m'
+        spanEndTimeShift: '5m'

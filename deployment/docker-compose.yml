@@ -13,6 +13,8 @@ services:
       # `app` lets Prometheus scrape app:8000/metrics inside the compose network.
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1},app
       UVICORN_WORKERS: ${UVICORN_WORKERS:-2}
+      # Traces go to Alloy (→ Tempo); set it empty in .env to turn tracing off.
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT-http://alloy:4318}
       # Login rate limits, shared by every worker and the MCP server.
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
     env_file:
@@ -49,6 +51,7 @@ services:
       POSTGRES_PORT: "5432"
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1},mcp
       MCP_PORT: "8001"
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT-http://alloy:4318}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       # Trust X-Forwarded-For from the reverse proxy (as the app's
       # --forwarded-allow-ips does), so /login throttles the browser's IP.
@@ -76,6 +79,7 @@ services:
     environment:
       POSTGRES_HOST: db
       POSTGRES_PORT: "5432"
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT-http://alloy:4318}
     env_file:
       - path: .env
         required: false

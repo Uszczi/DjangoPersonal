@@ -12,6 +12,9 @@ from typing import Any
 
 import pytest
 from fastapi import FastAPI
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from sqlalchemy.orm import Session
 
 from personal import wiring
@@ -79,6 +82,21 @@ def transport(app: FastAPI, session: Session) -> Transport:
 @pytest.fixture
 def password_hasher() -> PasswordHasher:
     return wiring.password_hasher()
+
+
+@pytest.fixture
+def span_exporter() -> InMemorySpanExporter:
+    """Collects the spans :func:`tracer_provider` records (nothing leaves the process)."""
+    return InMemorySpanExporter()
+
+
+@pytest.fixture
+def tracer_provider(span_exporter: InMemorySpanExporter) -> Iterator[TracerProvider]:
+    """A provider for apps under test that exports synchronously to memory."""
+    provider = TracerProvider()
+    provider.add_span_processor(SimpleSpanProcessor(span_exporter))
+    yield provider
+    provider.shutdown()
 
 
 @pytest.fixture

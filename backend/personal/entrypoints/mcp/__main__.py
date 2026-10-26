@@ -4,7 +4,10 @@ import os
 
 import uvicorn
 
-from .server import mcp
+from personal.log_config import configure_logging
 
+from .asgi import create_served_app
+
+configure_logging()
 port = int(os.environ.get('MCP_PORT', '8001'))
-uvicorn.run(mcp.streamable_http_app(), host='0.0.0.0', port=port)
+uvicorn.run(create_served_app(), host='0.0.0.0', port=port)
