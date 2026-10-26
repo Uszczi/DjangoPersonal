@@ -1,7 +1,7 @@
 from datetime import date as date_type
 from decimal import Decimal
 
-from sqlalchemy import ForeignKey, Numeric, String, Text
+from sqlalchemy import ForeignKey, Index, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -14,12 +14,14 @@ class Transaction(Base):
     """One entry in a wallet's ledger (see ``WalletRepository`` for the balance rule)."""
 
     __tablename__ = 'transactions'
+    #: Serves the keyset-paged wallet listing (``wallet_id = ?`` ordered by
+    #: ``date, id`` descending) and, by its leading column, every other
+    #: per-wallet lookup — so ``wallet_id`` needs no index of its own.
+    __table_args__ = (Index('ix_transactions_wallet_id_date_id', 'wallet_id', 'date', 'id'),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
-    wallet_id: Mapped[int] = mapped_column(
-        ForeignKey('wallets.id', ondelete='CASCADE'), index=True
-    )
+    wallet_id: Mapped[int] = mapped_column(ForeignKey('wallets.id', ondelete='CASCADE'))
     category_id: Mapped[int | None] = mapped_column(
         ForeignKey('categories.id', ondelete='CASCADE'), index=True
     )

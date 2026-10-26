@@ -1,6 +1,7 @@
 from .categories import CategoryRequest, CategoryResponse, PatchedCategoryRequest
 from .transactions import (
     PatchedTransactionRequest,
+    TransactionPageResponse,
     TransactionRequest,
     TransactionResponse,
 )
@@ -17,6 +18,7 @@ __all__ = [
     'PatchedCategoryRequest',
     'PatchedTransactionRequest',
     'PatchedWalletRequest',
+    'TransactionPageResponse',
     'TransactionRequest',
     'TransactionResponse',
     'WalletCreateRequest',

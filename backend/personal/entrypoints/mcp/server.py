@@ -562,13 +562,23 @@ def delete_category(ctx: ToolContext, category_id: int) -> str:
 
 
 @_tool
-def list_transactions(ctx: ToolContext, wallet_id: int) -> list[dict[str, Any]]:
-    """List a wallet's transactions."""
+def list_transactions(
+    ctx: ToolContext,
+    wallet_id: int,
+    limit: int = expense_handlers.DEFAULT_PAGE_SIZE,
+    cursor: str | None = None,
+) -> dict[str, Any]:
+    """List one page of a wallet's transactions, newest first.
+
+    Returns ``{"items": [...], "next_cursor": ...}``; pass ``next_cursor`` back as
+    ``cursor`` for the next page (``null`` means there is none). ``limit`` is 1–200.
+    """
     with _unit_of_work(ctx) as (session, user):
         handler = expense_handlers.ListTransactions(
             wiring.transaction_repository(session), wiring.wallet_repository(session), user
         )
-        return transactions(handler.execute(wallet_id))
+        page = handler.execute(wallet_id, limit=limit, cursor=cursor)
+        return {'items': transactions(page.items), 'next_cursor': page.next_cursor}
 
 
 @_tool
