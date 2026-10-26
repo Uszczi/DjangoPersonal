@@ -12,9 +12,11 @@ from personal.core.accounts.contracts.auth import (
 )
 from personal.entrypoints.http.deps import (
     CategoryRepositoryDep,
+    ClientAddress,
     CurrentUser,
     PasswordHasherDep,
     PasswordPolicyDep,
+    RateLimiterDep,
     TokenServiceDep,
     UserRepositoryDep,
 )
@@ -45,8 +47,11 @@ def login(
     users: UserRepositoryDep,
     hasher: PasswordHasherDep,
     tokens: TokenServiceDep,
+    limiter: RateLimiterDep,
+    client: ClientAddress,
 ) -> LoginResponse:
-    return handlers.LoginUser(users, hasher, tokens).execute(payload)
+    handler = handlers.LoginUser(users, hasher, tokens, limiter, client=client)
+    return handler.execute(payload)
 
 
 @router.post('/auth/refresh/', operation_id='auth_refresh')

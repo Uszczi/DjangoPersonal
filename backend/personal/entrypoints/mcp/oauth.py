@@ -6,6 +6,7 @@ The resource owner signs in on ``/login`` with their account's username and
 password, checked by the same use case as the API login.
 """
 
+import functools
 import secrets
 import time
 from html import escape
@@ -25,7 +26,7 @@ from starlette.responses import HTMLResponse, RedirectResponse, Response
 
 from personal.core.accounts import handlers as accounts_handlers
 from personal.core.accounts.contracts.auth import LoginRequest
-from personal.core.shared.errors import DomainError
+from personal.core.shared.errors import DomainError, RateLimited
 from personal.infra.repo import UserRepository
 
 from . import runtime
@@ -211,12 +212,20 @@ async def login_get(request: Request) -> HTMLResponse:
     return HTMLResponse(_login_page(dict(request.query_params)))
 
 
-def _authenticated_user_id(username: str, password: str) -> int | None:
-    """The id of the account these credentials sign in to, or ``None``."""
+def _authenticated_user_id(username: str, password: str, *, client: str) -> int | None:
+    """The id of the account these credentials sign in to, or ``None``.
+
+    Failures are throttled like the API login; a blocked client gets
+    :class:`RateLimited` even for the right password.
+    """
     with runtime.database.transaction() as session:
-        handler = accounts_handlers.AuthenticateUser(UserRepository(session), runtime.hasher)
+        handler = accounts_handlers.ThrottledAuthenticateUser(
+            UserRepository(session), runtime.hasher, runtime.limiter, client=client
+        )
         try:
             return handler.execute(LoginRequest(username=username, password=password)).id
+        except RateLimited:
+            raise
         except DomainError:
             return None
 
@@ -225,7 +234,11 @@ def _is_registered_redirect(client: OAuthClientInformationFull, redirect_uri: st
     return any(str(uri) == redirect_uri for uri in client.redirect_uris or [])
 
 
-def _login_sync(data: dict[str, str]) -> tuple[str, str, int]:
+def _error(message: str) -> str:
+    return f"<p style='color:red'>{escape(message)}</p>"
+
+
+def _login_sync(data: dict[str, str], *, client_address: str) -> Response:
     username = data.get("username", "")
     password = data.get("password", "")
     client_id = data.get("client_id", "")
@@ -239,12 +252,18 @@ def _login_sync(data: dict[str, str]) -> tuple[str, str, int]:
     if client is None or not _is_registered_redirect(client, redirect_uri):
         # The form is user-supplied: only a registered client's own redirect
         # URI may receive a code, or a crafted link could send it elsewhere.
-        return ("html", _login_page(data, error="<p style='color:red'>Unknown client.</p>"), 400)
+        return HTMLResponse(_login_page(data, error=_error("Unknown client.")), status_code=400)
 
-    user_id = _authenticated_user_id(username, password)
+    try:
+        user_id = _authenticated_user_id(username, password, client=client_address)
+    except RateLimited as error:
+        return HTMLResponse(
+            _login_page(data, error=_error(error.message)),
+            status_code=429,
+            headers={"Retry-After": str(error.retry_after)},
+        )
     if user_id is None:
-        html = _login_page(data, error="<p style='color:red'>Invalid credentials.</p>")
-        return ("html", html, 401)
+        return HTMLResponse(_login_page(data, error=_error("Invalid credentials.")), status_code=401)
 
     code = secrets.token_urlsafe(48)
     _AUTH_CODES[code] = AuthorizationCode(
@@ -264,13 +283,16 @@ def _login_sync(data: dict[str, str]) -> tuple[str, str, int]:
     params = {"code": code}
     if state:
         params["state"] = state
-    return ("redirect", f"{redirect}{sep}{urlencode(params)}", 302)
+    return RedirectResponse(url=f"{redirect}{sep}{urlencode(params)}", status_code=302)
 
 
 async def login_post(request: Request) -> Response:
     form = await request.form()
     data = {str(k): str(v) for k, v in form.items()}
-    kind, payload, status = await anyio.to_thread.run_sync(_login_sync, data)
-    if kind == "html":
-        return HTMLResponse(payload, status_code=status)
-    return RedirectResponse(url=payload, status_code=status)
+    # Behind the reverse proxy uvicorn reads X-Forwarded-For (see the compose
+    # file's FORWARDED_ALLOW_IPS), so this is the browser's address.
+    client_address = request.client.host if request.client else "unknown"
+    response: Response = await anyio.to_thread.run_sync(
+        functools.partial(_login_sync, data, client_address=client_address)
+    )
+    return response

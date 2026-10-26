@@ -9,10 +9,18 @@ CLI call them directly. This is also the single place to swap the concrete
 implementation: a fake in a unit test, a caching wrapper in production.
 """
 
+import redis
 from sqlalchemy.orm import Session
 
-from personal.core.accounts.ports import InvalidToken, PasswordHasher, PasswordPolicy, TokenService
+from personal.core.accounts.ports import (
+    InvalidToken,
+    PasswordHasher,
+    PasswordPolicy,
+    RateLimiter,
+    TokenService,
+)
 from personal.infra.models import User
+from personal.infra.rate_limit import InMemoryRateLimiter, RedisRateLimiter
 from personal.infra.repo import (
     CategoryRepository,
     CounterEntryRepository,
@@ -88,6 +96,18 @@ def token_service(settings: Settings) -> TokenService:
         access_lifetime=settings.access_token_lifetime,
         refresh_lifetime=settings.refresh_token_lifetime,
     )
+
+
+def rate_limiter(settings: Settings) -> RateLimiter:
+    """Redis when ``REDIS_URL`` is set, process memory otherwise.
+
+    Unlike the other providers its result holds state that must outlive a
+    request (the counts), so each entrypoint calls it once at startup and
+    shares the instance.
+    """
+    if settings.redis_url:
+        return RedisRateLimiter(redis.Redis.from_url(settings.redis_url))
+    return InMemoryRateLimiter()
 
 
 def authenticate(access_token: str, *, tokens: TokenService, session: Session) -> User:

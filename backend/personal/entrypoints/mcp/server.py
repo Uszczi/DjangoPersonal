@@ -62,7 +62,7 @@ from personal.core.work.contracts import (
 from personal.infra.models import User
 
 from . import runtime
-from .auth import get_current_user
+from .auth import client_address, get_current_user
 from .oauth import login_get, login_post, provider
 from .serialization import (
     account,
@@ -417,12 +417,16 @@ def register_user(username: str, password: str, password_confirm: str) -> dict[s
 
 
 @_tool
-def login_user(username: str, password: str) -> dict[str, Any]:
+def login_user(ctx: ToolContext, username: str, password: str) -> dict[str, Any]:
     """Authenticate and return token pair."""
     payload = LoginRequest(username=username, password=password)
     with runtime.database.transaction() as session:
         handler = accounts_handlers.LoginUser(
-            wiring.user_repository(session), runtime.hasher, runtime.tokens
+            wiring.user_repository(session),
+            runtime.hasher,
+            runtime.tokens,
+            runtime.limiter,
+            client=client_address(ctx),
         )
         return handler.execute(payload).model_dump(mode='json')
 
