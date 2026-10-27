@@ -60,7 +60,7 @@ export function CounterCalendar({ entries }: { entries: CounterEntryResponse[] }
   ];
 
   return (
-    <section aria-label="Kalendarz wpisów" className="mb-8 max-w-sm">
+    <section aria-label="Kalendarz wpisów" className="mx-auto mb-8 max-w-sm">
       <div className="mb-2 flex items-center justify-between">
         <IconButton aria-label="Poprzedni miesiąc" onClick={() => shiftMonth(-1)}>
           ‹
