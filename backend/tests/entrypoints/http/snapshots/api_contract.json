@@ -200,6 +200,14 @@
     ]
   },
   {
+    "method": "POST",
+    "path": "/api/v1/notes/ask/",
+    "operation_id": "notes_ask",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
     "method": "GET",
     "path": "/api/v1/projects/",
     "operation_id": "projects_list",

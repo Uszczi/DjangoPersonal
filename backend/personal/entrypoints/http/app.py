@@ -78,6 +78,8 @@ def create_app(
     app.state.settings = settings
     app.state.database = database
     app.state.rate_limiter = wiring.rate_limiter(settings)
+    app.state.embedder = wiring.embedder(settings)
+    app.state.answer_generator = wiring.answer_generator(settings)
 
     _without_validation_responses(app)
     register_fastapi_error_handlers(app)

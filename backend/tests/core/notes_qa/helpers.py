@@ -27,3 +27,15 @@ def _vector(text: str) -> list[float]:
         digest = hashlib.blake2b(word.encode(), digest_size=4).digest()
         vector[int.from_bytes(digest) % DIMENSIONS] += 1.0
     return vector
+
+
+class FakeAnswerGenerator:
+    """Replies with ``reply`` and records every prompt it was given."""
+
+    def __init__(self, reply: str = 'Odpowiedź [1].') -> None:
+        self.reply = reply
+        self.calls: list[tuple[str, str]] = []
+
+    def generate(self, *, system: str, prompt: str) -> str:
+        self.calls.append((system, prompt))
+        return self.reply

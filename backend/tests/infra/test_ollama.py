@@ -5,6 +5,7 @@ import httpx2
 import pytest
 
 from personal.core.notes_qa.chunking import SplitResult
+from personal.core.notes_qa.ports import ModelUnavailable
 from personal.infra.ollama import OllamaEmbedder
 
 MODEL = "embeddinggemma-2"
@@ -95,5 +96,26 @@ def test_an_error_response_raises() -> None:
     failing = FakeOllama(status_code=500)
     embedder = OllamaEmbedder(failing.client(), model=MODEL)
 
-    with pytest.raises(httpx2.HTTPStatusError):
+    with pytest.raises(ModelUnavailable):
         embedder.embed_query("q")
+
+
+def test_an_unreachable_server_raises() -> None:
+    def refuse(request: httpx2.Request) -> httpx2.Response:
+        raise httpx2.ConnectError("connection refused", request=request)
+
+    client = httpx2.Client(transport=httpx2.MockTransport(refuse), base_url="http://ollama")
+
+    with pytest.raises(ModelUnavailable):
+        OllamaEmbedder(client, model=MODEL).embed_query("q")
+
+
+def test_fewer_vectors_than_inputs_raises() -> None:
+    def short(request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(200, json={"embeddings": [[1.0]]})
+
+    client = httpx2.Client(transport=httpx2.MockTransport(short), base_url="http://ollama")
+    chunks = [SplitResult(heading_path="N", text="a"), SplitResult(heading_path="N", text="b")]
+
+    with pytest.raises(ModelUnavailable):
+        OllamaEmbedder(client, model=MODEL).embed_documents(chunks)

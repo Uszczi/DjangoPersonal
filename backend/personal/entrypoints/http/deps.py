@@ -20,6 +20,7 @@ from personal.core.accounts.ports import (
     RateLimiter,
     TokenService,
 )
+from personal.core.notes_qa.ports import AnswerGenerator, Embedder
 from personal.infra.db import Database
 from personal.infra.models import User
 from personal.infra.repo import (
@@ -27,6 +28,7 @@ from personal.infra.repo import (
     CounterEntryRepository,
     CounterRepository,
     FolderRepository,
+    NoteChunkRepository,
     ProjectRepository,
     TaskRepository,
     TimeEntryRepository,
@@ -76,6 +78,9 @@ WhiteboardRepositoryDep = Annotated[
     WhiteboardRepository, _per_session(wiring.whiteboard_repository)
 ]
 FolderRepositoryDep = Annotated[FolderRepository, _per_session(wiring.folder_repository)]
+NoteChunkRepositoryDep = Annotated[
+    NoteChunkRepository, _per_session(wiring.note_chunk_repository)
+]
 WalletRepositoryDep = Annotated[WalletRepository, _per_session(wiring.wallet_repository)]
 CategoryRepositoryDep = Annotated[CategoryRepository, _per_session(wiring.category_repository)]
 TransactionRepositoryDep = Annotated[
@@ -103,6 +108,24 @@ def get_rate_limiter(request: Request) -> RateLimiter:
 
 
 RateLimiterDep = Annotated[RateLimiter, Depends(get_rate_limiter)]
+
+
+def get_embedder(request: Request) -> Embedder:
+    """The app's one embedder (built at startup: its HTTP client pools connections)."""
+    embedder: Embedder = request.app.state.embedder
+    return embedder
+
+
+EmbedderDep = Annotated[Embedder, Depends(get_embedder)]
+
+
+def get_answer_generator(request: Request) -> AnswerGenerator:
+    """The app's one answer model (built at startup, like the embedder)."""
+    generator: AnswerGenerator = request.app.state.answer_generator
+    return generator
+
+
+AnswerGeneratorDep = Annotated[AnswerGenerator, Depends(get_answer_generator)]
 
 
 def client_address(request: Request) -> str:

@@ -685,6 +685,34 @@ paths:
       responses:
         '204':
           description: Successful Response
+  /api/v1/notes/ask/:
+    post:
+      tags:
+      - personal
+      summary: Ask Notes
+      description: 'Answer ``question`` from the user''s Notatki, with the Chunks
+        the answer cites
+
+        (``sources``). Nothing relevant found: the answer says so and ``sources``
+        is empty.
+
+        503 when the embedding or answer model is unavailable or not configured.'
+      operationId: notes_ask
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AskNotesRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotesAnswer'
+      security:
+      - JWTAuth: []
   /api/v1/wallets/:
     get:
       tags:
@@ -1316,6 +1344,17 @@ paths:
           description: Successful Response
 components:
   schemas:
+    AskNotesRequest:
+      properties:
+        question:
+          type: string
+          maxLength: 1000
+          minLength: 1
+          title: Question
+      type: object
+      required:
+      - question
+      title: AskNotesRequest
     AuthResponse:
       properties:
         access:
@@ -1544,6 +1583,47 @@ components:
       - text
       title: MatchingLine
       description: One line of a Notatka that matched a search, numbered from 1.
+    NoteSource:
+      properties:
+        number:
+          type: integer
+          title: Number
+        whiteboard_id:
+          type: integer
+          title: Whiteboard Id
+        heading:
+          type: string
+          title: Heading
+        text:
+          type: string
+          title: Text
+        score:
+          type: number
+          title: Score
+      type: object
+      required:
+      - number
+      - whiteboard_id
+      - heading
+      - text
+      - score
+      title: NoteSource
+      description: A Chunk the answer cites, under the number it is cited by (``[1]``).
+    NotesAnswer:
+      properties:
+        answer:
+          type: string
+          title: Answer
+        sources:
+          items:
+            $ref: '#/components/schemas/NoteSource'
+          type: array
+          title: Sources
+      type: object
+      required:
+      - answer
+      - sources
+      title: NotesAnswer
     PatchedCategoryRequest:
       properties:
         name:

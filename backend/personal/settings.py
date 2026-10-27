@@ -76,6 +76,17 @@ class Settings(BaseSettings):
     embedding_model: str = Field(
         default='embeddinggemma-2:270m', validation_alias='EMBEDDING_MODEL'
     )
+    #: Chunks scoring below this are not shown to the answer model. Depends on the
+    #: embedding model: 0.65 was measured for ``embeddinggemma-2:270m`` on the seeded Notatki.
+    notes_min_score: float = Field(default=0.65, validation_alias='NOTES_MIN_SCORE')
+
+    #: Any OpenAI-compatible chat completions API: Ollama's ``/v1`` or a hosted provider.
+    llm_base_url: str = Field(default='http://localhost:11434/v1', validation_alias='LLM_BASE_URL')
+    #: Unset, questions about Notatki fail with 503: there is no model to write the answer.
+    llm_model: str | None = Field(default=None, validation_alias='LLM_MODEL')
+    llm_api_key: str | None = Field(default=None, validation_alias='LLM_API_KEY')
+    #: A local model on a CPU can take minutes to answer.
+    llm_timeout_seconds: float = Field(default=300.0, validation_alias='LLM_TIMEOUT_SECONDS')
 
     access_token_lifetime: timedelta = timedelta(minutes=15)
     refresh_token_lifetime: timedelta = timedelta(days=14)

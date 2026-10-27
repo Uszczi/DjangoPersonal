@@ -71,6 +71,16 @@ def test_text_before_the_first_heading_is_titled_with_the_name_alone(
     assert _stored(session, user, note) == [('Samochód', 'Kupić płyn do spryskiwaczy.')]
 
 
+def test_a_first_heading_repeating_the_name_is_not_repeated_in_the_title(
+    session: Session, user: User, embedder: FakeEmbedder
+) -> None:
+    note = _note(session, user, '# Samochód\n\n## Opony\n\nZimowe w listopadzie.\n')
+
+    _index(session, user, embedder, note)
+
+    assert _stored(session, user, note) == [('Samochód / Opony', 'Zimowe w listopadzie.')]
+
+
 def test_an_unchanged_notatka_is_not_embedded_again(
     session: Session, user: User, embedder: FakeEmbedder
 ) -> None:

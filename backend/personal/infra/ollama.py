@@ -1,9 +1,10 @@
 from itertools import batched
 
 import httpx2
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from personal.core.notes_qa.chunking import SplitResult
+from personal.core.notes_qa.ports import ModelUnavailable
 
 
 class EmbedResponse(BaseModel):
@@ -31,8 +32,17 @@ class OllamaEmbedder:
         return self._embed([f"task: search result | query: {query}"])[0]
 
     def _embed(self, inputs: list[str]) -> list[list[float]]:
-        response = self._client.post(
-            "/api/embed", json={"model": self._model, "input": inputs, "truncate": False}
-        )
-        response.raise_for_status()
-        return EmbedResponse.model_validate(response.json()).embeddings
+        try:
+            response = self._client.post(
+                "/api/embed", json={"model": self._model, "input": inputs, "truncate": False}
+            )
+            response.raise_for_status()
+            embeddings = EmbedResponse.model_validate(response.json()).embeddings
+        except (httpx2.HTTPError, ValidationError, ValueError) as error:
+            raise ModelUnavailable(f"The embedding model failed: {error}") from error
+        # Fewer vectors than inputs would silently give chunks each other's vectors.
+        if len(embeddings) != len(inputs):
+            raise ModelUnavailable(
+                f"The embedding model returned {len(embeddings)} vectors for {len(inputs)} inputs."
+            )
+        return embeddings

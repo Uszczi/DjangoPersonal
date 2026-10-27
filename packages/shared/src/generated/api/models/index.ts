@@ -1,6 +1,7 @@
 // @ts-nocheck
 /* tslint:disable */
 /* eslint-disable */
+export * from './AskNotesRequest';
 export * from './AuthResponse';
 export * from './CategoryRequest';
 export * from './CategoryResponse';
@@ -13,6 +14,8 @@ export * from './FolderResponse';
 export * from './LoginRequest';
 export * from './LoginResponse';
 export * from './MatchingLine';
+export * from './NoteSource';
+export * from './NotesAnswer';
 export * from './PatchedCategoryRequest';
 export * from './PatchedCounterEntryRequest';
 export * from './PatchedCounterRequest';
