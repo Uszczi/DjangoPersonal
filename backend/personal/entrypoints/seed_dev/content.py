@@ -266,6 +266,79 @@ uv run pytest -x -k nazwa_testu
 - [ ] fuga szara
 """,
     ),
+    NoteSeed(
+        name='Wdrożenie na VPS',
+        folder='Praca',
+        markdown="""# Wdrożenie na VPS
+
+Checklista dla nowego serwera. Kolejność ma znaczenie.
+
+## Przygotowanie serwera
+
+- Logowanie tylko kluczem SSH, hasła wyłączone w `sshd_config`.
+- Firewall `ufw`: otwarte tylko porty 22, 80 i 443.
+- Docker i Docker Compose z oficjalnego repozytorium.
+
+```bash
+# po każdej zmianie reguł
+sudo ufw status verbose
+```
+
+## Nginx i certyfikaty
+
+Nginx na hoście terminuje TLS i przekazuje ruch do kontenerów przez loopback.
+Certyfikaty z Let's Encrypt przez `certbot --nginx`. Odnowienie działa z timera
+systemd; sprawdzić `systemctl list-timers` raz na kwartał.
+
+## Migracje bazy
+
+Przed każdą migracją zrobić kopię zapasową bazy. Migracje uruchamia
+`alembic upgrade head` w kontenerze aplikacji, nigdy ręcznie na produkcji.
+
+## Kopia zapasowa bazy
+
+Kopia zapasowa bazy robi się codziennie o 3:00 z crona: `pg_dump` do pliku,
+potem kopia na zewnętrzny dysk. Trzymamy 14 ostatnich kopii.
+Raz w miesiącu odtworzyć kopię na czystej bazie, żeby sprawdzić, że działa.
+
+## Monitoring
+
+Grafana pod `/grafana`, alerty na mail, gdy `/health/ready` nie odpowiada
+przez 5 minut albo dysk jest zajęty w ponad 80%.
+""",
+    ),
+    NoteSeed(
+        name='Samochód',
+        folder='Dom',
+        markdown="""# Samochód
+
+## Przegląd
+
+Przegląd techniczny co roku w maju. Ostatni bez uwag, przebieg 84 000 km.
+
+## Opony
+
+Wymiana na zimowe w listopadzie, na letnie w kwietniu. Komplet zimowy
+przechowuje warsztat. Bieżnik zimowych: jeszcze jeden sezon.
+
+## Ubezpieczenie
+
+OC i AC kończą się 14 marca. Miesiąc wcześniej porównać oferty,
+w zeszłym roku najtańsza była zniżka za brak szkód.
+
+## Warsztat
+
+Mechanik: warsztat przy ulicy Polnej, umawiać się telefonicznie
+z tygodniowym wyprzedzeniem. Wymiana oleju co 15 000 km.
+""",
+    ),
+    NoteSeed(
+        name='Kopia zapasowa zdjęć',
+        markdown="""# Kopia zapasowa zdjęć
+
+Zdjęcia z telefonu: kopia zapasowa na dysk zewnętrzny raz w miesiącu.
+""",
+    ),
 )
 
 
