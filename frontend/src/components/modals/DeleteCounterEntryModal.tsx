@@ -4,7 +4,7 @@ import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { formatEntryTime, signedValue } from "@personal/shared/counterFormat";
 import { Button, ErrorAlert, Modal, ModalFooter } from "@/design-system";
 import type { CounterEntryResponse } from "@personal/shared/generated/api";
-import { useCountersStore } from "@personal/shared/stores/counters";
+import { useDeleteCounterEntry } from "@personal/shared/queries/counters";
 
 type DeleteCounterEntryModalProps = {
   entry: CounterEntryResponse;
@@ -15,7 +15,7 @@ export function DeleteCounterEntryModal({
   entry,
   onClose,
 }: DeleteCounterEntryModalProps) {
-  const deleteEntry = useCountersStore((state) => state.deleteEntry);
+  const deleteEntry = useDeleteCounterEntry();
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
@@ -27,7 +27,7 @@ export function DeleteCounterEntryModal({
     setIsDeleting(true);
     setDeleteError("");
     try {
-      await deleteEntry(entry);
+      await deleteEntry.mutateAsync(entry);
       onClose();
     } catch (error) {
       setDeleteError(await apiErrorMessage(error));

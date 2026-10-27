@@ -4,7 +4,7 @@ import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { useWalletsStore } from "@personal/shared/stores/wallets";
+import { useWalletSelectionStore } from "@personal/shared/stores/walletSelection";
 
 import { renderApp } from "../renderApp";
 
@@ -128,7 +128,7 @@ describe("Wallets", () => {
       within(switcher()).getByRole("link", { name: "Personal" }),
     );
     await screen.findByRole("region", { name: "Portfel: Personal" });
-    expect(useWalletsStore.getState().selectedWalletId).toBe(1);
+    expect(useWalletSelectionStore.getState().selectedWalletId).toBe(1);
 
     await router.navigate({ to: "/expenses" });
     expect(

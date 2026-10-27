@@ -3,7 +3,7 @@ import { useState } from "react";
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { Button, ErrorAlert, Modal, ModalFooter } from "@/design-system";
 import type { CategoryResponse } from "@personal/shared/generated/api";
-import { useCategoriesStore } from "@personal/shared/stores/categories";
+import { useDeleteCategory } from "@personal/shared/queries/categories";
 
 type DeleteCategoryModalProps = {
   category: CategoryResponse;
@@ -14,9 +14,7 @@ export function DeleteCategoryModal({
   category,
   onClose,
 }: DeleteCategoryModalProps) {
-  const confirmCategoryDelete = useCategoriesStore(
-    (state) => state.confirmCategoryDelete,
-  );
+  const deleteCategory = useDeleteCategory();
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -30,7 +28,7 @@ export function DeleteCategoryModal({
     setDeleteError("");
 
     try {
-      await confirmCategoryDelete(category);
+      await deleteCategory.mutateAsync(category);
       onClose();
     } catch (error) {
       setDeleteError(await apiErrorMessage(error));

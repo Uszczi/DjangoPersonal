@@ -10,7 +10,10 @@ import {
   TextInput,
 } from "@/design-system";
 import type { CounterResponse } from "@personal/shared/generated/api";
-import { useCountersStore } from "@personal/shared/stores/counters";
+import {
+  useCreateCounter,
+  useRenameCounter,
+} from "@personal/shared/queries/counters";
 
 type CounterEditorModalProps = {
   /** Omit to create a new counter; pass one to rename it. */
@@ -25,8 +28,8 @@ export function CounterEditorModal({
   onSaved,
   onClose,
 }: CounterEditorModalProps) {
-  const createCounter = useCountersStore((state) => state.createCounter);
-  const renameCounter = useCountersStore((state) => state.renameCounter);
+  const createCounter = useCreateCounter();
+  const renameCounter = useRenameCounter();
 
   const [name, setName] = useState(counter?.name ?? "");
   const [formError, setFormError] = useState("");
@@ -48,8 +51,8 @@ export function CounterEditorModal({
     setFormError("");
     try {
       const saved = counter
-        ? await renameCounter(counter.id, trimmed)
-        : await createCounter(trimmed);
+        ? await renameCounter.mutateAsync({ id: counter.id, name: trimmed })
+        : await createCounter.mutateAsync(trimmed);
       onClose();
       onSaved?.(saved);
     } catch (error) {

@@ -12,7 +12,7 @@ import {
 import { WalletColorPicker } from "@/components/WalletColorPicker";
 import { WalletIconPicker } from "@/components/WalletIconPicker";
 import { balanceError } from "@personal/shared/money";
-import { useWalletsStore } from "@personal/shared/stores/wallets";
+import { useCreateWallet } from "@personal/shared/queries/wallets";
 import { DEFAULT_WALLET_COLOR } from "@personal/shared/walletColors";
 
 type WalletCreateModalProps = {
@@ -21,7 +21,7 @@ type WalletCreateModalProps = {
 
 /** The create modal: a name, a colour and the balance the wallet opens with. */
 export function WalletCreateModal({ onClose }: WalletCreateModalProps) {
-  const createWallet = useWalletsStore((state) => state.createWallet);
+  const createWallet = useCreateWallet();
 
   const [name, setName] = useState("");
   const [color, setColor] = useState<string>(DEFAULT_WALLET_COLOR);
@@ -51,7 +51,12 @@ export function WalletCreateModal({ onClose }: WalletCreateModalProps) {
     setFormError("");
 
     try {
-      await createWallet({ name: trimmedName, color, icon, initialBalance });
+      await createWallet.mutateAsync({
+        name: trimmedName,
+        color,
+        icon,
+        initialBalance,
+      });
       onClose();
     } catch (error) {
       setFormError(await apiErrorMessage(error));

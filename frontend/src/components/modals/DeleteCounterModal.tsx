@@ -3,7 +3,7 @@ import { useState } from "react";
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { Button, ErrorAlert, Modal, ModalFooter } from "@/design-system";
 import type { CounterResponse } from "@personal/shared/generated/api";
-import { useCountersStore } from "@personal/shared/stores/counters";
+import { useDeleteCounter } from "@personal/shared/queries/counters";
 
 type DeleteCounterModalProps = {
   counter: CounterResponse;
@@ -17,7 +17,7 @@ export function DeleteCounterModal({
   onDeleted,
   onClose,
 }: DeleteCounterModalProps) {
-  const deleteCounter = useCountersStore((state) => state.deleteCounter);
+  const deleteCounter = useDeleteCounter();
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
@@ -29,7 +29,7 @@ export function DeleteCounterModal({
     setIsDeleting(true);
     setDeleteError("");
     try {
-      await deleteCounter(counter.id);
+      await deleteCounter.mutateAsync(counter.id);
       onClose();
       onDeleted?.();
     } catch (error) {

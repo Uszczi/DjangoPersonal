@@ -3,7 +3,8 @@ import { useEffect } from "react";
 
 import { rememberedProjectId, rememberProject } from "@/lib/lastProject";
 import { useAuthStore } from "@personal/shared/stores/auth";
-import { useProjectsStore } from "@personal/shared/stores/projects";
+import { useProjects } from "@personal/shared/queries/projects";
+import { useProjectSelectionStore } from "@/stores/projectSelection";
 
 /** Keeps the `?project=` search param of `/tasks` in step with the user's Projects.
 
@@ -14,18 +15,16 @@ someone else's, a typo) is dropped from the URL.
 export function useProjectSearchParam(project: number | undefined) {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
-  const projects = useProjectsStore((state) => state.projects);
-  const isLoading = useProjectsStore((state) => state.isLoading);
-  const pageError = useProjectsStore((state) => state.pageError);
+  const { data: projects = [], isPending: isLoading, isError } = useProjects();
 
   const known = projects.some((item) => item.id === project);
   const projectNotFound =
-    !isLoading && !pageError && project !== undefined && !known;
+    !isLoading && !isError && project !== undefined && !known;
 
-  const isRestored = useProjectsStore(
+  const isRestored = useProjectSelectionStore(
     (state) => state.isRememberedProjectRestored,
   );
-  const markRestored = useProjectsStore(
+  const markRestored = useProjectSelectionStore(
     (state) => state.markRememberedProjectRestored,
   );
   useEffect(() => {

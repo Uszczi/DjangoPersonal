@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { ProjectEditorModal } from "@/components/modals/ProjectEditorModal";
 import { InboxIcon } from "@/design-system";
 import { ShowModal } from "@/stores/modal";
-import { useProjectsStore } from "@personal/shared/stores/projects";
+import { useProjects } from "@personal/shared/queries/projects";
 
 const toggleButtonClasses =
   "inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md border bg-transparent text-[20px] leading-none text-[#f3f7f3] transition-colors hover:border-[#6e8b8d] hover:bg-[#29474d]";
@@ -22,8 +22,7 @@ export function ProjectNavList({
   tone,
   onNavigate,
 }: ProjectNavListProps) {
-  const projects = useProjectsStore((state) => state.projects);
-  const isLoading = useProjectsStore((state) => state.isLoading);
+  const { data: projects = [], isPending } = useProjects();
 
   const linkTone =
     tone === "dark"
@@ -33,7 +32,7 @@ export function ProjectNavList({
 
   return (
     <nav className="flex flex-col gap-1" aria-label="Projekty">
-      {isLoading ? (
+      {isPending ? (
         <p className="px-[10px] py-2 text-[13px] text-muted">Wczytywanie…</p>
       ) : (
         projects.map((item) => (

@@ -10,11 +10,14 @@ import {
 } from "react-native";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
+import { defaultProject, useProjects } from "@personal/shared/queries/projects";
+import { useAllTasks } from "@personal/shared/queries/tasks";
 import {
-  defaultProject,
-  useProjectsStore,
-} from "@personal/shared/stores/projects";
-import { useTimerStore } from "@personal/shared/stores/timer";
+  useAddManualEntry,
+  useDeleteEntry,
+  useTimeEntries,
+  useUpdateEntry,
+} from "@personal/shared/queries/timer";
 import {
   dateFromKey,
   dateKey,
@@ -43,12 +46,12 @@ export default function TimeEntryEditorScreen() {
   const params = useLocalSearchParams<{ entryId?: string }>();
   const entryId = params.entryId ? Number(params.entryId) : null;
 
-  const projects = useProjectsStore((state) => state.projects);
-  const entries = useTimerStore((state) => state.entries);
-  const tasks = useTimerStore((state) => state.tasks);
-  const addManualEntry = useTimerStore((state) => state.addManualEntry);
-  const updateEntry = useTimerStore((state) => state.updateEntry);
-  const deleteEntry = useTimerStore((state) => state.deleteEntry);
+  const { data: projects = [] } = useProjects();
+  const { data: entries = [] } = useTimeEntries();
+  const { data: tasks = [] } = useAllTasks();
+  const addManualEntry = useAddManualEntry();
+  const updateEntry = useUpdateEntry();
+  const deleteEntry = useDeleteEntry();
   const entry =
     entryId === null
       ? null
@@ -96,9 +99,9 @@ export default function TimeEntryEditorScreen() {
     setFormError("");
     try {
       if (entry) {
-        await updateEntry(entry, input);
+        await updateEntry.mutateAsync({ entry, input });
       } else {
-        await addManualEntry(input);
+        await addManualEntry.mutateAsync(input);
       }
       router.back();
     } catch (error) {
@@ -116,8 +119,13 @@ export default function TimeEntryEditorScreen() {
     );
     if (!confirmed) return;
     setIsSaving(true);
-    await deleteEntry(entry);
-    router.back();
+    try {
+      await deleteEntry.mutateAsync(entry);
+      router.back();
+    } catch (error) {
+      setFormError(await apiErrorMessage(error));
+      setIsSaving(false);
+    }
   }
 
   return (

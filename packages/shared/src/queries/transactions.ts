@@ -10,40 +10,52 @@ import {
   type QueryClient,
 } from "@tanstack/react-query";
 
-import { api } from "@personal/shared/api";
-import type {
-  TransactionPageResponse,
-  TransactionResponse,
-} from "@personal/shared/generated/api";
+import { api } from "../api";
 import {
-  toTransactionRequest,
-  type TransactionInput,
-} from "@personal/shared/stores/transactions";
-import {
-  compareNewestFirst,
-  withPlaced,
-} from "@personal/shared/transactionList";
-import { useWalletsStore } from "@personal/shared/stores/wallets";
+  parseDate,
+  type TransactionPageResponse,
+  type TransactionResponse,
+} from "../generated/api";
+import { compareNewestFirst, withPlaced } from "../transactionList";
+import { transactionKeys } from "./keys";
+import { refreshWallets } from "./wallets";
+
+export type TransactionInput = {
+  title: string;
+  amount: string;
+  date: string;
+  description: string;
+  category: number | null;
+  wallet: number;
+};
+
+/** The API contract types `date` as a Date; the form carries the wire string. */
+export function toTransactionRequest(input: TransactionInput) {
+  return { ...input, date: parseDate(input.date) };
+}
 
 type Pages = InfiniteData<TransactionPageResponse, string | null>;
 
-export const transactionKeys = {
-  all: ["transactions"] as const,
-  wallet: (walletId: number) => ["transactions", "wallet", walletId] as const,
-};
+function flatten(data: Pages) {
+  return data.pages.flatMap((page) => page.items);
+}
 
-/** The wallet's transactions, newest first, a page (50 by default) at a time. */
-export function useWalletTransactions(walletId: number) {
+/**
+ * The wallet's transactions, newest first, a page (50 by default) at a time;
+ * `null` waits for a wallet.
+ */
+export function useWalletTransactions(walletId: number | null) {
   return useInfiniteQuery({
-    queryKey: transactionKeys.wallet(walletId),
+    queryKey: transactionKeys.wallet(walletId ?? 0),
     queryFn: ({ pageParam, signal }) =>
       api.transactionsList(
-        { wallet: walletId, cursor: pageParam ?? undefined },
+        { wallet: walletId ?? 0, cursor: pageParam ?? undefined },
         { signal },
       ),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    select: (data) => data.pages.flatMap((page) => page.items),
+    enabled: walletId !== null,
+    select: flatten,
   });
 }
 
@@ -102,7 +114,6 @@ function updateWalletPages(
  */
 export function useSaveTransaction() {
   const queryClient = useQueryClient();
-  const refreshWallets = useWalletsStore((state) => state.refreshWallets);
   return useMutation({
     mutationFn: ({
       input,
@@ -129,6 +140,7 @@ export function useSaveTransaction() {
         placed(data, saved),
       );
       void refreshWallets(
+        queryClient,
         transaction ? [transaction.walletId, saved.walletId] : [saved.walletId],
       );
     },
@@ -137,7 +149,6 @@ export function useSaveTransaction() {
 
 export function useDeleteTransaction() {
   const queryClient = useQueryClient();
-  const refreshWallets = useWalletsStore((state) => state.refreshWallets);
   return useMutation({
     mutationFn: (transaction: TransactionResponse) =>
       api.transactionsDestroy({ id: transaction.id }),
@@ -145,7 +156,7 @@ export function useDeleteTransaction() {
       updateWalletPages(queryClient, transaction.walletId, (data) =>
         without(data, transaction.id),
       );
-      void refreshWallets([transaction.walletId]);
+      void refreshWallets(queryClient, [transaction.walletId]);
     },
   });
 }

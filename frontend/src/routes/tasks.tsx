@@ -3,7 +3,7 @@ import {
   useNavigate,
   useSearch,
 } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   Button,
@@ -24,12 +24,15 @@ import { validateProjectSearch } from "@/lib/projectSearch";
 import { useProjectSearchParam } from "@/lib/useProjectSearchParam";
 import { useLayoutStore } from "@/stores/layout";
 import { ShowModal } from "@/stores/modal";
-import {
-  defaultProject,
-  useProjectsStore,
-} from "@personal/shared/stores/projects";
-import { useTasksStore } from "@personal/shared/stores/tasks";
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import type { TaskResponse } from "@personal/shared/generated/api";
+import { TASKS_LOAD_ERROR } from "@personal/shared/loadErrors";
+import { defaultProject, useProjects } from "@personal/shared/queries/projects";
+import {
+  useProjectTasks,
+  useToggleTaskStatus,
+} from "@personal/shared/queries/tasks";
+import { useStartTimer } from "@personal/shared/queries/timer";
 
 export const Route = createFileRoute("/tasks")({
   validateSearch: validateProjectSearch,
@@ -41,15 +44,10 @@ function TasksPage() {
   const navigate = useNavigate();
   useProjectSearchParam(project);
 
-  const projects = useProjectsStore((state) => state.projects);
-  const isProjectsLoading = useProjectsStore((state) => state.isLoading);
-
-  const taskList = useTasksStore((state) => state.taskList);
-  const loadError = useTasksStore((state) => state.loadError);
-  const actionError = useTasksStore((state) => state.actionError);
-  const loadTasks = useTasksStore((state) => state.loadTasks);
-  const toggleTaskStatus = useTasksStore((state) => state.toggleTaskStatus);
-  const startTaskTimer = useTasksStore((state) => state.startTaskTimer);
+  const { data: projects = [], isPending: isProjectsLoading } = useProjects();
+  const toggleTaskStatus = useToggleTaskStatus();
+  const startTaskTimer = useStartTimer();
+  const [actionError, setActionError] = useState("");
 
   const isSidebarCollapsed = useLayoutStore(
     (state) => state.isSidebarCollapsed,
@@ -60,12 +58,11 @@ function TasksPage() {
   const selectedProject =
     projects.find((item) => item.id === selectedProjectId) ?? null;
 
-  useEffect(() => {
-    if (selectedProjectId === null) return;
-    void loadTasks(selectedProjectId);
-  }, [loadTasks, selectedProjectId]);
-
-  const tasks = taskList?.projectId === selectedProjectId ? taskList.tasks : [];
+  const {
+    data: tasks = [],
+    isPending: isTasksLoading,
+    isError: isTasksError,
+  } = useProjectTasks(selectedProject);
   const [isProjectsDrawerOpen, setProjectsDrawerOpen] = useState(false);
   const [collapsedStatuses, setCollapsedStatuses] = useState<
     ReadonlySet<string>
@@ -98,13 +95,27 @@ function TasksPage() {
     ShowModal(TaskEditorModal, { projectId: selectedProject?.id });
   }
 
-  async function startTimer(task: TaskResponse) {
-    if (await startTaskTimer(task)) {
-      navigate({
-        to: "/timer",
-        search: { project: selectedProjectId ?? undefined },
-      });
+  async function toggleTask(task: TaskResponse) {
+    setActionError("");
+    try {
+      await toggleTaskStatus.mutateAsync(task);
+    } catch (error) {
+      setActionError(await apiErrorMessage(error));
     }
+  }
+
+  async function startTimer(task: TaskResponse) {
+    setActionError("");
+    try {
+      await startTaskTimer.mutateAsync({ task: task.id });
+    } catch (error) {
+      setActionError(await apiErrorMessage(error));
+      return;
+    }
+    navigate({
+      to: "/timer",
+      search: { project: selectedProjectId ?? undefined },
+    });
   }
 
   if (isProjectsLoading) {
@@ -124,12 +135,6 @@ function TasksPage() {
       </EmptyState>
     );
   }
-
-  const tasksError =
-    loadError?.projectId === selectedProjectId ? loadError.message : "";
-  const isTasksLoading =
-    taskList?.projectId !== selectedProjectId &&
-    loadError?.projectId !== selectedProjectId;
 
   return (
     <>
@@ -173,8 +178,8 @@ function TasksPage() {
 
           {isTasksLoading ? (
             <LoadingStatus variant="inline">Wczytywanie zadań…</LoadingStatus>
-          ) : tasksError ? (
-            <ErrorMessage>{tasksError}</ErrorMessage>
+          ) : isTasksError ? (
+            <ErrorMessage>{TASKS_LOAD_ERROR}</ErrorMessage>
           ) : tasks.length === 0 ? (
             <p className="py-4 text-[13px] text-muted">
               Nie ma tu jeszcze zadań.
@@ -185,7 +190,7 @@ function TasksPage() {
               tasks={tasks}
               collapsedStatuses={collapsedStatuses}
               onToggleCollapsed={toggleStatusSection}
-              onToggleTaskStatus={(task) => void toggleTaskStatus(task)}
+              onToggleTaskStatus={(task) => void toggleTask(task)}
               onStartTimer={(task) => void startTimer(task)}
               onEditTask={(task) => ShowModal(TaskEditorModal, { task })}
             />

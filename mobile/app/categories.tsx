@@ -1,9 +1,9 @@
 import { router } from "expo-router";
-import { useEffect } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 
 import { DEFAULT_CATEGORY_ICON } from "@personal/shared/categoryIcons";
-import { useCategoriesStore } from "@personal/shared/stores/categories";
+import { CATEGORIES_LOAD_ERROR } from "@personal/shared/loadErrors";
+import { useCategories } from "@personal/shared/queries/categories";
 
 import { Fab } from "../src/Fab";
 import { NamedIcon } from "../src/NamedIcon";
@@ -11,20 +11,17 @@ import { colors, common } from "../src/theme";
 
 /** The categories a transaction can have; the System category is not managed here. */
 export default function CategoriesScreen() {
-  const categories = useCategoriesStore((state) => state.categories);
-  const isLoading = useCategoriesStore((state) => state.isLoading);
-  const pageError = useCategoriesStore((state) => state.pageError);
-  const loadCategories = useCategoriesStore((state) => state.loadCategories);
-
-  useEffect(() => {
-    void loadCategories();
-  }, [loadCategories]);
+  const {
+    data: categories = [],
+    isPending: isLoading,
+    isError,
+  } = useCategories();
 
   const visible = categories.filter((category) => !category.isSystem);
 
   return (
     <View style={common.screen}>
-      {pageError !== "" && <Text style={common.error}>{pageError}</Text>}
+      {isError && <Text style={common.error}>{CATEGORIES_LOAD_ERROR}</Text>}
       <FlatList
         data={visible}
         keyExtractor={(category) => String(category.id)}

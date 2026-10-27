@@ -1,4 +1,4 @@
-import { router, useFocusEffect } from "expo-router";
+import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   Pressable,
@@ -12,11 +12,17 @@ import {
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import type { TimeEntryResponse } from "@personal/shared/generated/api";
+import { TIMER_LOAD_ERROR } from "@personal/shared/loadErrors";
+import { defaultProject, useProjects } from "@personal/shared/queries/projects";
+import { useAllTasks } from "@personal/shared/queries/tasks";
 import {
-  defaultProject,
-  useProjectsStore,
-} from "@personal/shared/stores/projects";
-import { useTimerStore } from "@personal/shared/stores/timer";
+  useDiscardTimer,
+  useRefreshTimer,
+  useStartTimer,
+  useStopTimer,
+  useTimeEntries,
+  useTimer,
+} from "@personal/shared/queries/timer";
 import {
   dateKey,
   entryMinutes,
@@ -30,6 +36,7 @@ import { Button } from "../../src/Button";
 import { ChipGroup } from "../../src/ChipGroup";
 import { TitleSuggestions } from "../../src/TitleSuggestions";
 import { card, colors, common, form } from "../../src/theme";
+import { useRefreshOnFocus } from "../../src/useRefreshOnFocus";
 
 type EntryRange = "today" | "7" | "30" | "all";
 
@@ -51,20 +58,26 @@ function daysAgoKey(now: number, days: number) {
 
 /** The web Timer page: the running timer, recent entries and the time summary. */
 export default function TimeScreen() {
-  const projects = useProjectsStore((state) => state.projects);
-  const loadProjects = useProjectsStore((state) => state.loadProjects);
-  const isLoading = useTimerStore((state) => state.isLoading);
-  const pageError = useTimerStore((state) => state.pageError);
-  const runningEntryRaw = useTimerStore((state) => state.runningEntry);
-  const serverOffset = useTimerStore((state) => state.serverOffset);
-  const entries = useTimerStore((state) => state.entries);
-  const tasks = useTimerStore((state) => state.tasks);
-  const actionError = useTimerStore((state) => state.actionError);
-  const loadData = useTimerStore((state) => state.loadData);
-  const startTimer = useTimerStore((state) => state.startTimer);
-  const stopTimer = useTimerStore((state) => state.stopTimer);
-  const discardTimer = useTimerStore((state) => state.discardTimer);
-  const refreshTimer = useTimerStore((state) => state.refreshTimer);
+  const { data: projects = [], refetch: refetchProjects } = useProjects();
+  const timer = useTimer();
+  const entriesQuery = useTimeEntries();
+  const tasksQuery = useAllTasks();
+  const startTimer = useStartTimer();
+  const stopTimer = useStopTimer();
+  const discardTimer = useDiscardTimer();
+  const refreshTimer = useRefreshTimer();
+
+  const runningEntryRaw = timer.data?.runningEntry ?? null;
+  const serverOffset = timer.data?.serverOffset ?? 0;
+  const entries = entriesQuery.data ?? [];
+  const tasks = tasksQuery.data ?? [];
+  const isLoading =
+    timer.isPending || entriesQuery.isPending || tasksQuery.isPending;
+  const pageError =
+    timer.isError || entriesQuery.isError || tasksQuery.isError
+      ? TIMER_LOAD_ERROR
+      : "";
+  const [actionError, setActionError] = useState("");
 
   const [nowTick, setNowTick] = useState(() => Date.now());
   const [startProjectId, setStartProjectId] = useState<number | null>(null);
@@ -76,13 +89,21 @@ export default function TimeScreen() {
   const [entryRange, setEntryRange] = useState<EntryRange>("today");
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Reload on every visit: a timer may have been started from a Task meanwhile.
-  useFocusEffect(
-    useCallback(() => {
-      void loadData();
-      void loadProjects();
-    }, [loadData, loadProjects]),
+  const { refetch: refetchTimer } = timer;
+  const { refetch: refetchEntries } = entriesQuery;
+  const { refetch: refetchTasks } = tasksQuery;
+  const reload = useCallback(
+    () =>
+      Promise.all([
+        refetchTimer(),
+        refetchEntries(),
+        refetchTasks(),
+        refetchProjects(),
+      ]),
+    [refetchTimer, refetchEntries, refetchTasks, refetchProjects],
   );
+  // Reload on every visit: the timer may have been changed on another device.
+  useRefreshOnFocus(reload);
 
   const runningEntry =
     runningEntryRaw && runningEntryRaw.end == null ? runningEntryRaw : null;
@@ -100,13 +121,17 @@ export default function TimeScreen() {
     if (plannedEndMs == null) return;
     const delay =
       Math.max(0, plannedEndMs - (Date.now() + serverOffset)) + 1000;
-    const timeout = setTimeout(() => void refreshTimer(), delay);
+    const timeout = setTimeout(() => {
+      refreshTimer().catch(async (error: unknown) =>
+        setActionError(await apiErrorMessage(error)),
+      );
+    }, delay);
     return () => clearTimeout(timeout);
   }, [plannedEndMs, serverOffset, refreshTimer]);
 
   async function refresh() {
     setIsRefreshing(true);
-    await loadData();
+    await reload();
     setNowTick(Date.now());
     setIsRefreshing(false);
   }
@@ -120,7 +145,10 @@ export default function TimeScreen() {
     setStartError("");
     setIsBusy(true);
     try {
-      await startTimer(title, startLimit || undefined);
+      await startTimer.mutateAsync({
+        title,
+        durationMinutes: startLimit || undefined,
+      });
       setStartTitle("");
       setNowTick(Date.now());
     } catch (error) {
@@ -130,9 +158,15 @@ export default function TimeScreen() {
     }
   }
 
-  async function run(action: () => Promise<void>) {
+  /** Run a stop or discard, showing its failure under the timer. */
+  async function run(action: () => Promise<unknown>) {
     setIsBusy(true);
-    await action();
+    setActionError("");
+    try {
+      await action();
+    } catch (error) {
+      setActionError(await apiErrorMessage(error));
+    }
     setIsBusy(false);
   }
 
@@ -233,13 +267,15 @@ export default function TimeScreen() {
               <Button
                 label="Zatrzymaj"
                 isBusy={isBusy}
-                onPress={() => void run(stopTimer)}
+                onPress={() => void run(() => stopTimer.mutateAsync())}
               />
               <Button
                 label="Odrzuć"
                 variant="secondary"
                 disabled={isBusy}
-                onPress={() => void run(discardTimer)}
+                onPress={() =>
+                  void run(() => discardTimer.mutateAsync(runningEntry))
+                }
               />
             </View>
           </>

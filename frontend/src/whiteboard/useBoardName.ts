@@ -2,7 +2,9 @@ import { useRef, useState } from "react";
 
 import { api } from "@personal/shared/api";
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
-import { useWhiteboardsStore } from "@/stores/whiteboards";
+import { useQueryClient } from "@tanstack/react-query";
+
+import { replaceWhiteboard } from "@/queries/whiteboards";
 
 /**
  * In-place renaming of a Notatnik item. The name is saved directly, not through autosave:
@@ -13,6 +15,7 @@ export function useBoardName(boardId: string, initialName: string) {
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState("");
   const savedName = useRef(initialName);
+  const queryClient = useQueryClient();
 
   function startEditing() {
     savedName.current = name;
@@ -36,11 +39,7 @@ export function useBoardName(boardId: string, initialName: string) {
       });
       setName(updated.name);
       savedName.current = updated.name;
-      useWhiteboardsStore.setState((s) => ({
-        whiteboards: s.whiteboards.map((wb) =>
-          wb.id === updated.id ? updated : wb,
-        ),
-      }));
+      replaceWhiteboard(queryClient, updated);
     } catch (err) {
       setName(savedName.current);
       setError(await apiErrorMessage(err));

@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 
 import { WalletMark } from "@/components/WalletMark";
-import { useWalletsStore } from "@personal/shared/stores/wallets";
+import { useWallets } from "@personal/shared/queries/wallets";
 
 type WalletSelectProps = {
   /** The wallet highlighted in the list, if one is active. */
@@ -14,7 +14,7 @@ type WalletSelectProps = {
  * `/expenses/$walletId` route. Hidden while there are no wallets.
  */
 export function WalletSelect({ activeWalletId }: WalletSelectProps) {
-  const wallets = useWalletsStore((state) => state.wallets);
+  const { data: wallets = [] } = useWallets();
 
   if (wallets.length === 0) return null;
 

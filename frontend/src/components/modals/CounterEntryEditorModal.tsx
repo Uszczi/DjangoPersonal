@@ -13,7 +13,7 @@ import {
   TextInput,
 } from "@/design-system";
 import type { CounterEntryResponse } from "@personal/shared/generated/api";
-import { useCountersStore } from "@personal/shared/stores/counters";
+import { useSaveCounterEntry } from "@personal/shared/queries/counters";
 import { ShowModal } from "@/stores/modal";
 
 type CounterEntryEditorModalProps = {
@@ -35,7 +35,7 @@ export function CounterEntryEditorModal({
   entry = null,
   onClose,
 }: CounterEntryEditorModalProps) {
-  const saveEntry = useCountersStore((state) => state.saveEntry);
+  const saveEntry = useSaveCounterEntry();
 
   // A new entry defaults to the moment the modal opened.
   const [form, setForm] = useState(() => ({
@@ -66,15 +66,15 @@ export function CounterEntryEditorModal({
     setIsSaving(true);
     setFormError("");
     try {
-      await saveEntry(
+      await saveEntry.mutateAsync({
         counterId,
-        {
+        input: {
           value: Number(value),
           occurredAt: form.occurredAt,
           note: form.note.trim(),
         },
         entry,
-      );
+      });
       onClose();
     } catch (error) {
       setFormError(await apiErrorMessage(error));

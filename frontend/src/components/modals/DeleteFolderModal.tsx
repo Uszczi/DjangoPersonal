@@ -3,8 +3,7 @@ import { useState } from "react";
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { Button, ErrorAlert, Modal, ModalFooter } from "@/design-system";
 import type { FolderResponse } from "@personal/shared/generated/api";
-import { useFoldersStore } from "@/stores/folders";
-import { useWhiteboardsStore } from "@/stores/whiteboards";
+import { useDeleteFolder } from "@/queries/folders";
 
 type DeleteFolderModalProps = {
   folder: FolderResponse;
@@ -36,8 +35,7 @@ export function DeleteFolderModal({
   subfolderCount = 0,
   onClose,
 }: DeleteFolderModalProps) {
-  const deleteFolder = useFoldersStore((state) => state.deleteFolder);
-  const dropFolderItems = useWhiteboardsStore((state) => state.dropFolderItems);
+  const deleteFolder = useDeleteFolder();
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
@@ -54,7 +52,7 @@ export function DeleteFolderModal({
     setIsDeleting(true);
     setDeleteError("");
     try {
-      dropFolderItems(await deleteFolder(folder.id));
+      await deleteFolder.mutateAsync(folder.id);
       onClose();
     } catch (error) {
       setDeleteError(await apiErrorMessage(error));

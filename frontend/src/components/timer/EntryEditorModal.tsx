@@ -5,7 +5,7 @@ import type {
   TaskResponse,
   TimeEntryResponse,
 } from "@personal/shared/generated/api";
-import { useTimerStore } from "@personal/shared/stores/timer";
+import { useDeleteEntry, useUpdateEntry } from "@personal/shared/queries/timer";
 import { dateKey, entryMinutes } from "@personal/shared/timeFormat";
 import {
   Button,
@@ -28,14 +28,27 @@ export function EntryEditorModal({
   entry,
   tasks,
   taskTitles,
+  onClose: close,
+  onActionError,
 }: {
   entry: TimeEntryResponse;
   tasks: TaskResponse[];
   taskTitles: TaskTitles;
+  onClose: () => void;
+  /** Shows a failed delete, which runs after the modal has closed. */
+  onActionError: (message: string) => void;
 }) {
-  const updateEntry = useTimerStore((state) => state.updateEntry);
-  const deleteEntry = useTimerStore((state) => state.deleteEntry);
-  const close = useTimerStore((state) => state.closeEntryEditor);
+  const updateEntry = useUpdateEntry();
+  const deleteEntry = useDeleteEntry();
+
+  async function remove() {
+    onActionError("");
+    try {
+      await deleteEntry.mutateAsync(entry);
+    } catch (caught) {
+      onActionError(await apiErrorMessage(caught));
+    }
+  }
 
   const [form, setForm] = useState<EntryFormValues>(() => ({
     date: dateKey(entry.start),
@@ -56,7 +69,8 @@ export function EntryEditorModal({
     }
     setError("");
     try {
-      await updateEntry(entry, parsed.input);
+      await updateEntry.mutateAsync({ entry, input: parsed.input });
+      close();
     } catch (caught) {
       setError(await apiErrorMessage(caught));
     }
@@ -116,7 +130,7 @@ export function EntryEditorModal({
               className="mr-auto"
               onClick={() => {
                 close();
-                void deleteEntry(entry);
+                void remove();
               }}
             >
               Usuń

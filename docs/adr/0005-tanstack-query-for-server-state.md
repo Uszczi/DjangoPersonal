@@ -6,7 +6,7 @@
 
 On the web, the transaction list is the first domain moved to TanStack Query (`@tanstack/react-query`). One `QueryClient` (`frontend/src/queryClient.ts`) is provided in the root route. `frontend/src/queries/transactions.ts` holds `useWalletTransactions` (a `useInfiniteQuery` keyed `["transactions", "wallet", id]`) and the `useSaveTransaction`/`useDeleteTransaction` mutations. `WalletView` loads more pages through a "Wczytaj więcej" button and an `IntersectionObserver` sentinel for infinite scroll.
 
-Status: accepted
+Status: accepted (superseded in part by 0008: every domain, on both clients, is now in TanStack Query)
 
 Considered Options:
 

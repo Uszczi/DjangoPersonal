@@ -11,7 +11,11 @@ import {
 } from "react-native";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
-import { useCountersStore } from "@personal/shared/stores/counters";
+import {
+  useCounterEntries,
+  useDeleteCounterEntry,
+  useSaveCounterEntry,
+} from "@personal/shared/queries/counters";
 
 import { Button } from "../src/Button";
 import { DateTimeField } from "../src/DateTimeField";
@@ -32,13 +36,15 @@ export default function CounterEntryEditorScreen() {
   }>();
   const counterId = Number(params.counterId);
   const entryId = params.entryId ? Number(params.entryId) : null;
-  const entry = useCountersStore((state) =>
-    entryId === null || state.entryList?.counterId !== counterId
-      ? null
-      : (state.entryList.entries.find((item) => item.id === entryId) ?? null),
+  const { data: entries = [] } = useCounterEntries(
+    entryId === null ? null : counterId,
   );
-  const saveEntry = useCountersStore((state) => state.saveEntry);
-  const deleteEntry = useCountersStore((state) => state.deleteEntry);
+  const entry =
+    entryId === null
+      ? null
+      : (entries.find((item) => item.id === entryId) ?? null);
+  const saveEntry = useSaveCounterEntry();
+  const deleteEntry = useDeleteCounterEntry();
 
   // A new entry defaults to the moment the screen opened.
   const [value, setValue] = useState(String(entry?.value ?? 1));
@@ -67,11 +73,11 @@ export default function CounterEntryEditorScreen() {
     setIsSaving(true);
     setFormError("");
     try {
-      await saveEntry(
+      await saveEntry.mutateAsync({
         counterId,
-        { value: Number(trimmed), occurredAt, note: note.trim() },
+        input: { value: Number(trimmed), occurredAt, note: note.trim() },
         entry,
-      );
+      });
       router.back();
     } catch (error) {
       setFormError(await apiErrorMessage(error));
@@ -89,7 +95,7 @@ export default function CounterEntryEditorScreen() {
         onPress: async () => {
           setIsSaving(true);
           try {
-            await deleteEntry(entry);
+            await deleteEntry.mutateAsync(entry);
             router.back();
           } catch (error) {
             setFormError(await apiErrorMessage(error));

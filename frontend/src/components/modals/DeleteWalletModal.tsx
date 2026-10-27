@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { Button, ErrorAlert, Modal, ModalFooter } from "@/design-system";
 import type { WalletResponse } from "@personal/shared/generated/api";
-import { useWalletsStore } from "@personal/shared/stores/wallets";
+import { useDeleteWallet } from "@personal/shared/queries/wallets";
 
 type DeleteWalletModalProps = {
   wallet: WalletResponse;
@@ -13,9 +13,7 @@ type DeleteWalletModalProps = {
 
 export function DeleteWalletModal({ wallet, onClose }: DeleteWalletModalProps) {
   const navigate = useNavigate();
-  const confirmWalletDelete = useWalletsStore(
-    (state) => state.confirmWalletDelete,
-  );
+  const deleteWallet = useDeleteWallet();
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -29,7 +27,7 @@ export function DeleteWalletModal({ wallet, onClose }: DeleteWalletModalProps) {
     setDeleteError("");
 
     try {
-      await confirmWalletDelete(wallet);
+      await deleteWallet.mutateAsync(wallet);
       onClose();
       // Decision 05: a deleted wallet always returns to the wallet list.
       navigate({ to: "/expenses" });

@@ -13,9 +13,11 @@ import {
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import {
-  useProjectsStore,
+  useDeleteProject,
+  useProjects,
+  useSaveProject,
   type ProjectInput,
-} from "@personal/shared/stores/projects";
+} from "@personal/shared/queries/projects";
 
 import { Button } from "../src/Button";
 import { ChipGroup } from "../src/ChipGroup";
@@ -38,15 +40,13 @@ function newStatus(name: string): StatusDraft {
 export default function ProjectEditorScreen() {
   const params = useLocalSearchParams<{ projectId?: string }>();
   const projectId = params.projectId ? Number(params.projectId) : null;
-  const project = useProjectsStore((state) =>
+  const { data: projects = [] } = useProjects();
+  const project =
     projectId === null
       ? null
-      : (state.projects.find((item) => item.id === projectId) ?? null),
-  );
-  const saveProject = useProjectsStore((state) => state.saveProject);
-  const confirmProjectDelete = useProjectsStore(
-    (state) => state.confirmProjectDelete,
-  );
+      : (projects.find((item) => item.id === projectId) ?? null);
+  const saveProject = useSaveProject();
+  const deleteProjectMutation = useDeleteProject();
 
   const [name, setName] = useState(project?.name ?? "");
   const [description, setDescription] = useState(project?.description ?? "");
@@ -117,7 +117,7 @@ export default function ProjectEditorScreen() {
     setIsSaving(true);
     setFormError("");
     try {
-      const saved = await saveProject(input, project);
+      const saved = await saveProject.mutateAsync({ input, project });
       if (project) {
         router.back();
       } else {
@@ -143,7 +143,7 @@ export default function ProjectEditorScreen() {
 
     setIsSaving(true);
     try {
-      await confirmProjectDelete(project);
+      await deleteProjectMutation.mutateAsync(project);
       // Leave both this form and the deleted Project's task list.
       router.dismissTo("/");
     } catch (error) {

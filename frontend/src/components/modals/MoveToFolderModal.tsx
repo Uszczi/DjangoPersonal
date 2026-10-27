@@ -6,8 +6,8 @@ import type {
   FolderResponse,
   WhiteboardResponse,
 } from "@personal/shared/generated/api";
-import { useFoldersStore } from "@/stores/folders";
-import { useWhiteboardsStore } from "@/stores/whiteboards";
+import { useFolders, useMoveFolder } from "@/queries/folders";
+import { useMoveWhiteboard } from "@/queries/whiteboards";
 import { flattenTree, subtreeIds } from "@/whiteboard/folderTree";
 
 type MoveTargetsModalProps = {
@@ -29,7 +29,7 @@ function MoveTargetsModal({
   move,
   onClose,
 }: MoveTargetsModalProps) {
-  const folders = useFoldersStore((state) => state.folders);
+  const { data: folders = [] } = useFolders();
   const [isMoving, setIsMoving] = useState(false);
   const [moveError, setMoveError] = useState("");
 
@@ -113,12 +113,14 @@ export function MoveWhiteboardModal({
   whiteboard: WhiteboardResponse;
   onClose: () => void;
 }) {
-  const moveWhiteboard = useWhiteboardsStore((state) => state.moveWhiteboard);
+  const moveWhiteboard = useMoveWhiteboard();
   return (
     <MoveTargetsModal
       name={whiteboard.name}
       currentFolderId={whiteboard.folderId ?? null}
-      move={(folderId) => moveWhiteboard(whiteboard.id, folderId)}
+      move={(folderId) =>
+        moveWhiteboard.mutateAsync({ id: whiteboard.id, folderId })
+      }
       onClose={onClose}
     />
   );
@@ -132,14 +134,14 @@ export function MoveFolderModal({
   folder: FolderResponse;
   onClose: () => void;
 }) {
-  const folders = useFoldersStore((state) => state.folders);
-  const moveFolder = useFoldersStore((state) => state.moveFolder);
+  const { data: folders = [] } = useFolders();
+  const moveFolder = useMoveFolder();
   return (
     <MoveTargetsModal
       name={folder.name}
       currentFolderId={folder.parentId ?? null}
       excluded={subtreeIds(folders, folder.id)}
-      move={(parentId) => moveFolder(folder.id, parentId)}
+      move={(parentId) => moveFolder.mutateAsync({ id: folder.id, parentId })}
       onClose={onClose}
     />
   );

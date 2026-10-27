@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   FlatList,
   Pressable,
@@ -12,35 +12,36 @@ import {
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { entryCountLabel } from "@personal/shared/counterFormat";
 import type { CounterResponse } from "@personal/shared/generated/api";
-import { useCountersStore } from "@personal/shared/stores/counters";
+import { COUNTERS_LOAD_ERROR } from "@personal/shared/loadErrors";
+import {
+  useCounters,
+  useSaveCounterEntry,
+} from "@personal/shared/queries/counters";
 
 import { Fab } from "../../src/Fab";
 import { plusOneEntry } from "../../src/plusOne";
 import { colors, common } from "../../src/theme";
 
 export default function CountersScreen() {
-  const counters = useCountersStore((state) => state.counters);
-  const isLoading = useCountersStore((state) => state.isLoading);
-  const pageError = useCountersStore((state) => state.pageError);
-  const loadCounters = useCountersStore((state) => state.loadCounters);
-  const saveEntry = useCountersStore((state) => state.saveEntry);
+  const { data: counters = [], isPending, isError, refetch } = useCounters();
+  const saveEntry = useSaveCounterEntry();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [actionError, setActionError] = useState("");
-
-  useEffect(() => {
-    void loadCounters();
-  }, [loadCounters]);
+  const pageError = isError ? COUNTERS_LOAD_ERROR : "";
 
   async function refresh() {
     setIsRefreshing(true);
-    await loadCounters();
+    await refetch();
     setIsRefreshing(false);
   }
 
   async function addOne(counter: CounterResponse) {
     setActionError("");
     try {
-      await saveEntry(counter.id, plusOneEntry());
+      await saveEntry.mutateAsync({
+        counterId: counter.id,
+        input: plusOneEntry(),
+      });
     } catch (error) {
       setActionError(await apiErrorMessage(error));
     }
@@ -57,12 +58,12 @@ export default function CountersScreen() {
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
-            refreshing={isRefreshing || (isLoading && counters.length === 0)}
+            refreshing={isRefreshing || isPending}
             onRefresh={() => void refresh()}
           />
         }
         ListEmptyComponent={
-          !isLoading && pageError === "" ? (
+          !isPending && pageError === "" ? (
             <Text style={[common.muted, styles.empty]}>
               Brak liczników. Utwórz pierwszy przyciskiem +.
             </Text>

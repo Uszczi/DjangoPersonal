@@ -30,10 +30,19 @@ import {
   MoveFolderModal,
   MoveWhiteboardModal,
 } from "@/components/modals/MoveToFolderModal";
-import { useFoldersStore } from "@/stores/folders";
+import {
+  FOLDERS_LOAD_ERROR,
+  WHITEBOARDS_LOAD_ERROR,
+} from "@personal/shared/loadErrors";
+import { useFolders } from "@/queries/folders";
 import { useLayoutStore } from "@/stores/layout";
 import { ShowModal } from "@/stores/modal";
-import { useWhiteboardsStore, type ItemKind } from "@/stores/whiteboards";
+import {
+  useCreateItem,
+  useDeleteWhiteboard,
+  useWhiteboards,
+  type ItemKind,
+} from "@/queries/whiteboards";
 import { useExpandedFolders } from "@/whiteboard/expandedFolders";
 import {
   childFolders,
@@ -72,25 +81,22 @@ export function NotatnikSidebar({
   activeId,
   detailOpen = activeId != null,
 }: NotatnikSidebarProps) {
-  const whiteboards = useWhiteboardsStore((s) => s.whiteboards);
-  const isLoading = useWhiteboardsStore((s) => s.isLoading);
-  const pageError = useWhiteboardsStore((s) => s.pageError);
-  const load = useWhiteboardsStore((s) => s.loadWhiteboards);
-  const createItem = useWhiteboardsStore((s) => s.createItem);
-  const folders = useFoldersStore((s) => s.folders);
-  const foldersLoading = useFoldersStore((s) => s.isLoading);
-  const foldersError = useFoldersStore((s) => s.pageError);
-  const loadFolders = useFoldersStore((s) => s.loadFolders);
+  const {
+    data: whiteboards = [],
+    isPending: isLoading,
+    isError,
+  } = useWhiteboards();
+  const createItem = useCreateItem();
+  const {
+    data: folders = [],
+    isPending: foldersLoading,
+    isError: isFoldersError,
+  } = useFolders();
   const isCollapsed = useLayoutStore((s) => s.isNotatnikSidebarCollapsed);
   const toggleCollapsed = useLayoutStore((s) => s.toggleNotatnikSidebar);
   const { isExpanded, toggle, expand } = useExpandedFolders();
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
-
-  useEffect(() => {
-    void load();
-    void loadFolders();
-  }, [load, loadFolders]);
 
   const activeFolderId =
     whiteboards.find((wb) => wb.id === activeId)?.folderId ?? null;
@@ -104,12 +110,16 @@ export function NotatnikSidebar({
   }, [activePath]);
 
   async function handleCreate(kind: ItemKind, folderId: number | null = null) {
-    const created = await createItem(kind, folderId);
-    if (created)
-      navigate({
-        to: "/whiteboard/$boardId",
-        params: { boardId: String(created.id) },
-      });
+    let created;
+    try {
+      created = await createItem.mutateAsync({ kind, folderId });
+    } catch {
+      return;
+    }
+    navigate({
+      to: "/whiteboard/$boardId",
+      params: { boardId: String(created.id) },
+    });
   }
 
   /** Leave the search and show `folder` in the tree, its ancestors expanded. */
@@ -144,8 +154,12 @@ export function NotatnikSidebar({
   let body: ReactNode;
   if (isLoading || foldersLoading) {
     body = <LoadingStatus>Wczytywanie tablic…</LoadingStatus>;
-  } else if (pageError || foldersError) {
-    body = <ErrorMessage>{pageError || foldersError}</ErrorMessage>;
+  } else if (isError || isFoldersError) {
+    body = (
+      <ErrorMessage>
+        {isError ? WHITEBOARDS_LOAD_ERROR : FOLDERS_LOAD_ERROR}
+      </ErrorMessage>
+    );
   } else if (searching) {
     body = (
       <SearchResults
@@ -512,12 +526,12 @@ function WhiteboardRow({
   lines = [],
   searchQuery,
 }: WhiteboardRowProps) {
-  const remove = useWhiteboardsStore((s) => s.deleteWhiteboard);
+  const remove = useDeleteWhiteboard();
   const navigate = useNavigate();
 
   async function handleDelete() {
     if (!window.confirm("Usunąć tablicę?")) return;
-    await remove(wb.id);
+    await remove.mutateAsync(wb.id);
     if (active) navigate({ to: "/whiteboard" });
   }
 

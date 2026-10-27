@@ -13,8 +13,8 @@ import {
 } from "@/design-system";
 import { ShowModal } from "@/stores/modal";
 import type { TaskResponse } from "@personal/shared/generated/api";
-import { useProjectsStore } from "@personal/shared/stores/projects";
-import { useTasksStore, type TaskInput } from "@personal/shared/stores/tasks";
+import { useProjects } from "@personal/shared/queries/projects";
+import { useSaveTask, type TaskInput } from "@personal/shared/queries/tasks";
 
 type TaskEditorModalProps = {
   /** Omit (or pass `null`) to create a new TaskResponse; pass a TaskResponse to edit it. */
@@ -29,8 +29,8 @@ export function TaskEditorModal({
   projectId,
   onClose,
 }: TaskEditorModalProps) {
-  const projects = useProjectsStore((state) => state.projects);
-  const saveTask = useTasksStore((state) => state.saveTask);
+  const { data: projects = [] } = useProjects();
+  const saveTask = useSaveTask();
 
   const initialProjectId = task?.projectId ?? projectId ?? 0;
 
@@ -95,7 +95,7 @@ export function TaskEditorModal({
     setFormError("");
 
     try {
-      await saveTask(input, task);
+      await saveTask.mutateAsync({ input, task });
       onClose();
     } catch (error) {
       setFormError(await apiErrorMessage(error));

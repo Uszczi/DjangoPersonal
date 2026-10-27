@@ -16,9 +16,8 @@ import {
   ListRowTitle,
 } from "@/design-system";
 import { useSortSensors } from "@/lib/useSortSensors";
-import { api } from "@personal/shared/api";
 import type { ProjectResponse } from "@personal/shared/generated/api";
-import { useProjectsStore } from "@personal/shared/stores/projects";
+import { useMoveProject } from "@personal/shared/queries/projects";
 
 type ProjectRowProps = {
   project: ProjectResponse;
@@ -96,13 +95,13 @@ export function ProjectList({
   projects: ProjectResponse[];
   onEdit: (project: ProjectResponse) => void;
 }) {
-  const loadProjects = useProjectsStore((state) => state.loadProjects);
+  const moveProject = useMoveProject();
   const sensors = useSortSensors();
 
   const sortableProjects = projects.filter((p) => !p.isInbox);
   const inboxProject = projects.find((p) => p.isInbox);
 
-  async function handleDragEnd(event: DragEndEvent) {
+  function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -113,15 +112,8 @@ export function ProjectList({
     const reordered = arrayMove(sortableProjects, oldIndex, newIndex);
     const targetIndex = reordered.findIndex((p) => p.id === active.id);
 
-    try {
-      await api.projectsPartialUpdate({
-        id: Number(active.id),
-        patchedProjectRequest: { position: targetIndex },
-      });
-    } catch {
-      // The reload below puts the Project back where the server has it.
-    }
-    await loadProjects();
+    // The list is reloaded either way, so a refused move snaps back.
+    moveProject.mutate({ id: Number(active.id), position: targetIndex });
   }
 
   return (

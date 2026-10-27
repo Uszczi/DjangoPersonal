@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Stack, router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Pressable,
   RefreshControl,
@@ -10,9 +10,15 @@ import {
   View,
 } from "react-native";
 
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import type { TaskResponse } from "@personal/shared/generated/api";
-import { useProjectsStore } from "@personal/shared/stores/projects";
-import { useTasksStore } from "@personal/shared/stores/tasks";
+import { TASKS_LOAD_ERROR } from "@personal/shared/loadErrors";
+import { useProjects } from "@personal/shared/queries/projects";
+import {
+  useProjectTasks,
+  useToggleTaskStatus,
+} from "@personal/shared/queries/tasks";
+import { useStartTimer } from "@personal/shared/queries/timer";
 
 import { Button } from "../../src/Button";
 import { Fab } from "../../src/Fab";
@@ -39,36 +45,43 @@ export default function ProjectTasksScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const projectId = Number(id);
 
-  const project = useProjectsStore((state) =>
-    state.projects.find((item) => item.id === projectId),
-  );
-  const taskList = useTasksStore((state) => state.taskList);
-  const loadError = useTasksStore((state) => state.loadError);
-  const actionError = useTasksStore((state) => state.actionError);
-  const loadTasks = useTasksStore((state) => state.loadTasks);
-  const toggleTaskStatus = useTasksStore((state) => state.toggleTaskStatus);
-  const startTaskTimer = useTasksStore((state) => state.startTaskTimer);
+  const { data: projects = [] } = useProjects();
+  const project = projects.find((item) => item.id === projectId) ?? null;
+  const tasksQuery = useProjectTasks(project);
+  const toggleTaskStatus = useToggleTaskStatus();
+  const startTaskTimer = useStartTimer();
+  const [actionError, setActionError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  useEffect(() => {
-    void loadTasks(projectId);
-  }, [loadTasks, projectId]);
 
   async function refresh() {
     setIsRefreshing(true);
-    await loadTasks(projectId);
+    await tasksQuery.refetch();
     setIsRefreshing(false);
   }
 
-  async function startTimer(task: TaskResponse) {
-    if (await startTaskTimer(task)) router.navigate("/time");
+  async function toggleTask(task: TaskResponse) {
+    setActionError("");
+    try {
+      await toggleTaskStatus.mutateAsync(task);
+    } catch (error) {
+      setActionError(await apiErrorMessage(error));
+    }
   }
 
-  // Ignore a list left over from another Project until this one loads.
-  const tasks = taskList?.projectId === projectId ? taskList.tasks : null;
+  async function startTimer(task: TaskResponse) {
+    setActionError("");
+    try {
+      await startTaskTimer.mutateAsync({ task: task.id });
+    } catch (error) {
+      setActionError(await apiErrorMessage(error));
+      return;
+    }
+    router.navigate("/time");
+  }
+
+  const tasks = tasksQuery.data ?? null;
   const terminalStatus = project?.terminalStatus;
-  const errorMessage =
-    loadError?.projectId === projectId ? loadError.message : actionError;
+  const errorMessage = tasksQuery.isError ? TASKS_LOAD_ERROR : actionError;
   const sections = sectionsByStatus(
     tasks ?? [],
     project?.projectStatuses ?? [],
@@ -84,7 +97,7 @@ export default function ProjectTasksScreen() {
         stickySectionHeadersEnabled={false}
         refreshControl={
           <RefreshControl
-            refreshing={isRefreshing || (tasks === null && !loadError)}
+            refreshing={isRefreshing || (tasks === null && !tasksQuery.isError)}
             onRefresh={() => void refresh()}
           />
         }
@@ -129,7 +142,10 @@ export default function ProjectTasksScreen() {
               accessibilityRole="button"
               accessibilityLabel={`Edytuj zadanie: ${item.title}`}
               onPress={() =>
-                router.push({ pathname: "/task", params: { taskId: item.id } })
+                router.push({
+                  pathname: "/task",
+                  params: { taskId: item.id, projectId },
+                })
               }
             >
               <Pressable
@@ -137,7 +153,7 @@ export default function ProjectTasksScreen() {
                 accessibilityState={{ checked: isDone }}
                 accessibilityLabel={`${isDone ? "Otwórz zadanie" : "Oznacz jako ukończone"}: ${item.title}`}
                 hitSlop={12}
-                onPress={() => void toggleTaskStatus(item)}
+                onPress={() => void toggleTask(item)}
                 style={[styles.checkbox, isDone && styles.checkboxChecked]}
               >
                 {isDone && <Text style={styles.checkmark}>✓</Text>}

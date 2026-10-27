@@ -6,8 +6,6 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { renderApp } from "../renderApp";
 
-const inbox = { id: 1, name: "Inbox", description: "", is_inbox: true };
-
 // API returns snake_case; the generated client maps it to camelCase.
 const catJedzenie = {
   id: 1,
@@ -31,13 +29,12 @@ function jsonResponse(data: unknown, status = 200) {
 }
 
 /**
- * The panel mounts only after the wallets finish loading: wallets, projects, categories.
+ * The panel mounts only after the wallets finish loading: wallets, then categories.
  * No wallets, so no wallet view joins in with its own transaction/category fetches.
  */
 function mockInitial(categories: unknown[]) {
   return {
     wallets: jsonResponse([]),
-    projects: jsonResponse([inbox]),
     categories: jsonResponse(categories),
   };
 }
@@ -59,7 +56,6 @@ describe("Categories", () => {
     const initial = mockInitial([catJedzenie, catTransport]);
     fetchMock
       .mockResolvedValueOnce(initial.wallets)
-      .mockResolvedValueOnce(initial.projects)
       .mockResolvedValueOnce(initial.categories);
 
     renderApp("/expenses");
@@ -85,7 +81,6 @@ describe("Categories", () => {
     const initial = mockInitial(seeded);
     fetchMock
       .mockResolvedValueOnce(initial.wallets)
-      .mockResolvedValueOnce(initial.projects)
       .mockResolvedValueOnce(initial.categories);
 
     renderApp("/expenses");
@@ -100,7 +95,6 @@ describe("Categories", () => {
     const initial = mockInitial([catJedzenie, catSystem]);
     fetchMock
       .mockResolvedValueOnce(initial.wallets)
-      .mockResolvedValueOnce(initial.projects)
       .mockResolvedValueOnce(initial.categories);
 
     renderApp("/expenses");
@@ -115,7 +109,6 @@ describe("Categories", () => {
     const initial = mockInitial([catJedzenie]);
     fetchMock
       .mockResolvedValueOnce(initial.wallets)
-      .mockResolvedValueOnce(initial.projects)
       .mockResolvedValueOnce(initial.categories)
       .mockResolvedValueOnce(
         jsonResponse({ id: 9, name: "Rachunki", icon: "tag" }, 201),
@@ -130,7 +123,7 @@ describe("Categories", () => {
 
     expect(await within(list).findByText("Rachunki")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenNthCalledWith(
-      4,
+      3,
       "/api/v1/categories/",
       expect.objectContaining({
         method: "POST",
@@ -143,7 +136,6 @@ describe("Categories", () => {
     const initial = mockInitial([catJedzenie]);
     fetchMock
       .mockResolvedValueOnce(initial.wallets)
-      .mockResolvedValueOnce(initial.projects)
       .mockResolvedValueOnce(initial.categories)
       .mockResolvedValueOnce(
         jsonResponse(
@@ -168,7 +160,6 @@ describe("Categories", () => {
     const initial = mockInitial([catJedzenie]);
     fetchMock
       .mockResolvedValueOnce(initial.wallets)
-      .mockResolvedValueOnce(initial.projects)
       .mockResolvedValueOnce(initial.categories)
       .mockResolvedValueOnce(
         jsonResponse({ id: 1, name: "Żywność", icon: "utensils" }),
@@ -190,7 +181,7 @@ describe("Categories", () => {
 
     expect(await within(list).findByText("Żywność")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenNthCalledWith(
-      4,
+      3,
       "/api/v1/categories/1/",
       expect.objectContaining({
         method: "PATCH",
@@ -203,9 +194,10 @@ describe("Categories", () => {
     const initial = mockInitial([catJedzenie]);
     fetchMock
       .mockResolvedValueOnce(initial.wallets)
-      .mockResolvedValueOnce(initial.projects)
       .mockResolvedValueOnce(initial.categories)
-      .mockResolvedValueOnce(jsonResponse(null, 204));
+      .mockResolvedValueOnce(jsonResponse(null, 204))
+      // Its transactions went with it, so the balances are read again.
+      .mockResolvedValueOnce(jsonResponse([]));
     const user = userEvent.setup();
 
     renderApp("/expenses");
@@ -225,7 +217,7 @@ describe("Categories", () => {
     expect(await screen.findByText("Brak kategorii.")).toBeInTheDocument();
     await waitFor(() =>
       expect(fetchMock).toHaveBeenNthCalledWith(
-        4,
+        3,
         "/api/v1/categories/1/",
         expect.objectContaining({ method: "DELETE" }),
       ),
@@ -236,7 +228,6 @@ describe("Categories", () => {
     const initial = mockInitial([catJedzenie]);
     fetchMock
       .mockResolvedValueOnce(initial.wallets)
-      .mockResolvedValueOnce(initial.projects)
       .mockResolvedValueOnce(initial.categories)
       .mockResolvedValueOnce(
         jsonResponse({ id: 9, name: "Kawa", icon: "coffee" }, 201),
@@ -272,7 +263,7 @@ describe("Categories", () => {
       await screen.findByRole("button", { name: "Ikona kategorii: Etykieta" }),
     ).toBeInTheDocument();
     expect(fetchMock).toHaveBeenNthCalledWith(
-      4,
+      3,
       "/api/v1/categories/",
       expect.objectContaining({
         method: "POST",
@@ -285,7 +276,6 @@ describe("Categories", () => {
     const initial = mockInitial([catJedzenie]);
     fetchMock
       .mockResolvedValueOnce(initial.wallets)
-      .mockResolvedValueOnce(initial.projects)
       .mockResolvedValueOnce(initial.categories);
     const user = userEvent.setup();
 
@@ -322,7 +312,6 @@ describe("Categories", () => {
     const initial = mockInitial([catJedzenie]);
     fetchMock
       .mockResolvedValueOnce(initial.wallets)
-      .mockResolvedValueOnce(initial.projects)
       .mockResolvedValueOnce(initial.categories);
     const user = userEvent.setup();
 
@@ -340,14 +329,13 @@ describe("Categories", () => {
     expect(
       screen.getByRole("button", { name: "Ikona kategorii: rocket" }),
     ).toHaveFocus();
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   test("user can change a category icon while editing", async () => {
     const initial = mockInitial([catJedzenie]);
     fetchMock
       .mockResolvedValueOnce(initial.wallets)
-      .mockResolvedValueOnce(initial.projects)
       .mockResolvedValueOnce(initial.categories)
       .mockResolvedValueOnce(jsonResponse({ ...catJedzenie, icon: "rocket" }));
     const user = userEvent.setup();
@@ -367,7 +355,7 @@ describe("Categories", () => {
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenNthCalledWith(
-        4,
+        3,
         "/api/v1/categories/1/",
         expect.objectContaining({
           method: "PATCH",
@@ -381,7 +369,6 @@ describe("Categories", () => {
     const initial = mockInitial([catJedzenie]);
     fetchMock
       .mockResolvedValueOnce(initial.wallets)
-      .mockResolvedValueOnce(initial.projects)
       .mockResolvedValueOnce(initial.categories);
     const user = userEvent.setup();
 

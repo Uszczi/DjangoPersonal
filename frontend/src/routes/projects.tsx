@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
 
 import {
   Button,
@@ -10,27 +9,21 @@ import {
 import { ProjectEditorModal } from "@/components/modals/ProjectEditorModal";
 import { ProjectList } from "@/components/projects/ProjectList";
 import { ShowModal } from "@/stores/modal";
-import { useProjectsStore } from "@personal/shared/stores/projects";
+import { PROJECTS_LOAD_ERROR } from "@personal/shared/loadErrors";
+import { useProjects } from "@personal/shared/queries/projects";
 
 export const Route = createFileRoute("/projects")({
   component: ProjectsPage,
 });
 
 function ProjectsPage() {
-  const projects = useProjectsStore((state) => state.projects);
-  const isLoading = useProjectsStore((state) => state.isLoading);
-  const pageError = useProjectsStore((state) => state.pageError);
-  const loadProjects = useProjectsStore((state) => state.loadProjects);
-
-  useEffect(() => {
-    void loadProjects();
-  }, [loadProjects]);
+  const { data: projects = [], isPending, isError } = useProjects();
 
   function openCreateForm() {
     ShowModal(ProjectEditorModal);
   }
 
-  if (isLoading) {
+  if (isPending) {
     return <LoadingStatus>Wczytywanie projektów…</LoadingStatus>;
   }
 
@@ -46,7 +39,7 @@ function ProjectsPage() {
         }
       />
 
-      {pageError && <ErrorMessage>{pageError}</ErrorMessage>}
+      {isError && <ErrorMessage>{PROJECTS_LOAD_ERROR}</ErrorMessage>}
 
       {projects.length === 0 ? (
         <p className="py-4 text-[13px] text-muted">Brak projektów.</p>
