@@ -43,7 +43,6 @@ export default function ProjectsScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 16, color: colors.text }}>
                   {item.name}
-                  {item.isInbox && <Text style={common.muted}>  · domyślny</Text>}
                 </Text>
                 {item.description !== "" && (
                   <Text style={common.muted} numberOfLines={1}>
