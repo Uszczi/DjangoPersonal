@@ -97,15 +97,18 @@ def test_only_the_cited_sources_are_returned_under_their_numbers(
     assert [source.number for source in answer.sources] == [2]
 
 
-def test_an_answer_without_citations_keeps_every_source(session: Session, user: User) -> None:
+def test_an_answer_without_citations_has_no_sources(session: Session, user: User) -> None:
+    """Bielik declines in its own words ("Nie znalazłem informacji na temat…") rather than with
+    the exact NOT_FOUND; the fragments it rejected must not show as grounds."""
     _note(session, user, CAR)
 
     answer = _ask(
         session, user, 'Opony i ubezpieczenie: kiedy wymiana, kiedy OC?',
-        FakeAnswerGenerator('Opony w listopadzie, OC do marca.'), min_score=0.0,
+        FakeAnswerGenerator('Nie znalazłem informacji na ten temat w podanych fragmentach.'),
+        min_score=0.0,
     )
 
-    assert [source.number for source in answer.sources] == [1, 2]
+    assert answer.sources == []
 
 
 def test_a_new_notatka_is_indexed_before_the_question(session: Session, user: User) -> None:

@@ -80,10 +80,8 @@ def _source(number: int, result: ScoredChunk) -> NoteSource:
 
 
 def _cited(answer: str, sources: list[NoteSource]) -> list[NoteSource]:
-    """The sources the answer cites; all of them when it cites none (a model that forgot to
-    cite still read them), and none when it found nothing."""
-    if answer == NOT_FOUND:
-        return []
+    """Only the sources the answer cites. An answer without citations gets none: models
+    often decline in their own words instead of :data:`NOT_FOUND`, and listing the
+    fragments they rejected would present them as the answer's grounds."""
     numbers = {int(number) for number in _CITATION.findall(answer)}
-    cited = [source for source in sources if source.number in numbers]
-    return cited or sources
+    return [source for source in sources if source.number in numbers]

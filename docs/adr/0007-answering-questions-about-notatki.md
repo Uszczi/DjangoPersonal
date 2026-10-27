@@ -6,7 +6,7 @@
 - **Guard 1, a score threshold**: Chunks below `NOTES_MIN_SCORE` (0.65) never reach the model. With none left, the answer is "Nie znalazłem tego w Notatkach." and the model is not called. 0.65 was measured with `embeddinggemma-2:270m` on the seeded Notatki. Questions they answer scored 0.68–0.82 on their best Chunk, and questions they do not answer scored 0.59–0.63. The exception is "Jak skonfigurować Kubernetes?", which scored 0.705 against the VPS Notatka. Hence:
 - **Guard 2, the prompt** (`core/notes_qa/prompt.py`): answer only from the fragments, cite them, and reply exactly "Nie znalazłem tego w Notatkach." when they do not hold the answer. The prompt lives in the core, not in the adapter, so the rules stay the same for every model.
 - **Fragments are data**: each Chunk goes inside `<fragment numer=… tytul=…>`, with `<`, `&` and `"` escaped so a Chunk cannot close its tag. The system prompt says that instructions inside fragments are not to be followed. This lowers the risk of prompt injection through pasted text. It does not remove it.
-- **Sources are the cited Chunks**: when the answer cites `[n]`, only those Chunks are returned, under the same numbers. When it cites none, all Chunks shown to the model are returned. When it found nothing, none are.
+- **Sources are the cited Chunks**: only the Chunks the answer cites as `[n]` are returned, under the same numbers. An answer without citations gets no sources. Bielik often declines in its own words ("Nie znalazłem informacji na temat konfiguracji Kubernetes w podanych fragmentach.") instead of the exact phrase, and listing the fragments it rejected would present them as the answer's grounds.
 
 Status: accepted
 
