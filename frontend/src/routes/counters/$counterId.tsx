@@ -15,7 +15,7 @@ export const Route = createFileRoute("/counters/$counterId")({
   component: CounterPage,
 });
 
-/** One counter: its total, quick +1, the entries to add, edit and delete, and a calendar of the days they fall on. */
+/** One counter: its total, quick +1, a calendar of the days its entries fall on, and the entries to add, edit and delete. */
 function CounterPage() {
   const { counterId } = Route.useParams();
   const id = Number(counterId);
@@ -118,11 +118,11 @@ function CounterPage() {
         )
       ) : (
         <>
+          <CounterCalendar entries={entries} />
           <CounterEntryList
             entries={entries}
             onEdit={(entry) => ShowModal(CounterEntryEditorModal, { counterId: id, entry })}
           />
-          <CounterCalendar entries={entries} />
         </>
       )}
     </section>
