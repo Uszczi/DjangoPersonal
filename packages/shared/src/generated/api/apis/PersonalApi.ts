@@ -15,6 +15,11 @@
 
 import * as runtime from '../runtime';
 import {
+    type AskNotesRequest,
+    AskNotesRequestFromJSON,
+    AskNotesRequestToJSON,
+} from '../models/AskNotesRequest';
+import {
     type AuthResponse,
     AuthResponseFromJSON,
     AuthResponseToJSON,
@@ -69,6 +74,11 @@ import {
     LoginResponseFromJSON,
     LoginResponseToJSON,
 } from '../models/LoginResponse';
+import {
+    type NotesAnswer,
+    NotesAnswerFromJSON,
+    NotesAnswerToJSON,
+} from '../models/NotesAnswer';
 import {
     type PatchedCategoryRequest,
     PatchedCategoryRequestFromJSON,
@@ -383,6 +393,13 @@ export interface FoldersPartialUpdateRequest {
      *
      */
     patchedFolderRequest: PatchedFolderRequest;
+}
+
+export interface NotesAskRequest {
+    /**
+     *
+     */
+    askNotesRequest: AskNotesRequest;
 }
 
 export interface ProjectsCreateRequest {
@@ -1972,6 +1989,63 @@ export class PersonalApi extends runtime.BaseAPI {
      */
     async foldersPartialUpdate(requestParameters: FoldersPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FolderResponse> {
         const response = await this.foldersPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for notesAsk without sending the request
+     */
+    async notesAskRequestOpts(requestParameters: NotesAskRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['askNotesRequest'] == null) {
+            throw new runtime.RequiredError(
+                'askNotesRequest',
+                'Required parameter "askNotesRequest" was null or undefined when calling notesAsk().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/notes/ask/`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: AskNotesRequestToJSON(requestParameters['askNotesRequest']),
+        };
+    }
+
+    /**
+     * Answer ``question`` from the user\'s Notatki, with the Chunks the answer cites (``sources``). Nothing relevant found: the answer says so and ``sources`` is empty. 503 when the embedding or answer model is unavailable or not configured.
+     * Ask Notes
+     */
+    async notesAskRaw(requestParameters: NotesAskRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<NotesAnswer>> {
+        const requestOptions = await this.notesAskRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => NotesAnswerFromJSON(jsonValue));
+    }
+
+    /**
+     * Answer ``question`` from the user\'s Notatki, with the Chunks the answer cites (``sources``). Nothing relevant found: the answer says so and ``sources`` is empty. 503 when the embedding or answer model is unavailable or not configured.
+     * Ask Notes
+     */
+    async notesAsk(requestParameters: NotesAskRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<NotesAnswer> {
+        const response = await this.notesAskRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

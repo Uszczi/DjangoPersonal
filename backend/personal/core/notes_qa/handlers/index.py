@@ -60,9 +60,12 @@ def _markdown(note: Whiteboard) -> str:
 
 def _titled(name: str, piece: SplitResult) -> SplitResult:
     """The heading path under the Notatka's name, which is also all the title text before the
-    first heading gets."""
-    heading = ' / '.join(part for part in (name, piece.heading_path) if part)
-    return SplitResult(heading_path=heading, text=piece.text)
+    first heading gets. A Notatka often opens with its name as a heading; that one is not
+    repeated."""
+    headings = piece.heading_path.split(' / ') if piece.heading_path else []
+    if headings and headings[0].strip().casefold() == name.strip().casefold():
+        headings = headings[1:]
+    return SplitResult(heading_path=' / '.join([name, *headings]), text=piece.text)
 
 
 def _hash(piece: SplitResult) -> str:

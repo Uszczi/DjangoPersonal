@@ -20,7 +20,8 @@ from personal.core.accounts.ports import (
     RateLimiter,
     TokenService,
 )
-from personal.core.notes_qa.ports import Embedder
+from personal.core.notes_qa.ports import AnswerGenerator, Embedder
+from personal.infra.llm import OpenAICompatibleGenerator, UnconfiguredGenerator
 from personal.infra.models import User
 from personal.infra.ollama import OllamaEmbedder
 from personal.infra.rate_limit import InMemoryRateLimiter, RedisRateLimiter
@@ -118,6 +119,20 @@ EMBEDDING_TIMEOUT_SECONDS = 60.0
 def embedder(settings: Settings) -> Embedder:
     client = httpx2.Client(base_url=settings.ollama_url, timeout=EMBEDDING_TIMEOUT_SECONDS)
     return OllamaEmbedder(client, model=settings.embedding_model)
+
+
+def answer_generator(settings: Settings) -> AnswerGenerator:
+    """The OpenAI-compatible API at ``LLM_BASE_URL``, once ``LLM_MODEL`` is set.
+
+    Built once per process, like :func:`embedder`.
+    """
+    if not settings.llm_model:
+        return UnconfiguredGenerator()
+    headers = {'Authorization': f'Bearer {settings.llm_api_key}'} if settings.llm_api_key else {}
+    client = httpx2.Client(
+        base_url=settings.llm_base_url, headers=headers, timeout=settings.llm_timeout_seconds
+    )
+    return OpenAICompatibleGenerator(client, model=settings.llm_model)
 
 
 def authenticate(access_token: str, *, tokens: TokenService, session: Session) -> User:

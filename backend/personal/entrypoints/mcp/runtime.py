@@ -10,6 +10,7 @@ import os
 
 from personal import wiring
 from personal.core.accounts.ports import PasswordHasher, RateLimiter, TokenService
+from personal.core.notes_qa.ports import AnswerGenerator, Embedder
 from personal.infra import tracing
 from personal.infra.db import Database
 from personal.settings import Settings
@@ -24,6 +25,9 @@ hasher: PasswordHasher = wiring.password_hasher()
 #: Counts failed logins (the ``/login`` page and the ``login_user`` tool);
 #: shared with the API through Redis when ``REDIS_URL`` is set.
 limiter: RateLimiter = wiring.rate_limiter(settings)
+#: The models behind ``ask_notes``; their HTTP clients pool connections across calls.
+embedder: Embedder = wiring.embedder(settings)
+answer_generator: AnswerGenerator = wiring.answer_generator(settings)
 
 
 def _optional_int(name: str) -> int | None:

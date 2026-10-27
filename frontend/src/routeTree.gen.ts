@@ -26,6 +26,7 @@ import { Route as ExpensesIndexRouteImport } from './routes/expenses/index'
 import { Route as ExpensesWalletIdRouteImport } from './routes/expenses/$walletId'
 import { Route as WhiteboardIndexRouteImport } from './routes/whiteboard/index'
 import { Route as WhiteboardBoardIdRouteImport } from './routes/whiteboard/$boardId'
+import { Route as WhiteboardAskRouteImport } from './routes/whiteboard/ask'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -112,6 +113,11 @@ const WhiteboardBoardIdRoute = WhiteboardBoardIdRouteImport.update({
   path: '/$boardId',
   getParentRoute: () => WhiteboardRoute,
 } as any)
+const WhiteboardAskRoute = WhiteboardAskRouteImport.update({
+  id: '/ask',
+  path: '/ask',
+  getParentRoute: () => WhiteboardRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -128,6 +134,7 @@ export interface FileRoutesByFullPath {
   '/counters/$counterId': typeof CountersCounterIdRoute
   '/expenses/$walletId': typeof ExpensesWalletIdRoute
   '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
+  '/whiteboard/ask': typeof WhiteboardAskRoute
   '/counters/': typeof CountersIndexRoute
   '/expenses/': typeof ExpensesIndexRoute
   '/whiteboard/': typeof WhiteboardIndexRoute
@@ -144,6 +151,7 @@ export interface FileRoutesByTo {
   '/counters/$counterId': typeof CountersCounterIdRoute
   '/expenses/$walletId': typeof ExpensesWalletIdRoute
   '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
+  '/whiteboard/ask': typeof WhiteboardAskRoute
   '/counters': typeof CountersIndexRoute
   '/expenses': typeof ExpensesIndexRoute
   '/whiteboard': typeof WhiteboardIndexRoute
@@ -164,6 +172,7 @@ export interface FileRoutesById {
   '/counters/$counterId': typeof CountersCounterIdRoute
   '/expenses/$walletId': typeof ExpensesWalletIdRoute
   '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
+  '/whiteboard/ask': typeof WhiteboardAskRoute
   '/counters/': typeof CountersIndexRoute
   '/expenses/': typeof ExpensesIndexRoute
   '/whiteboard/': typeof WhiteboardIndexRoute
@@ -185,6 +194,7 @@ export interface FileRouteTypes {
     | '/counters/$counterId'
     | '/expenses/$walletId'
     | '/whiteboard/$boardId'
+    | '/whiteboard/ask'
     | '/counters/'
     | '/expenses/'
     | '/whiteboard/'
@@ -201,6 +211,7 @@ export interface FileRouteTypes {
     | '/counters/$counterId'
     | '/expenses/$walletId'
     | '/whiteboard/$boardId'
+    | '/whiteboard/ask'
     | '/counters'
     | '/expenses'
     | '/whiteboard'
@@ -220,6 +231,7 @@ export interface FileRouteTypes {
     | '/counters/$counterId'
     | '/expenses/$walletId'
     | '/whiteboard/$boardId'
+    | '/whiteboard/ask'
     | '/counters/'
     | '/expenses/'
     | '/whiteboard/'
@@ -360,6 +372,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WhiteboardBoardIdRouteImport
       parentRoute: typeof WhiteboardRoute
     }
+    '/whiteboard/ask': {
+      id: '/whiteboard/ask'
+      path: '/ask'
+      fullPath: '/whiteboard/ask'
+      preLoaderRoute: typeof WhiteboardAskRouteImport
+      parentRoute: typeof WhiteboardRoute
+    }
   }
 }
 
@@ -393,11 +412,13 @@ const ExpensesRouteWithChildren = ExpensesRoute._addFileChildren(
 
 interface WhiteboardRouteChildren {
   WhiteboardBoardIdRoute: typeof WhiteboardBoardIdRoute
+  WhiteboardAskRoute: typeof WhiteboardAskRoute
   WhiteboardIndexRoute: typeof WhiteboardIndexRoute
 }
 
 const WhiteboardRouteChildren: WhiteboardRouteChildren = {
   WhiteboardBoardIdRoute: WhiteboardBoardIdRoute,
+  WhiteboardAskRoute: WhiteboardAskRoute,
   WhiteboardIndexRoute: WhiteboardIndexRoute,
 }
 
