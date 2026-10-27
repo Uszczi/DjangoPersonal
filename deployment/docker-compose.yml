@@ -124,7 +124,9 @@ services:
     command: ["redis-server", "--save", "60", "1", "--loglevel", "warning", "--appendonly", "yes"]
 
   db:
-    image: postgres:17
+    # postgres:17 plus the pgvector extension, on the same Debian (trixie) as
+    # postgres:17, so the glibc collations of an existing volume stay the same.
+    image: pgvector/pgvector:pg17-trixie
     container_name: djangopersonal-postgres
     restart: unless-stopped
     environment:

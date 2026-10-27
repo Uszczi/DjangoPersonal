@@ -31,6 +31,10 @@ A named space that holds one freeform drawing — freehand strokes, shapes, and 
 **Notatki** (Notes):
 A Whiteboard whose content is a Markdown document instead of a drawing. Shares the Whiteboard API and editor; only the payload differs.
 
+**Chunk**:
+A piece of a Notatka small enough to be compared with a question: the text under one heading (or a part of it, when the section is long), titled with the Notatka's name and the path of headings above it. Answers to questions about Notatki are drawn only from Chunks. A Notatka's Chunks are rebuilt from its current content before a question is answered.
+_Avoid_: Fragment, Segment, Passage
+
 **Folder**:
 A named group of Whiteboards, Notatki and other Folders (subfolders). Has a required name: trimmed, with no spaces and no "/", and unique among the Folders that share a parent (case matters, so "Praca" and "praca" are different names). Each Whiteboard, Notatka and Folder sits in at most one Folder; one without a Folder stays at the top level of the Notatnik. A Folder can't be moved into itself or one of its subfolders. Deleting a Folder cascades to its subfolders and every Whiteboard and Notatka in them.
 _Avoid_: Directory, Katalog, Group, Grupa, Tag
