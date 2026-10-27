@@ -1,6 +1,13 @@
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { balanceError } from "@personal/shared/money";
@@ -23,16 +30,24 @@ export default function WalletEditorScreen() {
   const params = useLocalSearchParams<{ walletId?: string }>();
   const walletId = params.walletId ? Number(params.walletId) : null;
   const wallet = useWalletsStore((state) =>
-    walletId === null ? null : (state.wallets.find((item) => item.id === walletId) ?? null),
+    walletId === null
+      ? null
+      : (state.wallets.find((item) => item.id === walletId) ?? null),
   );
   const createWallet = useWalletsStore((state) => state.createWallet);
   const updateWallet = useWalletsStore((state) => state.updateWallet);
-  const confirmWalletDelete = useWalletsStore((state) => state.confirmWalletDelete);
+  const confirmWalletDelete = useWalletsStore(
+    (state) => state.confirmWalletDelete,
+  );
 
   const [name, setName] = useState(wallet?.name ?? "");
-  const [color, setColor] = useState<string>(wallet?.color ?? DEFAULT_WALLET_COLOR);
+  const [color, setColor] = useState<string>(
+    wallet?.color ?? DEFAULT_WALLET_COLOR,
+  );
   const [icon, setIcon] = useState<string | null>(wallet?.icon ?? null);
-  const [balance, setBalance] = useState(wallet ? (wallet.balance ?? "0.00") : "");
+  const [balance, setBalance] = useState(
+    wallet ? (wallet.balance ?? "0.00") : "",
+  );
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -69,7 +84,12 @@ export default function WalletEditorScreen() {
           currentBalance: normalizedBalance,
         });
       } else {
-        await createWallet({ name: trimmedName, color, icon, initialBalance: normalizedBalance });
+        await createWallet({
+          name: trimmedName,
+          color,
+          icon,
+          initialBalance: normalizedBalance,
+        });
       }
       router.back();
     } catch (error) {
@@ -101,8 +121,13 @@ export default function WalletEditorScreen() {
       style={common.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Stack.Screen options={{ title: wallet ? "Edytuj portfel" : "Nowy portfel" }} />
-      <ScrollView contentContainerStyle={form.content} keyboardShouldPersistTaps="handled">
+      <Stack.Screen
+        options={{ title: wallet ? "Edytuj portfel" : "Nowy portfel" }}
+      />
+      <ScrollView
+        contentContainerStyle={form.content}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={form.label}>Nazwa portfela</Text>
         <TextInput
           style={form.input}
@@ -126,7 +151,9 @@ export default function WalletEditorScreen() {
           disabled={isSaving}
         />
 
-        <Text style={form.label}>{wallet ? "Stan aktualny" : "Stan początkowy"}</Text>
+        <Text style={form.label}>
+          {wallet ? "Stan aktualny" : "Stan początkowy"}
+        </Text>
         <TextInput
           style={form.input}
           value={balance}
@@ -136,7 +163,9 @@ export default function WalletEditorScreen() {
           editable={!isSaving}
         />
         {wallet && (
-          <Text style={form.hint}>Zmiana stanu zapisze transakcję „Korekta stanu”.</Text>
+          <Text style={form.hint}>
+            Zmiana stanu zapisze transakcję „Korekta stanu”.
+          </Text>
         )}
 
         {formError !== "" && <Text style={form.error}>{formError}</Text>}

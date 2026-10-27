@@ -15,14 +15,20 @@ const meta = {
     docs: { story: { inline: false, iframeHeight: 520 } },
   },
   args: {
-    title: <span className="text-[15px] font-bold tracking-[-0.03em]">Menu</span>,
+    title: (
+      <span className="text-[15px] font-bold tracking-[-0.03em]">Menu</span>
+    ),
     label: "Menu",
     onClose: fn(),
     children: (
       <>
         <nav className="flex flex-col gap-1" aria-label="Nawigacja">
           {["Start", "Zadania", "Projekty", "Czas"].map((item) => (
-            <a key={item} href="#" className="rounded-[5px] px-[14px] py-2 text-[13px] text-ink-soft no-underline hover:bg-wash">
+            <a
+              key={item}
+              href="#"
+              className="rounded-[5px] px-[14px] py-2 text-[13px] text-ink-soft no-underline hover:bg-wash"
+            >
               {item}
             </a>
           ))}

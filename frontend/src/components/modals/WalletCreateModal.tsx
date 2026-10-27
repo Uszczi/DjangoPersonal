@@ -1,7 +1,14 @@
 import { useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
-import { Button, ErrorAlert, Field, Modal, ModalFooter, TextInput } from "@/design-system";
+import {
+  Button,
+  ErrorAlert,
+  Field,
+  Modal,
+  ModalFooter,
+  TextInput,
+} from "@/design-system";
 import { WalletColorPicker } from "@/components/WalletColorPicker";
 import { WalletIconPicker } from "@/components/WalletIconPicker";
 import { balanceError } from "@personal/shared/money";
@@ -83,18 +90,10 @@ export function WalletCreateModal({ onClose }: WalletCreateModalProps) {
         </Field>
         {formError && <ErrorAlert>{formError}</ErrorAlert>}
         <ModalFooter>
-          <Button
-            variant="secondary"
-            onClick={close}
-            disabled={isSaving}
-          >
+          <Button variant="secondary" onClick={close} disabled={isSaving}>
             Anuluj
           </Button>
-          <Button
-            variant="primary"
-            type="submit"
-            disabled={isSaving}
-          >
+          <Button variant="primary" type="submit" disabled={isSaving}>
             {isSaving ? "Zapisywanie…" : "Utwórz portfel"}
           </Button>
         </ModalFooter>

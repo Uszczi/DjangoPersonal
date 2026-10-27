@@ -12,7 +12,10 @@ import {
 } from "react-native";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
-import { useProjectsStore, type ProjectInput } from "@personal/shared/stores/projects";
+import {
+  useProjectsStore,
+  type ProjectInput,
+} from "@personal/shared/stores/projects";
 
 import { Button } from "../src/Button";
 import { ChipGroup } from "../src/ChipGroup";
@@ -36,17 +39,23 @@ export default function ProjectEditorScreen() {
   const params = useLocalSearchParams<{ projectId?: string }>();
   const projectId = params.projectId ? Number(params.projectId) : null;
   const project = useProjectsStore((state) =>
-    projectId === null ? null : (state.projects.find((item) => item.id === projectId) ?? null),
+    projectId === null
+      ? null
+      : (state.projects.find((item) => item.id === projectId) ?? null),
   );
   const saveProject = useProjectsStore((state) => state.saveProject);
-  const confirmProjectDelete = useProjectsStore((state) => state.confirmProjectDelete);
+  const confirmProjectDelete = useProjectsStore(
+    (state) => state.confirmProjectDelete,
+  );
 
   const [name, setName] = useState(project?.name ?? "");
   const [description, setDescription] = useState(project?.description ?? "");
   const [statuses, setStatuses] = useState(() =>
     (project?.projectStatuses ?? ["Todo", "Zrobione"]).map(newStatus),
   );
-  const [terminalStatus, setTerminalStatus] = useState(project?.terminalStatus ?? "Zrobione");
+  const [terminalStatus, setTerminalStatus] = useState(
+    project?.terminalStatus ?? "Zrobione",
+  );
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -60,7 +69,9 @@ export default function ProjectEditorScreen() {
 
   function updateStatus(id: number, value: string) {
     setStatuses((current) =>
-      current.map((status) => (status.id === id ? { ...status, name: value } : status)),
+      current.map((status) =>
+        status.id === id ? { ...status, name: value } : status,
+      ),
     );
   }
 
@@ -98,7 +109,9 @@ export default function ProjectEditorScreen() {
       name: trimmedName,
       description: description.trim(),
       projectStatuses: names,
-      terminalStatus: names.includes(terminalStatus) ? terminalStatus : names[names.length - 1],
+      terminalStatus: names.includes(terminalStatus)
+        ? terminalStatus
+        : names[names.length - 1],
     };
 
     setIsSaving(true);
@@ -108,7 +121,10 @@ export default function ProjectEditorScreen() {
       if (project) {
         router.back();
       } else {
-        router.replace({ pathname: "/projects/[id]", params: { id: saved.id } });
+        router.replace({
+          pathname: "/projects/[id]",
+          params: { id: saved.id },
+        });
       }
     } catch (error) {
       setFormError(await apiErrorMessage(error));
@@ -136,15 +152,22 @@ export default function ProjectEditorScreen() {
     }
   }
 
-  const statusNames = statuses.map((status) => status.name.trim()).filter(Boolean);
+  const statusNames = statuses
+    .map((status) => status.name.trim())
+    .filter(Boolean);
 
   return (
     <KeyboardAvoidingView
       style={common.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Stack.Screen options={{ title: project ? "Edytuj projekt" : "Nowy projekt" }} />
-      <ScrollView contentContainerStyle={form.content} keyboardShouldPersistTaps="handled">
+      <Stack.Screen
+        options={{ title: project ? "Edytuj projekt" : "Nowy projekt" }}
+      />
+      <ScrollView
+        contentContainerStyle={form.content}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={form.label}>Nazwa projektu</Text>
         <TextInput
           style={[form.input, project?.isInbox && styles.readOnly]}
@@ -154,7 +177,9 @@ export default function ProjectEditorScreen() {
           autoFocus={!project}
           editable={!isSaving && !project?.isInbox}
         />
-        {project?.isInbox && <Text style={form.hint}>Nazwa Inbox jest stała.</Text>}
+        {project?.isInbox && (
+          <Text style={form.hint}>Nazwa Inbox jest stała.</Text>
+        )}
 
         <Text style={form.label}>Opis (opcjonalnie)</Text>
         <TextInput
@@ -200,7 +225,9 @@ export default function ProjectEditorScreen() {
             label="+ Dodaj status"
             variant="secondary"
             disabled={isSaving}
-            onPress={() => setStatuses((current) => [...current, newStatus("")])}
+            onPress={() =>
+              setStatuses((current) => [...current, newStatus("")])
+            }
           />
         </View>
 
@@ -208,7 +235,10 @@ export default function ProjectEditorScreen() {
           <>
             <Text style={form.label}>Status końcowy („zrobione”)</Text>
             <ChipGroup
-              options={statusNames.map((status) => ({ value: status, label: status }))}
+              options={statusNames.map((status) => ({
+                value: status,
+                label: status,
+              }))}
               value={
                 statusNames.includes(terminalStatus)
                   ? terminalStatus

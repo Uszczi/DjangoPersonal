@@ -42,16 +42,28 @@ export default function CategoriesScreen() {
             accessibilityRole="button"
             accessibilityLabel={`Edytuj kategorię: ${item.name}`}
             onPress={() =>
-              router.push({ pathname: "/category", params: { categoryId: item.id } })
+              router.push({
+                pathname: "/category",
+                params: { categoryId: item.id },
+              })
             }
           >
-            <NamedIcon name={item.icon} fallback={DEFAULT_CATEGORY_ICON} color={colors.text} />
-            <Text style={{ flex: 1, fontSize: 16, color: colors.text }}>{item.name}</Text>
+            <NamedIcon
+              name={item.icon}
+              fallback={DEFAULT_CATEGORY_ICON}
+              color={colors.text}
+            />
+            <Text style={{ flex: 1, fontSize: 16, color: colors.text }}>
+              {item.name}
+            </Text>
             <Text style={common.muted}>›</Text>
           </Pressable>
         )}
       />
-      <Fab accessibilityLabel="Nowa kategoria" onPress={() => router.push("/category")} />
+      <Fab
+        accessibilityLabel="Nowa kategoria"
+        onPress={() => router.push("/category")}
+      />
     </View>
   );
 }

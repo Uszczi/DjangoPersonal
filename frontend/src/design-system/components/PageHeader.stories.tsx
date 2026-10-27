@@ -39,6 +39,10 @@ export const ClickableTitle: Story = {
     subtitle: "12 wpisów",
     onTitleClick: () => {},
     titleClickLabel: "Zmień nazwę licznika: Kawa",
-    actions: <p className="font-display text-[44px] leading-none font-bold text-ink">12</p>,
+    actions: (
+      <p className="font-display text-[44px] leading-none font-bold text-ink">
+        12
+      </p>
+    ),
   },
 };

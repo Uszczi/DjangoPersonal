@@ -15,8 +15,14 @@ import type {
   TransactionPageResponse,
   TransactionResponse,
 } from "@personal/shared/generated/api";
-import { toTransactionRequest, type TransactionInput } from "@personal/shared/stores/transactions";
-import { compareNewestFirst, withPlaced } from "@personal/shared/transactionList";
+import {
+  toTransactionRequest,
+  type TransactionInput,
+} from "@personal/shared/stores/transactions";
+import {
+  compareNewestFirst,
+  withPlaced,
+} from "@personal/shared/transactionList";
 import { useWalletsStore } from "@personal/shared/stores/wallets";
 
 type Pages = InfiniteData<TransactionPageResponse, string | null>;
@@ -31,7 +37,10 @@ export function useWalletTransactions(walletId: number) {
   return useInfiniteQuery({
     queryKey: transactionKeys.wallet(walletId),
     queryFn: ({ pageParam, signal }) =>
-      api.transactionsList({ wallet: walletId, cursor: pageParam ?? undefined }, { signal }),
+      api.transactionsList(
+        { wallet: walletId, cursor: pageParam ?? undefined },
+        { signal },
+      ),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     select: (data) => data.pages.flatMap((page) => page.items),
@@ -107,13 +116,21 @@ export function useSaveTransaction() {
             id: transaction.id,
             patchedTransactionRequest: toTransactionRequest(input),
           })
-        : api.transactionsCreate({ transactionRequest: toTransactionRequest(input) }),
+        : api.transactionsCreate({
+            transactionRequest: toTransactionRequest(input),
+          }),
     onSuccess: (saved, { transaction }) => {
       if (transaction && transaction.walletId !== saved.walletId) {
-        updateWalletPages(queryClient, transaction.walletId, (data) => without(data, saved.id));
+        updateWalletPages(queryClient, transaction.walletId, (data) =>
+          without(data, saved.id),
+        );
       }
-      updateWalletPages(queryClient, saved.walletId, (data) => placed(data, saved));
-      void refreshWallets(transaction ? [transaction.walletId, saved.walletId] : [saved.walletId]);
+      updateWalletPages(queryClient, saved.walletId, (data) =>
+        placed(data, saved),
+      );
+      void refreshWallets(
+        transaction ? [transaction.walletId, saved.walletId] : [saved.walletId],
+      );
     },
   });
 }

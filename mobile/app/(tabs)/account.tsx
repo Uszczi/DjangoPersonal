@@ -43,7 +43,12 @@ export default function AccountScreen() {
       </View>
       <View style={[card.section, { gap: 12 }]}>
         <View style={{ flexDirection: "row" }}>
-          <Button label="Wyloguj" variant="secondary" disabled={isDeleting} onPress={logout} />
+          <Button
+            label="Wyloguj"
+            variant="secondary"
+            disabled={isDeleting}
+            onPress={logout}
+          />
         </View>
         <View style={{ flexDirection: "row" }}>
           <Button

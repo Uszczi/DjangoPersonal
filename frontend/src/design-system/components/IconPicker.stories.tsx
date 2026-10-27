@@ -17,7 +17,13 @@ const meta: Meta<typeof IconPicker> = {
   title: "Design System/IconPicker",
   component: IconPicker,
   tags: ["autodocs"],
-  decorators: [(Story) => <div className="min-h-[420px]"><Story /></div>],
+  decorators: [
+    (Story) => (
+      <div className="min-h-[420px]">
+        <Story />
+      </div>
+    ),
+  ],
 };
 
 export default meta;
@@ -25,7 +31,14 @@ type Story = StoryObj<typeof IconPicker>;
 
 function RequiredIcon({ initial }: { initial: string }) {
   const [value, setValue] = useState(initial);
-  return <IconPicker label="Ikona kategorii" value={value} onChange={setValue} suggestions={suggestions} />;
+  return (
+    <IconPicker
+      label="Ikona kategorii"
+      value={value}
+      onChange={setValue}
+      suggestions={suggestions}
+    />
+  );
 }
 
 function OptionalIcon() {
@@ -44,7 +57,9 @@ function OptionalIcon() {
 export const Default: Story = { render: () => <RequiredIcon initial="tag" /> };
 
 /** A chosen icon outside the suggestions still shows first when the search is empty. */
-export const ChosenOutsideSuggestions: Story = { render: () => <RequiredIcon initial="rocket" /> };
+export const ChosenOutsideSuggestions: Story = {
+  render: () => <RequiredIcon initial="rocket" />,
+};
 
 /** With `noneLabel` the icon is optional: "no icon" leads the list and `null` means none. */
 export const Optional: Story = { render: () => <OptionalIcon /> };

@@ -26,6 +26,13 @@ function WhiteboardEditorPage() {
       return <ErrorMessage>{state.message}</ErrorMessage>;
     case "loaded":
       // Keyed so a different board starts with fresh editor state and its own autosave.
-      return <BoardEditor key={boardId} boardId={boardId} item={state.item} searchQuery={q} />;
+      return (
+        <BoardEditor
+          key={boardId}
+          boardId={boardId}
+          item={state.item}
+          searchQuery={q}
+        />
+      );
   }
 }

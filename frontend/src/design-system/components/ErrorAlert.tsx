@@ -1,6 +1,9 @@
 import type { HTMLAttributes } from "react";
 
-export function ErrorAlert({ className = "", ...props }: HTMLAttributes<HTMLParagraphElement>) {
+export function ErrorAlert({
+  className = "",
+  ...props
+}: HTMLAttributes<HTMLParagraphElement>) {
   return (
     <p
       role="alert"

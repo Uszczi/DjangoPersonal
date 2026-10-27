@@ -36,16 +36,40 @@ export default function RootLayout() {
         <Stack.Protected guard={isSignedIn}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="projects/[id]" options={{ title: "Zadania" }} />
-          <Stack.Screen name="task" options={{ presentation: "modal", title: "Zadanie" }} />
+          <Stack.Screen
+            name="task"
+            options={{ presentation: "modal", title: "Zadanie" }}
+          />
           <Stack.Screen name="counters/[id]" options={{ title: "Licznik" }} />
-          <Stack.Screen name="counter" options={{ presentation: "modal", title: "Licznik" }} />
-          <Stack.Screen name="counter-entry" options={{ presentation: "modal", title: "Wpis" }} />
-          <Stack.Screen name="project" options={{ presentation: "modal", title: "Projekt" }} />
-          <Stack.Screen name="time-entry" options={{ presentation: "modal", title: "Wpis czasu" }} />
-          <Stack.Screen name="wallet" options={{ presentation: "modal", title: "Portfel" }} />
-          <Stack.Screen name="transaction" options={{ presentation: "modal", title: "Transakcja" }} />
+          <Stack.Screen
+            name="counter"
+            options={{ presentation: "modal", title: "Licznik" }}
+          />
+          <Stack.Screen
+            name="counter-entry"
+            options={{ presentation: "modal", title: "Wpis" }}
+          />
+          <Stack.Screen
+            name="project"
+            options={{ presentation: "modal", title: "Projekt" }}
+          />
+          <Stack.Screen
+            name="time-entry"
+            options={{ presentation: "modal", title: "Wpis czasu" }}
+          />
+          <Stack.Screen
+            name="wallet"
+            options={{ presentation: "modal", title: "Portfel" }}
+          />
+          <Stack.Screen
+            name="transaction"
+            options={{ presentation: "modal", title: "Transakcja" }}
+          />
           <Stack.Screen name="categories" options={{ title: "Kategorie" }} />
-          <Stack.Screen name="category" options={{ presentation: "modal", title: "Kategoria" }} />
+          <Stack.Screen
+            name="category"
+            options={{ presentation: "modal", title: "Kategoria" }}
+          />
         </Stack.Protected>
         <Stack.Protected guard={!isSignedIn}>
           <Stack.Screen name="login" options={{ headerShown: false }} />

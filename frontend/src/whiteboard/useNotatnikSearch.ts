@@ -28,7 +28,8 @@ export function useNotatnikSearch(query: string): NotatnikSearch {
     let current = true;
     const timer = setTimeout(() => {
       api.whiteboardsSearch({ q }).then(
-        (results) => current && setSearch({ q, state: { status: "done", results } }),
+        (results) =>
+          current && setSearch({ q, state: { status: "done", results } }),
         () => current && setSearch({ q, state: { status: "error" } }),
       );
     }, DEBOUNCE_MS);

@@ -92,7 +92,10 @@ export function IconPicker(props: IconPickerProps) {
         className="flex h-full min-h-[42px] items-center justify-center rounded border border-control-border bg-white px-[11px] text-ink transition-colors hover:bg-wash focus-visible:border-accent focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-accent/15"
       >
         {value === null ? (
-          <span aria-hidden="true" className="inline-block size-5 rounded border border-dashed border-control-border" />
+          <span
+            aria-hidden="true"
+            className="inline-block size-5 rounded border border-dashed border-control-border"
+          />
         ) : (
           <NamedIcon name={value} className="size-5" />
         )}
@@ -100,7 +103,11 @@ export function IconPicker(props: IconPickerProps) {
       {isOpen && (
         <Suspense
           fallback={
-            <p id={popupId} role="status" className="absolute left-0 top-full z-10 mt-1 m-0 rounded border border-line bg-white p-2 text-[12px] text-muted shadow-lg">
+            <p
+              id={popupId}
+              role="status"
+              className="absolute left-0 top-full z-10 mt-1 m-0 rounded border border-line bg-white p-2 text-[12px] text-muted shadow-lg"
+            >
               Wczytywanie ikon…
             </p>
           }

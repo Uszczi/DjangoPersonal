@@ -2,7 +2,10 @@ import { createFileRoute, useSearch } from "@tanstack/react-router";
 
 import { useEffect, useState } from "react";
 
-import { defaultProject, useProjectsStore } from "@personal/shared/stores/projects";
+import {
+  defaultProject,
+  useProjectsStore,
+} from "@personal/shared/stores/projects";
 import { useTimerStore } from "@personal/shared/stores/timer";
 import type { TimeEntryResponse } from "@personal/shared/generated/api";
 import { CurrentTimerPanel } from "@/components/timer/CurrentTimerPanel";
@@ -44,14 +47,18 @@ function TimerPage() {
     return () => clearInterval(interval);
   }, []);
 
-  if (isLoading) return <LoadingStatus>Wczytywanie danych czasu…</LoadingStatus>;
+  if (isLoading)
+    return <LoadingStatus>Wczytywanie danych czasu…</LoadingStatus>;
   if (pageError) return <ErrorMessage>{pageError}</ErrorMessage>;
 
-  const runningEntry = runningEntryRaw && runningEntryRaw.end == null ? runningEntryRaw : null;
+  const runningEntry =
+    runningEntryRaw && runningEntryRaw.end == null ? runningEntryRaw : null;
   const stoppedEntries = entries.filter((entry) => entry.end != null);
   const taskTitles = new Map(tasks.map((task) => [task.id, task.title]));
   const titleOf = (entry: TimeEntryResponse) => entryTitle(entry, taskTitles);
-  const defaultProjectId = String(project ?? defaultProject(projects)?.id ?? "");
+  const defaultProjectId = String(
+    project ?? defaultProject(projects)?.id ?? "",
+  );
 
   return (
     <>
@@ -64,7 +71,11 @@ function TimerPage() {
         tasks={tasks}
         defaultProjectId={defaultProjectId}
       />
-      <ManualEntryPanel projects={projects} tasks={tasks} defaultProjectId={defaultProjectId} />
+      <ManualEntryPanel
+        projects={projects}
+        tasks={tasks}
+        defaultProjectId={defaultProjectId}
+      />
       <RecentEntriesPanel
         entries={stoppedEntries}
         now={now}
@@ -72,7 +83,11 @@ function TimerPage() {
         onEdit={openEntryEditor}
         error={actionError}
       />
-      <TimeSummaryPanel entries={stoppedEntries} now={now} taskTitles={taskTitles} />
+      <TimeSummaryPanel
+        entries={stoppedEntries}
+        now={now}
+        taskTitles={taskTitles}
+      />
       {editingEntry && (
         <EntryEditorModal
           key={editingEntry.id}

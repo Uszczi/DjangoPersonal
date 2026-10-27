@@ -1,6 +1,13 @@
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { useCountersStore } from "@personal/shared/stores/counters";
@@ -13,7 +20,9 @@ export default function CounterEditorScreen() {
   const params = useLocalSearchParams<{ counterId?: string }>();
   const counterId = params.counterId ? Number(params.counterId) : null;
   const counter = useCountersStore((state) =>
-    counterId === null ? null : (state.counters.find((item) => item.id === counterId) ?? null),
+    counterId === null
+      ? null
+      : (state.counters.find((item) => item.id === counterId) ?? null),
   );
   const createCounter = useCountersStore((state) => state.createCounter);
   const renameCounter = useCountersStore((state) => state.renameCounter);
@@ -37,7 +46,10 @@ export default function CounterEditorScreen() {
       } else {
         // Like the web: a new Counter opens straight away.
         const created = await createCounter(trimmed);
-        router.replace({ pathname: "/counters/[id]", params: { id: created.id } });
+        router.replace({
+          pathname: "/counters/[id]",
+          params: { id: created.id },
+        });
       }
     } catch (error) {
       setFormError(await apiErrorMessage(error));
@@ -50,8 +62,13 @@ export default function CounterEditorScreen() {
       style={common.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Stack.Screen options={{ title: counter ? "Edytuj licznik" : "Nowy licznik" }} />
-      <ScrollView contentContainerStyle={form.content} keyboardShouldPersistTaps="handled">
+      <Stack.Screen
+        options={{ title: counter ? "Edytuj licznik" : "Nowy licznik" }}
+      />
+      <ScrollView
+        contentContainerStyle={form.content}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={form.label}>Nazwa licznika</Text>
         <TextInput
           style={form.input}

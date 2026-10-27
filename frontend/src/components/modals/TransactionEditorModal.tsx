@@ -2,7 +2,16 @@ import { useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { DeleteTransactionModal } from "@/components/modals/DeleteTransactionModal";
-import { Button, ErrorAlert, Field, Modal, ModalFooter, Select, TextArea, TextInput } from "@/design-system";
+import {
+  Button,
+  ErrorAlert,
+  Field,
+  Modal,
+  ModalFooter,
+  Select,
+  TextArea,
+  TextInput,
+} from "@/design-system";
 import { ShowModal } from "@/stores/modal";
 import type { TransactionResponse } from "@personal/shared/generated/api";
 import { DEFAULT_CATEGORY_ICON } from "@personal/shared/categoryIcons";
@@ -37,7 +46,8 @@ function dateKey(date: Date) {
 function validateAmount(raw: string): string {
   if (!raw) return "Podaj kwotę.";
   const value = Number(raw);
-  if (Number.isNaN(value) || value <= 0) return "Kwota musi być większa od zera.";
+  if (Number.isNaN(value) || value <= 0)
+    return "Kwota musi być większa od zera.";
   const fraction = raw.split(".")[1];
   if (fraction && fraction.length > 2)
     return "Kwota może mieć maksymalnie 2 miejsca dziesiętne.";
@@ -58,11 +68,14 @@ export function TransactionEditorModal({
     amount: transaction?.amount ?? "",
     date: transaction ? dateKey(transaction.date) : todayKey(),
     description: transaction?.description ?? "",
-    category: transaction?.categoryId != null ? String(transaction.categoryId) : "",
+    category:
+      transaction?.categoryId != null ? String(transaction.categoryId) : "",
     wallet: String(transaction?.walletId ?? walletId),
   });
   const [formError, setFormError] = useState("");
-  const selectedCategory = categories.find((item) => String(item.id) === form.category);
+  const selectedCategory = categories.find(
+    (item) => String(item.id) === form.category,
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(!transaction);
 
@@ -127,7 +140,10 @@ export function TransactionEditorModal({
               maxLength={200}
               value={form.title}
               onChange={(event) =>
-                setForm((current) => ({ ...current, title: event.target.value }))
+                setForm((current) => ({
+                  ...current,
+                  title: event.target.value,
+                }))
               }
               required
             />
@@ -138,7 +154,10 @@ export function TransactionEditorModal({
               autoComplete="off"
               value={form.amount}
               onChange={(event) =>
-                setForm((current) => ({ ...current, amount: event.target.value }))
+                setForm((current) => ({
+                  ...current,
+                  amount: event.target.value,
+                }))
               }
               required
             />
@@ -169,7 +188,10 @@ export function TransactionEditorModal({
             {/* A native select cannot draw icons in its options, so the chosen
                 category's icon sits beside it. */}
             <div className="flex items-center gap-[10px]">
-              <CategoryIcon icon={selectedCategory?.icon ?? DEFAULT_CATEGORY_ICON} className="size-5 text-ink-soft" />
+              <CategoryIcon
+                icon={selectedCategory?.icon ?? DEFAULT_CATEGORY_ICON}
+                className="size-5 text-ink-soft"
+              />
               <Select
                 className="flex-1"
                 value={form.category}
@@ -199,7 +221,10 @@ export function TransactionEditorModal({
             <Select
               value={form.wallet}
               onChange={(event) =>
-                setForm((current) => ({ ...current, wallet: event.target.value }))
+                setForm((current) => ({
+                  ...current,
+                  wallet: event.target.value,
+                }))
               }
             >
               {wallets.map((wallet) => (
@@ -226,18 +251,10 @@ export function TransactionEditorModal({
                 Usuń
               </Button>
             )}
-            <Button
-              variant="secondary"
-              onClick={close}
-              disabled={isSaving}
-            >
+            <Button variant="secondary" onClick={close} disabled={isSaving}>
               Anuluj
             </Button>
-            <Button
-              variant="primary"
-              type="submit"
-              disabled={isSaving}
-            >
+            <Button variant="primary" type="submit" disabled={isSaving}>
               {isSaving
                 ? "Zapisywanie…"
                 : transaction

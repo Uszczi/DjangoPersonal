@@ -1,7 +1,10 @@
 import { useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
-import type { ProjectResponse, TaskResponse } from "@personal/shared/generated/api";
+import type {
+  ProjectResponse,
+  TaskResponse,
+} from "@personal/shared/generated/api";
 import { useTimerStore } from "@personal/shared/stores/timer";
 import { todayKey } from "@personal/shared/timeFormat";
 import { Button, TextInput } from "@/design-system";
@@ -11,13 +14,22 @@ import { ProjectSelect } from "./ProjectSelect";
 import { TaskTitleInput } from "./TaskTitleInput";
 import { FormLabel, TimerPanel } from "./TimerPanel";
 
-export function ManualEntryPanel({ projects, tasks, defaultProjectId }: {
+export function ManualEntryPanel({
+  projects,
+  tasks,
+  defaultProjectId,
+}: {
   projects: ProjectResponse[];
   tasks: TaskResponse[];
   defaultProjectId: string;
 }) {
   const addManualEntry = useTimerStore((state) => state.addManualEntry);
-  const [form, setForm] = useState({ date: todayKey(), projectId: "", title: "", minutes: "" });
+  const [form, setForm] = useState({
+    date: todayKey(),
+    projectId: "",
+    title: "",
+    minutes: "",
+  });
   const [error, setError] = useState("");
 
   const projectId = form.projectId || defaultProjectId;
@@ -53,7 +65,9 @@ export function ManualEntryPanel({ projects, tasks, defaultProjectId }: {
           <TextInput
             type="date"
             value={form.date}
-            onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))}
+            onChange={(event) =>
+              setForm((current) => ({ ...current, date: event.target.value }))
+            }
             required
           />
         </FormLabel>
@@ -61,7 +75,9 @@ export function ManualEntryPanel({ projects, tasks, defaultProjectId }: {
           <ProjectSelect
             projects={projects}
             value={projectId}
-            onChange={(id) => setForm((current) => ({ ...current, projectId: id, title: "" }))}
+            onChange={(id) =>
+              setForm((current) => ({ ...current, projectId: id, title: "" }))
+            }
           />
         </FormLabel>
         <FormLabel text="Zadanie">
@@ -78,7 +94,10 @@ export function ManualEntryPanel({ projects, tasks, defaultProjectId }: {
             max={1440}
             value={form.minutes}
             onChange={(event) =>
-              setForm((current) => ({ ...current, minutes: event.target.value }))
+              setForm((current) => ({
+                ...current,
+                minutes: event.target.value,
+              }))
             }
             required
           />

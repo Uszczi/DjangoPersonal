@@ -1,10 +1,20 @@
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { useCategoriesStore } from "@personal/shared/stores/categories";
-import { useTransactionsStore, type TransactionInput } from "@personal/shared/stores/transactions";
+import {
+  useTransactionsStore,
+  type TransactionInput,
+} from "@personal/shared/stores/transactions";
 import { useWalletsStore } from "@personal/shared/stores/wallets";
 import { dateFromKey, dateKey, todayKey } from "@personal/shared/timeFormat";
 
@@ -20,9 +30,11 @@ const NO_CATEGORY = 0;
 function validateAmount(raw: string): string {
   if (!raw) return "Podaj kwotę.";
   const value = Number(raw);
-  if (Number.isNaN(value) || value <= 0) return "Kwota musi być większa od zera.";
+  if (Number.isNaN(value) || value <= 0)
+    return "Kwota musi być większa od zera.";
   const fraction = raw.split(".")[1];
-  if (fraction && fraction.length > 2) return "Kwota może mieć maksymalnie 2 miejsca dziesiętne.";
+  if (fraction && fraction.length > 2)
+    return "Kwota może mieć maksymalnie 2 miejsca dziesiętne.";
   return "";
 }
 
@@ -31,27 +43,48 @@ function validateAmount(raw: string): string {
  * the web TransactionEditorModal.
  */
 export default function TransactionEditorScreen() {
-  const params = useLocalSearchParams<{ walletId: string; transactionId?: string }>();
+  const params = useLocalSearchParams<{
+    walletId: string;
+    transactionId?: string;
+  }>();
   const walletId = Number(params.walletId);
-  const transactionId = params.transactionId ? Number(params.transactionId) : null;
+  const transactionId = params.transactionId
+    ? Number(params.transactionId)
+    : null;
 
-  const transactionList = useTransactionsStore((state) => state.transactionList);
-  const saveTransaction = useTransactionsStore((state) => state.saveTransaction);
-  const confirmTransactionDelete = useTransactionsStore((state) => state.confirmTransactionDelete);
+  const transactionList = useTransactionsStore(
+    (state) => state.transactionList,
+  );
+  const saveTransaction = useTransactionsStore(
+    (state) => state.saveTransaction,
+  );
+  const confirmTransactionDelete = useTransactionsStore(
+    (state) => state.confirmTransactionDelete,
+  );
   const wallets = useWalletsStore((state) => state.wallets);
   const refreshWallets = useWalletsStore((state) => state.refreshWallets);
   const categories = useCategoriesStore((state) => state.categories);
   const transaction =
     transactionId === null
       ? null
-      : (transactionList?.transactions.find((item) => item.id === transactionId) ?? null);
+      : (transactionList?.transactions.find(
+          (item) => item.id === transactionId,
+        ) ?? null);
 
   const [title, setTitle] = useState(transaction?.title ?? "");
   const [amount, setAmount] = useState(transaction?.amount ?? "");
-  const [date, setDate] = useState(transaction ? dateKey(transaction.date) : todayKey());
-  const [description, setDescription] = useState(transaction?.description ?? "");
-  const [category, setCategory] = useState<number>(transaction?.categoryId ?? NO_CATEGORY);
-  const [wallet, setWallet] = useState<number>(transaction?.walletId ?? walletId);
+  const [date, setDate] = useState(
+    transaction ? dateKey(transaction.date) : todayKey(),
+  );
+  const [description, setDescription] = useState(
+    transaction?.description ?? "",
+  );
+  const [category, setCategory] = useState<number>(
+    transaction?.categoryId ?? NO_CATEGORY,
+  );
+  const [wallet, setWallet] = useState<number>(
+    transaction?.walletId ?? walletId,
+  );
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -97,7 +130,9 @@ export default function TransactionEditorScreen() {
       await saveTransaction(input, transaction);
       // Balances are computed from the ledger: refresh the wallet the
       // transaction is in and, when it moved, the one it left.
-      void refreshWallets(transaction ? [transaction.walletId, input.wallet] : [input.wallet]);
+      void refreshWallets(
+        transaction ? [transaction.walletId, input.wallet] : [input.wallet],
+      );
       router.back();
     } catch (error) {
       setFormError(await apiErrorMessage(error));
@@ -129,8 +164,15 @@ export default function TransactionEditorScreen() {
       style={common.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Stack.Screen options={{ title: transaction ? "Edytuj transakcję" : "Nowa transakcja" }} />
-      <ScrollView contentContainerStyle={form.content} keyboardShouldPersistTaps="handled">
+      <Stack.Screen
+        options={{
+          title: transaction ? "Edytuj transakcję" : "Nowa transakcja",
+        }}
+      />
+      <ScrollView
+        contentContainerStyle={form.content}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={form.label}>Tytuł</Text>
         <TextInput
           style={form.input}
@@ -180,7 +222,10 @@ export default function TransactionEditorScreen() {
           <>
             <Text style={form.label}>Portfel</Text>
             <ChipGroup
-              options={wallets.map((item) => ({ value: item.id, label: item.name }))}
+              options={wallets.map((item) => ({
+                value: item.id,
+                label: item.name,
+              }))}
               value={wallet}
               onChange={setWallet}
               disabled={isSaving}

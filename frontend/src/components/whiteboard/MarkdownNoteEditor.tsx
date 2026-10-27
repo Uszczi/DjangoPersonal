@@ -45,7 +45,11 @@ export function MarkdownNoteEditor({
         value={mode}
         onChange={setMode}
       />
-      <div className={split ? "grid grid-cols-1 items-end gap-4 md:grid-cols-2" : undefined}>
+      <div
+        className={
+          split ? "grid grid-cols-1 items-end gap-4 md:grid-cols-2" : undefined
+        }
+      >
         <MarkdownSourceEditor
           value={value}
           onChange={onChange}

@@ -7,7 +7,12 @@ import { CounterEditorModal } from "@/components/modals/CounterEditorModal";
 import { CounterEntryEditorModal } from "@/components/modals/CounterEntryEditorModal";
 import { DeleteCounterModal } from "@/components/modals/DeleteCounterModal";
 import { entryCountLabel } from "@personal/shared/counterFormat";
-import { Button, ErrorMessage, LoadingStatus, PageHeader } from "@/design-system";
+import {
+  Button,
+  ErrorMessage,
+  LoadingStatus,
+  PageHeader,
+} from "@/design-system";
 import { useCountersStore } from "@personal/shared/stores/counters";
 import { ShowModal } from "@/stores/modal";
 
@@ -20,7 +25,9 @@ function CounterPage() {
   const { counterId } = Route.useParams();
   const id = Number(counterId);
   const navigate = useNavigate();
-  const counter = useCountersStore((state) => state.counters.find((item) => item.id === id));
+  const counter = useCountersStore((state) =>
+    state.counters.find((item) => item.id === id),
+  );
   const isLoading = useCountersStore((state) => state.isLoading);
   const pageError = useCountersStore((state) => state.pageError);
   const entryList = useCountersStore((state) => state.entryList);
@@ -39,21 +46,13 @@ function CounterPage() {
   }, [isMissing, navigate]);
 
   if (isLoading) {
-    return (
-      <LoadingStatus>
-        Wczytywanie licznika…
-      </LoadingStatus>
-    );
+    return <LoadingStatus>Wczytywanie licznika…</LoadingStatus>;
   }
   if (pageError) {
     return <ErrorMessage>{pageError}</ErrorMessage>;
   }
   if (!counter) {
-    return (
-      <LoadingStatus>
-        Przekierowywanie…
-      </LoadingStatus>
-    );
+    return <LoadingStatus>Przekierowywanie…</LoadingStatus>;
   }
 
   const entries = entryList?.counterId === id ? entryList.entries : null;
@@ -62,7 +61,10 @@ function CounterPage() {
     <section aria-label={`Licznik: ${counter.name}`}>
       <PageHeader
         eyebrow={
-          <Link to="/counters" className="text-muted no-underline hover:text-ink">
+          <Link
+            to="/counters"
+            className="text-muted no-underline hover:text-ink"
+          >
             ← LICZNIKI
           </Link>
         }
@@ -83,7 +85,9 @@ function CounterPage() {
       <div className="mb-6 flex flex-wrap gap-2">
         <Button
           variant="primary"
-          onClick={() => void saveEntry(id, { value: 1, occurredAt: new Date(), note: "" })}
+          onClick={() =>
+            void saveEntry(id, { value: 1, occurredAt: new Date(), note: "" })
+          }
         >
           +1
         </Button>
@@ -108,9 +112,7 @@ function CounterPage() {
         </Button>
       </div>
 
-      {entriesError && (
-        <ErrorMessage>{entriesError}</ErrorMessage>
-      )}
+      {entriesError && <ErrorMessage>{entriesError}</ErrorMessage>}
 
       {entries === null ? (
         !entriesError && (
@@ -121,7 +123,9 @@ function CounterPage() {
           <CounterCalendar entries={entries} />
           <CounterEntryList
             entries={entries}
-            onEdit={(entry) => ShowModal(CounterEntryEditorModal, { counterId: id, entry })}
+            onEdit={(entry) =>
+              ShowModal(CounterEntryEditorModal, { counterId: id, entry })
+            }
           />
         </>
       )}

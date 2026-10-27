@@ -37,7 +37,8 @@ export function DateTimeField({
   mode = "datetime",
   disabled = false,
 }: DateTimeFieldProps) {
-  const emit = (date: Date) => onChange(mode === "date" ? startOfDay(date) : date);
+  const emit = (date: Date) =>
+    onChange(mode === "date" ? startOfDay(date) : date);
 
   if (Platform.OS === "ios") {
     return (
@@ -48,7 +49,9 @@ export function DateTimeField({
           display="compact"
           locale="pl-PL"
           disabled={disabled}
-          onChange={(_event: DateTimePickerEvent, date?: Date) => date && emit(date)}
+          onChange={(_event: DateTimePickerEvent, date?: Date) =>
+            date && emit(date)
+          }
         />
       </View>
     );
@@ -79,7 +82,9 @@ export function DateTimeField({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityHint={mode === "date" ? "Zmienia datę" : "Zmienia datę i godzinę"}
+      accessibilityHint={
+        mode === "date" ? "Zmienia datę" : "Zmienia datę i godzinę"
+      }
       disabled={disabled}
       onPress={pickOnAndroid}
       style={form.input}

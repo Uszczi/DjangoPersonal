@@ -9,7 +9,15 @@ const LABELS: Record<Mode, string> = { rows: "Wiersze", tiles: "Kafelki" };
 
 function Demo() {
   const [value, setValue] = useState<Mode>("rows");
-  return <ToggleGroup label="Widok" options={MODES} labels={LABELS} value={value} onChange={setValue} />;
+  return (
+    <ToggleGroup
+      label="Widok"
+      options={MODES}
+      labels={LABELS}
+      value={value}
+      onChange={setValue}
+    />
+  );
 }
 
 const meta = {

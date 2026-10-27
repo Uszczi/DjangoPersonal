@@ -1,7 +1,14 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, RefreshControl, SectionList, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  RefreshControl,
+  SectionList,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import type { TaskResponse } from "@personal/shared/generated/api";
 import { useProjectsStore } from "@personal/shared/stores/projects";
@@ -14,11 +21,17 @@ import { colors, common } from "../../src/theme";
 type StatusSection = { title: string; data: TaskResponse[] };
 
 /** One section per status, in the Project's order, like the web task list. */
-function sectionsByStatus(tasks: TaskResponse[], statuses: string[]): StatusSection[] {
+function sectionsByStatus(
+  tasks: TaskResponse[],
+  statuses: string[],
+): StatusSection[] {
   const order = [...statuses, ...tasks.map((task) => task.status)];
   const titles = [...new Set(order)];
   return titles
-    .map((title) => ({ title, data: tasks.filter((task) => task.status === title) }))
+    .map((title) => ({
+      title,
+      data: tasks.filter((task) => task.status === title),
+    }))
     .filter((section) => section.data.length > 0);
 }
 
@@ -56,7 +69,10 @@ export default function ProjectTasksScreen() {
   const terminalStatus = project?.terminalStatus;
   const errorMessage =
     loadError?.projectId === projectId ? loadError.message : actionError;
-  const sections = sectionsByStatus(tasks ?? [], project?.projectStatuses ?? []);
+  const sections = sectionsByStatus(
+    tasks ?? [],
+    project?.projectStatuses ?? [],
+  );
 
   return (
     <View style={common.screen}>
@@ -88,12 +104,16 @@ export default function ProjectTasksScreen() {
                 />
               </View>
             )}
-            {errorMessage !== "" && <Text style={styles.error}>{errorMessage}</Text>}
+            {errorMessage !== "" && (
+              <Text style={styles.error}>{errorMessage}</Text>
+            )}
           </View>
         }
         ListEmptyComponent={
           tasks !== null ? (
-            <Text style={[common.muted, styles.empty]}>Brak zadań w tym projekcie.</Text>
+            <Text style={[common.muted, styles.empty]}>
+              Brak zadań w tym projekcie.
+            </Text>
           ) : undefined
         }
         renderSectionHeader={({ section }) => (
@@ -123,7 +143,9 @@ export default function ProjectTasksScreen() {
                 {isDone && <Text style={styles.checkmark}>✓</Text>}
               </Pressable>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.title, isDone && styles.titleDone]}>{item.title}</Text>
+                <Text style={[styles.title, isDone && styles.titleDone]}>
+                  {item.title}
+                </Text>
                 {item.description !== "" && (
                   <Text style={common.muted} numberOfLines={1}>
                     {item.description}
@@ -147,7 +169,9 @@ export default function ProjectTasksScreen() {
       />
       <Fab
         accessibilityLabel="Dodaj zadanie"
-        onPress={() => router.push({ pathname: "/task", params: { projectId } })}
+        onPress={() =>
+          router.push({ pathname: "/task", params: { projectId } })
+        }
       />
     </View>
   );
@@ -176,7 +200,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  checkboxChecked: { backgroundColor: colors.primary, borderColor: colors.primary },
+  checkboxChecked: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
   checkmark: { color: colors.onPrimary, fontSize: 14, fontWeight: "700" },
   title: { fontSize: 16, color: colors.text },
   titleDone: { color: colors.muted, textDecorationLine: "line-through" },

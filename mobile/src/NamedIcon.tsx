@@ -3,7 +3,10 @@ import type { ComponentType } from "react";
 
 type IconProps = { color?: string; size?: number; strokeWidth?: number };
 
-const iconsByName = icons as unknown as Record<string, ComponentType<IconProps> | undefined>;
+const iconsByName = icons as unknown as Record<
+  string,
+  ComponentType<IconProps> | undefined
+>;
 
 /** `piggy-bank` → `PiggyBank`, `gamepad-2` → `Gamepad2`: lucide's component names. */
 function componentName(name: string) {
@@ -21,7 +24,13 @@ type NamedIconProps = IconProps & {
 };
 
 /** A wallet or category icon by its stored lucide name, like the web `NamedIcon`. */
-export function NamedIcon({ name, fallback, size = 20, ...props }: NamedIconProps) {
-  const Icon = iconsByName[componentName(name)] ?? iconsByName[componentName(fallback)];
+export function NamedIcon({
+  name,
+  fallback,
+  size = 20,
+  ...props
+}: NamedIconProps) {
+  const Icon =
+    iconsByName[componentName(name)] ?? iconsByName[componentName(fallback)];
   return Icon ? <Icon size={size} {...props} /> : null;
 }

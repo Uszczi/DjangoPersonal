@@ -38,7 +38,10 @@ export default function ProjectsScreen() {
           />
         }
         renderItem={({ item }) => (
-          <Link href={{ pathname: "/projects/[id]", params: { id: item.id } }} asChild>
+          <Link
+            href={{ pathname: "/projects/[id]", params: { id: item.id } }}
+            asChild
+          >
             <Pressable style={common.row}>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 16, color: colors.text }}>
@@ -55,7 +58,10 @@ export default function ProjectsScreen() {
           </Link>
         )}
       />
-      <Fab accessibilityLabel="Nowy projekt" onPress={() => router.push("/project")} />
+      <Fab
+        accessibilityLabel="Nowy projekt"
+        onPress={() => router.push("/project")}
+      />
     </View>
   );
 }

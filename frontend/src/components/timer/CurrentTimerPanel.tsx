@@ -15,7 +15,14 @@ import { CountdownDial } from "./CountdownDial";
 import { StartTimerForm } from "./StartTimerForm";
 import { TimerPanel } from "./TimerPanel";
 
-export function CurrentTimerPanel({ runningEntry, runningTitle, now, projects, tasks, defaultProjectId }: {
+export function CurrentTimerPanel({
+  runningEntry,
+  runningTitle,
+  now,
+  projects,
+  tasks,
+  defaultProjectId,
+}: {
   runningEntry: TimeEntryResponse | null;
   runningTitle: string;
   /** Current time corrected by the server offset, in ms. */
@@ -41,12 +48,16 @@ export function CurrentTimerPanel({ runningEntry, runningTitle, now, projects, t
   // its limit (not stopped early elsewhere), tell the user.
   useEffect(() => {
     if (plannedEndMs == null || entryId == null) return;
-    const delay = Math.max(0, plannedEndMs - (Date.now() + serverOffset)) + 1000;
+    const delay =
+      Math.max(0, plannedEndMs - (Date.now() + serverOffset)) + 1000;
     const timeout = setTimeout(async () => {
       await refreshTimer();
       const state = useTimerStore.getState();
       const entry = state.entries.find((item) => item.id === entryId);
-      if (state.runningEntry?.id !== entryId && entry?.end?.getTime() === plannedEndMs) {
+      if (
+        state.runningEntry?.id !== entryId &&
+        entry?.end?.getTime() === plannedEndMs
+      ) {
         setFinishedTitle(runningTitle);
         notifyTimerFinished(runningTitle);
       }
@@ -63,7 +74,9 @@ export function CurrentTimerPanel({ runningEntry, runningTitle, now, projects, t
               <p className="font-utility text-[11px] font-semibold tracking-[0.08em] text-signal">
                 TIMER AKTYWNY
               </p>
-              <p className="mt-1 font-display text-[20px] font-bold text-ink">{runningTitle}</p>
+              <p className="mt-1 font-display text-[20px] font-bold text-ink">
+                {runningTitle}
+              </p>
               <p className="mt-2 font-utility text-[36px] font-bold tracking-tight text-ink">
                 {formatElapsed(remaining ?? now - runningEntry.start.getTime())}
               </p>

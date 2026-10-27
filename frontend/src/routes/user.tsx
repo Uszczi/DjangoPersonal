@@ -18,7 +18,11 @@ function UserPage() {
 
   return (
     <section aria-labelledby="user-heading">
-      <PageHeader eyebrow="KONTO" title={user?.username} titleId="user-heading" />
+      <PageHeader
+        eyebrow="KONTO"
+        title={user?.username}
+        titleId="user-heading"
+      />
       <div className="flex items-center gap-4">
         <Button variant="danger" onClick={openDeleteDialog}>
           Usuń konto

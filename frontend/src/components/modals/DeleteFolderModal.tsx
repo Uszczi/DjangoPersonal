@@ -30,7 +30,12 @@ function itemCountLabel(count: number) {
  * Deleting a Folder destroys what is in it, and there is no undo, so the question
  * says how many items will go.
  */
-export function DeleteFolderModal({ folder, itemCount, subfolderCount = 0, onClose }: DeleteFolderModalProps) {
+export function DeleteFolderModal({
+  folder,
+  itemCount,
+  subfolderCount = 0,
+  onClose,
+}: DeleteFolderModalProps) {
   const deleteFolder = useFoldersStore((state) => state.deleteFolder);
   const dropFolderItems = useWhiteboardsStore((state) => state.dropFolderItems);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -78,7 +83,11 @@ export function DeleteFolderModal({ folder, itemCount, subfolderCount = 0, onClo
         <Button variant="secondary" onClick={close} disabled={isDeleting}>
           Anuluj
         </Button>
-        <Button variant="danger" onClick={() => void handleDelete()} disabled={isDeleting}>
+        <Button
+          variant="danger"
+          onClick={() => void handleDelete()}
+          disabled={isDeleting}
+        >
           {isDeleting ? "Usuwanie…" : "Usuń folder"}
         </Button>
       </ModalFooter>

@@ -47,7 +47,9 @@ export function Modal({
     // Render the editable form now, so its first field exists to take focus from the pencil.
     flushSync(edit);
     sectionRef.current
-      ?.querySelector<HTMLElement>("input:not(:disabled), textarea:not(:disabled), select:not(:disabled)")
+      ?.querySelector<HTMLElement>(
+        "input:not(:disabled), textarea:not(:disabled), select:not(:disabled)",
+      )
       ?.focus();
   }
 
@@ -75,7 +77,11 @@ export function Modal({
           </div>
           <div className="flex shrink-0 gap-1">
             {onEdit && (
-              <IconButton onClick={() => startEditing(onEdit)} aria-label="Edytuj" title="Edytuj">
+              <IconButton
+                onClick={() => startEditing(onEdit)}
+                aria-label="Edytuj"
+                title="Edytuj"
+              >
                 <Pencil aria-hidden="true" className="size-[18px]" />
               </IconButton>
             )}
@@ -90,7 +96,10 @@ export function Modal({
   );
 }
 
-export function ModalFooter({ className = "", ...props }: HTMLAttributes<HTMLDivElement>) {
+export function ModalFooter({
+  className = "",
+  ...props
+}: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={`mt-[26px] flex justify-end gap-[9px] border-t border-line-soft pt-[18px] ${className}`.trim()}

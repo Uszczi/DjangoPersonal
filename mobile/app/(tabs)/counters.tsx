@@ -1,6 +1,13 @@
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
+import {
+  FlatList,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { entryCountLabel } from "@personal/shared/counterFormat";
@@ -67,14 +74,22 @@ export default function CountersScreen() {
             accessibilityRole="button"
             accessibilityLabel={`Otwórz licznik: ${item.name}`}
             onPress={() =>
-              router.push({ pathname: "/counters/[id]", params: { id: item.id } })
+              router.push({
+                pathname: "/counters/[id]",
+                params: { id: item.id },
+              })
             }
           >
             <View style={{ flex: 1 }}>
               <Text style={styles.name}>{item.name}</Text>
-              <Text style={common.muted}>{entryCountLabel(item.entryCount)}</Text>
+              <Text style={common.muted}>
+                {entryCountLabel(item.entryCount)}
+              </Text>
             </View>
-            <Text style={styles.total} accessibilityLabel={`Suma: ${item.total}`}>
+            <Text
+              style={styles.total}
+              accessibilityLabel={`Suma: ${item.total}`}
+            >
               {item.total}
             </Text>
             <Pressable
@@ -82,14 +97,20 @@ export default function CountersScreen() {
               accessibilityLabel={`Dodaj 1 do licznika: ${item.name}`}
               hitSlop={8}
               onPress={() => void addOne(item)}
-              style={({ pressed }) => [styles.plusOne, pressed && styles.pressed]}
+              style={({ pressed }) => [
+                styles.plusOne,
+                pressed && styles.pressed,
+              ]}
             >
               <Text style={styles.plusOneLabel}>+1</Text>
             </Pressable>
           </Pressable>
         )}
       />
-      <Fab accessibilityLabel="Nowy licznik" onPress={() => router.push("/counter")} />
+      <Fab
+        accessibilityLabel="Nowy licznik"
+        onPress={() => router.push("/counter")}
+      />
     </View>
   );
 }
@@ -98,7 +119,12 @@ const styles = StyleSheet.create({
   listContent: { paddingBottom: 96 },
   empty: { padding: 24, textAlign: "center" },
   name: { fontSize: 16, color: colors.text },
-  total: { fontSize: 20, fontWeight: "700", color: colors.text, fontVariant: ["tabular-nums"] },
+  total: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: colors.text,
+    fontVariant: ["tabular-nums"],
+  },
   plusOne: {
     borderWidth: 1,
     borderColor: colors.border,

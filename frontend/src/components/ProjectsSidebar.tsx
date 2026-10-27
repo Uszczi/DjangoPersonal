@@ -17,7 +17,11 @@ type ProjectNavListProps = {
 };
 
 /** The Projects as links to their Tasks; shared by the sidebar and the mobile drawer. */
-export function ProjectNavList({ selectedProjectId, tone, onNavigate }: ProjectNavListProps) {
+export function ProjectNavList({
+  selectedProjectId,
+  tone,
+  onNavigate,
+}: ProjectNavListProps) {
   const projects = useProjectsStore((state) => state.projects);
   const isLoading = useProjectsStore((state) => state.isLoading);
 
@@ -42,7 +46,10 @@ export function ProjectNavList({ selectedProjectId, tone, onNavigate }: ProjectN
             aria-label={item.name}
             onClick={onNavigate}
           >
-            <span className="inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center" aria-hidden="true">
+            <span
+              className="inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center"
+              aria-hidden="true"
+            >
               {item.isInbox ? (
                 <span className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full bg-signal text-[13px] text-white">
                   <InboxIcon />
@@ -51,7 +58,9 @@ export function ProjectNavList({ selectedProjectId, tone, onNavigate }: ProjectN
                 <span className={`h-2 w-2 rounded-full ${dotTone}`} />
               )}
             </span>
-            <span className="truncate text-[13px] font-medium">{item.name}</span>
+            <span className="truncate text-[13px] font-medium">
+              {item.name}
+            </span>
           </Link>
         ))
       )}
@@ -93,7 +102,10 @@ export function ProjectsSidebar({
   }
 
   return (
-    <aside className={`${panelClasses} flex w-[248px] flex-col gap-4 p-4`} aria-label="Nawigacja projektów">
+    <aside
+      className={`${panelClasses} flex w-[248px] flex-col gap-4 p-4`}
+      aria-label="Nawigacja projektów"
+    >
       <div className="flex items-center gap-1 pl-[10px]">
         <h2 className="mr-auto font-display text-[17px] font-bold tracking-[-0.02em] text-white">
           Projekty

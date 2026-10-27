@@ -12,10 +12,16 @@ type WalletColorPickerProps = {
 export function WalletColorPicker({ value, onChange }: WalletColorPickerProps) {
   return (
     <fieldset className="mb-[18px] grid gap-2 border-0 p-0">
-      <legend className="mb-2 p-0 text-[12px] font-semibold text-ink-soft">Kolor</legend>
+      <legend className="mb-2 p-0 text-[12px] font-semibold text-ink-soft">
+        Kolor
+      </legend>
       <div className="flex flex-wrap gap-2">
         {WALLET_COLORS.map((color) => (
-          <label key={color.value} className="cursor-pointer" title={color.label}>
+          <label
+            key={color.value}
+            className="cursor-pointer"
+            title={color.label}
+          >
             <input
               type="radio"
               name="wallet-color"

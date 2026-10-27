@@ -1,25 +1,41 @@
 import type { ReactNode } from "react";
 
 import type { TimeEntryResponse } from "@personal/shared/generated/api";
-import { dateKey, entryMinutes, formatDuration } from "@personal/shared/timeFormat";
+import {
+  dateKey,
+  entryMinutes,
+  formatDuration,
+} from "@personal/shared/timeFormat";
 
 import type { TaskTitles } from "./entries";
 import { TimerPanel } from "./TimerPanel";
 
-export function TimeSummaryPanel({ entries, now, taskTitles }: {
+export function TimeSummaryPanel({
+  entries,
+  now,
+  taskTitles,
+}: {
   /** Stopped Time entries. */
   entries: TimeEntryResponse[];
   now: number;
   taskTitles: TaskTitles;
 }) {
   const today = dateKey(new Date(now));
-  const todaysEntries = entries.filter((entry) => dateKey(entry.start) === today);
-  const todaysMinutes = todaysEntries.reduce((sum, entry) => sum + entryMinutes(entry), 0);
+  const todaysEntries = entries.filter(
+    (entry) => dateKey(entry.start) === today,
+  );
+  const todaysMinutes = todaysEntries.reduce(
+    (sum, entry) => sum + entryMinutes(entry),
+    0,
+  );
 
   const perTaskMinutes = new Map<number, number>();
   for (const entry of todaysEntries) {
     if (entry.taskId == null) continue;
-    perTaskMinutes.set(entry.taskId, (perTaskMinutes.get(entry.taskId) ?? 0) + entryMinutes(entry));
+    perTaskMinutes.set(
+      entry.taskId,
+      (perTaskMinutes.get(entry.taskId) ?? 0) + entryMinutes(entry),
+    );
   }
 
   const dayKeys = Array.from({ length: 7 }, (_, index) => {
@@ -31,7 +47,8 @@ export function TimeSummaryPanel({ entries, now, taskTitles }: {
   for (const entry of entries) {
     const key = dateKey(entry.start);
     const minutes = minutesByDay.get(key);
-    if (minutes !== undefined) minutesByDay.set(key, minutes + entryMinutes(entry));
+    if (minutes !== undefined)
+      minutesByDay.set(key, minutes + entryMinutes(entry));
   }
 
   return (
@@ -57,7 +74,11 @@ export function TimeSummaryPanel({ entries, now, taskTitles }: {
         </SummaryCard>
         <SummaryCard title="Ostatnie 7 dni">
           <MinutesList
-            rows={dayKeys.map((key) => ({ key, label: key, minutes: minutesByDay.get(key) ?? 0 }))}
+            rows={dayKeys.map((key) => ({
+              key,
+              label: key,
+              minutes: minutesByDay.get(key) ?? 0,
+            }))}
           />
         </SummaryCard>
       </div>
@@ -65,7 +86,13 @@ export function TimeSummaryPanel({ entries, now, taskTitles }: {
   );
 }
 
-function SummaryCard({ title, children }: { title: string; children: ReactNode }) {
+function SummaryCard({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
   return (
     <div className="rounded border border-[#dce4df] bg-surface p-4">
       <h3 className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">
@@ -76,13 +103,18 @@ function SummaryCard({ title, children }: { title: string; children: ReactNode }
   );
 }
 
-function MinutesList({ rows }: {
+function MinutesList({
+  rows,
+}: {
   rows: { key: string | number; label: string; minutes: number }[];
 }) {
   return (
     <ul className="mt-2 flex flex-col gap-1">
       {rows.map((row) => (
-        <li key={row.key} className="flex items-center justify-between text-[13px]">
+        <li
+          key={row.key}
+          className="flex items-center justify-between text-[13px]"
+        >
           <span className="truncate text-ink">{row.label}</span>
           <span className="ml-2 font-utility text-[11px] text-muted">
             {formatDuration(row.minutes)}

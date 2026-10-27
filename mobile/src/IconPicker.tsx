@@ -83,6 +83,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  cellSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  cellSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
   none: { fontSize: 18, color: colors.muted },
 });

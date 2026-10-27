@@ -11,7 +11,10 @@ type DeleteCounterEntryModalProps = {
   onClose: () => void;
 };
 
-export function DeleteCounterEntryModal({ entry, onClose }: DeleteCounterEntryModalProps) {
+export function DeleteCounterEntryModal({
+  entry,
+  onClose,
+}: DeleteCounterEntryModalProps) {
   const deleteEntry = useCountersStore((state) => state.deleteEntry);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -42,15 +45,19 @@ export function DeleteCounterEntryModal({ entry, onClose }: DeleteCounterEntryMo
       size="md"
     >
       <p className="m-0 mt-5 text-[13px] leading-relaxed text-ink-soft break-words">
-        Wpis {signedValue(entry.value)} z {formatEntryTime(entry.occurredAt)} zostanie
-        trwale usunięty.
+        Wpis {signedValue(entry.value)} z {formatEntryTime(entry.occurredAt)}{" "}
+        zostanie trwale usunięty.
       </p>
       {deleteError && <ErrorAlert>{deleteError}</ErrorAlert>}
       <ModalFooter>
         <Button variant="secondary" onClick={close} disabled={isDeleting}>
           Anuluj
         </Button>
-        <Button variant="danger" onClick={() => void handleDelete()} disabled={isDeleting}>
+        <Button
+          variant="danger"
+          onClick={() => void handleDelete()}
+          disabled={isDeleting}
+        >
           {isDeleting ? "Usuwanie…" : "Usuń wpis"}
         </Button>
       </ModalFooter>

@@ -13,7 +13,9 @@ function LoginPage() {
   const login = useAuthStore((state) => state.login);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const { error, isSubmitting, onSubmit } = useAuthSubmit(() => login(username.trim(), password));
+  const { error, isSubmitting, onSubmit } = useAuthSubmit(() =>
+    login(username.trim(), password),
+  );
 
   return (
     <AuthCard
@@ -24,7 +26,11 @@ function LoginPage() {
       submitLabel="Zaloguj się"
       submittingLabel="Logowanie…"
       onSubmit={(event) => void onSubmit(event)}
-      footer={{ text: "Nie masz konta?", to: "/register", label: "Załóż konto" }}
+      footer={{
+        text: "Nie masz konta?",
+        to: "/register",
+        label: "Załóż konto",
+      }}
     >
       <AuthField
         label="Nazwa użytkownika"

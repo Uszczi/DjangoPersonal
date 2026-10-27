@@ -9,7 +9,11 @@ type DragHandleProps = HTMLAttributes<HTMLSpanElement> & {
  * `listeners` onto it. `touch-none` keeps the browser from claiming a touch on
  * the handle for scrolling, which would cancel the drag on phones.
  */
-export function DragHandle({ className = "", title = "Przeciągnij", ...props }: DragHandleProps) {
+export function DragHandle({
+  className = "",
+  title = "Przeciągnij",
+  ...props
+}: DragHandleProps) {
   return (
     <span
       title={title}

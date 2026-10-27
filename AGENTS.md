@@ -66,6 +66,7 @@ just makemigrations "msg"  # Alembic revision from model changes
 just migrate          # alembic upgrade head
 just seed             # seed the dev DB with demo data (refuses if DB not empty)
 just typecheck        # mypy (strict) over backend/
+just format           # Prettier over frontend/ and mobile/ sources (format-check: verify only)
 just check            # full gate: mypy + pytest + npm test + lint + build (+ shared/mobile typecheck and lint)
 just generate-api     # regenerate backend/openapi.yaml + the TypeScript client (packages/shared)
 ```

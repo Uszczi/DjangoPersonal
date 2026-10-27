@@ -1,4 +1,9 @@
-import { createFileRoute, Outlet, useLocation, useParams } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Outlet,
+  useLocation,
+  useParams,
+} from "@tanstack/react-router";
 
 import { NotatnikSidebar } from "@/components/NotatnikSidebar";
 
@@ -10,7 +15,9 @@ export const Route = createFileRoute("/whiteboard")({
 function WhiteboardLayout() {
   const { boardId } = useParams({ strict: false });
   const activeId = boardId != null ? Number(boardId) : null;
-  const asking = useLocation({ select: (location) => location.pathname.startsWith("/whiteboard/ask") });
+  const asking = useLocation({
+    select: (location) => location.pathname.startsWith("/whiteboard/ask"),
+  });
   // On small screens the tree and the right side take turns: the tree until something is open.
   const detailOpen = activeId != null || asking;
   return (

@@ -5,12 +5,32 @@ import { entryCountLabel } from "@personal/shared/counterFormat";
 import type { CounterEntryResponse } from "@personal/shared/generated/api";
 
 const MONTHS = [
-  "styczeń", "luty", "marzec", "kwiecień", "maj", "czerwiec",
-  "lipiec", "sierpień", "wrzesień", "październik", "listopad", "grudzień",
+  "styczeń",
+  "luty",
+  "marzec",
+  "kwiecień",
+  "maj",
+  "czerwiec",
+  "lipiec",
+  "sierpień",
+  "wrzesień",
+  "październik",
+  "listopad",
+  "grudzień",
 ];
 const MONTHS_GENITIVE = [
-  "stycznia", "lutego", "marca", "kwietnia", "maja", "czerwca",
-  "lipca", "sierpnia", "września", "października", "listopada", "grudnia",
+  "stycznia",
+  "lutego",
+  "marca",
+  "kwietnia",
+  "maja",
+  "czerwca",
+  "lipca",
+  "sierpnia",
+  "września",
+  "października",
+  "listopada",
+  "grudnia",
 ];
 const WEEKDAYS = ["Pn", "Wt", "Śr", "Cz", "Pt", "So", "Nd"];
 
@@ -23,7 +43,11 @@ function dayKey(year: number, month: number, day: number) {
  * A month view of a Counter's entries: days with at least one entry are marked.
  * Days are local, so an entry late in the evening lands on the day the user saw it.
  */
-export function CounterCalendar({ entries }: { entries: CounterEntryResponse[] }) {
+export function CounterCalendar({
+  entries,
+}: {
+  entries: CounterEntryResponse[];
+}) {
   // Read the clock once, on mount: it picks the starting month and the day to ring.
   const [today] = useState(() => new Date());
   const [shown, setShown] = useState(() => ({
@@ -45,7 +69,11 @@ export function CounterCalendar({ entries }: { entries: CounterEntryResponse[] }
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   // Monday-first: getDay() is 0 for Sunday.
   const leadingBlanks = (new Date(year, month, 1).getDay() + 6) % 7;
-  const todayKey = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
+  const todayKey = dayKey(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+  );
 
   function shiftMonth(delta: number) {
     setShown(({ year, month }) => {
@@ -62,7 +90,10 @@ export function CounterCalendar({ entries }: { entries: CounterEntryResponse[] }
   return (
     <section aria-label="Kalendarz wpisów" className="mx-auto mb-8 max-w-sm">
       <div className="mb-2 flex items-center justify-between">
-        <IconButton aria-label="Poprzedni miesiąc" onClick={() => shiftMonth(-1)}>
+        <IconButton
+          aria-label="Poprzedni miesiąc"
+          onClick={() => shiftMonth(-1)}
+        >
           ‹
         </IconButton>
         <h2 className="text-[15px] font-semibold text-ink" aria-live="polite">
@@ -74,12 +105,17 @@ export function CounterCalendar({ entries }: { entries: CounterEntryResponse[] }
       </div>
       <div className="grid grid-cols-7 gap-1 text-center text-[13px]">
         {WEEKDAYS.map((weekday) => (
-          <div key={weekday} aria-hidden="true" className="py-1 text-[11px] font-semibold text-muted">
+          <div
+            key={weekday}
+            aria-hidden="true"
+            className="py-1 text-[11px] font-semibold text-muted"
+          >
             {weekday}
           </div>
         ))}
         {cells.map((day, index) => {
-          if (day === null) return <div key={`blank-${index}`} aria-hidden="true" />;
+          if (day === null)
+            return <div key={`blank-${index}`} aria-hidden="true" />;
           const key = dayKey(year, month, day);
           const count = countsByDay.get(key) ?? 0;
           const label = `${day} ${MONTHS_GENITIVE[month]}: ${count > 0 ? entryCountLabel(count) : "brak wpisów"}`;

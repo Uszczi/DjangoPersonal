@@ -51,11 +51,7 @@ export type NoteElement = {
 };
 
 export type BoardElement =
-  | StrokeElement
-  | ShapeElement
-  | ConnectorElement
-  | TextElement
-  | NoteElement;
+  StrokeElement | ShapeElement | ConnectorElement | TextElement | NoteElement;
 
 export type BoardDocument = {
   version: 1;
@@ -71,11 +67,17 @@ export function createEmptyBoard(): BoardDocument {
   };
 }
 
-export function getElement(doc: BoardDocument, id: string): BoardElement | undefined {
+export function getElement(
+  doc: BoardDocument,
+  id: string,
+): BoardElement | undefined {
   return doc.elements.find((element) => element.id === id);
 }
 
-export function addElement(doc: BoardDocument, element: BoardElement): BoardDocument {
+export function addElement(
+  doc: BoardDocument,
+  element: BoardElement,
+): BoardDocument {
   return {
     ...doc,
     elements: [...doc.elements, element],
@@ -116,10 +118,16 @@ export function moveElement(
     } as Partial<BoardElement>);
   }
   if (element.kind === "text" || element.kind === "note") {
-    return updateElement(doc, id, { x: element.x + dx, y: element.y + dy } as Partial<BoardElement>);
+    return updateElement(doc, id, {
+      x: element.x + dx,
+      y: element.y + dy,
+    } as Partial<BoardElement>);
   }
   if (element.kind === "rectangle" || element.kind === "ellipse") {
-    return updateElement(doc, id, { x: element.x + dx, y: element.y + dy } as Partial<BoardElement>);
+    return updateElement(doc, id, {
+      x: element.x + dx,
+      y: element.y + dy,
+    } as Partial<BoardElement>);
   }
   if (element.kind === "line" || element.kind === "arrow") {
     return updateElement(doc, id, {
@@ -180,7 +188,12 @@ export function elementBounds(el: BoardElement): Bounds {
       };
     }
     case "text":
-      return { x: el.x, y: el.y, width: TEXT_LABEL_BOUNDS.width, height: TEXT_LABEL_BOUNDS.height };
+      return {
+        x: el.x,
+        y: el.y,
+        width: TEXT_LABEL_BOUNDS.width,
+        height: TEXT_LABEL_BOUNDS.height,
+      };
     case "note":
     case "rectangle":
     case "ellipse":
@@ -203,7 +216,10 @@ export function elementsInRect(doc: BoardDocument, rect: Bounds): string[] {
     .map((el) => el.id);
 }
 
-export function setViewport(doc: BoardDocument, viewport: Viewport): BoardDocument {
+export function setViewport(
+  doc: BoardDocument,
+  viewport: Viewport,
+): BoardDocument {
   return { ...doc, viewport };
 }
 
@@ -234,11 +250,16 @@ export type HistoryState = {
   future: BoardDocument[];
 };
 
-export function createHistory(initial: BoardDocument = createEmptyBoard()): HistoryState {
+export function createHistory(
+  initial: BoardDocument = createEmptyBoard(),
+): HistoryState {
   return { past: [], present: initial, future: [] };
 }
 
-export function commit(history: HistoryState, next: BoardDocument): HistoryState {
+export function commit(
+  history: HistoryState,
+  next: BoardDocument,
+): HistoryState {
   if (next === history.present) return history;
   return {
     past: [...history.past, history.present],

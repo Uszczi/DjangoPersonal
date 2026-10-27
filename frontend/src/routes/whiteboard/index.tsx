@@ -15,14 +15,22 @@ export const Route = createFileRoute("/whiteboard/")({
  * actions live in the sidebar (`NotatnikSidebar`), so this only greets.
  */
 function WhiteboardsPage() {
-  const isEmpty = useWhiteboardsStore((s) => !s.isLoading && !s.pageError && s.whiteboards.length === 0);
-  const noFolders = useFoldersStore((s) => !s.isLoading && !s.pageError && s.folders.length === 0);
+  const isEmpty = useWhiteboardsStore(
+    (s) => !s.isLoading && !s.pageError && s.whiteboards.length === 0,
+  );
+  const noFolders = useFoldersStore(
+    (s) => !s.isLoading && !s.pageError && s.folders.length === 0,
+  );
   const createItem = useWhiteboardsStore((s) => s.createItem);
   const navigate = useNavigate();
 
   async function handleCreate(kind: ItemKind) {
     const created = await createItem(kind);
-    if (created) navigate({ to: "/whiteboard/$boardId", params: { boardId: String(created.id) } });
+    if (created)
+      navigate({
+        to: "/whiteboard/$boardId",
+        params: { boardId: String(created.id) },
+      });
   }
 
   return (
@@ -30,21 +38,32 @@ function WhiteboardsPage() {
       <PageHeader title="Notatnik" />
       {isEmpty && noFolders ? (
         <EmptyState eyebrow="BRAK NOTATEK" title="Utwórz pierwszą notatkę">
-          <Button variant="primary" onClick={() => void handleCreate("markdown")}>
+          <Button
+            variant="primary"
+            onClick={() => void handleCreate("markdown")}
+          >
             <span aria-hidden="true">+</span>
             Nowa notatka
           </Button>
-          <Button variant="secondary" onClick={() => void handleCreate("whiteboard")}>
+          <Button
+            variant="secondary"
+            onClick={() => void handleCreate("whiteboard")}
+          >
             <span aria-hidden="true">+</span>
             Nowa tablica
           </Button>
-          <Button variant="secondary" onClick={() => ShowModal(FolderEditorModal)}>
+          <Button
+            variant="secondary"
+            onClick={() => ShowModal(FolderEditorModal)}
+          >
             <span aria-hidden="true">+</span>
             Nowy folder
           </Button>
         </EmptyState>
       ) : (
-        <p className="pt-[40px] text-[14px] text-muted">Wybierz notatkę lub tablicę z drzewa po lewej albo utwórz nową.</p>
+        <p className="pt-[40px] text-[14px] text-muted">
+          Wybierz notatkę lub tablicę z drzewa po lewej albo utwórz nową.
+        </p>
       )}
     </>
   );

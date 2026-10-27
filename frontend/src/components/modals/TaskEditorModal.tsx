@@ -2,7 +2,15 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { DeleteTaskModal } from "@/components/modals/DeleteTaskModal";
-import { Button, ErrorAlert, Field, Modal, ModalFooter, Select, TextArea } from "@/design-system";
+import {
+  Button,
+  ErrorAlert,
+  Field,
+  Modal,
+  ModalFooter,
+  Select,
+  TextArea,
+} from "@/design-system";
 import { ShowModal } from "@/stores/modal";
 import type { TaskResponse } from "@personal/shared/generated/api";
 import { useProjectsStore } from "@personal/shared/stores/projects";
@@ -100,11 +108,7 @@ export function TaskEditorModal({
     <Modal
       kicker={task ? "ZMIANA SZCZEGÓŁÓW" : "NOWE ZADANIE"}
       title={
-        task ? (
-          "Edytuj zadanie"
-        ) : (
-          <>Dodaj do {targetProject?.name ?? "Inbox"}</>
-        )
+        task ? "Edytuj zadanie" : <>Dodaj do {targetProject?.name ?? "Inbox"}</>
       }
       titleId={titleId}
       onClose={close}
@@ -201,18 +205,10 @@ export function TaskEditorModal({
                 Usuń
               </Button>
             )}
-            <Button
-              variant="secondary"
-              onClick={close}
-              disabled={isSaving}
-            >
+            <Button variant="secondary" onClick={close} disabled={isSaving}>
               Anuluj
             </Button>
-            <Button
-              variant="primary"
-              type="submit"
-              disabled={isSaving}
-            >
+            <Button variant="primary" type="submit" disabled={isSaving}>
               {isSaving
                 ? "Zapisywanie…"
                 : task

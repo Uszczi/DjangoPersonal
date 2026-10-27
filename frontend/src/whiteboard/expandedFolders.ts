@@ -4,8 +4,12 @@ const STORAGE_KEY = "notatnik.expandedFolders";
 
 function readExpanded(): number[] {
   try {
-    const parsed: unknown = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? "[]");
-    return Array.isArray(parsed) ? parsed.filter((id): id is number => typeof id === "number") : [];
+    const parsed: unknown = JSON.parse(
+      window.localStorage.getItem(STORAGE_KEY) ?? "[]",
+    );
+    return Array.isArray(parsed)
+      ? parsed.filter((id): id is number => typeof id === "number")
+      : [];
   } catch {
     return [];
   }
@@ -39,11 +43,18 @@ export function useExpandedFolders() {
   /** Expand every Folder in `folderIds`, leaving the others as they are. */
   function expand(folderIds: number[]) {
     setExpanded((current) => {
-      const next = [...current, ...folderIds.filter((id) => !current.includes(id))];
+      const next = [
+        ...current,
+        ...folderIds.filter((id) => !current.includes(id)),
+      ];
       writeExpanded(next);
       return next;
     });
   }
 
-  return { isExpanded: (folderId: number) => expanded.includes(folderId), toggle, expand };
+  return {
+    isExpanded: (folderId: number) => expanded.includes(folderId),
+    toggle,
+    expand,
+  };
 }

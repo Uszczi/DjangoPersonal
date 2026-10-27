@@ -1,5 +1,8 @@
 import { useDroppable } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import type { ReactNode } from "react";
 
 import type { TaskResponse } from "@personal/shared/generated/api";
@@ -83,7 +86,9 @@ export function TaskStatusSection({
                   <SortableTaskRow
                     key={task.id}
                     task={task}
-                    isCompleted={terminalStatus != null && task.status === terminalStatus}
+                    isCompleted={
+                      terminalStatus != null && task.status === terminalStatus
+                    }
                     onToggleStatus={() => onToggleTaskStatus(task)}
                     onStartTimer={() => onStartTimer(task)}
                     onEdit={() => onEditTask(task)}
@@ -91,7 +96,9 @@ export function TaskStatusSection({
                 ))}
               </SortableContext>
               {tasks.length === 0 && (
-                <li className="py-4 text-center text-[13px] text-muted">Brak w tym statusie.</li>
+                <li className="py-4 text-center text-[13px] text-muted">
+                  Brak w tym statusie.
+                </li>
               )}
             </ul>
           </DroppableContainer>

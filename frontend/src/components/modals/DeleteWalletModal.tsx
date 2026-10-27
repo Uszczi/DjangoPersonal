@@ -11,10 +11,7 @@ type DeleteWalletModalProps = {
   onClose: () => void;
 };
 
-export function DeleteWalletModal({
-  wallet,
-  onClose,
-}: DeleteWalletModalProps) {
+export function DeleteWalletModal({ wallet, onClose }: DeleteWalletModalProps) {
   const navigate = useNavigate();
   const confirmWalletDelete = useWalletsStore(
     (state) => state.confirmWalletDelete,
@@ -52,16 +49,12 @@ export function DeleteWalletModal({
       size="md"
     >
       <p className="m-0 mt-5 text-[13px] leading-relaxed text-[#40595c] break-words">
-        Portfel „{wallet.name}" zostanie trwale usunięty wraz ze wszystkimi
-        jego transakcjami.
+        Portfel „{wallet.name}" zostanie trwale usunięty wraz ze wszystkimi jego
+        transakcjami.
       </p>
       {deleteError && <ErrorAlert>{deleteError}</ErrorAlert>}
       <ModalFooter>
-        <Button
-          variant="secondary"
-          onClick={close}
-          disabled={isDeleting}
-        >
+        <Button variant="secondary" onClick={close} disabled={isDeleting}>
           Anuluj
         </Button>
         <Button

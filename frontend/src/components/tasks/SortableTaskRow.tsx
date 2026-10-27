@@ -62,10 +62,17 @@ export function SortableTaskRow({
         >
           {isCompleted ? "✓" : ""}
         </button>
-        <ListRowButton aria-label={`Edytuj zadanie: ${task.title}`} onClick={onEdit}>
+        <ListRowButton
+          aria-label={`Edytuj zadanie: ${task.title}`}
+          onClick={onEdit}
+        >
           <div className="min-w-0">
-            <ListRowTitle className={isCompleted ? "line-through" : ""}>{task.title}</ListRowTitle>
-            {task.description && <ListRowSubtitle>{task.description}</ListRowSubtitle>}
+            <ListRowTitle className={isCompleted ? "line-through" : ""}>
+              {task.title}
+            </ListRowTitle>
+            {task.description && (
+              <ListRowSubtitle>{task.description}</ListRowSubtitle>
+            )}
           </div>
         </ListRowButton>
       </>

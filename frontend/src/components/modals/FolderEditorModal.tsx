@@ -1,7 +1,14 @@
 import { useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
-import { Button, ErrorAlert, Field, Modal, ModalFooter, TextInput } from "@/design-system";
+import {
+  Button,
+  ErrorAlert,
+  Field,
+  Modal,
+  ModalFooter,
+  TextInput,
+} from "@/design-system";
 import type { FolderResponse } from "@personal/shared/generated/api";
 import { useFoldersStore } from "@/stores/folders";
 
@@ -13,7 +20,11 @@ type FolderEditorModalProps = {
   onClose: () => void;
 };
 
-export function FolderEditorModal({ folder = null, parent = null, onClose }: FolderEditorModalProps) {
+export function FolderEditorModal({
+  folder = null,
+  parent = null,
+  onClose,
+}: FolderEditorModalProps) {
   const createFolder = useFoldersStore((state) => state.createFolder);
   const renameFolder = useFoldersStore((state) => state.renameFolder);
 
@@ -52,8 +63,16 @@ export function FolderEditorModal({ folder = null, parent = null, onClose }: Fol
 
   return (
     <Modal
-      kicker={folder ? "ZMIANA NAZWY" : parent ? "NOWY PODFOLDER" : "NOWY FOLDER"}
-      title={folder ? "Zmień nazwę folderu" : parent ? `Nowy folder w „${parent.name}”` : "Nowy folder"}
+      kicker={
+        folder ? "ZMIANA NAZWY" : parent ? "NOWY PODFOLDER" : "NOWY FOLDER"
+      }
+      title={
+        folder
+          ? "Zmień nazwę folderu"
+          : parent
+            ? `Nowy folder w „${parent.name}”`
+            : "Nowy folder"
+      }
       titleId="folder-dialog-title"
       onClose={close}
       size="lg"
@@ -73,7 +92,11 @@ export function FolderEditorModal({ folder = null, parent = null, onClose }: Fol
             Anuluj
           </Button>
           <Button variant="primary" type="submit" disabled={isSaving}>
-            {isSaving ? "Zapisywanie…" : folder ? "Zapisz zmiany" : "Utwórz folder"}
+            {isSaving
+              ? "Zapisywanie…"
+              : folder
+                ? "Zapisz zmiany"
+                : "Utwórz folder"}
           </Button>
         </ModalFooter>
       </form>

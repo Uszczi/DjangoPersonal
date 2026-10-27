@@ -1,4 +1,9 @@
-import { ListRow, ListRowButton, ListRowSubtitle, ListRowTitle } from "@/design-system";
+import {
+  ListRow,
+  ListRowButton,
+  ListRowSubtitle,
+  ListRowTitle,
+} from "@/design-system";
 import { formatEntryTime, signedValue } from "@personal/shared/counterFormat";
 import type { CounterEntryResponse } from "@personal/shared/generated/api";
 
@@ -11,7 +16,11 @@ export function CounterEntryList({
   onEdit: (entry: CounterEntryResponse) => void;
 }) {
   if (entries.length === 0) {
-    return <p className="py-4 text-[13px] text-muted">Brak wpisów. Dodaj pierwszy wpis.</p>;
+    return (
+      <p className="py-4 text-[13px] text-muted">
+        Brak wpisów. Dodaj pierwszy wpis.
+      </p>
+    );
   }
 
   return (
@@ -24,7 +33,9 @@ export function CounterEntryList({
           >
             <div className="min-w-0">
               <ListRowTitle>{formatEntryTime(entry.occurredAt)}</ListRowTitle>
-              {entry.note && <ListRowSubtitle multiline>{entry.note}</ListRowSubtitle>}
+              {entry.note && (
+                <ListRowSubtitle multiline>{entry.note}</ListRowSubtitle>
+              )}
             </div>
           </ListRowButton>
           <span

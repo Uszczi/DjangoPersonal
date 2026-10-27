@@ -11,11 +11,18 @@ type EmptyStateProps = {
 };
 
 /** What a page shows in place of a list that has nothing in it yet. */
-export function EmptyState({ eyebrow, title, titleAs = "h2", children }: EmptyStateProps) {
+export function EmptyState({
+  eyebrow,
+  title,
+  titleAs = "h2",
+  children,
+}: EmptyStateProps) {
   const Title = titleAs;
   return (
     <div className="pt-[40px] text-muted">
-      <p className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">{eyebrow}</p>
+      <p className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">
+        {eyebrow}
+      </p>
       <Title
         className={`mt-2 font-display font-bold tracking-[-0.02em] text-ink ${titleAs === "h1" ? "text-[28px]" : "text-[24px]"}`}
       >

@@ -6,7 +6,10 @@ import { useEffect, useRef, type MouseEvent, type SyntheticEvent } from "react";
  * Escape and backdrop clicks are routed to `onClose`, and the dialog closes on unmount.
  * The owner decides whether to actually close (e.g. not while saving).
  */
-export function useModalDialog(onClose: () => void, { focusFirstField = false } = {}) {
+export function useModalDialog(
+  onClose: () => void,
+  { focusFirstField = false } = {},
+) {
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -17,7 +20,9 @@ export function useModalDialog(onClose: () => void, { focusFirstField = false } 
       // `autoFocus` runs before the dialog is open, so focus the first field here; without
       // one the browser default applies (the first focusable element).
       dialog
-        .querySelector<HTMLElement>("input:not(:disabled), textarea:not(:disabled), select:not(:disabled)")
+        .querySelector<HTMLElement>(
+          "input:not(:disabled), textarea:not(:disabled), select:not(:disabled)",
+        )
         ?.focus();
     }
     return () => dialog.close();

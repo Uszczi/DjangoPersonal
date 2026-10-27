@@ -13,7 +13,10 @@ type FoldersState = {
   pageError: string;
   loadFolders: () => Promise<void>;
   /** Create a Folder at the top level, or inside `parentId`. */
-  createFolder: (name: string, parentId?: number | null) => Promise<FolderResponse>;
+  createFolder: (
+    name: string,
+    parentId?: number | null,
+  ) => Promise<FolderResponse>;
   renameFolder: (id: number, name: string) => Promise<FolderResponse>;
   /** Move a Folder into another one, or to the top level with `null`. */
   moveFolder: (id: number, parentId: number | null) => Promise<FolderResponse>;
@@ -25,7 +28,9 @@ const loadGuard = createLoadGuard();
 
 /** The server's order: by name, character by character, so case matters. */
 function byName(folders: FolderResponse[]) {
-  return [...folders].sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : a.id - b.id));
+  return [...folders].sort((a, b) =>
+    a.name < b.name ? -1 : a.name > b.name ? 1 : a.id - b.id,
+  );
 }
 
 export const useFoldersStore = create<FoldersState>((set, get) => ({
@@ -52,7 +57,9 @@ export const useFoldersStore = create<FoldersState>((set, get) => ({
   },
 
   createFolder: async (name, parentId = null) => {
-    const created = await api.foldersCreate({ folderRequest: { name, parentId } });
+    const created = await api.foldersCreate({
+      folderRequest: { name, parentId },
+    });
     set((state) => ({ folders: byName([...state.folders, created]) }));
     return created;
   },
@@ -63,7 +70,9 @@ export const useFoldersStore = create<FoldersState>((set, get) => ({
       patchedFolderRequest: { name },
     });
     set((state) => ({
-      folders: byName(state.folders.map((item) => (item.id === id ? updated : item))),
+      folders: byName(
+        state.folders.map((item) => (item.id === id ? updated : item)),
+      ),
     }));
     return updated;
   },
@@ -82,7 +91,9 @@ export const useFoldersStore = create<FoldersState>((set, get) => ({
   deleteFolder: async (id) => {
     await api.foldersDestroy({ id });
     const removed = subtreeIds(get().folders, id);
-    set((state) => ({ folders: state.folders.filter((item) => !removed.has(item.id)) }));
+    set((state) => ({
+      folders: state.folders.filter((item) => !removed.has(item.id)),
+    }));
     return removed;
   },
 }));

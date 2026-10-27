@@ -1,4 +1,9 @@
-import type { ButtonHTMLAttributes, LiHTMLAttributes, ReactNode, Ref } from "react";
+import type {
+  ButtonHTMLAttributes,
+  LiHTMLAttributes,
+  ReactNode,
+  Ref,
+} from "react";
 
 type ListRowProps = Omit<LiHTMLAttributes<HTMLLIElement>, "children"> & {
   ref?: Ref<HTMLLIElement>;
@@ -14,14 +19,21 @@ type ListRowProps = Omit<LiHTMLAttributes<HTMLLIElement>, "children"> & {
  * `style` and the other `<li>` attributes pass through, so a sortable list can
  * hand in dnd-kit's.
  */
-export function ListRow({ children: [start, end], className = "", ref, ...props }: ListRowProps) {
+export function ListRow({
+  children: [start, end],
+  className = "",
+  ref,
+  ...props
+}: ListRowProps) {
   return (
     <li
       ref={ref}
       className={`flex min-h-[62px] flex-wrap items-center justify-between gap-x-[13px] gap-y-1 border-b border-row-line px-[3px] py-[10px] ${className}`.trim()}
       {...props}
     >
-      <div className="flex min-w-[min(100%,14rem)] flex-1 items-center gap-[13px]">{start}</div>
+      <div className="flex min-w-[min(100%,14rem)] flex-1 items-center gap-[13px]">
+        {start}
+      </div>
       <div className="ml-auto flex shrink-0 items-center gap-1">{end}</div>
     </li>
   );
@@ -36,7 +48,9 @@ export function ListRowTitle({
   children: ReactNode;
 }) {
   return (
-    <p className={`truncate text-[14px] font-medium leading-snug text-ink ${className}`.trim()}>
+    <p
+      className={`truncate text-[14px] font-medium leading-snug text-ink ${className}`.trim()}
+    >
       {children}
     </p>
   );
@@ -50,9 +64,13 @@ export function ListRowSubtitle({
   multiline?: boolean;
   children: ReactNode;
 }) {
-  const lines = multiline ? "line-clamp-3 whitespace-pre-line break-words" : "truncate";
+  const lines = multiline
+    ? "line-clamp-3 whitespace-pre-line break-words"
+    : "truncate";
   return (
-    <small className={`mt-0.5 block ${lines} text-[12px] leading-relaxed text-muted`}>
+    <small
+      className={`mt-0.5 block ${lines} text-[12px] leading-relaxed text-muted`}
+    >
       {children}
     </small>
   );
@@ -68,7 +86,11 @@ type ListRowButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
  * like a colour dot) to open the item's editor. Drag handles and checkboxes
  * stay outside it, since buttons cannot nest.
  */
-export function ListRowButton({ className = "", type = "button", ...props }: ListRowButtonProps) {
+export function ListRowButton({
+  className = "",
+  type = "button",
+  ...props
+}: ListRowButtonProps) {
   return (
     <button
       type={type}

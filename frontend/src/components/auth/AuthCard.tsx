@@ -53,7 +53,10 @@ export function AuthCard({
 
         <p className="mt-5 text-[13px] text-muted">
           {footer.text}{" "}
-          <Link to={footer.to} className="font-semibold text-accent no-underline hover:underline">
+          <Link
+            to={footer.to}
+            className="font-semibold text-accent no-underline hover:underline"
+          >
             {footer.label}
           </Link>
         </p>
@@ -63,10 +66,15 @@ export function AuthCard({
 }
 
 /** One required text field of an account form. */
-export function AuthField({ label, ...inputProps }: { label: string } & ComponentProps<typeof TextInput>) {
+export function AuthField({
+  label,
+  ...inputProps
+}: { label: string } & ComponentProps<typeof TextInput>) {
   return (
     <label className="mb-4 block">
-      <span className="mb-1 block text-[12px] font-semibold text-ink-soft">{label}</span>
+      <span className="mb-1 block text-[12px] font-semibold text-ink-soft">
+        {label}
+      </span>
       <TextInput required minLength={1} {...inputProps} />
     </label>
   );

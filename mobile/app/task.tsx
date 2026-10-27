@@ -1,6 +1,13 @@
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { useProjectsStore } from "@personal/shared/stores/projects";
@@ -18,13 +25,18 @@ import { common, form } from "../src/theme";
  * drag and drop.
  */
 export default function TaskEditorScreen() {
-  const params = useLocalSearchParams<{ projectId?: string; taskId?: string }>();
+  const params = useLocalSearchParams<{
+    projectId?: string;
+    taskId?: string;
+  }>();
   const taskId = params.taskId ? Number(params.taskId) : null;
 
   const projects = useProjectsStore((state) => state.projects);
   const taskList = useTasksStore((state) => state.taskList);
   const task =
-    taskId === null ? null : (taskList?.tasks.find((item) => item.id === taskId) ?? null);
+    taskId === null
+      ? null
+      : (taskList?.tasks.find((item) => item.id === taskId) ?? null);
   // Derived outside the selector: a selector returning a fresh array would
   // re-render forever.
   const siblings = task
@@ -47,7 +59,9 @@ export default function TaskEditorScreen() {
   const targetProject = projects.find((item) => item.id === form_.project);
   const statuses = targetProject?.projectStatuses ?? [];
   const selectedStatus =
-    form_.status && statuses.includes(form_.status) ? form_.status : statuses[0];
+    form_.status && statuses.includes(form_.status)
+      ? form_.status
+      : statuses[0];
 
   if (taskId !== null && !task) {
     return (
@@ -110,7 +124,9 @@ export default function TaskEditorScreen() {
     setIsSaving(false);
   }
 
-  const position = task ? siblings.findIndex((item) => item.id === task.id) : -1;
+  const position = task
+    ? siblings.findIndex((item) => item.id === task.id)
+    : -1;
 
   return (
     <KeyboardAvoidingView
@@ -119,15 +135,22 @@ export default function TaskEditorScreen() {
     >
       <Stack.Screen
         options={{
-          title: task ? "Edytuj zadanie" : `Dodaj do ${targetProject?.name ?? "Inbox"}`,
+          title: task
+            ? "Edytuj zadanie"
+            : `Dodaj do ${targetProject?.name ?? "Inbox"}`,
         }}
       />
-      <ScrollView contentContainerStyle={form.content} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={form.content}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={form.label}>Tytuł zadania</Text>
         <TextInput
           style={form.input}
           value={form_.title}
-          onChangeText={(title) => setForm((current) => ({ ...current, title }))}
+          onChangeText={(title) =>
+            setForm((current) => ({ ...current, title }))
+          }
           maxLength={200}
           multiline
           autoFocus={!task}
@@ -139,7 +162,9 @@ export default function TaskEditorScreen() {
         <TextInput
           style={[form.input, form.multiline]}
           value={form_.description}
-          onChangeText={(description) => setForm((current) => ({ ...current, description }))}
+          onChangeText={(description) =>
+            setForm((current) => ({ ...current, description }))
+          }
           multiline
           editable={!isSaving}
         />
@@ -148,9 +173,14 @@ export default function TaskEditorScreen() {
           <>
             <Text style={form.label}>Projekt zadania</Text>
             <ChipGroup
-              options={projects.map((project) => ({ value: project.id, label: project.name }))}
+              options={projects.map((project) => ({
+                value: project.id,
+                label: project.name,
+              }))}
               value={form_.project}
-              onChange={(project) => setForm((current) => ({ ...current, project }))}
+              onChange={(project) =>
+                setForm((current) => ({ ...current, project }))
+              }
               disabled={isSaving}
             />
           </>
@@ -160,9 +190,14 @@ export default function TaskEditorScreen() {
           <>
             <Text style={form.label}>Status</Text>
             <ChipGroup
-              options={statuses.map((status) => ({ value: status, label: status }))}
+              options={statuses.map((status) => ({
+                value: status,
+                label: status,
+              }))}
               value={selectedStatus}
-              onChange={(status) => setForm((current) => ({ ...current, status }))}
+              onChange={(status) =>
+                setForm((current) => ({ ...current, status }))
+              }
               disabled={isSaving}
             />
           </>

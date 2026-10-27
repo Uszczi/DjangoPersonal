@@ -68,6 +68,14 @@ mobile:
 storybook:
     cd frontend && npm run storybook
 
+# Format the frontend and mobile sources with Prettier.
+format:
+    npx prettier --write frontend/src frontend/tests frontend/scripts frontend/vite.config.ts mobile/app mobile/src
+
+# Fail if any frontend or mobile source is not Prettier-formatted.
+format-check:
+    npx prettier --check frontend/src frontend/tests frontend/scripts frontend/vite.config.ts mobile/app mobile/src
+
 # Type-check the backend with mypy (strict).
 typecheck:
     cd backend && uv run mypy .

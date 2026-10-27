@@ -1,5 +1,11 @@
 /** The wallet's colour as a small circle next to its name; decorative, the name carries the meaning. */
-export function WalletColorDot({ color, className = "" }: { color: string; className?: string }) {
+export function WalletColorDot({
+  color,
+  className = "",
+}: {
+  color: string;
+  className?: string;
+}) {
   return (
     <span
       aria-hidden="true"

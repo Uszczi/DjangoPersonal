@@ -1,10 +1,21 @@
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import type { TimeEntryResponse } from "@personal/shared/generated/api";
-import { defaultProject, useProjectsStore } from "@personal/shared/stores/projects";
+import {
+  defaultProject,
+  useProjectsStore,
+} from "@personal/shared/stores/projects";
 import { useTimerStore } from "@personal/shared/stores/timer";
 import {
   dateKey,
@@ -73,7 +84,8 @@ export default function TimeScreen() {
     }, [loadData, loadProjects]),
   );
 
-  const runningEntry = runningEntryRaw && runningEntryRaw.end == null ? runningEntryRaw : null;
+  const runningEntry =
+    runningEntryRaw && runningEntryRaw.end == null ? runningEntryRaw : null;
 
   useEffect(() => {
     if (!runningEntry) return;
@@ -86,7 +98,8 @@ export default function TimeScreen() {
   const plannedEndMs = runningEntry?.plannedEnd?.getTime() ?? null;
   useEffect(() => {
     if (plannedEndMs == null) return;
-    const delay = Math.max(0, plannedEndMs - (Date.now() + serverOffset)) + 1000;
+    const delay =
+      Math.max(0, plannedEndMs - (Date.now() + serverOffset)) + 1000;
     const timeout = setTimeout(() => void refreshTimer(), delay);
     return () => clearTimeout(timeout);
   }, [plannedEndMs, serverOffset, refreshTimer]);
@@ -131,8 +144,13 @@ export default function TimeScreen() {
     if (entryRange === "all") return true;
     return key >= daysAgoKey(nowTick, Number(entryRange) - 1);
   });
-  const todaysEntries = stoppedEntries.filter((entry) => dateKey(entry.start) === today);
-  const todaysMinutes = todaysEntries.reduce((sum, entry) => sum + entryMinutes(entry), 0);
+  const todaysEntries = stoppedEntries.filter(
+    (entry) => dateKey(entry.start) === today,
+  );
+  const todaysMinutes = todaysEntries.reduce(
+    (sum, entry) => sum + entryMinutes(entry),
+    0,
+  );
 
   const taskTitles = new Map(tasks.map((task) => [task.id, task.title]));
   const entryTitle = (entry: TimeEntryResponse) =>
@@ -144,25 +162,38 @@ export default function TimeScreen() {
   const perTaskMinutes = new Map<number, number>();
   for (const entry of todaysEntries) {
     if (entry.taskId == null) continue;
-    perTaskMinutes.set(entry.taskId, (perTaskMinutes.get(entry.taskId) ?? 0) + entryMinutes(entry));
+    perTaskMinutes.set(
+      entry.taskId,
+      (perTaskMinutes.get(entry.taskId) ?? 0) + entryMinutes(entry),
+    );
   }
-  const dayKeys = Array.from({ length: 7 }, (_, index) => daysAgoKey(nowTick, 6 - index));
+  const dayKeys = Array.from({ length: 7 }, (_, index) =>
+    daysAgoKey(nowTick, 6 - index),
+  );
   const minutesByDay = new Map(dayKeys.map((key) => [key, 0]));
   for (const entry of stoppedEntries) {
     const key = dateKey(entry.start);
-    if (minutesByDay.has(key)) minutesByDay.set(key, (minutesByDay.get(key) ?? 0) + entryMinutes(entry));
+    if (minutesByDay.has(key))
+      minutesByDay.set(key, (minutesByDay.get(key) ?? 0) + entryMinutes(entry));
   }
 
   // Without a project the timer runs on its title alone; suggestions come from every project.
-  const chosenProjectId = startProjectId ?? defaultProject(projects)?.id ?? null;
+  const chosenProjectId =
+    startProjectId ?? defaultProject(projects)?.id ?? null;
   const startTasks =
-    chosenProjectId === NO_PROJECT ? tasks : tasks.filter((task) => task.projectId === chosenProjectId);
+    chosenProjectId === NO_PROJECT
+      ? tasks
+      : tasks.filter((task) => task.projectId === chosenProjectId);
 
   if (pageError) {
     return (
       <View style={common.center}>
         <Text style={common.error}>{pageError}</Text>
-        <Button label="Spróbuj ponownie" variant="secondary" onPress={() => void refresh()} />
+        <Button
+          label="Spróbuj ponownie"
+          variant="secondary"
+          onPress={() => void refresh()}
+        />
       </View>
     );
   }
@@ -173,13 +204,18 @@ export default function TimeScreen() {
       contentContainerStyle={{ paddingBottom: 32 }}
       keyboardShouldPersistTaps="handled"
       refreshControl={
-        <RefreshControl refreshing={isRefreshing || isLoading} onRefresh={() => void refresh()} />
+        <RefreshControl
+          refreshing={isRefreshing || isLoading}
+          onRefresh={() => void refresh()}
+        />
       }
     >
       <View style={card.section}>
         {runningEntry ? (
           <>
-            <Text style={[card.kicker, { color: colors.success }]}>TIMER AKTYWNY</Text>
+            <Text style={[card.kicker, { color: colors.success }]}>
+              TIMER AKTYWNY
+            </Text>
             <Text style={card.title}>{entryTitle(runningEntry)}</Text>
             <Text style={styles.elapsed}>
               {formatElapsed(
@@ -189,11 +225,16 @@ export default function TimeScreen() {
             </Text>
             {runningEntry.plannedEnd && (
               <Text style={common.muted}>
-                Pozostało · zatrzyma się o {formatClock(runningEntry.plannedEnd)}
+                Pozostało · zatrzyma się o{" "}
+                {formatClock(runningEntry.plannedEnd)}
               </Text>
             )}
             <View style={form.actions}>
-              <Button label="Zatrzymaj" isBusy={isBusy} onPress={() => void run(stopTimer)} />
+              <Button
+                label="Zatrzymaj"
+                isBusy={isBusy}
+                onPress={() => void run(stopTimer)}
+              />
               <Button
                 label="Odrzuć"
                 variant="secondary"
@@ -210,7 +251,10 @@ export default function TimeScreen() {
               <ChipGroup
                 options={[
                   { value: NO_PROJECT, label: "Bez projektu" },
-                  ...projects.map((project) => ({ value: project.id, label: project.name })),
+                  ...projects.map((project) => ({
+                    value: project.id,
+                    label: project.name,
+                  })),
                 ]}
                 value={chosenProjectId ?? undefined}
                 onChange={(projectId) => {
@@ -229,7 +273,11 @@ export default function TimeScreen() {
               returnKeyType="go"
               onSubmitEditing={() => void start()}
             />
-            <TitleSuggestions tasks={startTasks} query={startTitle} onPick={setStartTitle} />
+            <TitleSuggestions
+              tasks={startTasks}
+              query={startTitle}
+              onPick={setStartTitle}
+            />
             <Text style={form.label}>Limit czasu</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <ChipGroup
@@ -247,7 +295,11 @@ export default function TimeScreen() {
             </ScrollView>
             {startError !== "" && <Text style={form.error}>{startError}</Text>}
             <View style={form.actions}>
-              <Button label="Rozpocznij timer" isBusy={isBusy} onPress={() => void start()} />
+              <Button
+                label="Rozpocznij timer"
+                isBusy={isBusy}
+                onPress={() => void start()}
+              />
             </View>
           </>
         )}
@@ -258,13 +310,20 @@ export default function TimeScreen() {
         <View style={styles.sectionHeader}>
           <Text style={card.title}>Ostatnie wpisy</Text>
           <Text style={card.kicker}>
-            {recentEntries.length} {recentEntries.length === 1 ? "WPIS" : "WPISÓW"}
+            {recentEntries.length}{" "}
+            {recentEntries.length === 1 ? "WPIS" : "WPISÓW"}
           </Text>
         </View>
-        <ChipGroup options={RANGES} value={entryRange} onChange={setEntryRange} />
+        <ChipGroup
+          options={RANGES}
+          value={entryRange}
+          onChange={setEntryRange}
+        />
         {recentEntries.length === 0 ? (
           <Text style={[common.muted, { paddingVertical: 8 }]}>
-            {entryRange === "today" ? "Brak wpisów na dziś." : "Brak wpisów w wybranym zakresie."}
+            {entryRange === "today"
+              ? "Brak wpisów na dziś."
+              : "Brak wpisów w wybranym zakresie."}
           </Text>
         ) : (
           recentEntries.map((entry) => (
@@ -273,17 +332,23 @@ export default function TimeScreen() {
               accessibilityRole="button"
               accessibilityLabel={`Edytuj wpis: ${entryTitle(entry)}`}
               onPress={() =>
-                router.push({ pathname: "/time-entry", params: { entryId: entry.id } })
+                router.push({
+                  pathname: "/time-entry",
+                  params: { entryId: entry.id },
+                })
               }
               style={styles.entryRow}
             >
               <Text style={styles.entryClock}>
-                {formatClock(entry.start)}–{entry.end ? formatClock(entry.end) : "…"}
+                {formatClock(entry.start)}–
+                {entry.end ? formatClock(entry.end) : "…"}
               </Text>
               <Text style={styles.entryTitle} numberOfLines={1}>
                 {entryTitle(entry)}
               </Text>
-              <Text style={styles.entryDuration}>{formatDuration(entryMinutes(entry))}</Text>
+              <Text style={styles.entryDuration}>
+                {formatDuration(entryMinutes(entry))}
+              </Text>
             </Pressable>
           ))
         )}
@@ -301,7 +366,9 @@ export default function TimeScreen() {
         <Text style={card.kicker}>DZIŚ ŁĄCZNIE</Text>
         <Text style={styles.total}>{formatDuration(todaysMinutes)}</Text>
 
-        <Text style={[card.kicker, { marginTop: 8 }]}>WEDŁUG ZADANIA (DZIŚ)</Text>
+        <Text style={[card.kicker, { marginTop: 8 }]}>
+          WEDŁUG ZADANIA (DZIŚ)
+        </Text>
         {perTaskMinutes.size === 0 ? (
           <Text style={common.muted}>Brak wpisów.</Text>
         ) : (
@@ -319,7 +386,9 @@ export default function TimeScreen() {
         {dayKeys.map((key) => (
           <View key={key} style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>{key}</Text>
-            <Text style={common.muted}>{formatDuration(minutesByDay.get(key) ?? 0)}</Text>
+            <Text style={common.muted}>
+              {formatDuration(minutesByDay.get(key) ?? 0)}
+            </Text>
           </View>
         ))}
       </View>
@@ -334,7 +403,11 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontVariant: ["tabular-nums"],
   },
-  sectionHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   entryRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -343,10 +416,18 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
   },
-  entryClock: { color: colors.muted, fontSize: 12, fontVariant: ["tabular-nums"] },
+  entryClock: {
+    color: colors.muted,
+    fontSize: 12,
+    fontVariant: ["tabular-nums"],
+  },
   entryTitle: { flex: 1, color: colors.text, fontSize: 15 },
   entryDuration: { color: colors.muted, fontSize: 12, fontWeight: "600" },
   total: { fontSize: 24, fontWeight: "700", color: colors.text },
-  summaryRow: { flexDirection: "row", justifyContent: "space-between", gap: 12 },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+  },
   summaryLabel: { flex: 1, color: colors.text },
 });

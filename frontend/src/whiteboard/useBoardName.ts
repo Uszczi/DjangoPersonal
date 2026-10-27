@@ -37,7 +37,9 @@ export function useBoardName(boardId: string, initialName: string) {
       setName(updated.name);
       savedName.current = updated.name;
       useWhiteboardsStore.setState((s) => ({
-        whiteboards: s.whiteboards.map((wb) => (wb.id === updated.id ? updated : wb)),
+        whiteboards: s.whiteboards.map((wb) =>
+          wb.id === updated.id ? updated : wb,
+        ),
       }));
     } catch (err) {
       setName(savedName.current);

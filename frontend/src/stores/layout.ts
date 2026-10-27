@@ -16,10 +16,13 @@ export const useLayoutStore = create<LayoutState>()(
       isSidebarCollapsed: false,
       toggleSidebar: () =>
         set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
-      setSidebarCollapsed: (collapsed) => set({ isSidebarCollapsed: collapsed }),
+      setSidebarCollapsed: (collapsed) =>
+        set({ isSidebarCollapsed: collapsed }),
       isNotatnikSidebarCollapsed: false,
       toggleNotatnikSidebar: () =>
-        set((state) => ({ isNotatnikSidebarCollapsed: !state.isNotatnikSidebarCollapsed })),
+        set((state) => ({
+          isNotatnikSidebarCollapsed: !state.isNotatnikSidebarCollapsed,
+        })),
     }),
     { name: "djangopersonal.layout" },
   ),

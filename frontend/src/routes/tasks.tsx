@@ -15,13 +15,19 @@ import {
 import { ProjectEditorModal } from "@/components/modals/ProjectEditorModal";
 import { TaskEditorModal } from "@/components/modals/TaskEditorModal";
 import { ProjectsSidebar } from "@/components/ProjectsSidebar";
-import { ProjectsDrawer, ProjectsDrawerToggle } from "@/components/tasks/ProjectsDrawer";
+import {
+  ProjectsDrawer,
+  ProjectsDrawerToggle,
+} from "@/components/tasks/ProjectsDrawer";
 import { TaskBoard } from "@/components/tasks/TaskBoard";
 import { validateProjectSearch } from "@/lib/projectSearch";
 import { useProjectSearchParam } from "@/lib/useProjectSearchParam";
 import { useLayoutStore } from "@/stores/layout";
 import { ShowModal } from "@/stores/modal";
-import { defaultProject, useProjectsStore } from "@personal/shared/stores/projects";
+import {
+  defaultProject,
+  useProjectsStore,
+} from "@personal/shared/stores/projects";
 import { useTasksStore } from "@personal/shared/stores/tasks";
 import type { TaskResponse } from "@personal/shared/generated/api";
 
@@ -94,7 +100,10 @@ function TasksPage() {
 
   async function startTimer(task: TaskResponse) {
     if (await startTaskTimer(task)) {
-      navigate({ to: "/timer", search: { project: selectedProjectId ?? undefined } });
+      navigate({
+        to: "/timer",
+        search: { project: selectedProjectId ?? undefined },
+      });
     }
   }
 
@@ -104,7 +113,11 @@ function TasksPage() {
 
   if (!selectedProject) {
     return (
-      <EmptyState titleAs="h1" eyebrow="BRAK PROJEKTÓW" title="Utwórz pierwsze miejsce pracy">
+      <EmptyState
+        titleAs="h1"
+        eyebrow="BRAK PROJEKTÓW"
+        title="Utwórz pierwsze miejsce pracy"
+      >
         <Button variant="primary" onClick={() => ShowModal(ProjectEditorModal)}>
           Nowy projekt
         </Button>
@@ -132,7 +145,10 @@ function TasksPage() {
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={toggleSidebar}
         />
-        <section className="flex min-w-0 flex-1 flex-col" aria-labelledby="tasks-heading">
+        <section
+          className="flex min-w-0 flex-1 flex-col"
+          aria-labelledby="tasks-heading"
+        >
           <PageHeader
             title={selectedProject.name}
             titleId="tasks-heading"
@@ -160,7 +176,9 @@ function TasksPage() {
           ) : tasksError ? (
             <ErrorMessage>{tasksError}</ErrorMessage>
           ) : tasks.length === 0 ? (
-            <p className="py-4 text-[13px] text-muted">Nie ma tu jeszcze zadań.</p>
+            <p className="py-4 text-[13px] text-muted">
+              Nie ma tu jeszcze zadań.
+            </p>
           ) : (
             <TaskBoard
               project={selectedProject}

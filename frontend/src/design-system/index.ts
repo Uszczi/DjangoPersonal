@@ -14,7 +14,12 @@ export { InboxIcon } from "./icons/InboxIcon";
 export { NamedIcon } from "./icons/NamedIcon";
 export { PageHeader } from "./components/PageHeader";
 export { LoadingStatus } from "./components/LoadingStatus";
-export { ListRow, ListRowButton, ListRowSubtitle, ListRowTitle } from "./components/ListRow";
+export {
+  ListRow,
+  ListRowButton,
+  ListRowSubtitle,
+  ListRowTitle,
+} from "./components/ListRow";
 export { Modal, ModalFooter } from "./components/Modal";
 export { DeleteButton } from "./components/DeleteButton";
 export { Select } from "./components/Select";

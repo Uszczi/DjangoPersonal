@@ -1,14 +1,30 @@
 import { useState } from "react";
 
 import type { TimeEntryResponse } from "@personal/shared/generated/api";
-import { dateKey, entryMinutes, formatClock, formatDuration } from "@personal/shared/timeFormat";
-import { ErrorMessage, ListRow, ListRowButton, ListRowTitle } from "@/design-system";
+import {
+  dateKey,
+  entryMinutes,
+  formatClock,
+  formatDuration,
+} from "@personal/shared/timeFormat";
+import {
+  ErrorMessage,
+  ListRow,
+  ListRowButton,
+  ListRowTitle,
+} from "@/design-system";
 
 import { TimerPanel } from "./TimerPanel";
 
 type EntryRange = "today" | "7" | "30" | "all";
 
-export function RecentEntriesPanel({ entries, now, titleOf, onEdit, error }: {
+export function RecentEntriesPanel({
+  entries,
+  now,
+  titleOf,
+  onEdit,
+  error,
+}: {
   /** Stopped Time entries. */
   entries: TimeEntryResponse[];
   now: number;
@@ -53,10 +69,16 @@ export function RecentEntriesPanel({ entries, now, titleOf, onEdit, error }: {
   );
 
   return (
-    <TimerPanel title="Ostatnie wpisy" headingId="recent-entries-heading" actions={actions}>
+    <TimerPanel
+      title="Ostatnie wpisy"
+      headingId="recent-entries-heading"
+      actions={actions}
+    >
       {shown.length === 0 ? (
         <p className="py-4 text-[13px] text-muted">
-          {range === "today" ? "Brak wpisów na dziś." : "Brak wpisów w wybranym zakresie."}
+          {range === "today"
+            ? "Brak wpisów na dziś."
+            : "Brak wpisów w wybranym zakresie."}
         </p>
       ) : (
         <ul className="flex flex-col" aria-label="Ostatnie wpisy">
@@ -67,7 +89,8 @@ export function RecentEntriesPanel({ entries, now, titleOf, onEdit, error }: {
                 onClick={() => onEdit(entry)}
               >
                 <span className="shrink-0 font-utility text-[11px] text-muted">
-                  {formatClock(entry.start)}–{entry.end ? formatClock(entry.end) : "…"}
+                  {formatClock(entry.start)}–
+                  {entry.end ? formatClock(entry.end) : "…"}
                 </span>
                 <ListRowTitle>{titleOf(entry)}</ListRowTitle>
               </ListRowButton>

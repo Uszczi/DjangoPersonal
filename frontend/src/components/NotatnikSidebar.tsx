@@ -12,17 +12,35 @@ import {
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
-import { DeleteButton, ErrorMessage, IconButton, LoadingStatus, TextInput } from "@/design-system";
-import type { FolderResponse, MatchingLine, WhiteboardResponse } from "@personal/shared/generated/api";
+import {
+  DeleteButton,
+  ErrorMessage,
+  IconButton,
+  LoadingStatus,
+  TextInput,
+} from "@/design-system";
+import type {
+  FolderResponse,
+  MatchingLine,
+  WhiteboardResponse,
+} from "@personal/shared/generated/api";
 import { DeleteFolderModal } from "@/components/modals/DeleteFolderModal";
 import { FolderEditorModal } from "@/components/modals/FolderEditorModal";
-import { MoveFolderModal, MoveWhiteboardModal } from "@/components/modals/MoveToFolderModal";
+import {
+  MoveFolderModal,
+  MoveWhiteboardModal,
+} from "@/components/modals/MoveToFolderModal";
 import { useFoldersStore } from "@/stores/folders";
 import { useLayoutStore } from "@/stores/layout";
 import { ShowModal } from "@/stores/modal";
 import { useWhiteboardsStore, type ItemKind } from "@/stores/whiteboards";
 import { useExpandedFolders } from "@/whiteboard/expandedFolders";
-import { childFolders, folderPath, matchesQuery, subtreeIds } from "@/whiteboard/folderTree";
+import {
+  childFolders,
+  folderPath,
+  matchesQuery,
+  subtreeIds,
+} from "@/whiteboard/folderTree";
 import { useNotatnikSearch } from "@/whiteboard/useNotatnikSearch";
 
 /** How many matching lines a search result shows before "i N więcej". */
@@ -50,7 +68,10 @@ type NotatnikSidebarProps = {
  * Folders and items. The open item shows to its right. On small screens it
  * fills the Notatnik page and steps aside while an item is open.
  */
-export function NotatnikSidebar({ activeId, detailOpen = activeId != null }: NotatnikSidebarProps) {
+export function NotatnikSidebar({
+  activeId,
+  detailOpen = activeId != null,
+}: NotatnikSidebarProps) {
   const whiteboards = useWhiteboardsStore((s) => s.whiteboards);
   const isLoading = useWhiteboardsStore((s) => s.isLoading);
   const pageError = useWhiteboardsStore((s) => s.pageError);
@@ -71,7 +92,8 @@ export function NotatnikSidebar({ activeId, detailOpen = activeId != null }: Not
     void loadFolders();
   }, [load, loadFolders]);
 
-  const activeFolderId = whiteboards.find((wb) => wb.id === activeId)?.folderId ?? null;
+  const activeFolderId =
+    whiteboards.find((wb) => wb.id === activeId)?.folderId ?? null;
   const activePath = folderPath(folders, activeFolderId)
     .map((f) => f.id)
     .join(",");
@@ -83,7 +105,11 @@ export function NotatnikSidebar({ activeId, detailOpen = activeId != null }: Not
 
   async function handleCreate(kind: ItemKind, folderId: number | null = null) {
     const created = await createItem(kind, folderId);
-    if (created) navigate({ to: "/whiteboard/$boardId", params: { boardId: String(created.id) } });
+    if (created)
+      navigate({
+        to: "/whiteboard/$boardId",
+        params: { boardId: String(created.id) },
+      });
   }
 
   /** Leave the search and show `folder` in the tree, its ancestors expanded. */
@@ -147,7 +173,11 @@ export function NotatnikSidebar({ activeId, detailOpen = activeId != null }: Not
         ))}
         <ul className="flex flex-col" aria-label="Tablice">
           {looseItems.map((wb) => (
-            <WhiteboardRow key={wb.id} whiteboard={wb} active={wb.id === activeId} />
+            <WhiteboardRow
+              key={wb.id}
+              whiteboard={wb}
+              active={wb.id === activeId}
+            />
           ))}
         </ul>
       </>
@@ -155,9 +185,14 @@ export function NotatnikSidebar({ activeId, detailOpen = activeId != null }: Not
   }
 
   return (
-    <aside className={`${panelClasses} flex flex-col gap-2 p-3 md:w-[300px]`} aria-label="Drzewo Notatnika">
+    <aside
+      className={`${panelClasses} flex flex-col gap-2 p-3 md:w-[300px]`}
+      aria-label="Drzewo Notatnika"
+    >
       <div className="flex items-center gap-0.5 pl-[6px]">
-        <span className="mr-auto font-display text-[17px] font-bold tracking-[-0.02em] text-ink">Notatnik</span>
+        <span className="mr-auto font-display text-[17px] font-bold tracking-[-0.02em] text-ink">
+          Notatnik
+        </span>
         <IconButton
           className={smallIconButton}
           title="Nowa notatka"
@@ -188,7 +223,10 @@ export function NotatnikSidebar({ activeId, detailOpen = activeId != null }: Not
           aria-label="Zapytaj Notatki"
           onClick={() => navigate({ to: "/whiteboard/ask" })}
         >
-          <MessageCircleQuestionMark aria-hidden="true" className={iconClasses} />
+          <MessageCircleQuestionMark
+            aria-hidden="true"
+            className={iconClasses}
+          />
         </IconButton>
         <IconButton
           className={`${smallIconButton} text-[20px] max-md:hidden`}
@@ -234,9 +272,17 @@ type SearchResultsProps = {
  * (by name, or a Notatka by its text), flat, each with the Folders it sits in
  * and a Notatka's matching lines.
  */
-function SearchResults({ query, folders, whiteboards, activeId, onRevealFolder }: SearchResultsProps) {
+function SearchResults({
+  query,
+  folders,
+  whiteboards,
+  activeId,
+  onRevealFolder,
+}: SearchResultsProps) {
   const search = useNotatnikSearch(query);
-  const matchingFolders = folders.filter((folder) => matchesQuery(folder.name, query));
+  const matchingFolders = folders.filter((folder) =>
+    matchesQuery(folder.name, query),
+  );
   // Rows come from the store, so a result moved or deleted here updates at once.
   const byId = new Map(whiteboards.map((wb) => [wb.id, wb]));
   const matchingItems =
@@ -257,8 +303,16 @@ function SearchResults({ query, folders, whiteboards, activeId, onRevealFolder }
   if (search.status === "loading" && matchingFolders.length === 0) {
     return <LoadingStatus>Szukanie…</LoadingStatus>;
   }
-  if (search.status === "done" && matchingFolders.length === 0 && matchingItems.length === 0) {
-    return <p className="px-[6px] py-2 text-[13px] text-muted">Nic nie pasuje do „{query.trim()}”.</p>;
+  if (
+    search.status === "done" &&
+    matchingFolders.length === 0 &&
+    matchingItems.length === 0
+  ) {
+    return (
+      <p className="px-[6px] py-2 text-[13px] text-muted">
+        Nic nie pasuje do „{query.trim()}”.
+      </p>
+    );
   }
 
   return (
@@ -273,8 +327,12 @@ function SearchResults({ query, folders, whiteboards, activeId, onRevealFolder }
           >
             <span aria-hidden="true">📁</span>
             <span className="min-w-0">
-              <span className="block truncate font-medium text-ink">{folder.name}</span>
-              <small className="block truncate text-[11px] text-muted">{location(folder.parentId ?? null)}</small>
+              <span className="block truncate font-medium text-ink">
+                {folder.name}
+              </span>
+              <small className="block truncate text-[11px] text-muted">
+                {location(folder.parentId ?? null)}
+              </small>
             </span>
           </button>
         </li>
@@ -319,7 +377,9 @@ function FolderSection({
   const subfolders = childFolders(folders, folder.id);
   const items = whiteboards.filter((wb) => wb.folderId === folder.id);
   const subtree = subtreeIds(folders, folder.id);
-  const totalItems = whiteboards.filter((wb) => wb.folderId != null && subtree.has(wb.folderId)).length;
+  const totalItems = whiteboards.filter(
+    (wb) => wb.folderId != null && subtree.has(wb.folderId),
+  ).length;
 
   return (
     <section aria-label={`Folder: ${folder.name}`}>
@@ -331,9 +391,14 @@ function FolderSection({
           onClick={() => onToggle(folder.id)}
           className={rowButtonClasses}
         >
-          <Chevron aria-hidden="true" className="size-[14px] shrink-0 text-muted" />
+          <Chevron
+            aria-hidden="true"
+            className="size-[14px] shrink-0 text-muted"
+          />
           <span aria-hidden="true">📁</span>
-          <span className="min-w-0 truncate font-semibold text-ink">{folder.name}</span>
+          <span className="min-w-0 truncate font-semibold text-ink">
+            {folder.name}
+          </span>
           <span className="text-[11px] text-muted">{totalItems}</span>
         </button>
         <div className={rowActionsClasses}>
@@ -404,11 +469,22 @@ function FolderSection({
               onCreate={onCreate}
             />
           ))}
-          <ul className="flex flex-col" aria-label={`Zawartość folderu: ${folder.name}`}>
+          <ul
+            className="flex flex-col"
+            aria-label={`Zawartość folderu: ${folder.name}`}
+          >
             {items.length === 0 && subfolders.length === 0 ? (
-              <li className="px-[6px] py-1 text-[12px] text-muted">Folder jest pusty.</li>
+              <li className="px-[6px] py-1 text-[12px] text-muted">
+                Folder jest pusty.
+              </li>
             ) : (
-              items.map((wb) => <WhiteboardRow key={wb.id} whiteboard={wb} active={wb.id === activeId} />)
+              items.map((wb) => (
+                <WhiteboardRow
+                  key={wb.id}
+                  whiteboard={wb}
+                  active={wb.id === activeId}
+                />
+              ))
             )}
           </ul>
         </div>
@@ -429,7 +505,13 @@ type WhiteboardRowProps = {
   searchQuery?: string;
 };
 
-function WhiteboardRow({ whiteboard: wb, active, location, lines = [], searchQuery }: WhiteboardRowProps) {
+function WhiteboardRow({
+  whiteboard: wb,
+  active,
+  location,
+  lines = [],
+  searchQuery,
+}: WhiteboardRowProps) {
   const remove = useWhiteboardsStore((s) => s.deleteWhiteboard);
   const navigate = useNavigate();
 
@@ -461,12 +543,16 @@ function WhiteboardRow({ whiteboard: wb, active, location, lines = [], searchQue
         ) : (
           <span className="min-w-0">
             <span className="block truncate text-ink">{wb.name}</span>
-            <small className="block truncate text-[11px] text-muted">{location}</small>
+            <small className="block truncate text-[11px] text-muted">
+              {location}
+            </small>
             {lines.length > 0 && <MatchingLines lines={lines} />}
           </span>
         )}
       </button>
-      <div className={`${rowActionsClasses} ${location !== undefined ? "top-[18px]" : ""}`}>
+      <div
+        className={`${rowActionsClasses} ${location !== undefined ? "top-[18px]" : ""}`}
+      >
         <IconButton
           className={smallIconButton}
           title="Przenieś do…"
@@ -489,14 +575,22 @@ function WhiteboardRow({ whiteboard: wb, active, location, lines = [], searchQue
 function MatchingLines({ lines }: { lines: MatchingLine[] }) {
   const hidden = lines.length - SHOWN_LINES;
   return (
-    <span role="list" aria-label="Pasujące linie" className="mt-1 block font-mono text-[11px] leading-relaxed">
+    <span
+      role="list"
+      aria-label="Pasujące linie"
+      className="mt-1 block font-mono text-[11px] leading-relaxed"
+    >
       {lines.slice(0, SHOWN_LINES).map((line) => (
         <span role="listitem" key={line.number} className="flex min-w-0 gap-2">
-          <span className="w-6 shrink-0 text-right text-muted tabular-nums">{line.number}</span>
+          <span className="w-6 shrink-0 text-right text-muted tabular-nums">
+            {line.number}
+          </span>
           <span className="min-w-0 truncate text-ink">{line.text}</span>
         </span>
       ))}
-      {hidden > 0 && <span className="block pl-8 text-muted">i {hidden} więcej</span>}
+      {hidden > 0 && (
+        <span className="block pl-8 text-muted">i {hidden} więcej</span>
+      )}
     </span>
   );
 }

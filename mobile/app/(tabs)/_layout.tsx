@@ -9,7 +9,11 @@ type IconName = ComponentProps<typeof Ionicons>["name"];
 
 function tabIcon(name: IconName) {
   return ({ color, size }: { color: ColorValue; size: number }) => (
-    <Ionicons name={name} color={typeof color === "string" ? color : undefined} size={size} />
+    <Ionicons
+      name={name}
+      color={typeof color === "string" ? color : undefined}
+      size={size}
+    />
   );
 }
 
@@ -30,11 +34,17 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="counters"
-        options={{ title: "Liczniki", tabBarIcon: tabIcon("stats-chart-outline") }}
+        options={{
+          title: "Liczniki",
+          tabBarIcon: tabIcon("stats-chart-outline"),
+        }}
       />
       <Tabs.Screen
         name="account"
-        options={{ title: "Konto", tabBarIcon: tabIcon("person-circle-outline") }}
+        options={{
+          title: "Konto",
+          tabBarIcon: tabIcon("person-circle-outline"),
+        }}
       />
     </Tabs>
   );

@@ -37,27 +37,45 @@
 
   --shadow-dialog: 0 24px 80px rgb(9 24 28 / 25%);
 
-  --font-sans: 'Segoe UI', system-ui, sans-serif;
-  --font-display: 'Trebuchet MS', 'Segoe UI', sans-serif;
-  --font-utility: 'Cascadia Code', 'SFMono-Regular', Consolas, monospace;
+  --font-sans: "Segoe UI", system-ui, sans-serif;
+  --font-display: "Trebuchet MS", "Segoe UI", sans-serif;
+  --font-utility: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
 
   --animate-dialog-enter: dialog-enter 150ms ease-out both;
   --animate-nav-enter: nav-enter 150ms ease-out both;
   --animate-nav-enter-left: nav-enter-left 150ms ease-out both;
 
   @keyframes dialog-enter {
-    from { opacity: 0; transform: translateY(7px) scale(0.99); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+    from {
+      opacity: 0;
+      transform: translateY(7px) scale(0.99);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
   }
 
   @keyframes nav-enter {
-    from { opacity: 0; transform: translateX(14px); }
-    to { opacity: 1; transform: none; }
+    from {
+      opacity: 0;
+      transform: translateX(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
 
   @keyframes nav-enter-left {
-    from { opacity: 0; transform: translateX(-14px); }
-    to { opacity: 1; transform: none; }
+    from {
+      opacity: 0;
+      transform: translateX(-14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
 }
 
@@ -79,11 +97,15 @@
     font-synthesis: none;
   }
 
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     box-sizing: border-box;
   }
 
-  button, input, textarea {
+  button,
+  input,
+  textarea {
     font-family: inherit;
   }
 
@@ -100,13 +122,16 @@
     color: var(--color-ink);
   }
 
-  button:focus-visible, a:focus-visible {
+  button:focus-visible,
+  a:focus-visible {
     outline: 3px solid #e18a69;
     outline-offset: 3px;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
+    *,
+    *::before,
+    *::after {
       animation-duration: 0.01ms !important;
       scroll-behavior: auto !important;
       transition-duration: 0.01ms !important;

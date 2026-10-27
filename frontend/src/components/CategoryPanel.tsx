@@ -11,11 +11,17 @@ import {
   LoadingStatus,
   TextInput,
 } from "@/design-system";
-import { CATEGORY_ICON_SUGGESTIONS, DEFAULT_CATEGORY_ICON } from "@personal/shared/categoryIcons";
+import {
+  CATEGORY_ICON_SUGGESTIONS,
+  DEFAULT_CATEGORY_ICON,
+} from "@personal/shared/categoryIcons";
 import { CategoryIcon } from "@/components/CategoryIcon";
 import { DeleteCategoryModal } from "@/components/modals/DeleteCategoryModal";
 import { ShowModal } from "@/stores/modal";
-import { useCategoriesStore, type CategoryInput } from "@personal/shared/stores/categories";
+import {
+  useCategoriesStore,
+  type CategoryInput,
+} from "@personal/shared/stores/categories";
 import type { CategoryResponse } from "@personal/shared/generated/api";
 
 /** Panel below the wallet: inline create, edit (name and icon), and delete. */
@@ -107,10 +113,7 @@ export function CategoryPanel() {
         </div>
       </div>
 
-      <form
-        className="mt-4 flex gap-[10px]"
-        onSubmit={handleCreate}
-      >
+      <form className="mt-4 flex gap-[10px]" onSubmit={handleCreate}>
         <IconPicker
           label="Ikona kategorii"
           value={newIcon}
@@ -133,19 +136,12 @@ export function CategoryPanel() {
           {isCreating ? "Dodawanie…" : "Dodaj"}
         </Button>
       </form>
-      {createError && (
-        <ErrorAlert>{createError}</ErrorAlert>
-      )}
+      {createError && <ErrorAlert>{createError}</ErrorAlert>}
 
       {isLoading ? (
-        <LoadingStatus>
-          Wczytywanie kategorii…
-        </LoadingStatus>
+        <LoadingStatus>Wczytywanie kategorii…</LoadingStatus>
       ) : pageError ? (
-        <p
-          className="m-0 px-2 py-6 text-[13px] text-danger-ink"
-          role="alert"
-        >
+        <p className="m-0 px-2 py-6 text-[13px] text-danger-ink" role="alert">
           {pageError}
         </p>
       ) : visibleCategories.length === 0 ? (
@@ -187,7 +183,10 @@ export function CategoryPanel() {
                   aria-label={`Zmień nazwę kategorii: ${category.name}`}
                   onClick={() => startEditing(category)}
                 >
-                  <CategoryIcon icon={category.icon} className="text-ink-soft" />
+                  <CategoryIcon
+                    icon={category.icon}
+                    className="text-ink-soft"
+                  />
                   <ListRowTitle>{category.name}</ListRowTitle>
                 </ListRowButton>
               )}

@@ -4,7 +4,12 @@ import type { ProjectResponse } from "@personal/shared/generated/api";
 /** The select value for "no project" when `allowNone` is set. */
 export const NO_PROJECT = "none";
 
-export function ProjectSelect({ projects, value, onChange, allowNone = false }: {
+export function ProjectSelect({
+  projects,
+  value,
+  onChange,
+  allowNone = false,
+}: {
   projects: ProjectResponse[];
   value: string;
   onChange: (projectId: string) => void;
@@ -12,7 +17,11 @@ export function ProjectSelect({ projects, value, onChange, allowNone = false }: 
   allowNone?: boolean;
 }) {
   return (
-    <Select value={value} onChange={(event) => onChange(event.target.value)} required={!allowNone}>
+    <Select
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      required={!allowNone}
+    >
       <option value="" disabled>
         Wybierz projekt
       </option>

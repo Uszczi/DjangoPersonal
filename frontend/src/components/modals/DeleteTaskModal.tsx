@@ -43,16 +43,12 @@ export function DeleteTaskModal({ task, onClose }: DeleteTaskModalProps) {
       size="md"
     >
       <p className="m-0 mt-5 text-[13px] leading-relaxed text-[#40595c] break-words">
-        Zadanie „{task.title}" zostanie trwale usunięte. Tej operacji nie
-        można cofnąć.
+        Zadanie „{task.title}" zostanie trwale usunięte. Tej operacji nie można
+        cofnąć.
       </p>
       {deleteError && <ErrorAlert>{deleteError}</ErrorAlert>}
       <ModalFooter>
-        <Button
-          variant="secondary"
-          onClick={close}
-          disabled={isDeleting}
-        >
+        <Button variant="secondary" onClick={close} disabled={isDeleting}>
           Anuluj
         </Button>
         <Button

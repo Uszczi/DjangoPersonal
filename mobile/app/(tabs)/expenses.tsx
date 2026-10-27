@@ -38,7 +38,10 @@ function groupByDay(transactions: TransactionResponse[]): DaySection[] {
     const key = dateKey(transaction.date);
     groups.set(key, [...(groups.get(key) ?? []), transaction]);
   }
-  return [...groups.values()].map((data) => ({ title: dayFormatter.format(data[0].date), data }));
+  return [...groups.values()].map((data) => ({
+    title: dayFormatter.format(data[0].date),
+    data,
+  }));
 }
 
 /** The web Wydatki page: one wallet at a time, its transactions by day. */
@@ -51,10 +54,16 @@ export default function ExpensesScreen() {
   const loadWallets = useWalletsStore((state) => state.loadWallets);
   const categories = useCategoriesStore((state) => state.categories);
   const loadCategories = useCategoriesStore((state) => state.loadCategories);
-  const transactionList = useTransactionsStore((state) => state.transactionList);
+  const transactionList = useTransactionsStore(
+    (state) => state.transactionList,
+  );
   const transactionLoadError = useTransactionsStore((state) => state.loadError);
-  const loadTransactions = useTransactionsStore((state) => state.loadTransactions);
-  const loadMoreTransactions = useTransactionsStore((state) => state.loadMoreTransactions);
+  const loadTransactions = useTransactionsStore(
+    (state) => state.loadTransactions,
+  );
+  const loadMoreTransactions = useTransactionsStore(
+    (state) => state.loadMoreTransactions,
+  );
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -89,7 +98,8 @@ export default function ExpensesScreen() {
     setIsLoadingMore(false);
   }
 
-  const shownList = wallet && transactionList?.walletId === wallet.id ? transactionList : null;
+  const shownList =
+    wallet && transactionList?.walletId === wallet.id ? transactionList : null;
   const transactions = shownList ? shownList.transactions : null;
   const hasMore = shownList?.nextCursor != null;
   const sections = groupByDay(transactions ?? []);
@@ -128,10 +138,18 @@ export default function ExpensesScreen() {
                       accessibilityRole="tab"
                       accessibilityState={{ selected: isActive }}
                       onPress={() => selectWallet(item.id)}
-                      style={[styles.walletTab, isActive && styles.walletTabActive]}
+                      style={[
+                        styles.walletTab,
+                        isActive && styles.walletTabActive,
+                      ]}
                     >
                       <WalletMark wallet={item} size={16} />
-                      <Text style={[styles.walletTabLabel, isActive && styles.walletTabLabelActive]}>
+                      <Text
+                        style={[
+                          styles.walletTabLabel,
+                          isActive && styles.walletTabLabelActive,
+                        ]}
+                      >
                         {item.name}
                       </Text>
                     </Pressable>
@@ -146,14 +164,19 @@ export default function ExpensesScreen() {
                   <Text style={[card.title, { flex: 1 }]} numberOfLines={1}>
                     {wallet.name}
                   </Text>
-                  {wallet.balance != null && <Text style={styles.balance}>{wallet.balance}</Text>}
+                  {wallet.balance != null && (
+                    <Text style={styles.balance}>{wallet.balance}</Text>
+                  )}
                 </View>
                 <View style={styles.actions}>
                   <Button
                     label="Edytuj portfel"
                     variant="secondary"
                     onPress={() =>
-                      router.push({ pathname: "/wallet", params: { walletId: wallet.id } })
+                      router.push({
+                        pathname: "/wallet",
+                        params: { walletId: wallet.id },
+                      })
                     }
                   />
                   <Button
@@ -171,7 +194,9 @@ export default function ExpensesScreen() {
                 </Text>
               )
             )}
-            <View style={[styles.actions, { marginHorizontal: 16, marginTop: 12 }]}>
+            <View
+              style={[styles.actions, { marginHorizontal: 16, marginTop: 12 }]}
+            >
               <Button
                 label="+ Nowy portfel"
                 variant="secondary"
@@ -190,7 +215,9 @@ export default function ExpensesScreen() {
         }
         ListFooterComponent={
           hasMore ? (
-            <View style={[styles.actions, { marginHorizontal: 16, marginTop: 12 }]}>
+            <View
+              style={[styles.actions, { marginHorizontal: 16, marginTop: 12 }]}
+            >
               <Button
                 label={isLoadingMore ? "Wczytywanie…" : "Pokaż więcej"}
                 variant="secondary"
@@ -247,7 +274,10 @@ export default function ExpensesScreen() {
         <Fab
           accessibilityLabel="Nowa transakcja"
           onPress={() =>
-            router.push({ pathname: "/transaction", params: { walletId: wallet.id } })
+            router.push({
+              pathname: "/transaction",
+              params: { walletId: wallet.id },
+            })
           }
         />
       )}
@@ -272,7 +302,12 @@ const styles = StyleSheet.create({
   walletTabLabel: { color: colors.text },
   walletTabLabelActive: { fontWeight: "700" },
   walletHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
-  balance: { fontSize: 18, fontWeight: "700", color: colors.text, fontVariant: ["tabular-nums"] },
+  balance: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.text,
+    fontVariant: ["tabular-nums"],
+  },
   actions: { flexDirection: "row", gap: 12 },
   empty: { padding: 24, textAlign: "center" },
   dayTitle: {
@@ -285,5 +320,10 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 16, color: colors.text },
   category: { flexDirection: "row", alignItems: "center", gap: 4 },
-  amount: { fontSize: 15, fontWeight: "600", color: colors.text, fontVariant: ["tabular-nums"] },
+  amount: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: colors.text,
+    fontVariant: ["tabular-nums"],
+  },
 });

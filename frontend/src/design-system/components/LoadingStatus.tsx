@@ -12,6 +12,16 @@ type LoadingStatusProps = HTMLAttributes<HTMLParagraphElement> & {
 };
 
 /** A "loading…" (or "redirecting…") message announced to screen readers as a status. */
-export function LoadingStatus({ variant = "page", className = "", ...props }: LoadingStatusProps) {
-  return <p role="status" className={`${variantClasses[variant]} ${className}`.trim()} {...props} />;
+export function LoadingStatus({
+  variant = "page",
+  className = "",
+  ...props
+}: LoadingStatusProps) {
+  return (
+    <p
+      role="status"
+      className={`${variantClasses[variant]} ${className}`.trim()}
+      {...props}
+    />
+  );
 }

@@ -10,7 +10,9 @@ export function ModalHost() {
   return (
     <>
       {entries.map((entry) => (
-        <Fragment key={entry.id}>{entry.render(() => remove(entry.id))}</Fragment>
+        <Fragment key={entry.id}>
+          {entry.render(() => remove(entry.id))}
+        </Fragment>
       ))}
     </>
   );

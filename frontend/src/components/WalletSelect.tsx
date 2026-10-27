@@ -19,7 +19,10 @@ export function WalletSelect({ activeWalletId }: WalletSelectProps) {
   if (wallets.length === 0) return null;
 
   return (
-    <nav className="flex min-w-0 items-center gap-1 overflow-x-auto" aria-label="Wybierz portfel">
+    <nav
+      className="flex min-w-0 items-center gap-1 overflow-x-auto"
+      aria-label="Wybierz portfel"
+    >
       {wallets.map((wallet) => (
         <Link
           key={wallet.id}

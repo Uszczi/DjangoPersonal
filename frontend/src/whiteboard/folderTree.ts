@@ -3,18 +3,28 @@ import type { FolderResponse } from "@personal/shared/generated/api";
 /** The API lists Folders flat, each with its parent; these helpers read that as a tree. */
 
 /** The Folders directly inside `parentId` (`null`: the top level), in list order. */
-export function childFolders(folders: FolderResponse[], parentId: number | null) {
+export function childFolders(
+  folders: FolderResponse[],
+  parentId: number | null,
+) {
   return folders.filter((folder) => (folder.parentId ?? null) === parentId);
 }
 
 /** `folderId` and every Folder below it. */
-export function subtreeIds(folders: FolderResponse[], folderId: number): Set<number> {
+export function subtreeIds(
+  folders: FolderResponse[],
+  folderId: number,
+): Set<number> {
   const ids = new Set([folderId]);
   let grew = true;
   while (grew) {
     grew = false;
     for (const folder of folders) {
-      if (folder.parentId != null && ids.has(folder.parentId) && !ids.has(folder.id)) {
+      if (
+        folder.parentId != null &&
+        ids.has(folder.parentId) &&
+        !ids.has(folder.id)
+      ) {
         ids.add(folder.id);
         grew = true;
       }
@@ -37,7 +47,10 @@ export function flattenTree(folders: FolderResponse[]) {
 }
 
 /** The Folders from the top level down to `folderId`, inclusive; empty for `null`. */
-export function folderPath(folders: FolderResponse[], folderId: number | null): FolderResponse[] {
+export function folderPath(
+  folders: FolderResponse[],
+  folderId: number | null,
+): FolderResponse[] {
   const byId = new Map(folders.map((folder) => [folder.id, folder]));
   const path: FolderResponse[] = [];
   const seen = new Set<number>();

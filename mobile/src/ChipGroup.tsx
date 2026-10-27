@@ -22,7 +22,10 @@ export function ChipGroup<T extends string | number>({
   nowrap = false,
 }: ChipGroupProps<T>) {
   return (
-    <View style={[styles.group, nowrap && styles.nowrap]} accessibilityRole="radiogroup">
+    <View
+      style={[styles.group, nowrap && styles.nowrap]}
+      accessibilityRole="radiogroup"
+    >
       {options.map((option) => {
         const isSelected = option.value === value;
         return (
@@ -55,7 +58,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     backgroundColor: colors.surface,
   },
-  chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  chipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
   label: { color: colors.text },
   labelSelected: { color: colors.onPrimary, fontWeight: "600" },
 });

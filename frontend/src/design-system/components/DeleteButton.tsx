@@ -9,7 +9,11 @@ type DeleteButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 /** The bin button of a list row. */
-export function DeleteButton({ title = "Usuń", className = "", ...props }: DeleteButtonProps) {
+export function DeleteButton({
+  title = "Usuń",
+  className = "",
+  ...props
+}: DeleteButtonProps) {
   return (
     <IconButton
       title={title}

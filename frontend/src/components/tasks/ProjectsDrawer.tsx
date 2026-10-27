@@ -25,7 +25,11 @@ export function ProjectsDrawer({
       }
       onClose={onClose}
     >
-      <ProjectNavList selectedProjectId={selectedProjectId} tone="light" onNavigate={onClose} />
+      <ProjectNavList
+        selectedProjectId={selectedProjectId}
+        tone="light"
+        onNavigate={onClose}
+      />
       <Button
         variant="secondary"
         onClick={() => {

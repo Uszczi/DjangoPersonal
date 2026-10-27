@@ -20,7 +20,11 @@ export function ToggleGroup<T extends string>({
   className = "",
 }: ToggleGroupProps<T>) {
   return (
-    <div className={`flex items-center gap-2 ${className}`.trim()} role="group" aria-label={label}>
+    <div
+      className={`flex items-center gap-2 ${className}`.trim()}
+      role="group"
+      aria-label={label}
+    >
       {options.map((option) => (
         <Button
           key={option}

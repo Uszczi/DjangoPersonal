@@ -29,7 +29,11 @@ export function findMatches(text: string, query: string): TextMatch[] {
   const key = alignedKey(text);
   const found: TextMatch[] = [];
   for (const word of words) {
-    for (let at = key.indexOf(word); at !== -1; at = key.indexOf(word, at + 1)) {
+    for (
+      let at = key.indexOf(word);
+      at !== -1;
+      at = key.indexOf(word, at + 1)
+    ) {
       found.push({ start: at, end: at + word.length });
     }
   }
@@ -37,7 +41,8 @@ export function findMatches(text: string, query: string): TextMatch[] {
   const merged: TextMatch[] = [];
   for (const match of found) {
     const last = merged.at(-1);
-    if (last && match.start <= last.end) last.end = Math.max(last.end, match.end);
+    if (last && match.start <= last.end)
+      last.end = Math.max(last.end, match.end);
     else merged.push({ ...match });
   }
   return merged;

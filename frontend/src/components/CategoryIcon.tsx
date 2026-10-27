@@ -8,5 +8,11 @@ type CategoryIconProps = {
 
 /** A category's icon, decorative: the category's name always sits next to it. */
 export function CategoryIcon({ icon, className }: CategoryIconProps) {
-  return <NamedIcon name={icon} fallback={DEFAULT_CATEGORY_ICON} className={className} />;
+  return (
+    <NamedIcon
+      name={icon}
+      fallback={DEFAULT_CATEGORY_ICON}
+      className={className}
+    />
+  );
 }

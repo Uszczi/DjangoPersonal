@@ -12,7 +12,11 @@ type DeleteCounterModalProps = {
   onClose: () => void;
 };
 
-export function DeleteCounterModal({ counter, onDeleted, onClose }: DeleteCounterModalProps) {
+export function DeleteCounterModal({
+  counter,
+  onDeleted,
+  onClose,
+}: DeleteCounterModalProps) {
   const deleteCounter = useCountersStore((state) => state.deleteCounter);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -51,7 +55,11 @@ export function DeleteCounterModal({ counter, onDeleted, onClose }: DeleteCounte
         <Button variant="secondary" onClick={close} disabled={isDeleting}>
           Anuluj
         </Button>
-        <Button variant="danger" onClick={() => void handleDelete()} disabled={isDeleting}>
+        <Button
+          variant="danger"
+          onClick={() => void handleDelete()}
+          disabled={isDeleting}
+        >
           {isDeleting ? "Usuwanie…" : "Usuń licznik"}
         </Button>
       </ModalFooter>

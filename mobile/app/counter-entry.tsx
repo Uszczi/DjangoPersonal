@@ -26,7 +26,10 @@ function validateValue(raw: string): string {
 
 /** Adds a Counter entry (`?counterId=`) or edits one (`&entryId=`). */
 export default function CounterEntryEditorScreen() {
-  const params = useLocalSearchParams<{ counterId: string; entryId?: string }>();
+  const params = useLocalSearchParams<{
+    counterId: string;
+    entryId?: string;
+  }>();
   const counterId = Number(params.counterId);
   const entryId = params.entryId ? Number(params.entryId) : null;
   const entry = useCountersStore((state) =>
@@ -39,7 +42,9 @@ export default function CounterEntryEditorScreen() {
 
   // A new entry defaults to the moment the screen opened.
   const [value, setValue] = useState(String(entry?.value ?? 1));
-  const [occurredAt, setOccurredAt] = useState(() => entry?.occurredAt ?? new Date());
+  const [occurredAt, setOccurredAt] = useState(
+    () => entry?.occurredAt ?? new Date(),
+  );
   const [note, setNote] = useState(entry?.note ?? "");
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -97,7 +102,9 @@ export default function CounterEntryEditorScreen() {
 
   /** Flips the sign, since the number pad has no minus key on every phone. */
   function toggleSign() {
-    setValue((current) => (current.startsWith("-") ? current.slice(1) : `-${current}`));
+    setValue((current) =>
+      current.startsWith("-") ? current.slice(1) : `-${current}`,
+    );
   }
 
   return (
@@ -106,7 +113,10 @@ export default function CounterEntryEditorScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Stack.Screen options={{ title: entry ? "Edytuj wpis" : "Nowy wpis" }} />
-      <ScrollView contentContainerStyle={form.content} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={form.content}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={form.label}>Wartość</Text>
         <View style={{ flexDirection: "row", gap: 12 }}>
           <Button
@@ -126,10 +136,16 @@ export default function CounterEntryEditorScreen() {
             selectTextOnFocus
           />
         </View>
-        <Text style={form.hint}>Liczba całkowita; ujemna odejmuje od sumy.</Text>
+        <Text style={form.hint}>
+          Liczba całkowita; ujemna odejmuje od sumy.
+        </Text>
 
         <Text style={form.label}>Kiedy</Text>
-        <DateTimeField value={occurredAt} onChange={setOccurredAt} disabled={isSaving} />
+        <DateTimeField
+          value={occurredAt}
+          onChange={setOccurredAt}
+          disabled={isSaving}
+        />
 
         <Text style={form.label}>Notatka</Text>
         <TextInput
@@ -157,7 +173,12 @@ export default function CounterEntryEditorScreen() {
         </View>
         {entry && (
           <View style={form.actions}>
-            <Button label="Usuń wpis" variant="danger" disabled={isSaving} onPress={confirmDelete} />
+            <Button
+              label="Usuń wpis"
+              variant="danger"
+              disabled={isSaving}
+              onPress={confirmDelete}
+            />
           </View>
         )}
       </ScrollView>

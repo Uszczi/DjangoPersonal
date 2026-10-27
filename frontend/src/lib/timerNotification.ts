@@ -9,7 +9,9 @@ export function askForTimerNotifications(): void {
   if (!isSupported() || Notification.permission !== "default") return;
   try {
     // Older Safari returns nothing instead of a promise.
-    void Promise.resolve(Notification.requestPermission()).catch(() => undefined);
+    void Promise.resolve(Notification.requestPermission()).catch(
+      () => undefined,
+    );
   } catch {
     // Permission can't be requested here; the on-page message still shows.
   }

@@ -90,7 +90,12 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: { justifyContent: "center", padding: 24 },
   form: { gap: 12 },
-  title: { fontSize: 28, fontWeight: "700", color: colors.text, marginBottom: 12 },
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: colors.text,
+    marginBottom: 12,
+  },
   input: {
     borderWidth: 1,
     borderColor: colors.border,

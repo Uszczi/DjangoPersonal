@@ -21,7 +21,9 @@ export function NavTiles() {
           <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-signal text-xl text-white">
             {tile.icon}
           </span>
-          <span className="font-display text-lg font-semibold text-ink">{tile.label}</span>
+          <span className="font-display text-lg font-semibold text-ink">
+            {tile.label}
+          </span>
         </Link>
       ))}
     </div>

@@ -1,9 +1,19 @@
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
-import { CATEGORY_ICON_SUGGESTIONS, DEFAULT_CATEGORY_ICON } from "@personal/shared/categoryIcons";
+import {
+  CATEGORY_ICON_SUGGESTIONS,
+  DEFAULT_CATEGORY_ICON,
+} from "@personal/shared/categoryIcons";
 import { useCategoriesStore } from "@personal/shared/stores/categories";
 import { useTransactionsStore } from "@personal/shared/stores/transactions";
 import { useWalletsStore } from "@personal/shared/stores/wallets";
@@ -18,11 +28,15 @@ export default function CategoryEditorScreen() {
   const params = useLocalSearchParams<{ categoryId?: string }>();
   const categoryId = params.categoryId ? Number(params.categoryId) : null;
   const category = useCategoriesStore((state) =>
-    categoryId === null ? null : (state.categories.find((item) => item.id === categoryId) ?? null),
+    categoryId === null
+      ? null
+      : (state.categories.find((item) => item.id === categoryId) ?? null),
   );
   const createCategory = useCategoriesStore((state) => state.createCategory);
   const updateCategory = useCategoriesStore((state) => state.updateCategory);
-  const confirmCategoryDelete = useCategoriesStore((state) => state.confirmCategoryDelete);
+  const confirmCategoryDelete = useCategoriesStore(
+    (state) => state.confirmCategoryDelete,
+  );
 
   const [name, setName] = useState(category?.name ?? "");
   const [icon, setIcon] = useState(category?.icon ?? DEFAULT_CATEGORY_ICON);
@@ -71,7 +85,8 @@ export default function CategoryEditorScreen() {
       await confirmCategoryDelete(category);
       // Its transactions are gone too: reload the shown list and the balances.
       const shown = useTransactionsStore.getState().transactionList;
-      if (shown) void useTransactionsStore.getState().loadTransactions(shown.walletId);
+      if (shown)
+        void useTransactionsStore.getState().loadTransactions(shown.walletId);
       void useWalletsStore.getState().loadWallets();
       router.back();
     } catch (error) {
@@ -85,8 +100,13 @@ export default function CategoryEditorScreen() {
       style={common.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Stack.Screen options={{ title: category ? "Edytuj kategorię" : "Nowa kategoria" }} />
-      <ScrollView contentContainerStyle={form.content} keyboardShouldPersistTaps="handled">
+      <Stack.Screen
+        options={{ title: category ? "Edytuj kategorię" : "Nowa kategoria" }}
+      />
+      <ScrollView
+        contentContainerStyle={form.content}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={form.label}>Nazwa kategorii</Text>
         <TextInput
           style={form.input}

@@ -20,7 +20,8 @@ type PageHeaderProps = {
   titleEditor?: ReactNode;
 };
 
-const titleClasses = "font-display text-[28px] font-bold tracking-[-0.02em] text-ink";
+const titleClasses =
+  "font-display text-[28px] font-bold tracking-[-0.02em] text-ink";
 
 /** The top of every page: its `<h1>` and the page-wide actions. */
 export function PageHeader({

@@ -3,7 +3,13 @@ import { useEffect, useRef } from "react";
 /** Side of the dial in CSS pixels. */
 const SIZE = 132;
 
-type Palette = { face: string; rim: string; wedge: string; tick: string; hand: string };
+type Palette = {
+  face: string;
+  rim: string;
+  wedge: string;
+  tick: string;
+  hand: string;
+};
 
 /**
  * A kitchen-timer dial drawn on a canvas: the wedge is the part of the limit
@@ -11,7 +17,10 @@ type Palette = { face: string; rim: string; wedge: string; tick: string; hand: s
  * next to it carry the same information, so it is hidden from assistive tech.
  * It redraws whenever `remaining` changes (the page ticks once a second).
  */
-export function CountdownDial({ remaining, total }: {
+export function CountdownDial({
+  remaining,
+  total,
+}: {
   /** Milliseconds left. */
   remaining: number;
   /** The whole limit in milliseconds. */
@@ -32,7 +41,8 @@ export function CountdownDial({ remaining, total }: {
     }
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
 
-    const fraction = total > 0 ? Math.min(1, Math.max(0, remaining / total)) : 0;
+    const fraction =
+      total > 0 ? Math.min(1, Math.max(0, remaining / total)) : 0;
     drawDial(context, fraction, readPalette(canvas));
   }, [remaining, total]);
 
@@ -60,7 +70,11 @@ function readPalette(element: Element): Palette {
   };
 }
 
-function drawDial(context: CanvasRenderingContext2D, fraction: number, palette: Palette) {
+function drawDial(
+  context: CanvasRenderingContext2D,
+  fraction: number,
+  palette: Palette,
+) {
   const center = SIZE / 2;
   const radius = center - 3;
   const top = -Math.PI / 2;
@@ -98,8 +112,14 @@ function drawDial(context: CanvasRenderingContext2D, fraction: number, palette: 
     const inner = outer - (isMajor ? 7 : 3);
     context.beginPath();
     context.lineWidth = isMajor ? 2 : 1;
-    context.moveTo(center + Math.cos(angle) * inner, center + Math.sin(angle) * inner);
-    context.lineTo(center + Math.cos(angle) * outer, center + Math.sin(angle) * outer);
+    context.moveTo(
+      center + Math.cos(angle) * inner,
+      center + Math.sin(angle) * inner,
+    );
+    context.lineTo(
+      center + Math.cos(angle) * outer,
+      center + Math.sin(angle) * outer,
+    );
     context.stroke();
   }
 

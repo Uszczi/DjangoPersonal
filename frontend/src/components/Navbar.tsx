@@ -5,12 +5,20 @@ import { useState } from "react";
 import { Button, Drawer } from "@/design-system";
 import { useAuthStore } from "@personal/shared/stores/auth";
 
-type TopTabPath = "/" | "/tasks" | "/projects" | "/timer" | "/whiteboard" | "/expenses" | "/counters";
+type TopTabPath =
+  | "/"
+  | "/tasks"
+  | "/projects"
+  | "/timer"
+  | "/whiteboard"
+  | "/expenses"
+  | "/counters";
 
 /** Link colors for the dark header bar and for the light mobile drawer. */
 const tabToneClasses = {
   dark: "text-[#b5c6c6] hover:text-white data-[selected]:bg-[#29474d] data-[selected]:text-white",
-  light: "text-ink-soft hover:bg-wash hover:text-ink data-[selected]:bg-deep-ink data-[selected]:text-white",
+  light:
+    "text-ink-soft hover:bg-wash hover:text-ink data-[selected]:bg-deep-ink data-[selected]:text-white",
 };
 
 function TopTabLink({
@@ -64,45 +72,55 @@ export function Navbar() {
     <>
       <header className="bg-deep-ink text-[#f4f7f4]">
         <div className="mx-auto flex h-[68px] w-full max-w-app items-center justify-between gap-7 px-[38px]">
-        <Link className="inline-flex items-center gap-[11px] text-[15px] font-bold tracking-[-0.03em] text-inherit no-underline" to="/" aria-label="DjangoPersonal — strona główna">
-          <span className="inline-flex h-[29px] w-[29px] items-center justify-center rounded-[5px_5px_5px_1px] bg-signal font-utility text-[13px] text-white -rotate-[3deg]" aria-hidden="true">
-            D
-          </span>
-          <span>DjangoPersonal</span>
-        </Link>
-        <nav className="hidden md:flex gap-1" aria-label="Nawigacja widoków">
-          {NAV_ITEMS.map((item) => (
-            <TopTabLink key={item.to} to={item.to}>
-              {item.label}
-            </TopTabLink>
-          ))}
-        </nav>
-        <button
-          type="button"
-          className="md:hidden inline-flex items-center justify-center rounded-md border border-transparent bg-transparent text-[24px] leading-none text-[#b5c6c6] transition-all hover:-translate-y-px cursor-pointer"
-          aria-label={isNavOpen ? "Zamknij menu" : "Otwórz menu"}
-          aria-expanded={isNavOpen}
-          aria-controls="mobile-nav"
-          onClick={() => setIsNavOpen((open) => !open)}
-        >
-          <span aria-hidden="true">{isNavOpen ? "×" : "☰"}</span>
-        </button>
-        {user && (
-          <div className="hidden md:flex items-center gap-4">
-            <Link className="text-[13px] font-medium text-[#b5c6c6] no-underline transition-colors hover:text-white" to="/user">
-              {user.username}
-            </Link>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                logout();
-                navigate({ to: "/login" });
-              }}
+          <Link
+            className="inline-flex items-center gap-[11px] text-[15px] font-bold tracking-[-0.03em] text-inherit no-underline"
+            to="/"
+            aria-label="DjangoPersonal — strona główna"
+          >
+            <span
+              className="inline-flex h-[29px] w-[29px] items-center justify-center rounded-[5px_5px_5px_1px] bg-signal font-utility text-[13px] text-white -rotate-[3deg]"
+              aria-hidden="true"
             >
-              Wyloguj
-            </Button>
-          </div>
-        )}
+              D
+            </span>
+            <span>DjangoPersonal</span>
+          </Link>
+          <nav className="hidden md:flex gap-1" aria-label="Nawigacja widoków">
+            {NAV_ITEMS.map((item) => (
+              <TopTabLink key={item.to} to={item.to}>
+                {item.label}
+              </TopTabLink>
+            ))}
+          </nav>
+          <button
+            type="button"
+            className="md:hidden inline-flex items-center justify-center rounded-md border border-transparent bg-transparent text-[24px] leading-none text-[#b5c6c6] transition-all hover:-translate-y-px cursor-pointer"
+            aria-label={isNavOpen ? "Zamknij menu" : "Otwórz menu"}
+            aria-expanded={isNavOpen}
+            aria-controls="mobile-nav"
+            onClick={() => setIsNavOpen((open) => !open)}
+          >
+            <span aria-hidden="true">{isNavOpen ? "×" : "☰"}</span>
+          </button>
+          {user && (
+            <div className="hidden md:flex items-center gap-4">
+              <Link
+                className="text-[13px] font-medium text-[#b5c6c6] no-underline transition-colors hover:text-white"
+                to="/user"
+              >
+                {user.username}
+              </Link>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  logout();
+                  navigate({ to: "/login" });
+                }}
+              >
+                Wyloguj
+              </Button>
+            </div>
+          )}
         </div>
       </header>
       {isNavOpen && (
@@ -112,7 +130,10 @@ export function Navbar() {
           onClose={closeNav}
           title={
             <div className="inline-flex items-center gap-[11px] text-[15px] font-bold tracking-[-0.03em]">
-              <span className="inline-flex h-[29px] w-[29px] items-center justify-center rounded-[5px_5px_5px_1px] bg-signal font-utility text-[13px] text-white -rotate-[3deg]" aria-hidden="true">
+              <span
+                className="inline-flex h-[29px] w-[29px] items-center justify-center rounded-[5px_5px_5px_1px] bg-signal font-utility text-[13px] text-white -rotate-[3deg]"
+                aria-hidden="true"
+              >
                 D
               </span>
               <span>Menu</span>
@@ -121,14 +142,23 @@ export function Navbar() {
         >
           <nav className="flex flex-col gap-1" aria-label="Nawigacja widoków">
             {NAV_ITEMS.map((item) => (
-              <TopTabLink key={item.to} to={item.to} tone="light" onClick={closeNav}>
+              <TopTabLink
+                key={item.to}
+                to={item.to}
+                tone="light"
+                onClick={closeNav}
+              >
                 {item.label}
               </TopTabLink>
             ))}
           </nav>
           {user && (
             <div className="flex items-center gap-4">
-              <Link className="text-[13px] font-medium text-ink-soft no-underline transition-colors hover:text-ink" to="/user" onClick={closeNav}>
+              <Link
+                className="text-[13px] font-medium text-ink-soft no-underline transition-colors hover:text-ink"
+                to="/user"
+                onClick={closeNav}
+              >
                 {user.username}
               </Link>
               <Button

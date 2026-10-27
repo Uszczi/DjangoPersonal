@@ -22,7 +22,10 @@ export type BoardLoadState =
 /** Fetches one Notatnik item; a response for a board the user has since left is ignored. */
 export function useLoadedBoard(boardId: string): BoardLoadState {
   // Tagged with the board it belongs to, so a result for the previous board is never shown.
-  const [result, setResult] = useState<{ boardId: string; state: BoardLoadState } | null>(null);
+  const [result, setResult] = useState<{
+    boardId: string;
+    state: BoardLoadState;
+  } | null>(null);
   const loadGuard = useLoadGuard();
 
   useEffect(() => {
@@ -33,7 +36,8 @@ export function useLoadedBoard(boardId: string): BoardLoadState {
         const wb = await api.whiteboardsRetrieve({ id: Number(boardId) });
         if (!loadGuard.isLatest(requestId)) return;
         const { parseBoard } = await import("@/whiteboard/boardDocument");
-        const markdown = (wb.content && (wb.content as { markdown?: string }).markdown) ?? "";
+        const markdown =
+          (wb.content && (wb.content as { markdown?: string }).markdown) ?? "";
         setState({
           status: "loaded",
           item: {
@@ -54,7 +58,10 @@ export function useLoadedBoard(boardId: string): BoardLoadState {
           return;
         }
         const msg = await apiErrorMessage(error);
-        setState({ status: "error", message: msg || "Nie udało się wczytać tablicy." });
+        setState({
+          status: "error",
+          message: msg || "Nie udało się wczytać tablicy.",
+        });
       }
     }
     void load();

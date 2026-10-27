@@ -15,10 +15,18 @@ type NamedIconProps = {
  * box of the same size holds its place. Decorative: a label always sits next
  * to it.
  */
-export function NamedIcon({ name, fallback = "tag", className = "" }: NamedIconProps) {
+export function NamedIcon({
+  name,
+  fallback = "tag",
+  className = "",
+}: NamedIconProps) {
   const classes = `size-4 shrink-0 ${className}`.trim();
   return (
-    <Suspense fallback={<span className={`inline-block ${classes}`} aria-hidden="true" />}>
+    <Suspense
+      fallback={
+        <span className={`inline-block ${classes}`} aria-hidden="true" />
+      }
+    >
       <LucideNamedIcon name={name} fallback={fallback} className={classes} />
     </Suspense>
   );

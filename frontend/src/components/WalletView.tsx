@@ -13,7 +13,10 @@ import {
   ListRowSubtitle,
   ListRowTitle,
 } from "@/design-system";
-import { type TransactionResponse, type WalletResponse } from "@personal/shared/generated/api";
+import {
+  type TransactionResponse,
+  type WalletResponse,
+} from "@personal/shared/generated/api";
 import { ShowModal } from "@/stores/modal";
 import { useCategoriesStore } from "@personal/shared/stores/categories";
 import { TRANSACTIONS_LOAD_ERROR } from "@personal/shared/transactionList";
@@ -55,7 +58,11 @@ function groupByDay(
  * instead of waiting for a scroll that cannot happen. Without
  * IntersectionObserver the button still works.
  */
-function useOnScrolledIntoView(onReach: () => void, enabled: boolean, loaded: number) {
+function useOnScrolledIntoView(
+  onReach: () => void,
+  enabled: boolean,
+  loaded: number,
+) {
   const ref = useRef<HTMLDivElement>(null);
   const onReachRef = useRef(onReach);
   useEffect(() => {
@@ -63,7 +70,8 @@ function useOnScrolledIntoView(onReach: () => void, enabled: boolean, loaded: nu
   });
   useEffect(() => {
     const element = ref.current;
-    if (!enabled || !element || typeof IntersectionObserver === "undefined") return;
+    if (!enabled || !element || typeof IntersectionObserver === "undefined")
+      return;
     const observer = new IntersectionObserver((entries) => {
       if (entries.some((entry) => entry.isIntersecting)) onReachRef.current();
     });
@@ -92,7 +100,11 @@ export function WalletView({ wallet }: { wallet: WalletResponse }) {
   const loadMore = () => {
     if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
   };
-  const endOfList = useOnScrolledIntoView(loadMore, hasNextPage, transactions.length);
+  const endOfList = useOnScrolledIntoView(
+    loadMore,
+    hasNextPage,
+    transactions.length,
+  );
   const groups = groupByDay(transactions);
 
   return (
@@ -127,12 +139,12 @@ export function WalletView({ wallet }: { wallet: WalletResponse }) {
         </Button>
       </div>
 
-      {isError && (
-        <ErrorMessage>{TRANSACTIONS_LOAD_ERROR}</ErrorMessage>
-      )}
+      {isError && <ErrorMessage>{TRANSACTIONS_LOAD_ERROR}</ErrorMessage>}
 
       {groups.length === 0 ? (
-        <p className="py-4 text-[13px] text-muted">Brak transakcji. Dodaj pierwszą transakcję.</p>
+        <p className="py-4 text-[13px] text-muted">
+          Brak transakcji. Dodaj pierwszą transakcję.
+        </p>
       ) : (
         groups.map(([day, dayTransactions]) => (
           <section className="mb-6" key={day}>
@@ -145,7 +157,9 @@ export function WalletView({ wallet }: { wallet: WalletResponse }) {
             >
               {dayTransactions.map((transaction) => {
                 const category = transaction.categoryId
-                  ? categories.find((item) => item.id === transaction.categoryId)
+                  ? categories.find(
+                      (item) => item.id === transaction.categoryId,
+                    )
                   : undefined;
                 return (
                   <ListRow key={transaction.id}>
@@ -161,12 +175,17 @@ export function WalletView({ wallet }: { wallet: WalletResponse }) {
                       <div className="min-w-0">
                         <ListRowTitle>{transaction.title}</ListRowTitle>
                         {transaction.description && (
-                          <ListRowSubtitle multiline>{transaction.description}</ListRowSubtitle>
+                          <ListRowSubtitle multiline>
+                            {transaction.description}
+                          </ListRowSubtitle>
                         )}
                         {category && (
                           <ListRowSubtitle>
                             <span className="inline-flex items-center gap-1">
-                              <CategoryIcon icon={category.icon} className="size-3.5" />
+                              <CategoryIcon
+                                icon={category.icon}
+                                className="size-3.5"
+                              />
                               {category.name}
                             </span>
                           </ListRowSubtitle>
@@ -186,7 +205,11 @@ export function WalletView({ wallet }: { wallet: WalletResponse }) {
 
       {hasNextPage && (
         <div ref={endOfList} className="flex justify-center py-4">
-          <Button variant="secondary" onClick={loadMore} disabled={isFetchingNextPage}>
+          <Button
+            variant="secondary"
+            onClick={loadMore}
+            disabled={isFetchingNextPage}
+          >
             {isFetchingNextPage ? "Wczytywanie…" : "Wczytaj więcej"}
           </Button>
         </div>

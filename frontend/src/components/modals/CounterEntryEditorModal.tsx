@@ -68,7 +68,11 @@ export function CounterEntryEditorModal({
     try {
       await saveEntry(
         counterId,
-        { value: Number(value), occurredAt: form.occurredAt, note: form.note.trim() },
+        {
+          value: Number(value),
+          occurredAt: form.occurredAt,
+          note: form.note.trim(),
+        },
         entry,
       );
       onClose();
@@ -88,7 +92,10 @@ export function CounterEntryEditorModal({
       size="lg"
     >
       <form onSubmit={handleSubmit} noValidate>
-        <Field label="Wartość" hint="Liczba całkowita; ujemna odejmuje od sumy.">
+        <Field
+          label="Wartość"
+          hint="Liczba całkowita; ujemna odejmuje od sumy."
+        >
           <TextInput
             inputMode="numeric"
             autoComplete="off"
@@ -102,7 +109,9 @@ export function CounterEntryEditorModal({
         <Field label="Kiedy">
           <DateTimePicker
             value={form.occurredAt}
-            onChange={(occurredAt) => setForm((current) => ({ ...current, occurredAt }))}
+            onChange={(occurredAt) =>
+              setForm((current) => ({ ...current, occurredAt }))
+            }
             required
           />
         </Field>

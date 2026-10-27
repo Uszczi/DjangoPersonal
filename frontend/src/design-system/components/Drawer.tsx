@@ -21,7 +21,14 @@ type DrawerProps = {
  * A panel sliding in at the top right (or left, with `side`), on the native `<dialog>` element (see `useModalDialog`).
  * Render it only while open; it opens on mount and closes on unmount.
  */
-export function Drawer({ title, label, id, side = "right", onClose, children }: DrawerProps) {
+export function Drawer({
+  title,
+  label,
+  id,
+  side = "right",
+  onClose,
+  children,
+}: DrawerProps) {
   const dialogProps = useModalDialog(onClose);
 
   return (
@@ -31,7 +38,9 @@ export function Drawer({ title, label, id, side = "right", onClose, children }: 
       aria-label={label}
       className={`fixed inset-0 m-0 h-full max-h-none w-full max-w-none items-start border-0 bg-overlay p-5 text-ink backdrop:bg-transparent open:flex ${side === "left" ? "justify-start" : "justify-end"}`}
     >
-      <div className={`flex min-h-[200px] w-full max-w-[320px] flex-col gap-5 rounded-lg border border-line bg-paper p-[29px] shadow-dialog ${side === "left" ? "animate-nav-enter-left" : "animate-nav-enter"}`}>
+      <div
+        className={`flex min-h-[200px] w-full max-w-[320px] flex-col gap-5 rounded-lg border border-line bg-paper p-[29px] shadow-dialog ${side === "left" ? "animate-nav-enter-left" : "animate-nav-enter"}`}
+      >
         <div className="flex items-center justify-between">
           {title}
           <IconButton onClick={onClose} aria-label="Zamknij">

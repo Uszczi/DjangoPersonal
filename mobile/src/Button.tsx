@@ -1,4 +1,11 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, type StyleProp, type ViewStyle } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 
 import { colors } from "./theme";
 
@@ -37,7 +44,9 @@ export function Button({
       ]}
     >
       {isBusy ? (
-        <ActivityIndicator color={variant === "primary" ? colors.onPrimary : colors.text} />
+        <ActivityIndicator
+          color={variant === "primary" ? colors.onPrimary : colors.text}
+        />
       ) : (
         <Text style={[styles.label, labelStyles[variant]]}>{label}</Text>
       )}
@@ -55,8 +64,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   primary: { backgroundColor: colors.primary },
-  secondary: { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  danger: { borderWidth: 1, borderColor: colors.danger, backgroundColor: colors.surface },
+  secondary: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  danger: {
+    borderWidth: 1,
+    borderColor: colors.danger,
+    backgroundColor: colors.surface,
+  },
   dimmed: { opacity: 0.6 },
   label: { fontSize: 16, fontWeight: "600" },
 });

@@ -1,7 +1,13 @@
 import type { ReactNode } from "react";
 
 /** The card every section of the Timer page sits in, with an optional heading row. */
-export function TimerPanel({ title, headingId, label, actions, children }: {
+export function TimerPanel({
+  title,
+  headingId,
+  label,
+  actions,
+  children,
+}: {
   title?: string;
   headingId?: string;
   label?: string;
@@ -30,10 +36,18 @@ export function TimerPanel({ title, headingId, label, actions, children }: {
   );
 }
 
-export function FormLabel({ text, children }: { text: string; children: ReactNode }) {
+export function FormLabel({
+  text,
+  children,
+}: {
+  text: string;
+  children: ReactNode;
+}) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[12px] font-semibold text-ink-soft">{text}</span>
+      <span className="mb-1 block text-[12px] font-semibold text-ink-soft">
+        {text}
+      </span>
       {children}
     </label>
   );

@@ -1,7 +1,10 @@
 import { useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
-import type { ProjectResponse, TaskResponse } from "@personal/shared/generated/api";
+import type {
+  ProjectResponse,
+  TaskResponse,
+} from "@personal/shared/generated/api";
 import { useTimerStore } from "@personal/shared/stores/timer";
 import { timerLimitOptions } from "@personal/shared/timerLimit";
 import { Button, Select } from "@/design-system";
@@ -12,7 +15,12 @@ import { TaskTitleInput } from "./TaskTitleInput";
 import { FormLabel } from "./TimerPanel";
 
 /** Starts a timer on a title, optionally with a project and a limit; shown while no timer runs. */
-export function StartTimerForm({ projects, tasks, defaultProjectId, onStart }: {
+export function StartTimerForm({
+  projects,
+  tasks,
+  defaultProjectId,
+  onStart,
+}: {
   projects: ProjectResponse[];
   tasks: TaskResponse[];
   defaultProjectId: string;
@@ -28,7 +36,10 @@ export function StartTimerForm({ projects, tasks, defaultProjectId, onStart }: {
   const suggestions = [
     ...new Set(
       tasks
-        .filter((task) => projectId === NO_PROJECT || task.projectId === Number(projectId))
+        .filter(
+          (task) =>
+            projectId === NO_PROJECT || task.projectId === Number(projectId),
+        )
         .map((task) => task.title),
     ),
   ];
@@ -73,7 +84,10 @@ export function StartTimerForm({ projects, tasks, defaultProjectId, onStart }: {
           />
         </FormLabel>
         <FormLabel text="Limit czasu">
-          <Select value={limit} onChange={(event) => setLimit(event.target.value)}>
+          <Select
+            value={limit}
+            onChange={(event) => setLimit(event.target.value)}
+          >
             <option value="">Bez limitu</option>
             {timerLimitOptions.map((option) => (
               <option key={option.minutes} value={option.minutes}>

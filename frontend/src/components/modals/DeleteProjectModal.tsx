@@ -60,11 +60,7 @@ export function DeleteProjectModal({
       </p>
       {deleteError && <ErrorAlert>{deleteError}</ErrorAlert>}
       <ModalFooter>
-        <Button
-          variant="secondary"
-          onClick={close}
-          disabled={isDeleting}
-        >
+        <Button variant="secondary" onClick={close} disabled={isDeleting}>
           Anuluj
         </Button>
         <Button

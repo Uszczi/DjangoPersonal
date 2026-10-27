@@ -13,7 +13,17 @@ import {
   type HistoryState,
 } from "@/whiteboard/boardDocument";
 
-const TOOLS: Tool[] = ["select", "pen", "eraser", "rectangle", "ellipse", "line", "arrow", "text", "note"];
+const TOOLS: Tool[] = [
+  "select",
+  "pen",
+  "eraser",
+  "rectangle",
+  "ellipse",
+  "line",
+  "arrow",
+  "text",
+  "note",
+];
 
 /**
  * A whiteboard: tool bar, undo/redo and the canvas. It owns the document and its history,
@@ -26,7 +36,9 @@ export function WhiteboardEditor({
   initialBoard: BoardDocument;
   onChange: (board: BoardDocument) => void;
 }) {
-  const [history, setHistory] = useState<HistoryState>(() => createHistory(initialBoard));
+  const [history, setHistory] = useState<HistoryState>(() =>
+    createHistory(initialBoard),
+  );
   const [tool, setTool] = useState<Tool>("select");
 
   function handleChange(next: BoardDocument) {
@@ -42,20 +54,38 @@ export function WhiteboardEditor({
 
   return (
     <>
-      <div style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+      <div
+        style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}
+      >
         {TOOLS.map((t) => (
-          <Button key={t} variant={tool === t ? "primary" : "secondary"} onClick={() => setTool(t)}>
+          <Button
+            key={t}
+            variant={tool === t ? "primary" : "secondary"}
+            onClick={() => setTool(t)}
+          >
             {t}
           </Button>
         ))}
-        <Button variant="secondary" onClick={() => step(undo)} disabled={!canUndo(history)}>
+        <Button
+          variant="secondary"
+          onClick={() => step(undo)}
+          disabled={!canUndo(history)}
+        >
           Cofnij
         </Button>
-        <Button variant="secondary" onClick={() => step(redo)} disabled={!canRedo(history)}>
+        <Button
+          variant="secondary"
+          onClick={() => step(redo)}
+          disabled={!canRedo(history)}
+        >
           Ponów
         </Button>
       </div>
-      <WhiteboardCanvas board={history.present} onChange={handleChange} tool={tool} />
+      <WhiteboardCanvas
+        board={history.present}
+        onChange={handleChange}
+        tool={tool}
+      />
     </>
   );
 }

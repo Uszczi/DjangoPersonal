@@ -27,19 +27,33 @@ type ProjectRowProps = {
   dragHandle?: HTMLAttributes<HTMLSpanElement>;
 } & Pick<ComponentProps<typeof ListRow>, "ref" | "style">;
 
-function ProjectRow({ project, onEdit, dragHandle, ref, style }: ProjectRowProps) {
+function ProjectRow({
+  project,
+  onEdit,
+  dragHandle,
+  ref,
+  style,
+}: ProjectRowProps) {
   return (
     <ListRow ref={ref} style={style}>
       <>
         {dragHandle ? (
-          <DragHandle aria-label={`Przeciągnij projekt: ${project.name}`} {...dragHandle} />
+          <DragHandle
+            aria-label={`Przeciągnij projekt: ${project.name}`}
+            {...dragHandle}
+          />
         ) : (
           <span className="inline-block w-[14px]" aria-hidden="true" />
         )}
-        <ListRowButton aria-label={`Edytuj projekt: ${project.name}`} onClick={onEdit}>
+        <ListRowButton
+          aria-label={`Edytuj projekt: ${project.name}`}
+          onClick={onEdit}
+        >
           <div className="min-w-0">
             <ListRowTitle>{project.name}</ListRowTitle>
-            {project.description && <ListRowSubtitle>{project.description}</ListRowSubtitle>}
+            {project.description && (
+              <ListRowSubtitle>{project.description}</ListRowSubtitle>
+            )}
           </div>
         </ListRowButton>
       </>
@@ -48,7 +62,9 @@ function ProjectRow({ project, onEdit, dragHandle, ref, style }: ProjectRowProps
   );
 }
 
-function SortableProjectRow(props: Omit<ProjectRowProps, "dragHandle" | "ref" | "style">) {
+function SortableProjectRow(
+  props: Omit<ProjectRowProps, "dragHandle" | "ref" | "style">,
+) {
   const {
     attributes,
     listeners,
@@ -111,9 +127,16 @@ export function ProjectList({
   return (
     <ul className="flex flex-col" aria-label="Projekty">
       {inboxProject && (
-        <ProjectRow project={inboxProject} onEdit={() => onEdit(inboxProject)} />
+        <ProjectRow
+          project={inboxProject}
+          onEdit={() => onEdit(inboxProject)}
+        />
       )}
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
         <SortableContext
           items={sortableProjects.map((p) => p.id)}
           strategy={verticalListSortingStrategy}

@@ -15,7 +15,12 @@ export const colors = {
 
 export const common = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+  },
   error: { color: colors.danger, padding: 16 },
   muted: { color: colors.muted },
   row: {
@@ -42,7 +47,12 @@ export const card = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   title: { fontSize: 18, fontWeight: "700", color: colors.text },
-  kicker: { fontSize: 11, fontWeight: "700", letterSpacing: 0.8, color: colors.muted },
+  kicker: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.8,
+    color: colors.muted,
+  },
 });
 
 export const form = StyleSheet.create({

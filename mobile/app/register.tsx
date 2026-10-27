@@ -1,6 +1,14 @@
 import { Link } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { useAuthStore } from "@personal/shared/stores/auth";
@@ -29,14 +37,20 @@ export default function RegisterScreen() {
   }
 
   const canSubmit =
-    username.trim() !== "" && password !== "" && passwordConfirm !== "" && !isSubmitting;
+    username.trim() !== "" &&
+    password !== "" &&
+    passwordConfirm !== "" &&
+    !isSubmitting;
 
   return (
     <KeyboardAvoidingView
       style={common.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={styles.title}>Załóż konto</Text>
         <Text style={form.label}>Nazwa użytkownika</Text>
         <TextInput
@@ -86,7 +100,12 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
   container: { flexGrow: 1, justifyContent: "center", padding: 24, gap: 8 },
-  title: { fontSize: 28, fontWeight: "700", color: colors.text, marginBottom: 12 },
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: colors.text,
+    marginBottom: 12,
+  },
   footer: { marginTop: 20, color: colors.muted, textAlign: "center" },
   link: { color: colors.primary, fontWeight: "600" },
 });

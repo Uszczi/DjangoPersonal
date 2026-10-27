@@ -2,14 +2,24 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
-import { Button, ErrorAlert, Field, Modal, ModalFooter, TextInput } from "@/design-system";
+import {
+  Button,
+  ErrorAlert,
+  Field,
+  Modal,
+  ModalFooter,
+  TextInput,
+} from "@/design-system";
 import type { WalletResponse } from "@personal/shared/generated/api";
 import { DeleteWalletModal } from "@/components/modals/DeleteWalletModal";
 import { WalletColorPicker } from "@/components/WalletColorPicker";
 import { WalletIconPicker } from "@/components/WalletIconPicker";
 import { balanceError } from "@personal/shared/money";
 import { ShowModal } from "@/stores/modal";
-import { balanceChange, useWalletsStore } from "@personal/shared/stores/wallets";
+import {
+  balanceChange,
+  useWalletsStore,
+} from "@personal/shared/stores/wallets";
 import { transactionKeys } from "@/queries/transactions";
 
 type WalletEditModalProps = {
@@ -29,7 +39,9 @@ export function WalletEditModal({ wallet, onClose }: WalletEditModalProps) {
   const [name, setName] = useState(wallet.name);
   const [color, setColor] = useState(wallet.color);
   const [icon, setIcon] = useState<string | null>(wallet.icon ?? null);
-  const [currentBalance, setCurrentBalance] = useState(wallet.balance ?? "0.00");
+  const [currentBalance, setCurrentBalance] = useState(
+    wallet.balance ?? "0.00",
+  );
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -55,7 +67,8 @@ export function WalletEditModal({ wallet, onClose }: WalletEditModalProps) {
     setFormError("");
 
     try {
-      const recordsCorrection = balanceChange(wallet, currentBalance.trim()) !== undefined;
+      const recordsCorrection =
+        balanceChange(wallet, currentBalance.trim()) !== undefined;
       await updateWallet(wallet, {
         name: trimmedName,
         color,
@@ -65,7 +78,9 @@ export function WalletEditModal({ wallet, onClose }: WalletEditModalProps) {
       // The server records a new balance as a System "Korekta stanu"
       // transaction; refetch the list so it shows up straight away.
       if (recordsCorrection) {
-        void queryClient.invalidateQueries({ queryKey: transactionKeys.wallet(wallet.id) });
+        void queryClient.invalidateQueries({
+          queryKey: transactionKeys.wallet(wallet.id),
+        });
       }
       onClose();
     } catch (error) {
@@ -119,18 +134,10 @@ export function WalletEditModal({ wallet, onClose }: WalletEditModalProps) {
             >
               Usuń
             </Button>
-            <Button
-              variant="secondary"
-              onClick={close}
-              disabled={isSaving}
-            >
+            <Button variant="secondary" onClick={close} disabled={isSaving}>
               Anuluj
             </Button>
-            <Button
-              variant="primary"
-              type="submit"
-              disabled={isSaving}
-            >
+            <Button variant="primary" type="submit" disabled={isSaving}>
               {isSaving ? "Zapisywanie…" : "Zapisz zmiany"}
             </Button>
           </ModalFooter>

@@ -8,423 +8,423 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as SplatRouteImport } from './routes/$'
-import { Route as CountersRouteImport } from './routes/counters'
-import { Route as ExpensesRouteImport } from './routes/expenses'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as ProjectsRouteImport } from './routes/projects'
-import { Route as RegisterRouteImport } from './routes/register'
-import { Route as TasksRouteImport } from './routes/tasks'
-import { Route as TimerRouteImport } from './routes/timer'
-import { Route as UserRouteImport } from './routes/user'
-import { Route as WhiteboardRouteImport } from './routes/whiteboard'
-import { Route as CountersIndexRouteImport } from './routes/counters/index'
-import { Route as CountersCounterIdRouteImport } from './routes/counters/$counterId'
-import { Route as ExpensesIndexRouteImport } from './routes/expenses/index'
-import { Route as ExpensesWalletIdRouteImport } from './routes/expenses/$walletId'
-import { Route as WhiteboardIndexRouteImport } from './routes/whiteboard/index'
-import { Route as WhiteboardBoardIdRouteImport } from './routes/whiteboard/$boardId'
-import { Route as WhiteboardAskRouteImport } from './routes/whiteboard/ask'
+import { Route as rootRouteImport } from "./routes/__root";
+import { Route as IndexRouteImport } from "./routes/index";
+import { Route as SplatRouteImport } from "./routes/$";
+import { Route as CountersRouteImport } from "./routes/counters";
+import { Route as ExpensesRouteImport } from "./routes/expenses";
+import { Route as LoginRouteImport } from "./routes/login";
+import { Route as ProjectsRouteImport } from "./routes/projects";
+import { Route as RegisterRouteImport } from "./routes/register";
+import { Route as TasksRouteImport } from "./routes/tasks";
+import { Route as TimerRouteImport } from "./routes/timer";
+import { Route as UserRouteImport } from "./routes/user";
+import { Route as WhiteboardRouteImport } from "./routes/whiteboard";
+import { Route as CountersIndexRouteImport } from "./routes/counters/index";
+import { Route as CountersCounterIdRouteImport } from "./routes/counters/$counterId";
+import { Route as ExpensesIndexRouteImport } from "./routes/expenses/index";
+import { Route as ExpensesWalletIdRouteImport } from "./routes/expenses/$walletId";
+import { Route as WhiteboardIndexRouteImport } from "./routes/whiteboard/index";
+import { Route as WhiteboardBoardIdRouteImport } from "./routes/whiteboard/$boardId";
+import { Route as WhiteboardAskRouteImport } from "./routes/whiteboard/ask";
 
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const SplatRoute = SplatRouteImport.update({
-  id: '/$',
-  path: '/$',
+  id: "/$",
+  path: "/$",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const CountersRoute = CountersRouteImport.update({
-  id: '/counters',
-  path: '/counters',
+  id: "/counters",
+  path: "/counters",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const ExpensesRoute = ExpensesRouteImport.update({
-  id: '/expenses',
-  path: '/expenses',
+  id: "/expenses",
+  path: "/expenses",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+  id: "/login",
+  path: "/login",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const ProjectsRoute = ProjectsRouteImport.update({
-  id: '/projects',
-  path: '/projects',
+  id: "/projects",
+  path: "/projects",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
+  id: "/register",
+  path: "/register",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const TasksRoute = TasksRouteImport.update({
-  id: '/tasks',
-  path: '/tasks',
+  id: "/tasks",
+  path: "/tasks",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const TimerRoute = TimerRouteImport.update({
-  id: '/timer',
-  path: '/timer',
+  id: "/timer",
+  path: "/timer",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const UserRoute = UserRouteImport.update({
-  id: '/user',
-  path: '/user',
+  id: "/user",
+  path: "/user",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const WhiteboardRoute = WhiteboardRouteImport.update({
-  id: '/whiteboard',
-  path: '/whiteboard',
+  id: "/whiteboard",
+  path: "/whiteboard",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const CountersIndexRoute = CountersIndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => CountersRoute,
-} as any)
+} as any);
 const CountersCounterIdRoute = CountersCounterIdRouteImport.update({
-  id: '/$counterId',
-  path: '/$counterId',
+  id: "/$counterId",
+  path: "/$counterId",
   getParentRoute: () => CountersRoute,
-} as any)
+} as any);
 const ExpensesIndexRoute = ExpensesIndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => ExpensesRoute,
-} as any)
+} as any);
 const ExpensesWalletIdRoute = ExpensesWalletIdRouteImport.update({
-  id: '/$walletId',
-  path: '/$walletId',
+  id: "/$walletId",
+  path: "/$walletId",
   getParentRoute: () => ExpensesRoute,
-} as any)
+} as any);
 const WhiteboardIndexRoute = WhiteboardIndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => WhiteboardRoute,
-} as any)
+} as any);
 const WhiteboardBoardIdRoute = WhiteboardBoardIdRouteImport.update({
-  id: '/$boardId',
-  path: '/$boardId',
+  id: "/$boardId",
+  path: "/$boardId",
   getParentRoute: () => WhiteboardRoute,
-} as any)
+} as any);
 const WhiteboardAskRoute = WhiteboardAskRouteImport.update({
-  id: '/ask',
-  path: '/ask',
+  id: "/ask",
+  path: "/ask",
   getParentRoute: () => WhiteboardRoute,
-} as any)
+} as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/$': typeof SplatRoute
-  '/counters': typeof CountersRouteWithChildren
-  '/expenses': typeof ExpensesRouteWithChildren
-  '/login': typeof LoginRoute
-  '/projects': typeof ProjectsRoute
-  '/register': typeof RegisterRoute
-  '/tasks': typeof TasksRoute
-  '/timer': typeof TimerRoute
-  '/user': typeof UserRoute
-  '/whiteboard': typeof WhiteboardRouteWithChildren
-  '/counters/$counterId': typeof CountersCounterIdRoute
-  '/expenses/$walletId': typeof ExpensesWalletIdRoute
-  '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
-  '/whiteboard/ask': typeof WhiteboardAskRoute
-  '/counters/': typeof CountersIndexRoute
-  '/expenses/': typeof ExpensesIndexRoute
-  '/whiteboard/': typeof WhiteboardIndexRoute
+  "/": typeof IndexRoute;
+  "/$": typeof SplatRoute;
+  "/counters": typeof CountersRouteWithChildren;
+  "/expenses": typeof ExpensesRouteWithChildren;
+  "/login": typeof LoginRoute;
+  "/projects": typeof ProjectsRoute;
+  "/register": typeof RegisterRoute;
+  "/tasks": typeof TasksRoute;
+  "/timer": typeof TimerRoute;
+  "/user": typeof UserRoute;
+  "/whiteboard": typeof WhiteboardRouteWithChildren;
+  "/counters/$counterId": typeof CountersCounterIdRoute;
+  "/expenses/$walletId": typeof ExpensesWalletIdRoute;
+  "/whiteboard/$boardId": typeof WhiteboardBoardIdRoute;
+  "/whiteboard/ask": typeof WhiteboardAskRoute;
+  "/counters/": typeof CountersIndexRoute;
+  "/expenses/": typeof ExpensesIndexRoute;
+  "/whiteboard/": typeof WhiteboardIndexRoute;
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/$': typeof SplatRoute
-  '/login': typeof LoginRoute
-  '/projects': typeof ProjectsRoute
-  '/register': typeof RegisterRoute
-  '/tasks': typeof TasksRoute
-  '/timer': typeof TimerRoute
-  '/user': typeof UserRoute
-  '/counters/$counterId': typeof CountersCounterIdRoute
-  '/expenses/$walletId': typeof ExpensesWalletIdRoute
-  '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
-  '/whiteboard/ask': typeof WhiteboardAskRoute
-  '/counters': typeof CountersIndexRoute
-  '/expenses': typeof ExpensesIndexRoute
-  '/whiteboard': typeof WhiteboardIndexRoute
+  "/": typeof IndexRoute;
+  "/$": typeof SplatRoute;
+  "/login": typeof LoginRoute;
+  "/projects": typeof ProjectsRoute;
+  "/register": typeof RegisterRoute;
+  "/tasks": typeof TasksRoute;
+  "/timer": typeof TimerRoute;
+  "/user": typeof UserRoute;
+  "/counters/$counterId": typeof CountersCounterIdRoute;
+  "/expenses/$walletId": typeof ExpensesWalletIdRoute;
+  "/whiteboard/$boardId": typeof WhiteboardBoardIdRoute;
+  "/whiteboard/ask": typeof WhiteboardAskRoute;
+  "/counters": typeof CountersIndexRoute;
+  "/expenses": typeof ExpensesIndexRoute;
+  "/whiteboard": typeof WhiteboardIndexRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/$': typeof SplatRoute
-  '/counters': typeof CountersRouteWithChildren
-  '/expenses': typeof ExpensesRouteWithChildren
-  '/login': typeof LoginRoute
-  '/projects': typeof ProjectsRoute
-  '/register': typeof RegisterRoute
-  '/tasks': typeof TasksRoute
-  '/timer': typeof TimerRoute
-  '/user': typeof UserRoute
-  '/whiteboard': typeof WhiteboardRouteWithChildren
-  '/counters/$counterId': typeof CountersCounterIdRoute
-  '/expenses/$walletId': typeof ExpensesWalletIdRoute
-  '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
-  '/whiteboard/ask': typeof WhiteboardAskRoute
-  '/counters/': typeof CountersIndexRoute
-  '/expenses/': typeof ExpensesIndexRoute
-  '/whiteboard/': typeof WhiteboardIndexRoute
+  __root__: typeof rootRouteImport;
+  "/": typeof IndexRoute;
+  "/$": typeof SplatRoute;
+  "/counters": typeof CountersRouteWithChildren;
+  "/expenses": typeof ExpensesRouteWithChildren;
+  "/login": typeof LoginRoute;
+  "/projects": typeof ProjectsRoute;
+  "/register": typeof RegisterRoute;
+  "/tasks": typeof TasksRoute;
+  "/timer": typeof TimerRoute;
+  "/user": typeof UserRoute;
+  "/whiteboard": typeof WhiteboardRouteWithChildren;
+  "/counters/$counterId": typeof CountersCounterIdRoute;
+  "/expenses/$walletId": typeof ExpensesWalletIdRoute;
+  "/whiteboard/$boardId": typeof WhiteboardBoardIdRoute;
+  "/whiteboard/ask": typeof WhiteboardAskRoute;
+  "/counters/": typeof CountersIndexRoute;
+  "/expenses/": typeof ExpensesIndexRoute;
+  "/whiteboard/": typeof WhiteboardIndexRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
+  fileRoutesByFullPath: FileRoutesByFullPath;
   fullPaths:
-    | '/'
-    | '/$'
-    | '/counters'
-    | '/expenses'
-    | '/login'
-    | '/projects'
-    | '/register'
-    | '/tasks'
-    | '/timer'
-    | '/user'
-    | '/whiteboard'
-    | '/counters/$counterId'
-    | '/expenses/$walletId'
-    | '/whiteboard/$boardId'
-    | '/whiteboard/ask'
-    | '/counters/'
-    | '/expenses/'
-    | '/whiteboard/'
-  fileRoutesByTo: FileRoutesByTo
+    | "/"
+    | "/$"
+    | "/counters"
+    | "/expenses"
+    | "/login"
+    | "/projects"
+    | "/register"
+    | "/tasks"
+    | "/timer"
+    | "/user"
+    | "/whiteboard"
+    | "/counters/$counterId"
+    | "/expenses/$walletId"
+    | "/whiteboard/$boardId"
+    | "/whiteboard/ask"
+    | "/counters/"
+    | "/expenses/"
+    | "/whiteboard/";
+  fileRoutesByTo: FileRoutesByTo;
   to:
-    | '/'
-    | '/$'
-    | '/login'
-    | '/projects'
-    | '/register'
-    | '/tasks'
-    | '/timer'
-    | '/user'
-    | '/counters/$counterId'
-    | '/expenses/$walletId'
-    | '/whiteboard/$boardId'
-    | '/whiteboard/ask'
-    | '/counters'
-    | '/expenses'
-    | '/whiteboard'
+    | "/"
+    | "/$"
+    | "/login"
+    | "/projects"
+    | "/register"
+    | "/tasks"
+    | "/timer"
+    | "/user"
+    | "/counters/$counterId"
+    | "/expenses/$walletId"
+    | "/whiteboard/$boardId"
+    | "/whiteboard/ask"
+    | "/counters"
+    | "/expenses"
+    | "/whiteboard";
   id:
-    | '__root__'
-    | '/'
-    | '/$'
-    | '/counters'
-    | '/expenses'
-    | '/login'
-    | '/projects'
-    | '/register'
-    | '/tasks'
-    | '/timer'
-    | '/user'
-    | '/whiteboard'
-    | '/counters/$counterId'
-    | '/expenses/$walletId'
-    | '/whiteboard/$boardId'
-    | '/whiteboard/ask'
-    | '/counters/'
-    | '/expenses/'
-    | '/whiteboard/'
-  fileRoutesById: FileRoutesById
+    | "__root__"
+    | "/"
+    | "/$"
+    | "/counters"
+    | "/expenses"
+    | "/login"
+    | "/projects"
+    | "/register"
+    | "/tasks"
+    | "/timer"
+    | "/user"
+    | "/whiteboard"
+    | "/counters/$counterId"
+    | "/expenses/$walletId"
+    | "/whiteboard/$boardId"
+    | "/whiteboard/ask"
+    | "/counters/"
+    | "/expenses/"
+    | "/whiteboard/";
+  fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  SplatRoute: typeof SplatRoute
-  CountersRoute: typeof CountersRouteWithChildren
-  ExpensesRoute: typeof ExpensesRouteWithChildren
-  LoginRoute: typeof LoginRoute
-  ProjectsRoute: typeof ProjectsRoute
-  RegisterRoute: typeof RegisterRoute
-  TasksRoute: typeof TasksRoute
-  TimerRoute: typeof TimerRoute
-  UserRoute: typeof UserRoute
-  WhiteboardRoute: typeof WhiteboardRouteWithChildren
+  IndexRoute: typeof IndexRoute;
+  SplatRoute: typeof SplatRoute;
+  CountersRoute: typeof CountersRouteWithChildren;
+  ExpensesRoute: typeof ExpensesRouteWithChildren;
+  LoginRoute: typeof LoginRoute;
+  ProjectsRoute: typeof ProjectsRoute;
+  RegisterRoute: typeof RegisterRoute;
+  TasksRoute: typeof TasksRoute;
+  TimerRoute: typeof TimerRoute;
+  UserRoute: typeof UserRoute;
+  WhiteboardRoute: typeof WhiteboardRouteWithChildren;
 }
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/$': {
-      id: '/$'
-      path: '/$'
-      fullPath: '/$'
-      preLoaderRoute: typeof SplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/counters': {
-      id: '/counters'
-      path: '/counters'
-      fullPath: '/counters'
-      preLoaderRoute: typeof CountersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/expenses': {
-      id: '/expenses'
-      path: '/expenses'
-      fullPath: '/expenses'
-      preLoaderRoute: typeof ExpensesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/projects': {
-      id: '/projects'
-      path: '/projects'
-      fullPath: '/projects'
-      preLoaderRoute: typeof ProjectsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tasks': {
-      id: '/tasks'
-      path: '/tasks'
-      fullPath: '/tasks'
-      preLoaderRoute: typeof TasksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/timer': {
-      id: '/timer'
-      path: '/timer'
-      fullPath: '/timer'
-      preLoaderRoute: typeof TimerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/user': {
-      id: '/user'
-      path: '/user'
-      fullPath: '/user'
-      preLoaderRoute: typeof UserRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/whiteboard': {
-      id: '/whiteboard'
-      path: '/whiteboard'
-      fullPath: '/whiteboard'
-      preLoaderRoute: typeof WhiteboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/counters/': {
-      id: '/counters/'
-      path: '/'
-      fullPath: '/counters/'
-      preLoaderRoute: typeof CountersIndexRouteImport
-      parentRoute: typeof CountersRoute
-    }
-    '/counters/$counterId': {
-      id: '/counters/$counterId'
-      path: '/$counterId'
-      fullPath: '/counters/$counterId'
-      preLoaderRoute: typeof CountersCounterIdRouteImport
-      parentRoute: typeof CountersRoute
-    }
-    '/expenses/': {
-      id: '/expenses/'
-      path: '/'
-      fullPath: '/expenses/'
-      preLoaderRoute: typeof ExpensesIndexRouteImport
-      parentRoute: typeof ExpensesRoute
-    }
-    '/expenses/$walletId': {
-      id: '/expenses/$walletId'
-      path: '/$walletId'
-      fullPath: '/expenses/$walletId'
-      preLoaderRoute: typeof ExpensesWalletIdRouteImport
-      parentRoute: typeof ExpensesRoute
-    }
-    '/whiteboard/': {
-      id: '/whiteboard/'
-      path: '/'
-      fullPath: '/whiteboard/'
-      preLoaderRoute: typeof WhiteboardIndexRouteImport
-      parentRoute: typeof WhiteboardRoute
-    }
-    '/whiteboard/$boardId': {
-      id: '/whiteboard/$boardId'
-      path: '/$boardId'
-      fullPath: '/whiteboard/$boardId'
-      preLoaderRoute: typeof WhiteboardBoardIdRouteImport
-      parentRoute: typeof WhiteboardRoute
-    }
-    '/whiteboard/ask': {
-      id: '/whiteboard/ask'
-      path: '/ask'
-      fullPath: '/whiteboard/ask'
-      preLoaderRoute: typeof WhiteboardAskRouteImport
-      parentRoute: typeof WhiteboardRoute
-    }
+    "/": {
+      id: "/";
+      path: "/";
+      fullPath: "/";
+      preLoaderRoute: typeof IndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/$": {
+      id: "/$";
+      path: "/$";
+      fullPath: "/$";
+      preLoaderRoute: typeof SplatRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/counters": {
+      id: "/counters";
+      path: "/counters";
+      fullPath: "/counters";
+      preLoaderRoute: typeof CountersRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/expenses": {
+      id: "/expenses";
+      path: "/expenses";
+      fullPath: "/expenses";
+      preLoaderRoute: typeof ExpensesRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/login": {
+      id: "/login";
+      path: "/login";
+      fullPath: "/login";
+      preLoaderRoute: typeof LoginRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/projects": {
+      id: "/projects";
+      path: "/projects";
+      fullPath: "/projects";
+      preLoaderRoute: typeof ProjectsRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/register": {
+      id: "/register";
+      path: "/register";
+      fullPath: "/register";
+      preLoaderRoute: typeof RegisterRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/tasks": {
+      id: "/tasks";
+      path: "/tasks";
+      fullPath: "/tasks";
+      preLoaderRoute: typeof TasksRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/timer": {
+      id: "/timer";
+      path: "/timer";
+      fullPath: "/timer";
+      preLoaderRoute: typeof TimerRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/user": {
+      id: "/user";
+      path: "/user";
+      fullPath: "/user";
+      preLoaderRoute: typeof UserRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/whiteboard": {
+      id: "/whiteboard";
+      path: "/whiteboard";
+      fullPath: "/whiteboard";
+      preLoaderRoute: typeof WhiteboardRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/counters/": {
+      id: "/counters/";
+      path: "/";
+      fullPath: "/counters/";
+      preLoaderRoute: typeof CountersIndexRouteImport;
+      parentRoute: typeof CountersRoute;
+    };
+    "/counters/$counterId": {
+      id: "/counters/$counterId";
+      path: "/$counterId";
+      fullPath: "/counters/$counterId";
+      preLoaderRoute: typeof CountersCounterIdRouteImport;
+      parentRoute: typeof CountersRoute;
+    };
+    "/expenses/": {
+      id: "/expenses/";
+      path: "/";
+      fullPath: "/expenses/";
+      preLoaderRoute: typeof ExpensesIndexRouteImport;
+      parentRoute: typeof ExpensesRoute;
+    };
+    "/expenses/$walletId": {
+      id: "/expenses/$walletId";
+      path: "/$walletId";
+      fullPath: "/expenses/$walletId";
+      preLoaderRoute: typeof ExpensesWalletIdRouteImport;
+      parentRoute: typeof ExpensesRoute;
+    };
+    "/whiteboard/": {
+      id: "/whiteboard/";
+      path: "/";
+      fullPath: "/whiteboard/";
+      preLoaderRoute: typeof WhiteboardIndexRouteImport;
+      parentRoute: typeof WhiteboardRoute;
+    };
+    "/whiteboard/$boardId": {
+      id: "/whiteboard/$boardId";
+      path: "/$boardId";
+      fullPath: "/whiteboard/$boardId";
+      preLoaderRoute: typeof WhiteboardBoardIdRouteImport;
+      parentRoute: typeof WhiteboardRoute;
+    };
+    "/whiteboard/ask": {
+      id: "/whiteboard/ask";
+      path: "/ask";
+      fullPath: "/whiteboard/ask";
+      preLoaderRoute: typeof WhiteboardAskRouteImport;
+      parentRoute: typeof WhiteboardRoute;
+    };
   }
 }
 
 interface CountersRouteChildren {
-  CountersCounterIdRoute: typeof CountersCounterIdRoute
-  CountersIndexRoute: typeof CountersIndexRoute
+  CountersCounterIdRoute: typeof CountersCounterIdRoute;
+  CountersIndexRoute: typeof CountersIndexRoute;
 }
 
 const CountersRouteChildren: CountersRouteChildren = {
   CountersCounterIdRoute: CountersCounterIdRoute,
   CountersIndexRoute: CountersIndexRoute,
-}
+};
 
 const CountersRouteWithChildren = CountersRoute._addFileChildren(
   CountersRouteChildren,
-)
+);
 
 interface ExpensesRouteChildren {
-  ExpensesWalletIdRoute: typeof ExpensesWalletIdRoute
-  ExpensesIndexRoute: typeof ExpensesIndexRoute
+  ExpensesWalletIdRoute: typeof ExpensesWalletIdRoute;
+  ExpensesIndexRoute: typeof ExpensesIndexRoute;
 }
 
 const ExpensesRouteChildren: ExpensesRouteChildren = {
   ExpensesWalletIdRoute: ExpensesWalletIdRoute,
   ExpensesIndexRoute: ExpensesIndexRoute,
-}
+};
 
 const ExpensesRouteWithChildren = ExpensesRoute._addFileChildren(
   ExpensesRouteChildren,
-)
+);
 
 interface WhiteboardRouteChildren {
-  WhiteboardBoardIdRoute: typeof WhiteboardBoardIdRoute
-  WhiteboardAskRoute: typeof WhiteboardAskRoute
-  WhiteboardIndexRoute: typeof WhiteboardIndexRoute
+  WhiteboardBoardIdRoute: typeof WhiteboardBoardIdRoute;
+  WhiteboardAskRoute: typeof WhiteboardAskRoute;
+  WhiteboardIndexRoute: typeof WhiteboardIndexRoute;
 }
 
 const WhiteboardRouteChildren: WhiteboardRouteChildren = {
   WhiteboardBoardIdRoute: WhiteboardBoardIdRoute,
   WhiteboardAskRoute: WhiteboardAskRoute,
   WhiteboardIndexRoute: WhiteboardIndexRoute,
-}
+};
 
 const WhiteboardRouteWithChildren = WhiteboardRoute._addFileChildren(
   WhiteboardRouteChildren,
-)
+);
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -438,7 +438,7 @@ const rootRouteChildren: RootRouteChildren = {
   TimerRoute: TimerRoute,
   UserRoute: UserRoute,
   WhiteboardRoute: WhiteboardRouteWithChildren,
-}
+};
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+  ._addFileTypes<FileRouteTypes>();

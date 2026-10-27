@@ -1,11 +1,26 @@
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
-import { defaultProject, useProjectsStore } from "@personal/shared/stores/projects";
+import {
+  defaultProject,
+  useProjectsStore,
+} from "@personal/shared/stores/projects";
 import { useTimerStore } from "@personal/shared/stores/timer";
-import { dateFromKey, dateKey, entryMinutes, todayKey } from "@personal/shared/timeFormat";
+import {
+  dateFromKey,
+  dateKey,
+  entryMinutes,
+  todayKey,
+} from "@personal/shared/timeFormat";
 
 import { Button } from "../src/Button";
 import { ChipGroup } from "../src/ChipGroup";
@@ -34,9 +49,14 @@ export default function TimeEntryEditorScreen() {
   const addManualEntry = useTimerStore((state) => state.addManualEntry);
   const updateEntry = useTimerStore((state) => state.updateEntry);
   const deleteEntry = useTimerStore((state) => state.deleteEntry);
-  const entry = entryId === null ? null : (entries.find((item) => item.id === entryId) ?? null);
+  const entry =
+    entryId === null
+      ? null
+      : (entries.find((item) => item.id === entryId) ?? null);
 
-  const [date, setDate] = useState(() => (entry ? dateKey(entry.start) : todayKey()));
+  const [date, setDate] = useState(() =>
+    entry ? dateKey(entry.start) : todayKey(),
+  );
   const [projectId, setProjectId] = useState<number | null>(null);
   const [title, setTitle] = useState(() => {
     if (!entry) return "";
@@ -45,7 +65,9 @@ export default function TimeEntryEditorScreen() {
       ? (tasks.find((task) => task.id === entry.taskId)?.title ?? "")
       : "";
   });
-  const [minutes, setMinutes] = useState(() => (entry ? String(entryMinutes(entry)) : ""));
+  const [minutes, setMinutes] = useState(() =>
+    entry ? String(entryMinutes(entry)) : "",
+  );
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -59,7 +81,9 @@ export default function TimeEntryEditorScreen() {
 
   const chosenProjectId = projectId ?? defaultProject(projects)?.id ?? null;
   // A new entry suggests the chosen Project's Tasks; an edited one any Task.
-  const suggestedTasks = entry ? tasks : tasks.filter((task) => task.projectId === chosenProjectId);
+  const suggestedTasks = entry
+    ? tasks
+    : tasks.filter((task) => task.projectId === chosenProjectId);
 
   async function submit() {
     const input = { date, title: title.trim(), minutes: Number(minutes) };
@@ -101,8 +125,13 @@ export default function TimeEntryEditorScreen() {
       style={common.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Stack.Screen options={{ title: entry ? "Edytuj wpis" : "Dodaj wpis ręcznie" }} />
-      <ScrollView contentContainerStyle={form.content} keyboardShouldPersistTaps="handled">
+      <Stack.Screen
+        options={{ title: entry ? "Edytuj wpis" : "Dodaj wpis ręcznie" }}
+      />
+      <ScrollView
+        contentContainerStyle={form.content}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={form.label}>Data</Text>
         <DateTimeField
           mode="date"
@@ -116,7 +145,10 @@ export default function TimeEntryEditorScreen() {
             <Text style={form.label}>Projekt</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <ChipGroup
-                options={projects.map((project) => ({ value: project.id, label: project.name }))}
+                options={projects.map((project) => ({
+                  value: project.id,
+                  label: project.name,
+                }))}
                 value={chosenProjectId ?? undefined}
                 onChange={(id) => {
                   setProjectId(id);

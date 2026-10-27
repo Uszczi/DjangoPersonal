@@ -10,7 +10,9 @@ const storageKey = "countersView";
 
 export function rememberedCounterViewMode(): CounterViewMode {
   try {
-    return window.localStorage.getItem(storageKey) === "tiles" ? "tiles" : "rows";
+    return window.localStorage.getItem(storageKey) === "tiles"
+      ? "tiles"
+      : "rows";
   } catch {
     return "rows";
   }

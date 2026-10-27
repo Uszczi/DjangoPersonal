@@ -12,9 +12,13 @@ type WalletMarkProps = {
  * or the colour dot when it has no icon. Decorative; the name carries the meaning.
  */
 export function WalletMark({ wallet, className = "" }: WalletMarkProps) {
-  if (!wallet.icon) return <WalletColorDot color={wallet.color} className={className} />;
+  if (!wallet.icon)
+    return <WalletColorDot color={wallet.color} className={className} />;
   return (
-    <span className={`inline-flex shrink-0 ${className}`.trim()} style={{ color: wallet.color }}>
+    <span
+      className={`inline-flex shrink-0 ${className}`.trim()}
+      style={{ color: wallet.color }}
+    >
       <NamedIcon name={wallet.icon} fallback="wallet" />
     </span>
   );

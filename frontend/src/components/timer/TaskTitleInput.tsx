@@ -3,7 +3,11 @@ import { useId, useRef } from "react";
 import { TextInput } from "@/design-system";
 
 /** A free-text task title with the given titles offered as suggestions. */
-export function TaskTitleInput({ suggestions, value, onChange }: {
+export function TaskTitleInput({
+  suggestions,
+  value,
+  onChange,
+}: {
   suggestions: string[];
   value: string;
   onChange: (value: string) => void;

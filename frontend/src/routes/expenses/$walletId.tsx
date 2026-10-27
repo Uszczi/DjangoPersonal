@@ -32,11 +32,7 @@ function WalletDetailPage() {
   }, [isLoading, pageError, wallet, navigate]);
 
   if (!isLoading && !pageError && !wallet) {
-    return (
-      <LoadingStatus>
-        Przekierowywanie…
-      </LoadingStatus>
-    );
+    return <LoadingStatus>Przekierowywanie…</LoadingStatus>;
   }
 
   return <ExpensesPage walletId={Number(walletId)} />;

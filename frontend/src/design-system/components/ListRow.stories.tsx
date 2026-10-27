@@ -3,7 +3,12 @@ import { Fragment } from "react";
 import { fn } from "storybook/test";
 
 import { DeleteButton } from "./DeleteButton";
-import { ListRow, ListRowButton, ListRowSubtitle, ListRowTitle } from "./ListRow";
+import {
+  ListRow,
+  ListRowButton,
+  ListRowSubtitle,
+  ListRowTitle,
+} from "./ListRow";
 
 const meta = {
   title: "Design System/ListRow",
@@ -18,14 +23,20 @@ const meta = {
   ],
   args: {
     children: [
-      <ListRowButton key="start" aria-label="Edytuj transakcję: Kawa" onClick={fn()}>
+      <ListRowButton
+        key="start"
+        aria-label="Edytuj transakcję: Kawa"
+        onClick={fn()}
+      >
         <div className="min-w-0">
           <ListRowTitle>Kawa</ListRowTitle>
           <ListRowSubtitle>Jedzenie</ListRowSubtitle>
         </div>
       </ListRowButton>,
       <Fragment key="end">
-        <span className="mr-2 font-utility text-[13px] font-semibold text-ink">12.50</span>
+        <span className="mr-2 font-utility text-[13px] font-semibold text-ink">
+          12.50
+        </span>
         <DeleteButton aria-label="Usuń transakcję: Kawa" onClick={fn()} />
       </Fragment>,
     ],
@@ -40,8 +51,15 @@ export const Default: Story = {};
 export const WithColorDot: Story = {
   args: {
     children: [
-      <ListRowButton key="start" aria-label="Edytuj portfel: Personal" onClick={fn()}>
-        <span aria-hidden="true" className="inline-block h-3 w-3 shrink-0 rounded-full bg-accent" />
+      <ListRowButton
+        key="start"
+        aria-label="Edytuj portfel: Personal"
+        onClick={fn()}
+      >
+        <span
+          aria-hidden="true"
+          className="inline-block h-3 w-3 shrink-0 rounded-full bg-accent"
+        />
         <div className="min-w-0">
           <ListRowTitle>Personal</ListRowTitle>
           <ListRowSubtitle>3 transakcje</ListRowSubtitle>
@@ -58,11 +76,17 @@ export const LongTitle: Story = {
   args: {
     children: [
       <ListRowButton key="start" aria-label="Edytuj wpis" onClick={fn()}>
-        <span className="shrink-0 font-utility text-[11px] text-muted">09:00–10:30</span>
-        <ListRowTitle>Przygotować bardzo długi konspekt prezentacji na spotkanie zespołu</ListRowTitle>
+        <span className="shrink-0 font-utility text-[11px] text-muted">
+          09:00–10:30
+        </span>
+        <ListRowTitle>
+          Przygotować bardzo długi konspekt prezentacji na spotkanie zespołu
+        </ListRowTitle>
       </ListRowButton>,
       <Fragment key="end">
-        <span className="mr-2 font-utility text-[11px] font-semibold text-muted">1 H 30 MIN</span>
+        <span className="mr-2 font-utility text-[11px] font-semibold text-muted">
+          1 H 30 MIN
+        </span>
         <DeleteButton aria-label="Usuń wpis" onClick={fn()} />
       </Fragment>,
     ],
@@ -72,14 +96,22 @@ export const LongTitle: Story = {
 export const MultilineSubtitle: Story = {
   args: {
     children: [
-      <ListRowButton key="start" aria-label="Edytuj transakcję: Zakupy" onClick={fn()}>
+      <ListRowButton
+        key="start"
+        aria-label="Edytuj transakcję: Zakupy"
+        onClick={fn()}
+      >
         <div className="min-w-0">
           <ListRowTitle>Zakupy</ListRowTitle>
-          <ListRowSubtitle multiline>{"Chleb, masło\nMleko\nJajka\nKawa"}</ListRowSubtitle>
+          <ListRowSubtitle multiline>
+            {"Chleb, masło\nMleko\nJajka\nKawa"}
+          </ListRowSubtitle>
         </div>
       </ListRowButton>,
       <Fragment key="end">
-        <span className="font-utility text-[13px] font-semibold text-ink-soft">42.50</span>
+        <span className="font-utility text-[13px] font-semibold text-ink-soft">
+          42.50
+        </span>
       </Fragment>,
     ],
   },

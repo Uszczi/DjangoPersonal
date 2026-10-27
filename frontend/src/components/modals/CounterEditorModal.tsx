@@ -1,7 +1,14 @@
 import { useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
-import { Button, ErrorAlert, Field, Modal, ModalFooter, TextInput } from "@/design-system";
+import {
+  Button,
+  ErrorAlert,
+  Field,
+  Modal,
+  ModalFooter,
+  TextInput,
+} from "@/design-system";
 import type { CounterResponse } from "@personal/shared/generated/api";
 import { useCountersStore } from "@personal/shared/stores/counters";
 
@@ -13,7 +20,11 @@ type CounterEditorModalProps = {
   onClose: () => void;
 };
 
-export function CounterEditorModal({ counter = null, onSaved, onClose }: CounterEditorModalProps) {
+export function CounterEditorModal({
+  counter = null,
+  onSaved,
+  onClose,
+}: CounterEditorModalProps) {
   const createCounter = useCountersStore((state) => state.createCounter);
   const renameCounter = useCountersStore((state) => state.renameCounter);
 
@@ -71,7 +82,11 @@ export function CounterEditorModal({ counter = null, onSaved, onClose }: Counter
             Anuluj
           </Button>
           <Button variant="primary" type="submit" disabled={isSaving}>
-            {isSaving ? "Zapisywanie…" : counter ? "Zapisz zmiany" : "Utwórz licznik"}
+            {isSaving
+              ? "Zapisywanie…"
+              : counter
+                ? "Zapisz zmiany"
+                : "Utwórz licznik"}
           </Button>
         </ModalFooter>
       </form>

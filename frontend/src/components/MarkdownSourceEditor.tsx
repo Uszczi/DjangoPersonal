@@ -19,28 +19,32 @@ function highlightMarkdown(markdown: string): string {
   // Headings (# … ######) — before other inline rules.
   safe = safe.replace(/^(#{1,6} .*)$/gm, '<span class="md-h">$1</span>');
   // List markers (- or 1.) at line starts.
-  safe = safe.replace(/^(\s*)(-|\d+\.) /gm, '$1<span class="md-list">$2</span> ');
   safe = safe.replace(
-    /(`[^`\n]+`)/g,
-    '<span class="md-code">$1</span>',
+    /^(\s*)(-|\d+\.) /gm,
+    '$1<span class="md-list">$2</span> ',
   );
+  safe = safe.replace(/(`[^`\n]+`)/g, '<span class="md-code">$1</span>');
   // Bold before italic, so ** wins over *.
-  safe = safe.replace(
-    /(\*\*[^*\n]+\*\*)/g,
-    '<span class="md-bold">$1</span>',
-  );
+  safe = safe.replace(/(\*\*[^*\n]+\*\*)/g, '<span class="md-bold">$1</span>');
   safe = safe.replace(/(\*[^*\n]+\*)/g, '<span class="md-italic">$1</span>');
   // Trailing newline keeps the last line visible while wrapping in <pre>.
   return `${safe}\n`;
 }
 
 /** The source with every match wrapped in `<mark>`, for the layer under the text. */
-function markMatches(text: string, matches: TextMatch[], current: number): string {
+function markMatches(
+  text: string,
+  matches: TextMatch[],
+  current: number,
+): string {
   let html = "";
   let last = 0;
   matches.forEach((match, i) => {
     html += escapeHtml(text.slice(last, match.start));
-    const attrs = i === current ? ' data-current="true" class="bg-search-current"' : ' class="bg-search-match"';
+    const attrs =
+      i === current
+        ? ' data-current="true" class="bg-search-current"'
+        : ' class="bg-search-match"';
     html += `<mark${attrs}>${escapeHtml(text.slice(match.start, match.end))}</mark>`;
     last = match.end;
   });
@@ -121,12 +125,16 @@ export function MarkdownSourceEditor({
   // Bring the current match into view without taking focus from the search box.
   useEffect(() => {
     const textarea = textareaRef.current;
-    const mark = marksRef.current?.querySelector<HTMLElement>("mark[data-current]");
+    const mark =
+      marksRef.current?.querySelector<HTMLElement>("mark[data-current]");
     if (!textarea || !mark || active < 0) return;
     const { start, end } = matches[active];
     textarea.setSelectionRange(start, end);
     const visible = textarea.scrollTop;
-    if (mark.offsetTop < visible || mark.offsetTop + mark.offsetHeight > visible + textarea.clientHeight) {
+    if (
+      mark.offsetTop < visible ||
+      mark.offsetTop + mark.offsetHeight > visible + textarea.clientHeight
+    ) {
       textarea.scrollTop = mark.offsetTop - textarea.clientHeight / 3;
     }
     syncScroll();
@@ -195,13 +203,27 @@ export function MarkdownSourceEditor({
             }}
             onKeyDown={handleSearchKeyDown}
           />
-          <span aria-live="polite" className="min-w-[5.5rem] px-2 text-sm text-muted">
-            {query && (matches.length ? `${active + 1} z ${matches.length}` : "Brak wyników")}
+          <span
+            aria-live="polite"
+            className="min-w-[5.5rem] px-2 text-sm text-muted"
+          >
+            {query &&
+              (matches.length
+                ? `${active + 1} z ${matches.length}`
+                : "Brak wyników")}
           </span>
-          <IconButton aria-label="Poprzednie trafienie" disabled={!matches.length} onClick={() => step(-1)}>
+          <IconButton
+            aria-label="Poprzednie trafienie"
+            disabled={!matches.length}
+            onClick={() => step(-1)}
+          >
             <ChevronUp size={18} />
           </IconButton>
-          <IconButton aria-label="Następne trafienie" disabled={!matches.length} onClick={() => step(1)}>
+          <IconButton
+            aria-label="Następne trafienie"
+            disabled={!matches.length}
+            onClick={() => step(1)}
+          >
             <ChevronDown size={18} />
           </IconButton>
           <IconButton aria-label="Zamknij wyszukiwanie" onClick={closeSearch}>
@@ -211,13 +233,23 @@ export function MarkdownSourceEditor({
       )}
       <div className="relative h-[70vh] overflow-hidden rounded-lg border border-[#d1d5db] bg-[#fafafa]">
         {matches.length > 0 && (
-          <pre ref={marksRef} aria-hidden="true" className={`${layerClasses} ${gutter} text-transparent`}>
-            <code dangerouslySetInnerHTML={{ __html: markMatches(value, matches, active) }} />
+          <pre
+            ref={marksRef}
+            aria-hidden="true"
+            className={`${layerClasses} ${gutter} text-transparent`}
+          >
+            <code
+              dangerouslySetInnerHTML={{
+                __html: markMatches(value, matches, active),
+              }}
+            />
           </pre>
         )}
         {highlight && (
           <pre ref={preRef} aria-hidden="true" className={layerClasses}>
-            <code dangerouslySetInnerHTML={{ __html: highlightMarkdown(value) }} />
+            <code
+              dangerouslySetInnerHTML={{ __html: highlightMarkdown(value) }}
+            />
           </pre>
         )}
         <textarea

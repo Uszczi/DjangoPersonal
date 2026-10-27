@@ -109,7 +109,11 @@ function parseBlocks(markdown: string): Block[] {
     }
 
     const paragraph: string[] = [];
-    while (i < lines.length && lines[i].trim() !== "" && !startsBlock(lines[i])) {
+    while (
+      i < lines.length &&
+      lines[i].trim() !== "" &&
+      !startsBlock(lines[i])
+    ) {
       paragraph.push(lines[i]);
       i++;
     }
@@ -129,11 +133,17 @@ function safeHref(url: string): string | null {
 
 // Earliest match wins; on a tie the order below decides (code first, so its
 // content is never parsed, and ** before *).
-const INLINE: { pattern: RegExp; render: (m: RegExpExecArray, key: string) => ReactNode }[] = [
+const INLINE: {
+  pattern: RegExp;
+  render: (m: RegExpExecArray, key: string) => ReactNode;
+}[] = [
   {
     pattern: /`([^`\n]+)`/,
     render: (m, key) => (
-      <code key={key} className="rounded bg-md-code-bg px-1 font-utility text-[0.9em] text-accent">
+      <code
+        key={key}
+        className="rounded bg-md-code-bg px-1 font-utility text-[0.9em] text-accent"
+      >
         {m[1]}
       </code>
     ),
@@ -149,7 +159,9 @@ const INLINE: { pattern: RegExp; render: (m: RegExpExecArray, key: string) => Re
           key={key}
           href={href}
           className="text-accent underline underline-offset-2 hover:text-ink"
-          {...(external ? { target: "_blank", rel: "noreferrer noopener" } : {})}
+          {...(external
+            ? { target: "_blank", rel: "noreferrer noopener" }
+            : {})}
         >
           {renderInline(m[1], key)}
         </a>
@@ -169,7 +181,8 @@ const INLINE: { pattern: RegExp; render: (m: RegExpExecArray, key: string) => Re
     render: (m, key) => <del key={key}>{renderInline(m[1], key)}</del>,
   },
   {
-    pattern: /(?<![\w*])\*(?=\S)([^*\n]+?)(?<=\S)\*(?!\*)|(?<!\w)_(?=\S)([^_\n]+?)(?<=\S)_(?!\w)/,
+    pattern:
+      /(?<![\w*])\*(?=\S)([^*\n]+?)(?<=\S)\*(?!\*)|(?<!\w)_(?=\S)([^_\n]+?)(?<=\S)_(?!\w)/,
     render: (m, key) => <em key={key}>{renderInline(m[1] ?? m[2], key)}</em>,
   },
 ];
@@ -180,7 +193,11 @@ function renderInline(text: string, keyPrefix = "i"): ReactNode[] {
   let n = 0;
 
   while (rest.length > 0) {
-    let best: { index: number; match: RegExpExecArray; rule: (typeof INLINE)[number] } | null = null;
+    let best: {
+      index: number;
+      match: RegExpExecArray;
+      rule: (typeof INLINE)[number];
+    } | null = null;
     for (const rule of INLINE) {
       const match = rule.pattern.exec(rest);
       if (match && (best === null || match.index < best.index)) {
@@ -221,7 +238,10 @@ function renderBlock(block: Block, index: number): ReactNode {
     case "heading": {
       const Tag = `h${block.level}` as const;
       return (
-        <Tag key={key} className={`font-display text-deep-ink first:mt-0 ${HEADING_CLASSES[block.level]}`}>
+        <Tag
+          key={key}
+          className={`font-display text-deep-ink first:mt-0 ${HEADING_CLASSES[block.level]}`}
+        >
           {renderInline(block.text, key)}
         </Tag>
       );
@@ -234,7 +254,9 @@ function renderBlock(block: Block, index: number): ReactNode {
       );
     case "list": {
       const items = block.items.map((item, itemIndex) => (
-        <li key={`${key}-${itemIndex}`}>{renderInline(item, `${key}-${itemIndex}`)}</li>
+        <li key={`${key}-${itemIndex}`}>
+          {renderInline(item, `${key}-${itemIndex}`)}
+        </li>
       ));
       return block.ordered ? (
         <ol key={key} start={block.start} className="my-2 list-decimal pl-6">
@@ -248,13 +270,19 @@ function renderBlock(block: Block, index: number): ReactNode {
     }
     case "quote":
       return (
-        <blockquote key={key} className="my-2 border-l-4 border-line pl-3 text-muted">
+        <blockquote
+          key={key}
+          className="my-2 border-l-4 border-line pl-3 text-muted"
+        >
           {renderLines(block.lines, key)}
         </blockquote>
       );
     case "code":
       return (
-        <pre key={key} className="my-2 overflow-x-auto rounded bg-md-code-bg p-3 font-utility text-[0.9em] text-ink">
+        <pre
+          key={key}
+          className="my-2 overflow-x-auto rounded bg-md-code-bg p-3 font-utility text-[0.9em] text-ink"
+        >
           <code>{block.text}</code>
         </pre>
       );
@@ -277,7 +305,10 @@ function markSearch(node: ReactNode, query: string, key: string): ReactNode {
     for (const { start, end } of matches) {
       parts.push(node.slice(last, start));
       parts.push(
-        <mark key={`${key}-m${start}`} className="rounded-sm bg-search-match text-inherit">
+        <mark
+          key={`${key}-m${start}`}
+          className="rounded-sm bg-search-match text-inherit"
+        >
           {node.slice(start, end)}
         </mark>,
       );
@@ -287,10 +318,19 @@ function markSearch(node: ReactNode, query: string, key: string): ReactNode {
     return parts;
   }
   if (Array.isArray(node)) {
-    return node.map((child: ReactNode, i) => markSearch(child, query, `${key}-${i}`));
+    return node.map((child: ReactNode, i) =>
+      markSearch(child, query, `${key}-${i}`),
+    );
   }
-  if (isValidElement<{ children?: ReactNode }>(node) && node.props.children !== undefined) {
-    return cloneElement(node, undefined, markSearch(node.props.children, query, key));
+  if (
+    isValidElement<{ children?: ReactNode }>(node) &&
+    node.props.children !== undefined
+  ) {
+    return cloneElement(
+      node,
+      undefined,
+      markSearch(node.props.children, query, key),
+    );
   }
   return node;
 }
@@ -302,7 +342,11 @@ type MarkdownPreviewProps = {
   highlight?: string;
 };
 
-export function MarkdownPreview({ markdown, className, highlight }: MarkdownPreviewProps) {
+export function MarkdownPreview({
+  markdown,
+  className,
+  highlight,
+}: MarkdownPreviewProps) {
   const blocks: ReactNode = parseBlocks(markdown).map(renderBlock);
   return (
     <div className={`break-words [&>*:first-child]:mt-0 ${className ?? ""}`}>

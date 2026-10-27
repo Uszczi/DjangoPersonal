@@ -1,11 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
-import { Button, ErrorAlert, Field, LoadingStatus, PageHeader, TextArea } from "@/design-system";
+import {
+  Button,
+  ErrorAlert,
+  Field,
+  LoadingStatus,
+  PageHeader,
+  TextArea,
+} from "@/design-system";
 import { MarkdownPreview } from "@/components/MarkdownPreview";
 import { api } from "@personal/shared/api";
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
-import { ResponseError, type NoteSource, type NotesAnswer } from "@personal/shared/generated/api";
+import {
+  ResponseError,
+  type NoteSource,
+  type NotesAnswer,
+} from "@personal/shared/generated/api";
 
 export const Route = createFileRoute("/whiteboard/ask")({
   component: AskNotesPage,
@@ -47,9 +58,16 @@ function AskNotesPage() {
     } catch (error) {
       if (!mounted.current) return;
       if (error instanceof ResponseError && error.response.status === 503) {
-        setAsking({ status: "error", message: UNAVAILABLE, detail: await apiErrorMessage(error) });
+        setAsking({
+          status: "error",
+          message: UNAVAILABLE,
+          detail: await apiErrorMessage(error),
+        });
       } else {
-        setAsking({ status: "error", message: "Nie udało się zadać pytania. Spróbuj ponownie." });
+        setAsking({
+          status: "error",
+          message: "Nie udało się zadać pytania. Spróbuj ponownie.",
+        });
       }
     }
   }
@@ -60,7 +78,10 @@ function AskNotesPage() {
         title="Zapytaj Notatki"
         subtitle="Odpowiedź powstaje tylko z Twoich Notatek, z odnośnikami do fragmentów, z których pochodzi."
       />
-      <form className="flex max-w-[720px] flex-col gap-3" onSubmit={(e) => void ask(e)}>
+      <form
+        className="flex max-w-[720px] flex-col gap-3"
+        onSubmit={(e) => void ask(e)}
+      >
         <Field label="Pytanie" hint="Enter wysyła, Shift+Enter to nowa linia.">
           <TextArea
             rows={2}
@@ -77,7 +98,11 @@ function AskNotesPage() {
           />
         </Field>
         <div>
-          <Button type="submit" variant="primary" disabled={question.trim() === "" || asking.status === "loading"}>
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={question.trim() === "" || asking.status === "loading"}
+          >
             Zapytaj
           </Button>
         </div>
@@ -94,7 +119,8 @@ function Result({ asking }: { asking: Asking }) {
   if (asking.status === "loading") {
     return (
       <LoadingStatus variant="inline">
-        Szukam w Notatkach i piszę odpowiedź… Lokalny model może potrzebować nawet kilku minut.
+        Szukam w Notatkach i piszę odpowiedź… Lokalny model może potrzebować
+        nawet kilku minut.
       </LoadingStatus>
     );
   }
@@ -102,7 +128,11 @@ function Result({ asking }: { asking: Asking }) {
     return (
       <ErrorAlert>
         {asking.message}
-        {asking.detail ? <span className="mt-1 block text-[12px] opacity-80">{asking.detail}</span> : null}
+        {asking.detail ? (
+          <span className="mt-1 block text-[12px] opacity-80">
+            {asking.detail}
+          </span>
+        ) : null}
       </ErrorAlert>
     );
   }
@@ -115,7 +145,9 @@ function Result({ asking }: { asking: Asking }) {
       </p>
       {sources.length > 0 ? (
         <div className="flex flex-col gap-3">
-          <h2 className="font-display text-[15px] font-bold text-ink">Źródła</h2>
+          <h2 className="font-display text-[15px] font-bold text-ink">
+            Źródła
+          </h2>
           <ol className="flex flex-col gap-3" aria-label="Źródła">
             {sources.map((source) => (
               <SourceCard key={source.number} source={source} />
@@ -130,7 +162,13 @@ function Result({ asking }: { asking: Asking }) {
 const CITATION = /\[(\d+)\]/g;
 
 /** The answer with each cited [n] as a button that brings its source into view. */
-function AnswerText({ text, sources }: { text: string; sources: NoteSource[] }) {
+function AnswerText({
+  text,
+  sources,
+}: {
+  text: string;
+  sources: NoteSource[];
+}) {
   const numbers = new Set(sources.map((s) => s.number));
   const parts: (string | number)[] = [];
   let last = 0;
@@ -149,7 +187,11 @@ function AnswerText({ text, sources }: { text: string; sources: NoteSource[] }) 
         type="button"
         className="mx-px cursor-pointer align-super text-[11px] font-bold text-accent hover:underline"
         aria-label={`Źródło ${part}`}
-        onClick={() => document.getElementById(sourceId(part))?.scrollIntoView?.({ behavior: "smooth", block: "nearest" })}
+        onClick={() =>
+          document
+            .getElementById(sourceId(part))
+            ?.scrollIntoView?.({ behavior: "smooth", block: "nearest" })
+        }
       >
         [{part}]
       </button>
@@ -165,10 +207,17 @@ function sourceId(n: number) {
 
 function SourceCard({ source }: { source: NoteSource }) {
   return (
-    <li id={sourceId(source.number)} className="rounded-lg border border-line bg-surface p-3">
+    <li
+      id={sourceId(source.number)}
+      className="rounded-lg border border-line bg-surface p-3"
+    >
       <div className="mb-2 flex items-baseline gap-2">
-        <span className="text-[12px] font-bold text-accent">[{source.number}]</span>
-        <span className="mr-auto text-[13px] font-semibold text-ink-soft">{source.heading}</span>
+        <span className="text-[12px] font-bold text-accent">
+          [{source.number}]
+        </span>
+        <span className="mr-auto text-[13px] font-semibold text-ink-soft">
+          {source.heading}
+        </span>
         <Link
           to="/whiteboard/$boardId"
           params={{ boardId: String(source.whiteboardId) }}
@@ -177,7 +226,10 @@ function SourceCard({ source }: { source: NoteSource }) {
           Otwórz notatkę
         </Link>
       </div>
-      <MarkdownPreview markdown={source.text} className="text-[14px] text-ink" />
+      <MarkdownPreview
+        markdown={source.text}
+        className="text-[14px] text-ink"
+      />
     </li>
   );
 }

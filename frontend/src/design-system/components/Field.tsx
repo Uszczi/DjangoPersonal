@@ -15,7 +15,14 @@ type FieldProps = HTMLAttributes<HTMLDivElement> & {
  * A labelled form row. The control is nested in the `<label>`, so no ids are needed for the
  * label itself; hint and error sit outside it so they don't become part of the control's name.
  */
-export function Field({ label, hint, error, children, className = "", ...props }: FieldProps) {
+export function Field({
+  label,
+  hint,
+  error,
+  children,
+  className = "",
+  ...props
+}: FieldProps) {
   const id = useId();
   const hintId = hint ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
@@ -34,7 +41,10 @@ export function Field({ label, hint, error, children, className = "", ...props }
           </small>
         )}
         {error && (
-          <p id={errorId} className="m-0 text-[12px] leading-relaxed text-danger-ink">
+          <p
+            id={errorId}
+            className="m-0 text-[12px] leading-relaxed text-danger-ink"
+          >
             {error}
           </p>
         )}

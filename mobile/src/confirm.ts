@@ -15,7 +15,11 @@ export function confirmDestructive(
       message,
       [
         { text: "Anuluj", style: "cancel", onPress: () => resolve(false) },
-        { text: confirmLabel, style: "destructive", onPress: () => resolve(true) },
+        {
+          text: confirmLabel,
+          style: "destructive",
+          onPress: () => resolve(true),
+        },
       ],
       { cancelable: true, onDismiss: () => resolve(false) },
     );

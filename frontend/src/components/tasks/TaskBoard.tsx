@@ -10,7 +10,10 @@ import {
 
 import { useSortSensors } from "@/lib/useSortSensors";
 import { api } from "@personal/shared/api";
-import type { ProjectResponse, TaskResponse } from "@personal/shared/generated/api";
+import type {
+  ProjectResponse,
+  TaskResponse,
+} from "@personal/shared/generated/api";
 import { useTasksStore } from "@personal/shared/stores/tasks";
 
 import { TaskStatusSection } from "./TaskStatusSection";
@@ -73,8 +76,11 @@ export function TaskBoard({
     const { active, over } = event;
     if (!over) return;
 
-    const activeStatus = (active.data.current as { status?: string } | undefined)?.status;
-    const overStatus = (over.data.current as { status?: string } | undefined)?.status;
+    const activeStatus = (
+      active.data.current as { status?: string } | undefined
+    )?.status;
+    const overStatus = (over.data.current as { status?: string } | undefined)
+      ?.status;
     if (!activeStatus || !overStatus || activeStatus === overStatus) return;
 
     if (!tasks.some((t) => t.id === active.id)) return;
@@ -82,7 +88,9 @@ export function TaskBoard({
     useTasksStore.setState({
       taskList: {
         projectId: project.id,
-        tasks: tasks.map((t) => (t.id === active.id ? { ...t, status: overStatus } : t)),
+        tasks: tasks.map((t) =>
+          t.id === active.id ? { ...t, status: overStatus } : t,
+        ),
       },
     });
   }
@@ -94,7 +102,8 @@ export function TaskBoard({
     const draggedTask = tasks.find((task) => task.id === active.id);
     if (!draggedTask) return;
 
-    const overStatus = (over.data.current as { status?: string } | undefined)?.status;
+    const overStatus = (over.data.current as { status?: string } | undefined)
+      ?.status;
     if (!overStatus) return;
 
     const isSameGroup = draggedTask.status === overStatus;

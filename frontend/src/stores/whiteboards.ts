@@ -18,7 +18,10 @@ type WhiteboardsState = {
   pageError: string;
   loadWhiteboards: () => Promise<void>;
   /** Create an untitled item, at the top level or in `folderId`; `null` if the server refused. */
-  createItem: (kind: ItemKind, folderId?: number | null) => Promise<WhiteboardResponse | null>;
+  createItem: (
+    kind: ItemKind,
+    folderId?: number | null,
+  ) => Promise<WhiteboardResponse | null>;
   renameWhiteboard: (id: number, name: string) => Promise<void>;
   deleteWhiteboard: (id: number) => Promise<void>;
   /** Put an item in a Folder, or take it out of one with `null`. */
@@ -96,7 +99,9 @@ export const useWhiteboardsStore = create<WhiteboardsState>((set) => ({
     });
     // A move counts as a change, so the item goes to the top of its new place.
     set((state) => ({
-      whiteboards: newestFirst(state.whiteboards.map((item) => (item.id === id ? updated : item))),
+      whiteboards: newestFirst(
+        state.whiteboards.map((item) => (item.id === id ? updated : item)),
+      ),
     }));
   },
 

@@ -10,7 +10,9 @@ type WalletIconPickerProps = {
 export function WalletIconPicker({ value, onChange }: WalletIconPickerProps) {
   return (
     <div className="mb-[18px] grid justify-items-start gap-2">
-      <span className="text-[12px] font-semibold text-ink-soft">Ikona (opcjonalnie)</span>
+      <span className="text-[12px] font-semibold text-ink-soft">
+        Ikona (opcjonalnie)
+      </span>
       <IconPicker
         label="Ikona portfela"
         noneLabel="Bez ikony"

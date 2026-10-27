@@ -11,10 +11,23 @@ import { CSS } from "@dnd-kit/utilities";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { DeleteProjectModal } from "@/components/modals/DeleteProjectModal";
-import { Button, DragHandle, ErrorAlert, Field, Modal, ModalFooter, Select, TextArea, TextInput } from "@/design-system";
+import {
+  Button,
+  DragHandle,
+  ErrorAlert,
+  Field,
+  Modal,
+  ModalFooter,
+  Select,
+  TextArea,
+  TextInput,
+} from "@/design-system";
 import type { ProjectResponse } from "@personal/shared/generated/api";
 import { ShowModal } from "@/stores/modal";
-import { useProjectsStore, type ProjectInput } from "@personal/shared/stores/projects";
+import {
+  useProjectsStore,
+  type ProjectInput,
+} from "@personal/shared/stores/projects";
 import { useSortSensors } from "@/lib/useSortSensors";
 
 type ProjectEditorModalProps = {
@@ -47,8 +60,14 @@ function StatusRow({
   onChange: (value: string) => void;
   onRemove: () => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: status.id, disabled });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: status.id, disabled });
 
   return (
     <div
@@ -116,7 +135,10 @@ export function ProjectEditorModal({
   }
 
   function addStatus() {
-    setForm((current) => ({ ...current, statuses: [...current.statuses, newStatus("")] }));
+    setForm((current) => ({
+      ...current,
+      statuses: [...current.statuses, newStatus("")],
+    }));
   }
 
   function removeStatus(id: number) {
@@ -129,7 +151,9 @@ export function ProjectEditorModal({
   function handleStatusDragEnd({ active, over }: DragEndEvent) {
     if (!over || active.id === over.id) return;
     setForm((current) => {
-      const from = current.statuses.findIndex((status) => status.id === active.id);
+      const from = current.statuses.findIndex(
+        (status) => status.id === active.id,
+      );
       const to = current.statuses.findIndex((status) => status.id === over.id);
       return { ...current, statuses: arrayMove(current.statuses, from, to) };
     });
@@ -138,7 +162,9 @@ export function ProjectEditorModal({
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const name = form.name.trim();
-    const statuses = form.statuses.map((status) => status.name.trim()).filter(Boolean);
+    const statuses = form.statuses
+      .map((status) => status.name.trim())
+      .filter(Boolean);
 
     if (!name) {
       setFormError("Podaj nazwę projektu.");
@@ -242,11 +268,7 @@ export function ProjectEditorModal({
                 </div>
               </SortableContext>
             </DndContext>
-            <Button
-              variant="secondary"
-              className="w-full"
-              onClick={addStatus}
-            >
+            <Button variant="secondary" className="w-full" onClick={addStatus}>
               <span aria-hidden="true">+</span> Dodaj status
             </Button>
           </Field>
@@ -284,18 +306,10 @@ export function ProjectEditorModal({
                 Usuń
               </Button>
             )}
-            <Button
-              variant="secondary"
-              onClick={close}
-              disabled={isSaving}
-            >
+            <Button variant="secondary" onClick={close} disabled={isSaving}>
               Anuluj
             </Button>
-            <Button
-              variant="primary"
-              type="submit"
-              disabled={isSaving}
-            >
+            <Button variant="primary" type="submit" disabled={isSaving}>
               {isSaving
                 ? "Zapisywanie…"
                 : project

@@ -46,7 +46,10 @@ export const Empty: Story = { render: () => <Controlled initial={null} /> };
 
 export const WithHint: Story = {
   render: () => (
-    <Controlled initial={new Date(2026, 9, 24, 8, 0)} hint="Czas lokalny, z dokładnością do minuty." />
+    <Controlled
+      initial={new Date(2026, 9, 24, 8, 0)}
+      hint="Czas lokalny, z dokładnością do minuty."
+    />
   ),
 };
 
