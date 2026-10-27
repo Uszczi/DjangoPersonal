@@ -5,6 +5,7 @@ import {
   FilePlus,
   FolderInput,
   FolderPlus,
+  MessageCircleQuestionMark,
   Palette,
   Pencil,
   Search,
@@ -40,6 +41,8 @@ const rowButtonClasses =
 type NotatnikSidebarProps = {
   /** The open item, highlighted and revealed in the tree; none on the Notatnik page. */
   activeId: number | null;
+  /** Something fills the right side (an item, or the questions page); on small screens the tree then steps aside. */
+  detailOpen?: boolean;
 };
 
 /**
@@ -47,7 +50,7 @@ type NotatnikSidebarProps = {
  * Folders and items. The open item shows to its right. On small screens it
  * fills the Notatnik page and steps aside while an item is open.
  */
-export function NotatnikSidebar({ activeId }: NotatnikSidebarProps) {
+export function NotatnikSidebar({ activeId, detailOpen = activeId != null }: NotatnikSidebarProps) {
   const whiteboards = useWhiteboardsStore((s) => s.whiteboards);
   const isLoading = useWhiteboardsStore((s) => s.isLoading);
   const pageError = useWhiteboardsStore((s) => s.pageError);
@@ -91,7 +94,7 @@ export function NotatnikSidebar({ activeId }: NotatnikSidebarProps) {
 
   const panelClasses = [
     "shrink-0 self-start overflow-y-auto rounded-lg border border-line bg-surface md:sticky md:top-8 md:h-[calc(100vh-132px)]",
-    activeId != null ? "max-md:hidden" : "max-md:w-full",
+    detailOpen ? "max-md:hidden" : "max-md:w-full",
   ].join(" ");
 
   if (isCollapsed) {
@@ -178,6 +181,14 @@ export function NotatnikSidebar({ activeId }: NotatnikSidebarProps) {
           onClick={() => ShowModal(FolderEditorModal)}
         >
           <FolderPlus aria-hidden="true" className={iconClasses} />
+        </IconButton>
+        <IconButton
+          className={smallIconButton}
+          title="Zapytaj Notatki"
+          aria-label="Zapytaj Notatki"
+          onClick={() => navigate({ to: "/whiteboard/ask" })}
+        >
+          <MessageCircleQuestionMark aria-hidden="true" className={iconClasses} />
         </IconButton>
         <IconButton
           className={`${smallIconButton} text-[20px] max-md:hidden`}
