@@ -3,17 +3,19 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "DOM-free code shared by the web and mobile apps: the generated API client, the configured client, domain stores and helpers.",
+  "description": "DOM-free code shared by the web and mobile apps: the generated API client, the configured client, server-state queries, client-state stores and helpers.",
   "exports": {
     "./generated/api": "./src/generated/api/index.ts",
     "./generated/api/runtime": "./src/generated/api/runtime.ts",
     "./stores/*": "./src/stores/*.ts",
+    "./queries/*": "./src/queries/*.ts",
     "./*": "./src/*.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
+    "@tanstack/react-query": "^5.105.0",
     "react": "19.3.0",
     "zustand": "^5.0.15"
   }

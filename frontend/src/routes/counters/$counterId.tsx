@@ -13,7 +13,15 @@ import {
   LoadingStatus,
   PageHeader,
 } from "@/design-system";
-import { useCountersStore } from "@personal/shared/stores/counters";
+import {
+  COUNTER_ENTRIES_LOAD_ERROR,
+  COUNTERS_LOAD_ERROR,
+} from "@personal/shared/loadErrors";
+import {
+  useCounterEntries,
+  useCounters,
+  useSaveCounterEntry,
+} from "@personal/shared/queries/counters";
 import { ShowModal } from "@/stores/modal";
 
 export const Route = createFileRoute("/counters/$counterId")({
@@ -25,22 +33,16 @@ function CounterPage() {
   const { counterId } = Route.useParams();
   const id = Number(counterId);
   const navigate = useNavigate();
-  const counter = useCountersStore((state) =>
-    state.counters.find((item) => item.id === id),
-  );
-  const isLoading = useCountersStore((state) => state.isLoading);
-  const pageError = useCountersStore((state) => state.pageError);
-  const entryList = useCountersStore((state) => state.entryList);
-  const entriesError = useCountersStore((state) => state.entriesError);
-  const loadEntries = useCountersStore((state) => state.loadEntries);
-  const saveEntry = useCountersStore((state) => state.saveEntry);
+  const {
+    data: counters = [],
+    isPending: isLoading,
+    isError: isCountersError,
+  } = useCounters();
+  const counter = counters.find((item) => item.id === id);
+  const entriesQuery = useCounterEntries(counter ? id : null);
+  const saveEntry = useSaveCounterEntry();
 
-  const exists = counter != null;
-  useEffect(() => {
-    if (exists) void loadEntries(id);
-  }, [exists, id, loadEntries]);
-
-  const isMissing = !isLoading && !pageError && !counter;
+  const isMissing = !isLoading && !isCountersError && !counter;
   useEffect(() => {
     if (isMissing) navigate({ to: "/counters" });
   }, [isMissing, navigate]);
@@ -48,14 +50,15 @@ function CounterPage() {
   if (isLoading) {
     return <LoadingStatus>Wczytywanie licznika…</LoadingStatus>;
   }
-  if (pageError) {
-    return <ErrorMessage>{pageError}</ErrorMessage>;
+  if (isCountersError) {
+    return <ErrorMessage>{COUNTERS_LOAD_ERROR}</ErrorMessage>;
   }
   if (!counter) {
     return <LoadingStatus>Przekierowywanie…</LoadingStatus>;
   }
 
-  const entries = entryList?.counterId === id ? entryList.entries : null;
+  const entries = entriesQuery.data ?? null;
+  const entriesError = entriesQuery.isError ? COUNTER_ENTRIES_LOAD_ERROR : "";
 
   return (
     <section aria-label={`Licznik: ${counter.name}`}>
@@ -86,7 +89,10 @@ function CounterPage() {
         <Button
           variant="primary"
           onClick={() =>
-            void saveEntry(id, { value: 1, occurredAt: new Date(), note: "" })
+            saveEntry.mutate({
+              counterId: id,
+              input: { value: 1, occurredAt: new Date(), note: "" },
+            })
           }
         >
           +1

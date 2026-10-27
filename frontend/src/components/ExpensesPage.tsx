@@ -1,5 +1,3 @@
-import { useEffect } from "react";
-
 import { CategoryPanel } from "@/components/CategoryPanel";
 import { WalletCreateModal } from "@/components/modals/WalletCreateModal";
 import { WalletView } from "@/components/WalletView";
@@ -10,7 +8,9 @@ import {
   PageHeader,
 } from "@/design-system";
 import { ShowModal } from "@/stores/modal";
-import { useWalletsStore } from "@personal/shared/stores/wallets";
+import { WALLETS_LOAD_ERROR } from "@personal/shared/loadErrors";
+import { useWallets, validSelection } from "@personal/shared/queries/wallets";
+import { useWalletSelectionStore } from "@personal/shared/stores/walletSelection";
 
 type ExpensesPageProps = {
   /** The wallet named by the URL; without one the page shows the store's selected wallet. */
@@ -19,24 +19,19 @@ type ExpensesPageProps = {
 
 /** The Wydatki page: one wallet at a time, then the category manager. */
 export function ExpensesPage({ walletId }: ExpensesPageProps) {
-  const wallets = useWalletsStore((state) => state.wallets);
-  const isLoading = useWalletsStore((state) => state.isLoading);
-  const pageError = useWalletsStore((state) => state.pageError);
-  const selectedWalletId = useWalletsStore((state) => state.selectedWalletId);
-  const loadWallets = useWalletsStore((state) => state.loadWallets);
+  const { data: wallets = [], isPending, isError } = useWallets();
+  const selectedWalletId = useWalletSelectionStore(
+    (state) => state.selectedWalletId,
+  );
 
-  useEffect(() => {
-    void loadWallets();
-  }, [loadWallets]);
-
-  const shownWalletId = walletId ?? selectedWalletId;
+  const shownWalletId = walletId ?? validSelection(wallets, selectedWalletId);
   const wallet = wallets.find((item) => item.id === shownWalletId);
 
   function openCreateForm() {
     ShowModal(WalletCreateModal);
   }
 
-  if (isLoading) {
+  if (isPending) {
     return <LoadingStatus>Wczytywanie portfeli…</LoadingStatus>;
   }
 
@@ -52,7 +47,7 @@ export function ExpensesPage({ walletId }: ExpensesPageProps) {
         }
       />
 
-      {pageError && <ErrorMessage>{pageError}</ErrorMessage>}
+      {isError && <ErrorMessage>{WALLETS_LOAD_ERROR}</ErrorMessage>}
 
       {wallets.length === 0 ? (
         <p className="py-4 text-[13px] text-muted">

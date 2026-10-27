@@ -1,18 +1,10 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { useEffect } from "react";
-
-import { useCountersStore } from "@personal/shared/stores/counters";
 
 export const Route = createFileRoute("/counters")({
   component: CountersLayout,
 });
 
+/** The Counter pages read the list themselves (`useCounters`), sharing one cached copy. */
 function CountersLayout() {
-  const loadCounters = useCountersStore((state) => state.loadCounters);
-
-  useEffect(() => {
-    void loadCounters();
-  }, [loadCounters]);
-
   return <Outlet />;
 }

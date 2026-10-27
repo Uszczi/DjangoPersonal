@@ -2,9 +2,13 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { Button, EmptyState, PageHeader } from "@/design-system";
 import { FolderEditorModal } from "@/components/modals/FolderEditorModal";
-import { useFoldersStore } from "@/stores/folders";
+import { useFolders } from "@/queries/folders";
 import { ShowModal } from "@/stores/modal";
-import { useWhiteboardsStore, type ItemKind } from "@/stores/whiteboards";
+import {
+  useCreateItem,
+  useWhiteboards,
+  type ItemKind,
+} from "@/queries/whiteboards";
 
 export const Route = createFileRoute("/whiteboard/")({
   component: WhiteboardsPage,
@@ -15,22 +19,24 @@ export const Route = createFileRoute("/whiteboard/")({
  * actions live in the sidebar (`NotatnikSidebar`), so this only greets.
  */
 function WhiteboardsPage() {
-  const isEmpty = useWhiteboardsStore(
-    (s) => !s.isLoading && !s.pageError && s.whiteboards.length === 0,
-  );
-  const noFolders = useFoldersStore(
-    (s) => !s.isLoading && !s.pageError && s.folders.length === 0,
-  );
-  const createItem = useWhiteboardsStore((s) => s.createItem);
+  const whiteboards = useWhiteboards();
+  const folders = useFolders();
+  const isEmpty = whiteboards.isSuccess && whiteboards.data.length === 0;
+  const noFolders = folders.isSuccess && folders.data.length === 0;
+  const createItem = useCreateItem();
   const navigate = useNavigate();
 
   async function handleCreate(kind: ItemKind) {
-    const created = await createItem(kind);
-    if (created)
-      navigate({
-        to: "/whiteboard/$boardId",
-        params: { boardId: String(created.id) },
-      });
+    let created;
+    try {
+      created = await createItem.mutateAsync({ kind });
+    } catch {
+      return;
+    }
+    navigate({
+      to: "/whiteboard/$boardId",
+      params: { boardId: String(created.id) },
+    });
   }
 
   return (

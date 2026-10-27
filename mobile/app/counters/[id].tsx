@@ -1,5 +1,5 @@
 import { Stack, router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Alert,
   FlatList,
@@ -16,7 +16,13 @@ import {
   formatEntryTime,
   signedValue,
 } from "@personal/shared/counterFormat";
-import { useCountersStore } from "@personal/shared/stores/counters";
+import { COUNTER_ENTRIES_LOAD_ERROR } from "@personal/shared/loadErrors";
+import {
+  useCounterEntries,
+  useCounters,
+  useDeleteCounter,
+  useSaveCounterEntry,
+} from "@personal/shared/queries/counters";
 
 import { Button } from "../../src/Button";
 import { plusOneEntry } from "../../src/plusOne";
@@ -27,31 +33,24 @@ export default function CounterScreen() {
   const { id: rawId } = useLocalSearchParams<{ id: string }>();
   const id = Number(rawId);
 
-  const counter = useCountersStore((state) =>
-    state.counters.find((item) => item.id === id),
-  );
-  const entryList = useCountersStore((state) => state.entryList);
-  const entriesError = useCountersStore((state) => state.entriesError);
-  const loadEntries = useCountersStore((state) => state.loadEntries);
-  const saveEntry = useCountersStore((state) => state.saveEntry);
-  const deleteCounter = useCountersStore((state) => state.deleteCounter);
+  const { data: counters = [] } = useCounters();
+  const counter = counters.find((item) => item.id === id);
+  const entriesQuery = useCounterEntries(id);
+  const saveEntry = useSaveCounterEntry();
+  const deleteCounter = useDeleteCounter();
   const [actionError, setActionError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    void loadEntries(id);
-  }, [id, loadEntries]);
-
   async function refresh() {
     setIsRefreshing(true);
-    await loadEntries(id);
+    await entriesQuery.refetch();
     setIsRefreshing(false);
   }
 
   async function addOne() {
     setActionError("");
     try {
-      await saveEntry(id, plusOneEntry());
+      await saveEntry.mutateAsync({ counterId: id, input: plusOneEntry() });
     } catch (error) {
       setActionError(await apiErrorMessage(error));
     }
@@ -69,7 +68,7 @@ export default function CounterScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              await deleteCounter(id);
+              await deleteCounter.mutateAsync(id);
               router.back();
             } catch (error) {
               setActionError(await apiErrorMessage(error));
@@ -88,7 +87,8 @@ export default function CounterScreen() {
     );
   }
 
-  const entries = entryList?.counterId === id ? entryList.entries : null;
+  const entries = entriesQuery.data ?? null;
+  const entriesError = entriesQuery.isError ? COUNTER_ENTRIES_LOAD_ERROR : "";
   const errorMessage = actionError || entriesError;
 
   return (

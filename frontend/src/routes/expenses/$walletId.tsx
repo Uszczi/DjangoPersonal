@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { ExpensesPage } from "@/components/ExpensesPage";
-import { useWalletsStore } from "@personal/shared/stores/wallets";
+import { useWallets } from "@personal/shared/queries/wallets";
+import { useWalletSelectionStore } from "@personal/shared/stores/walletSelection";
 import { LoadingStatus } from "@/design-system";
 
 export const Route = createFileRoute("/expenses/$walletId")({
@@ -13,10 +14,8 @@ export const Route = createFileRoute("/expenses/$walletId")({
 function WalletDetailPage() {
   const { walletId } = Route.useParams();
   const navigate = useNavigate();
-  const wallets = useWalletsStore((state) => state.wallets);
-  const isLoading = useWalletsStore((state) => state.isLoading);
-  const pageError = useWalletsStore((state) => state.pageError);
-  const selectWallet = useWalletsStore((state) => state.selectWallet);
+  const { data: wallets = [], isPending: isLoading, isError } = useWallets();
+  const selectWallet = useWalletSelectionStore((state) => state.selectWallet);
 
   const wallet = wallets.find((item) => item.id === Number(walletId));
   const activeWalletId = wallet?.id;
@@ -26,12 +25,12 @@ function WalletDetailPage() {
   }, [activeWalletId, selectWallet]);
 
   useEffect(() => {
-    if (!isLoading && !pageError && !wallet) {
+    if (!isLoading && !isError && !wallet) {
       navigate({ to: "/expenses" });
     }
-  }, [isLoading, pageError, wallet, navigate]);
+  }, [isLoading, isError, wallet, navigate]);
 
-  if (!isLoading && !pageError && !wallet) {
+  if (!isLoading && !isError && !wallet) {
     return <LoadingStatus>Przekierowywanie…</LoadingStatus>;
   }
 

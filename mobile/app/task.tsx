@@ -10,8 +10,14 @@ import {
 } from "react-native";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
-import { useProjectsStore } from "@personal/shared/stores/projects";
-import { useTasksStore, type TaskInput } from "@personal/shared/stores/tasks";
+import { useProjects } from "@personal/shared/queries/projects";
+import {
+  useDeleteTask,
+  useMoveTask,
+  useProjectTasks,
+  useSaveTask,
+  type TaskInput,
+} from "@personal/shared/queries/tasks";
 
 import { Button } from "../src/Button";
 import { ChipGroup } from "../src/ChipGroup";
@@ -19,10 +25,10 @@ import { confirmDestructive } from "../src/confirm";
 import { common, form } from "../src/theme";
 
 /**
- * Creates a Task (`?projectId=`) or edits one (`?taskId=`), like the web
- * TaskEditorModal. The edited Task comes from the loaded task list, which is
- * the list the user tapped it in. Moving up/down stands in for the web's
- * drag and drop.
+ * Creates a Task in `?projectId=`, or edits `?taskId=` of that Project, like
+ * the web TaskEditorModal. The edited Task comes from the Project's cached
+ * task list, which is the list the user tapped it in. Moving up/down stands
+ * in for the web's drag and drop.
  */
 export default function TaskEditorScreen() {
   const params = useLocalSearchParams<{
@@ -31,21 +37,23 @@ export default function TaskEditorScreen() {
   }>();
   const taskId = params.taskId ? Number(params.taskId) : null;
 
-  const projects = useProjectsStore((state) => state.projects);
-  const taskList = useTasksStore((state) => state.taskList);
+  const { data: projects = [] } = useProjects();
+  const listProject =
+    projects.find((item) => item.id === Number(params.projectId)) ?? null;
+  const { data: listTasks = [] } = useProjectTasks(
+    taskId === null ? null : listProject,
+  );
   const task =
     taskId === null
       ? null
-      : (taskList?.tasks.find((item) => item.id === taskId) ?? null);
-  // Derived outside the selector: a selector returning a fresh array would
-  // re-render forever.
+      : (listTasks.find((item) => item.id === taskId) ?? null);
   const siblings = task
-    ? (taskList?.tasks ?? []).filter((item) => item.status === task.status)
+    ? listTasks.filter((item) => item.status === task.status)
     : [];
-  const saveTask = useTasksStore((state) => state.saveTask);
-  const moveTask = useTasksStore((state) => state.moveTask);
-  const confirmDelete = useTasksStore((state) => state.confirmDelete);
-  const actionError = useTasksStore((state) => state.actionError);
+  const saveTask = useSaveTask();
+  const moveTask = useMoveTask();
+  const deleteTaskMutation = useDeleteTask();
+  const [actionError, setActionError] = useState("");
 
   const [form_, setForm] = useState<TaskInput>(() => ({
     title: task?.title ?? "",
@@ -90,7 +98,7 @@ export default function TaskEditorScreen() {
     setIsSaving(true);
     setFormError("");
     try {
-      await saveTask(input, task);
+      await saveTask.mutateAsync({ input, task });
       router.back();
     } catch (error) {
       setFormError(await apiErrorMessage(error));
@@ -109,7 +117,7 @@ export default function TaskEditorScreen() {
 
     setIsSaving(true);
     try {
-      await confirmDelete(task);
+      await deleteTaskMutation.mutateAsync(task);
       router.back();
     } catch (error) {
       setFormError(await apiErrorMessage(error));
@@ -117,16 +125,23 @@ export default function TaskEditorScreen() {
     }
   }
 
-  async function move(direction: "up" | "down") {
-    if (!task) return;
-    setIsSaving(true);
-    await moveTask(task, direction);
-    setIsSaving(false);
-  }
-
   const position = task
     ? siblings.findIndex((item) => item.id === task.id)
     : -1;
+
+  async function move(direction: "up" | "down") {
+    if (!task || position < 0) return;
+    const target = direction === "up" ? position - 1 : position + 1;
+    if (target < 0 || target >= siblings.length) return;
+    setIsSaving(true);
+    setActionError("");
+    try {
+      await moveTask.mutateAsync({ task, position: target });
+    } catch (error) {
+      setActionError(await apiErrorMessage(error));
+    }
+    setIsSaving(false);
+  }
 
   return (
     <KeyboardAvoidingView

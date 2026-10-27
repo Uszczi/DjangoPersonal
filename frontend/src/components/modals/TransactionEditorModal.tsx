@@ -16,10 +16,10 @@ import { ShowModal } from "@/stores/modal";
 import type { TransactionResponse } from "@personal/shared/generated/api";
 import { DEFAULT_CATEGORY_ICON } from "@personal/shared/categoryIcons";
 import { CategoryIcon } from "@/components/CategoryIcon";
-import { useCategoriesStore } from "@personal/shared/stores/categories";
-import type { TransactionInput } from "@personal/shared/stores/transactions";
-import { useSaveTransaction } from "@/queries/transactions";
-import { useWalletsStore } from "@personal/shared/stores/wallets";
+import { useCategories } from "@personal/shared/queries/categories";
+import type { TransactionInput } from "@personal/shared/queries/transactions";
+import { useSaveTransaction } from "@personal/shared/queries/transactions";
+import { useWallets } from "@personal/shared/queries/wallets";
 
 type TransactionEditorModalProps = {
   /** Omit (or pass `null`) to create a new transaction; pass one to edit it. */
@@ -60,8 +60,8 @@ export function TransactionEditorModal({
   onClose,
 }: TransactionEditorModalProps) {
   const saveTransaction = useSaveTransaction();
-  const wallets = useWalletsStore((state) => state.wallets);
-  const categories = useCategoriesStore((state) => state.categories);
+  const { data: wallets = [] } = useWallets();
+  const { data: categories = [] } = useCategories();
 
   const [form, setForm] = useState({
     title: transaction?.title ?? "",

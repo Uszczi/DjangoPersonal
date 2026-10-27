@@ -5,7 +5,7 @@ import type {
   ProjectResponse,
   TaskResponse,
 } from "@personal/shared/generated/api";
-import { useTimerStore } from "@personal/shared/stores/timer";
+import { useStartTimer } from "@personal/shared/queries/timer";
 import { timerLimitOptions } from "@personal/shared/timerLimit";
 import { Button, Select } from "@/design-system";
 import { askForTimerNotifications } from "@/lib/timerNotification";
@@ -26,7 +26,7 @@ export function StartTimerForm({
   defaultProjectId: string;
   onStart: () => void;
 }) {
-  const startTimer = useTimerStore((state) => state.startTimer);
+  const startTimer = useStartTimer();
   const [form, setForm] = useState({ projectId: "", title: "" });
   const [limit, setLimit] = useState("");
   const [error, setError] = useState("");
@@ -55,7 +55,10 @@ export function StartTimerForm({
     if (limit) askForTimerNotifications();
     onStart();
     try {
-      await startTimer(title, limit ? Number(limit) : undefined);
+      await startTimer.mutateAsync({
+        title,
+        durationMinutes: limit ? Number(limit) : undefined,
+      });
       setForm((current) => ({ ...current, title: "" }));
     } catch (caught) {
       setError(await apiErrorMessage(caught));

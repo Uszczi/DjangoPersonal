@@ -14,9 +14,12 @@ import {
   CATEGORY_ICON_SUGGESTIONS,
   DEFAULT_CATEGORY_ICON,
 } from "@personal/shared/categoryIcons";
-import { useCategoriesStore } from "@personal/shared/stores/categories";
-import { useTransactionsStore } from "@personal/shared/stores/transactions";
-import { useWalletsStore } from "@personal/shared/stores/wallets";
+import {
+  useCategories,
+  useCreateCategory,
+  useDeleteCategory,
+  useUpdateCategory,
+} from "@personal/shared/queries/categories";
 
 import { Button } from "../src/Button";
 import { confirmDestructive } from "../src/confirm";
@@ -27,16 +30,14 @@ import { common, form } from "../src/theme";
 export default function CategoryEditorScreen() {
   const params = useLocalSearchParams<{ categoryId?: string }>();
   const categoryId = params.categoryId ? Number(params.categoryId) : null;
-  const category = useCategoriesStore((state) =>
+  const { data: categories = [] } = useCategories();
+  const category =
     categoryId === null
       ? null
-      : (state.categories.find((item) => item.id === categoryId) ?? null),
-  );
-  const createCategory = useCategoriesStore((state) => state.createCategory);
-  const updateCategory = useCategoriesStore((state) => state.updateCategory);
-  const confirmCategoryDelete = useCategoriesStore(
-    (state) => state.confirmCategoryDelete,
-  );
+      : (categories.find((item) => item.id === categoryId) ?? null);
+  const createCategory = useCreateCategory();
+  const updateCategory = useUpdateCategory();
+  const deleteCategory = useDeleteCategory();
 
   const [name, setName] = useState(category?.name ?? "");
   const [icon, setIcon] = useState(category?.icon ?? DEFAULT_CATEGORY_ICON);
@@ -61,9 +62,9 @@ export default function CategoryEditorScreen() {
     setFormError("");
     try {
       if (category) {
-        await updateCategory(category, input);
+        await updateCategory.mutateAsync({ category, input });
       } else {
-        await createCategory(input);
+        await createCategory.mutateAsync(input);
       }
       router.back();
     } catch (error) {
@@ -82,12 +83,8 @@ export default function CategoryEditorScreen() {
     if (!confirmed) return;
     setIsSaving(true);
     try {
-      await confirmCategoryDelete(category);
-      // Its transactions are gone too: reload the shown list and the balances.
-      const shown = useTransactionsStore.getState().transactionList;
-      if (shown)
-        void useTransactionsStore.getState().loadTransactions(shown.walletId);
-      void useWalletsStore.getState().loadWallets();
+      // The mutation reloads the transactions and balances that went with it.
+      await deleteCategory.mutateAsync(category);
       router.back();
     } catch (error) {
       setFormError(await apiErrorMessage(error));

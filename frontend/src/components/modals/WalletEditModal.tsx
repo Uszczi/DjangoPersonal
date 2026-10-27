@@ -1,4 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
@@ -16,11 +15,7 @@ import { WalletColorPicker } from "@/components/WalletColorPicker";
 import { WalletIconPicker } from "@/components/WalletIconPicker";
 import { balanceError } from "@personal/shared/money";
 import { ShowModal } from "@/stores/modal";
-import {
-  balanceChange,
-  useWalletsStore,
-} from "@personal/shared/stores/wallets";
-import { transactionKeys } from "@/queries/transactions";
+import { useUpdateWallet } from "@personal/shared/queries/wallets";
 
 type WalletEditModalProps = {
   wallet: WalletResponse;
@@ -33,8 +28,7 @@ type WalletEditModalProps = {
  * summing to what the user says they have.
  */
 export function WalletEditModal({ wallet, onClose }: WalletEditModalProps) {
-  const updateWallet = useWalletsStore((state) => state.updateWallet);
-  const queryClient = useQueryClient();
+  const updateWallet = useUpdateWallet();
 
   const [name, setName] = useState(wallet.name);
   const [color, setColor] = useState(wallet.color);
@@ -67,21 +61,17 @@ export function WalletEditModal({ wallet, onClose }: WalletEditModalProps) {
     setFormError("");
 
     try {
-      const recordsCorrection =
-        balanceChange(wallet, currentBalance.trim()) !== undefined;
-      await updateWallet(wallet, {
-        name: trimmedName,
-        color,
-        icon,
-        currentBalance: currentBalance.trim(),
+      // A changed balance is recorded as a System "Korekta stanu"
+      // transaction; the mutation reloads the list so it shows up.
+      await updateWallet.mutateAsync({
+        wallet,
+        input: {
+          name: trimmedName,
+          color,
+          icon,
+          currentBalance: currentBalance.trim(),
+        },
       });
-      // The server records a new balance as a System "Korekta stanu"
-      // transaction; refetch the list so it shows up straight away.
-      if (recordsCorrection) {
-        void queryClient.invalidateQueries({
-          queryKey: transactionKeys.wallet(wallet.id),
-        });
-      }
       onClose();
     } catch (error) {
       setFormError(await apiErrorMessage(error));

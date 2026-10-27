@@ -221,13 +221,12 @@ describe("Time tracking", () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([inbox]))
       .mockResolvedValueOnce(jsonResponse([task]))
-      .mockResolvedValueOnce(timerResponse(runningEntry))
+      // Starting answers with the timer, so the timer page does not ask again.
       .mockResolvedValueOnce(timerResponse(runningEntry))
       .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(jsonResponse([task]))
       .mockResolvedValueOnce(timerResponse(stoppedEntry))
-      .mockResolvedValueOnce(jsonResponse([stoppedEntry]))
-      .mockResolvedValueOnce(jsonResponse([task]));
+      .mockResolvedValueOnce(jsonResponse([stoppedEntry]));
     const user = userEvent.setup();
 
     renderApp("/tasks");

@@ -2,12 +2,11 @@ import { createFileRoute, useSearch } from "@tanstack/react-router";
 
 import { useEffect, useState } from "react";
 
-import {
-  defaultProject,
-  useProjectsStore,
-} from "@personal/shared/stores/projects";
-import { useTimerStore } from "@personal/shared/stores/timer";
 import type { TimeEntryResponse } from "@personal/shared/generated/api";
+import { TIMER_LOAD_ERROR } from "@personal/shared/loadErrors";
+import { defaultProject, useProjects } from "@personal/shared/queries/projects";
+import { useAllTasks } from "@personal/shared/queries/tasks";
+import { useTimeEntries, useTimer } from "@personal/shared/queries/timer";
 import { CurrentTimerPanel } from "@/components/timer/CurrentTimerPanel";
 import { EntryEditorModal } from "@/components/timer/EntryEditorModal";
 import { entryTitle } from "@/components/timer/entries";
@@ -24,33 +23,30 @@ export const Route = createFileRoute("/timer")({
 
 function TimerPage() {
   const { project } = useSearch({ from: "/timer" });
-  const projects = useProjectsStore((state) => state.projects);
-  const isLoading = useTimerStore((state) => state.isLoading);
-  const pageError = useTimerStore((state) => state.pageError);
-  const runningEntryRaw = useTimerStore((state) => state.runningEntry);
-  const serverOffset = useTimerStore((state) => state.serverOffset);
-  const entries = useTimerStore((state) => state.entries);
-  const tasks = useTimerStore((state) => state.tasks);
-  const editingEntry = useTimerStore((state) => state.editingEntry);
-  const actionError = useTimerStore((state) => state.actionError);
-  const loadData = useTimerStore((state) => state.loadData);
-  const openEntryEditor = useTimerStore((state) => state.openEntryEditor);
+  const { data: projects = [] } = useProjects();
+  const timer = useTimer();
+  const entriesQuery = useTimeEntries();
+  const tasksQuery = useAllTasks();
+  const [editingEntry, setEditingEntry] = useState<TimeEntryResponse | null>(
+    null,
+  );
+  const [actionError, setActionError] = useState("");
 
   const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    void loadData();
-  }, [loadData]);
 
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
   }, []);
 
-  if (isLoading)
+  if (timer.isError || entriesQuery.isError || tasksQuery.isError)
+    return <ErrorMessage>{TIMER_LOAD_ERROR}</ErrorMessage>;
+  if (timer.isPending || entriesQuery.isPending || tasksQuery.isPending)
     return <LoadingStatus>Wczytywanie danych czasu…</LoadingStatus>;
-  if (pageError) return <ErrorMessage>{pageError}</ErrorMessage>;
 
+  const { runningEntry: runningEntryRaw, serverOffset } = timer.data;
+  const entries = entriesQuery.data;
+  const tasks = tasksQuery.data;
   const runningEntry =
     runningEntryRaw && runningEntryRaw.end == null ? runningEntryRaw : null;
   const stoppedEntries = entries.filter((entry) => entry.end != null);
@@ -67,9 +63,11 @@ function TimerPage() {
         runningEntry={runningEntry}
         runningTitle={runningEntry ? titleOf(runningEntry) : ""}
         now={now + serverOffset}
+        serverOffset={serverOffset}
         projects={projects}
         tasks={tasks}
         defaultProjectId={defaultProjectId}
+        onActionError={setActionError}
       />
       <ManualEntryPanel
         projects={projects}
@@ -80,7 +78,7 @@ function TimerPage() {
         entries={stoppedEntries}
         now={now}
         titleOf={titleOf}
-        onEdit={openEntryEditor}
+        onEdit={setEditingEntry}
         error={actionError}
       />
       <TimeSummaryPanel
@@ -94,6 +92,8 @@ function TimerPage() {
           entry={editingEntry}
           tasks={tasks}
           taskTitles={taskTitles}
+          onClose={() => setEditingEntry(null)}
+          onActionError={setActionError}
         />
       )}
     </>

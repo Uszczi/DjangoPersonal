@@ -9,12 +9,15 @@ import {
 } from "@dnd-kit/core";
 
 import { useSortSensors } from "@/lib/useSortSensors";
-import { api } from "@personal/shared/api";
 import type {
   ProjectResponse,
   TaskResponse,
 } from "@personal/shared/generated/api";
-import { useTasksStore } from "@personal/shared/stores/tasks";
+import {
+  updateProjectTasks,
+  useMoveTask,
+} from "@personal/shared/queries/tasks";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { TaskStatusSection } from "./TaskStatusSection";
 
@@ -68,7 +71,8 @@ export function TaskBoard({
   onStartTimer: (task: TaskResponse) => void;
   onEditTask: (task: TaskResponse) => void;
 }) {
-  const loadTasks = useTasksStore((state) => state.loadTasks);
+  const queryClient = useQueryClient();
+  const moveTask = useMoveTask();
   const sensors = useSortSensors();
 
   // Moves the Task into the hovered status list right away, so it is shown there while dragging.
@@ -85,17 +89,14 @@ export function TaskBoard({
 
     if (!tasks.some((t) => t.id === active.id)) return;
 
-    useTasksStore.setState({
-      taskList: {
-        projectId: project.id,
-        tasks: tasks.map((t) =>
-          t.id === active.id ? { ...t, status: overStatus } : t,
-        ),
-      },
-    });
+    updateProjectTasks(queryClient, project.id, (cached) =>
+      cached.map((t) =>
+        t.id === active.id ? { ...t, status: overStatus } : t,
+      ),
+    );
   }
 
-  async function handleDragEnd(event: DragEndEvent) {
+  function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -111,18 +112,12 @@ export function TaskBoard({
     const overIndex = targetGroupTasks.findIndex((task) => task.id === over.id);
     const newIndex = overIndex === -1 ? targetGroupTasks.length : overIndex;
 
-    try {
-      await api.tasksPartialUpdate({
-        id: Number(active.id),
-        patchedTaskUpdateRequest: {
-          ...(isSameGroup ? {} : { status: overStatus }),
-          position: newIndex,
-        },
-      });
-    } catch {
-      // The reload below puts the Task back where the server has it.
-    }
-    await loadTasks(project.id);
+    // The list is reloaded either way, so a refused move snaps back.
+    moveTask.mutate({
+      task: draggedTask,
+      position: newIndex,
+      status: isSameGroup ? undefined : overStatus,
+    });
   }
 
   return (

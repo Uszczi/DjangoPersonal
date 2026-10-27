@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import {
@@ -18,24 +18,23 @@ import {
 import { CategoryIcon } from "@/components/CategoryIcon";
 import { DeleteCategoryModal } from "@/components/modals/DeleteCategoryModal";
 import { ShowModal } from "@/stores/modal";
-import {
-  useCategoriesStore,
-  type CategoryInput,
-} from "@personal/shared/stores/categories";
 import type { CategoryResponse } from "@personal/shared/generated/api";
+import {
+  useCategories,
+  useCreateCategory,
+  useUpdateCategory,
+  type CategoryInput,
+} from "@personal/shared/queries/categories";
+import { CATEGORIES_LOAD_ERROR } from "@personal/shared/loadErrors";
 
 /** Panel below the wallet: inline create, edit (name and icon), and delete. */
 export function CategoryPanel() {
-  const categories = useCategoriesStore((state) => state.categories);
-  const isLoading = useCategoriesStore((state) => state.isLoading);
-  const pageError = useCategoriesStore((state) => state.pageError);
-  const loadCategories = useCategoriesStore((state) => state.loadCategories);
-  const createCategory = useCategoriesStore((state) => state.createCategory);
-  const updateCategory = useCategoriesStore((state) => state.updateCategory);
+  const { data: categories = [], isPending, isError } = useCategories();
+  const createCategory = useCreateCategory();
+  const updateCategory = useUpdateCategory();
 
   const [newName, setNewName] = useState("");
   const [newIcon, setNewIcon] = useState(DEFAULT_CATEGORY_ICON);
-  const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
@@ -44,10 +43,6 @@ export function CategoryPanel() {
 
   // The System category holds balance corrections; the user never manages it.
   const visibleCategories = categories.filter((category) => !category.isSystem);
-
-  useEffect(() => {
-    void loadCategories();
-  }, [loadCategories]);
 
   function openDeleteDialog(category: CategoryResponse) {
     ShowModal(DeleteCategoryModal, { category });
@@ -58,16 +53,13 @@ export function CategoryPanel() {
     const input: CategoryInput = { name: newName.trim(), icon: newIcon };
     if (!input.name) return;
 
-    setIsCreating(true);
     setCreateError("");
     try {
-      await createCategory(input);
+      await createCategory.mutateAsync(input);
       setNewName("");
       setNewIcon(DEFAULT_CATEGORY_ICON);
     } catch (error) {
       setCreateError(await apiErrorMessage(error));
-    } finally {
-      setIsCreating(false);
     }
   }
 
@@ -92,7 +84,7 @@ export function CategoryPanel() {
     if (!input.name) return;
 
     try {
-      await updateCategory(category, input);
+      await updateCategory.mutateAsync({ category, input });
       setEditingId(null);
       setRenameError("");
     } catch (error) {
@@ -131,18 +123,18 @@ export function CategoryPanel() {
         <Button
           variant="primary"
           type="submit"
-          disabled={isCreating || !newName.trim()}
+          disabled={createCategory.isPending || !newName.trim()}
         >
-          {isCreating ? "Dodawanie…" : "Dodaj"}
+          {createCategory.isPending ? "Dodawanie…" : "Dodaj"}
         </Button>
       </form>
       {createError && <ErrorAlert>{createError}</ErrorAlert>}
 
-      {isLoading ? (
+      {isPending ? (
         <LoadingStatus>Wczytywanie kategorii…</LoadingStatus>
-      ) : pageError ? (
+      ) : isError ? (
         <p className="m-0 px-2 py-6 text-[13px] text-danger-ink" role="alert">
-          {pageError}
+          {CATEGORIES_LOAD_ERROR}
         </p>
       ) : visibleCategories.length === 0 ? (
         <p className="m-0 border-b border-dashed border-[#ccd8d4] px-2 py-6 text-[13px] text-hint">

@@ -1,5 +1,5 @@
-import { router, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { router } from "expo-router";
+import { useCallback, useState } from "react";
 import {
   Pressable,
   RefreshControl,
@@ -12,9 +12,12 @@ import {
 
 import { DEFAULT_CATEGORY_ICON } from "@personal/shared/categoryIcons";
 import type { TransactionResponse } from "@personal/shared/generated/api";
-import { useCategoriesStore } from "@personal/shared/stores/categories";
-import { useTransactionsStore } from "@personal/shared/stores/transactions";
-import { useWalletsStore } from "@personal/shared/stores/wallets";
+import { WALLETS_LOAD_ERROR } from "@personal/shared/loadErrors";
+import { useCategories } from "@personal/shared/queries/categories";
+import { useWalletTransactions } from "@personal/shared/queries/transactions";
+import { useWallets, validSelection } from "@personal/shared/queries/wallets";
+import { useWalletSelectionStore } from "@personal/shared/stores/walletSelection";
+import { TRANSACTIONS_LOAD_ERROR } from "@personal/shared/transactionList";
 import { dateKey } from "@personal/shared/timeFormat";
 
 import { Button } from "../../src/Button";
@@ -22,6 +25,7 @@ import { Fab } from "../../src/Fab";
 import { NamedIcon } from "../../src/NamedIcon";
 import { WalletMark } from "../../src/WalletMark";
 import { card, colors, common } from "../../src/theme";
+import { useRefreshOnFocus } from "../../src/useRefreshOnFocus";
 
 const dayFormatter = new Intl.DateTimeFormat("pl-PL", {
   day: "numeric",
@@ -46,67 +50,52 @@ function groupByDay(transactions: TransactionResponse[]): DaySection[] {
 
 /** The web Wydatki page: one wallet at a time, its transactions by day. */
 export default function ExpensesScreen() {
-  const wallets = useWalletsStore((state) => state.wallets);
-  const isLoading = useWalletsStore((state) => state.isLoading);
-  const pageError = useWalletsStore((state) => state.pageError);
-  const selectedWalletId = useWalletsStore((state) => state.selectedWalletId);
-  const selectWallet = useWalletsStore((state) => state.selectWallet);
-  const loadWallets = useWalletsStore((state) => state.loadWallets);
-  const categories = useCategoriesStore((state) => state.categories);
-  const loadCategories = useCategoriesStore((state) => state.loadCategories);
-  const transactionList = useTransactionsStore(
-    (state) => state.transactionList,
+  const {
+    data: wallets = [],
+    isPending: isLoading,
+    isError: isWalletsError,
+    refetch: refetchWallets,
+  } = useWallets();
+  const selectedWalletId = useWalletSelectionStore(
+    (state) => state.selectedWalletId,
   );
-  const transactionLoadError = useTransactionsStore((state) => state.loadError);
-  const loadTransactions = useTransactionsStore(
-    (state) => state.loadTransactions,
-  );
-  const loadMoreTransactions = useTransactionsStore(
-    (state) => state.loadMoreTransactions,
-  );
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const selectWallet = useWalletSelectionStore((state) => state.selectWallet);
+  const { data: categories = [], refetch: refetchCategories } = useCategories();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      void loadWallets();
-      void loadCategories();
-    }, [loadWallets, loadCategories]),
-  );
-
-  const wallet = wallets.find((item) => item.id === selectedWalletId);
+  const shownWalletId = validSelection(wallets, selectedWalletId);
+  const wallet = wallets.find((item) => item.id === shownWalletId);
   const walletId = wallet?.id;
+  const transactionsQuery = useWalletTransactions(walletId ?? null);
 
-  useEffect(() => {
-    if (walletId != null) void loadTransactions(walletId);
-  }, [walletId, loadTransactions]);
+  // Balances and categories may have changed in a modal or on another device.
+  const reloadOnFocus = useCallback(
+    () => Promise.all([refetchWallets(), refetchCategories()]),
+    [refetchWallets, refetchCategories],
+  );
+  useRefreshOnFocus(reloadOnFocus);
 
   async function refresh() {
     setIsRefreshing(true);
     await Promise.all([
-      loadWallets(),
-      loadCategories(),
-      walletId != null ? loadTransactions(walletId) : Promise.resolve(),
+      refetchWallets(),
+      refetchCategories(),
+      walletId != null ? transactionsQuery.refetch() : Promise.resolve(),
     ]);
     setIsRefreshing(false);
   }
 
-  async function loadMore() {
-    if (isLoadingMore) return;
-    setIsLoadingMore(true);
-    await loadMoreTransactions();
-    setIsLoadingMore(false);
+  function loadMore() {
+    if (transactionsQuery.isFetchingNextPage) return;
+    void transactionsQuery.fetchNextPage();
   }
 
-  const shownList =
-    wallet && transactionList?.walletId === wallet.id ? transactionList : null;
-  const transactions = shownList ? shownList.transactions : null;
-  const hasMore = shownList?.nextCursor != null;
+  const pageError = isWalletsError ? WALLETS_LOAD_ERROR : "";
+  const isLoadingMore = transactionsQuery.isFetchingNextPage;
+  const transactions = wallet ? (transactionsQuery.data ?? null) : null;
+  const hasMore = transactionsQuery.hasNextPage;
   const sections = groupByDay(transactions ?? []);
-  const loadError =
-    transactionLoadError && transactionLoadError.walletId === walletId
-      ? transactionLoadError.message
-      : "";
+  const loadError = transactionsQuery.isError ? TRANSACTIONS_LOAD_ERROR : "";
 
   return (
     <View style={common.screen}>
@@ -222,7 +211,7 @@ export default function ExpensesScreen() {
                 label={isLoadingMore ? "Wczytywanie…" : "Pokaż więcej"}
                 variant="secondary"
                 disabled={isLoadingMore}
-                onPress={() => void loadMore()}
+                onPress={loadMore}
               />
             </View>
           ) : undefined

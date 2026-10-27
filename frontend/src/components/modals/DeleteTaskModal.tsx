@@ -3,7 +3,7 @@ import { useState } from "react";
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { Button, ErrorAlert, Modal, ModalFooter } from "@/design-system";
 import type { TaskResponse } from "@personal/shared/generated/api";
-import { useTasksStore } from "@personal/shared/stores/tasks";
+import { useDeleteTask } from "@personal/shared/queries/tasks";
 
 type DeleteTaskModalProps = {
   task: TaskResponse;
@@ -11,7 +11,7 @@ type DeleteTaskModalProps = {
 };
 
 export function DeleteTaskModal({ task, onClose }: DeleteTaskModalProps) {
-  const confirmDelete = useTasksStore((state) => state.confirmDelete);
+  const deleteTask = useDeleteTask();
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -25,7 +25,7 @@ export function DeleteTaskModal({ task, onClose }: DeleteTaskModalProps) {
     setDeleteError("");
 
     try {
-      await confirmDelete(task);
+      await deleteTask.mutateAsync(task);
       onClose();
     } catch (error) {
       setDeleteError(await apiErrorMessage(error));

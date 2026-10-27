@@ -5,7 +5,12 @@ import type {
   TaskResponse,
   TimeEntryResponse,
 } from "@personal/shared/generated/api";
-import { useTimerStore } from "@personal/shared/stores/timer";
+import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
+import {
+  useDiscardTimer,
+  useRefreshTimer,
+  useStopTimer,
+} from "@personal/shared/queries/timer";
 import { formatClock, formatElapsed } from "@personal/shared/timeFormat";
 import { timerRemaining } from "@personal/shared/timerLimit";
 import { Button } from "@/design-system";
@@ -19,22 +24,27 @@ export function CurrentTimerPanel({
   runningEntry,
   runningTitle,
   now,
+  serverOffset,
   projects,
   tasks,
   defaultProjectId,
+  onActionError,
 }: {
   runningEntry: TimeEntryResponse | null;
   runningTitle: string;
   /** Current time corrected by the server offset, in ms. */
   now: number;
+  /** Server clock minus this device's, in ms. */
+  serverOffset: number;
   projects: ProjectResponse[];
   tasks: TaskResponse[];
   defaultProjectId: string;
+  /** Shows a failed stop, discard or refresh ("" clears it). */
+  onActionError: (message: string) => void;
 }) {
-  const stopTimer = useTimerStore((state) => state.stopTimer);
-  const discardTimer = useTimerStore((state) => state.discardTimer);
-  const refreshTimer = useTimerStore((state) => state.refreshTimer);
-  const serverOffset = useTimerStore((state) => state.serverOffset);
+  const stopTimer = useStopTimer();
+  const discardTimer = useDiscardTimer();
+  const refreshTimer = useRefreshTimer();
 
   const remaining = runningEntry ? timerRemaining(runningEntry, now) : null;
   const plannedEnd = runningEntry?.plannedEnd ?? null;
@@ -51,11 +61,16 @@ export function CurrentTimerPanel({
     const delay =
       Math.max(0, plannedEndMs - (Date.now() + serverOffset)) + 1000;
     const timeout = setTimeout(async () => {
-      await refreshTimer();
-      const state = useTimerStore.getState();
-      const entry = state.entries.find((item) => item.id === entryId);
+      let fresh;
+      try {
+        fresh = await refreshTimer();
+      } catch (error) {
+        onActionError(await apiErrorMessage(error));
+        return;
+      }
+      const entry = fresh.entries.find((item) => item.id === entryId);
       if (
-        state.runningEntry?.id !== entryId &&
+        fresh.timer.runningEntry?.id !== entryId &&
         entry?.end?.getTime() === plannedEndMs
       ) {
         setFinishedTitle(runningTitle);
@@ -63,7 +78,24 @@ export function CurrentTimerPanel({
       }
     }, delay);
     return () => clearTimeout(timeout);
-  }, [plannedEndMs, entryId, runningTitle, serverOffset, refreshTimer]);
+  }, [
+    plannedEndMs,
+    entryId,
+    runningTitle,
+    serverOffset,
+    refreshTimer,
+    onActionError,
+  ]);
+
+  /** Run a stop or discard, showing its failure under the entries. */
+  async function act(action: () => Promise<unknown>) {
+    onActionError("");
+    try {
+      await action();
+    } catch (error) {
+      onActionError(await apiErrorMessage(error));
+    }
+  }
 
   return (
     <TimerPanel label="Bieżący timer">
@@ -94,10 +126,18 @@ export function CurrentTimerPanel({
             )}
           </div>
           <div className="mt-4 flex items-center gap-3">
-            <Button variant="primary" onClick={() => void stopTimer()}>
+            <Button
+              variant="primary"
+              onClick={() => void act(() => stopTimer.mutateAsync())}
+            >
               Zatrzymaj timer
             </Button>
-            <Button variant="secondary" onClick={() => void discardTimer()}>
+            <Button
+              variant="secondary"
+              onClick={() =>
+                void act(() => discardTimer.mutateAsync(runningEntry))
+              }
+            >
               Odrzuć timer
             </Button>
           </div>

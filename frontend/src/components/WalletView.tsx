@@ -18,9 +18,9 @@ import {
   type WalletResponse,
 } from "@personal/shared/generated/api";
 import { ShowModal } from "@/stores/modal";
-import { useCategoriesStore } from "@personal/shared/stores/categories";
+import { useCategories } from "@personal/shared/queries/categories";
 import { TRANSACTIONS_LOAD_ERROR } from "@personal/shared/transactionList";
-import { useWalletTransactions } from "@/queries/transactions";
+import { useWalletTransactions } from "@personal/shared/queries/transactions";
 
 const dayFormatter = new Intl.DateTimeFormat("pl-PL", {
   day: "numeric",
@@ -83,8 +83,7 @@ function useOnScrolledIntoView(
 
 /** One wallet: the switcher, its name (opening the edit modal) and its transactions grouped by day. */
 export function WalletView({ wallet }: { wallet: WalletResponse }) {
-  const categories = useCategoriesStore((state) => state.categories);
-  const loadCategories = useCategoriesStore((state) => state.loadCategories);
+  const { data: categories = [] } = useCategories();
   const {
     data: transactions = [],
     isError,
@@ -92,10 +91,6 @@ export function WalletView({ wallet }: { wallet: WalletResponse }) {
     isFetchingNextPage,
     fetchNextPage,
   } = useWalletTransactions(wallet.id);
-
-  useEffect(() => {
-    void loadCategories();
-  }, [loadCategories]);
 
   const loadMore = () => {
     if (hasNextPage && !isFetchingNextPage) void fetchNextPage();

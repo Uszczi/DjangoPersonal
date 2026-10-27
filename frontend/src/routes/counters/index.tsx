@@ -17,7 +17,11 @@ import {
   ToggleGroup,
 } from "@/design-system";
 import type { CounterResponse } from "@personal/shared/generated/api";
-import { useCountersStore } from "@personal/shared/stores/counters";
+import { COUNTERS_LOAD_ERROR } from "@personal/shared/loadErrors";
+import {
+  useCounters,
+  useSaveCounterEntry,
+} from "@personal/shared/queries/counters";
 import { ShowModal } from "@/stores/modal";
 
 export const Route = createFileRoute("/counters/")({
@@ -32,10 +36,8 @@ const VIEW_MODE_LABELS: Record<CounterViewMode, string> = {
 };
 
 function CountersPage() {
-  const counters = useCountersStore((state) => state.counters);
-  const isLoading = useCountersStore((state) => state.isLoading);
-  const pageError = useCountersStore((state) => state.pageError);
-  const saveEntry = useCountersStore((state) => state.saveEntry);
+  const { data: counters = [], isPending, isError } = useCounters();
+  const saveEntry = useSaveCounterEntry();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState(rememberedCounterViewMode);
 
@@ -45,7 +47,10 @@ function CountersPage() {
   }
 
   function addOne(counter: CounterResponse) {
-    void saveEntry(counter.id, { value: 1, occurredAt: new Date(), note: "" });
+    saveEntry.mutate({
+      counterId: counter.id,
+      input: { value: 1, occurredAt: new Date(), note: "" },
+    });
   }
 
   function openCounter(counter: CounterResponse) {
@@ -59,12 +64,12 @@ function CountersPage() {
     ShowModal(CounterEditorModal, { onSaved: openCounter });
   }
 
-  if (isLoading) {
+  if (isPending) {
     return <LoadingStatus>Wczytywanie liczników…</LoadingStatus>;
   }
 
-  if (pageError) {
-    return <ErrorMessage>{pageError}</ErrorMessage>;
+  if (isError) {
+    return <ErrorMessage>{COUNTERS_LOAD_ERROR}</ErrorMessage>;
   }
 
   return (

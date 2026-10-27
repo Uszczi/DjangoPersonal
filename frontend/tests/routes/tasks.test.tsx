@@ -912,8 +912,7 @@ describe("Deleting tasks and projects", () => {
       .mockResolvedValueOnce(jsonResponse([inbox, planning]))
       .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(jsonResponse([task]))
-      .mockResolvedValueOnce(new Response(null, { status: 204 }))
-      .mockResolvedValueOnce(jsonResponse([]));
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
     const user = userEvent.setup();
 
     renderApp("/tasks");
@@ -940,7 +939,9 @@ describe("Deleting tasks and projects", () => {
       within(dialog).getByRole("button", { name: "Usuń projekt" }),
     );
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(5));
+    // The Inbox's tasks are still cached from the first visit, so going back
+    // to it asks the server for nothing more.
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(4));
     expect(fetchMock).toHaveBeenNthCalledWith(
       4,
       "/api/v1/projects/2/",

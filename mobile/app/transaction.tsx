@@ -10,12 +10,14 @@ import {
 } from "react-native";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
-import { useCategoriesStore } from "@personal/shared/stores/categories";
+import { useCategories } from "@personal/shared/queries/categories";
 import {
-  useTransactionsStore,
+  useDeleteTransaction,
+  useSaveTransaction,
+  useWalletTransactions,
   type TransactionInput,
-} from "@personal/shared/stores/transactions";
-import { useWalletsStore } from "@personal/shared/stores/wallets";
+} from "@personal/shared/queries/transactions";
+import { useWallets } from "@personal/shared/queries/wallets";
 import { dateFromKey, dateKey, todayKey } from "@personal/shared/timeFormat";
 
 import { Button } from "../src/Button";
@@ -39,8 +41,8 @@ function validateAmount(raw: string): string {
 }
 
 /**
- * Adds a Transaction to `?walletId=`, or edits one (`&transactionId=`), like
- * the web TransactionEditorModal.
+ * Adds a Transaction to `?walletId=`, or edits one (`&transactionId=`) of
+ * that Wallet's loaded pages, like the web TransactionEditorModal.
  */
 export default function TransactionEditorScreen() {
   const params = useLocalSearchParams<{
@@ -52,24 +54,17 @@ export default function TransactionEditorScreen() {
     ? Number(params.transactionId)
     : null;
 
-  const transactionList = useTransactionsStore(
-    (state) => state.transactionList,
+  const { data: loaded = [] } = useWalletTransactions(
+    transactionId === null ? null : walletId,
   );
-  const saveTransaction = useTransactionsStore(
-    (state) => state.saveTransaction,
-  );
-  const confirmTransactionDelete = useTransactionsStore(
-    (state) => state.confirmTransactionDelete,
-  );
-  const wallets = useWalletsStore((state) => state.wallets);
-  const refreshWallets = useWalletsStore((state) => state.refreshWallets);
-  const categories = useCategoriesStore((state) => state.categories);
+  const saveTransaction = useSaveTransaction();
+  const deleteTransaction = useDeleteTransaction();
+  const { data: wallets = [] } = useWallets();
+  const { data: categories = [] } = useCategories();
   const transaction =
     transactionId === null
       ? null
-      : (transactionList?.transactions.find(
-          (item) => item.id === transactionId,
-        ) ?? null);
+      : (loaded.find((item) => item.id === transactionId) ?? null);
 
   const [title, setTitle] = useState(transaction?.title ?? "");
   const [amount, setAmount] = useState(transaction?.amount ?? "");
@@ -127,12 +122,8 @@ export default function TransactionEditorScreen() {
     setIsSaving(true);
     setFormError("");
     try {
-      await saveTransaction(input, transaction);
-      // Balances are computed from the ledger: refresh the wallet the
-      // transaction is in and, when it moved, the one it left.
-      void refreshWallets(
-        transaction ? [transaction.walletId, input.wallet] : [input.wallet],
-      );
+      // The mutation also refreshes the balances it changed.
+      await saveTransaction.mutateAsync({ input, transaction });
       router.back();
     } catch (error) {
       setFormError(await apiErrorMessage(error));
@@ -150,8 +141,7 @@ export default function TransactionEditorScreen() {
     if (!confirmed) return;
     setIsSaving(true);
     try {
-      await confirmTransactionDelete(transaction);
-      void refreshWallets([transaction.walletId]);
+      await deleteTransaction.mutateAsync(transaction);
       router.back();
     } catch (error) {
       setFormError(await apiErrorMessage(error));

@@ -1,4 +1,4 @@
-import type { CounterEntryInput } from "@personal/shared/stores/counters";
+import type { CounterEntryInput } from "@personal/shared/queries/counters";
 
 /** The quick "+1" entry, stamped with the moment of the tap. */
 export function plusOneEntry(): CounterEntryInput {

@@ -10,7 +10,11 @@ import {
 } from "react-native";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
-import { useCountersStore } from "@personal/shared/stores/counters";
+import {
+  useCounters,
+  useCreateCounter,
+  useRenameCounter,
+} from "@personal/shared/queries/counters";
 
 import { Button } from "../src/Button";
 import { common, form } from "../src/theme";
@@ -19,13 +23,13 @@ import { common, form } from "../src/theme";
 export default function CounterEditorScreen() {
   const params = useLocalSearchParams<{ counterId?: string }>();
   const counterId = params.counterId ? Number(params.counterId) : null;
-  const counter = useCountersStore((state) =>
+  const { data: counters = [] } = useCounters();
+  const counter =
     counterId === null
       ? null
-      : (state.counters.find((item) => item.id === counterId) ?? null),
-  );
-  const createCounter = useCountersStore((state) => state.createCounter);
-  const renameCounter = useCountersStore((state) => state.renameCounter);
+      : (counters.find((item) => item.id === counterId) ?? null);
+  const createCounter = useCreateCounter();
+  const renameCounter = useRenameCounter();
 
   const [name, setName] = useState(counter?.name ?? "");
   const [formError, setFormError] = useState("");
@@ -41,11 +45,11 @@ export default function CounterEditorScreen() {
     setFormError("");
     try {
       if (counter) {
-        await renameCounter(counter.id, trimmed);
+        await renameCounter.mutateAsync({ id: counter.id, name: trimmed });
         router.back();
       } else {
         // Like the web: a new Counter opens straight away.
-        const created = await createCounter(trimmed);
+        const created = await createCounter.mutateAsync(trimmed);
         router.replace({
           pathname: "/counters/[id]",
           params: { id: created.id },

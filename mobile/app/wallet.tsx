@@ -11,7 +11,12 @@ import {
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { balanceError } from "@personal/shared/money";
-import { useWalletsStore } from "@personal/shared/stores/wallets";
+import {
+  useCreateWallet,
+  useDeleteWallet,
+  useUpdateWallet,
+  useWallets,
+} from "@personal/shared/queries/wallets";
 import { DEFAULT_WALLET_COLOR } from "@personal/shared/walletColors";
 import { WALLET_ICON_SUGGESTIONS } from "@personal/shared/walletIcons";
 
@@ -29,16 +34,14 @@ import { common, form } from "../src/theme";
 export default function WalletEditorScreen() {
   const params = useLocalSearchParams<{ walletId?: string }>();
   const walletId = params.walletId ? Number(params.walletId) : null;
-  const wallet = useWalletsStore((state) =>
+  const { data: wallets = [] } = useWallets();
+  const wallet =
     walletId === null
       ? null
-      : (state.wallets.find((item) => item.id === walletId) ?? null),
-  );
-  const createWallet = useWalletsStore((state) => state.createWallet);
-  const updateWallet = useWalletsStore((state) => state.updateWallet);
-  const confirmWalletDelete = useWalletsStore(
-    (state) => state.confirmWalletDelete,
-  );
+      : (wallets.find((item) => item.id === walletId) ?? null);
+  const createWallet = useCreateWallet();
+  const updateWallet = useUpdateWallet();
+  const deleteWallet = useDeleteWallet();
 
   const [name, setName] = useState(wallet?.name ?? "");
   const [color, setColor] = useState<string>(
@@ -77,14 +80,17 @@ export default function WalletEditorScreen() {
     setFormError("");
     try {
       if (wallet) {
-        await updateWallet(wallet, {
-          name: trimmedName,
-          color,
-          icon,
-          currentBalance: normalizedBalance,
+        await updateWallet.mutateAsync({
+          wallet,
+          input: {
+            name: trimmedName,
+            color,
+            icon,
+            currentBalance: normalizedBalance,
+          },
         });
       } else {
-        await createWallet({
+        await createWallet.mutateAsync({
           name: trimmedName,
           color,
           icon,
@@ -108,7 +114,7 @@ export default function WalletEditorScreen() {
     if (!confirmed) return;
     setIsSaving(true);
     try {
-      await confirmWalletDelete(wallet);
+      await deleteWallet.mutateAsync(wallet);
       router.back();
     } catch (error) {
       setFormError(await apiErrorMessage(error));

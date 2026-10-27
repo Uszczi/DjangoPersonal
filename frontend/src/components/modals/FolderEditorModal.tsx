@@ -10,7 +10,7 @@ import {
   TextInput,
 } from "@/design-system";
 import type { FolderResponse } from "@personal/shared/generated/api";
-import { useFoldersStore } from "@/stores/folders";
+import { useCreateFolder, useRenameFolder } from "@/queries/folders";
 
 type FolderEditorModalProps = {
   /** Omit to create a new folder; pass one to rename it. */
@@ -25,8 +25,8 @@ export function FolderEditorModal({
   parent = null,
   onClose,
 }: FolderEditorModalProps) {
-  const createFolder = useFoldersStore((state) => state.createFolder);
-  const renameFolder = useFoldersStore((state) => state.renameFolder);
+  const createFolder = useCreateFolder();
+  const renameFolder = useRenameFolder();
 
   const [name, setName] = useState(folder?.name ?? "");
   const [formError, setFormError] = useState("");
@@ -51,8 +51,13 @@ export function FolderEditorModal({
     setIsSaving(true);
     setFormError("");
     try {
-      if (folder) await renameFolder(folder.id, trimmed);
-      else await createFolder(trimmed, parent?.id ?? null);
+      if (folder)
+        await renameFolder.mutateAsync({ id: folder.id, name: trimmed });
+      else
+        await createFolder.mutateAsync({
+          name: trimmed,
+          parentId: parent?.id ?? null,
+        });
       onClose();
     } catch (error) {
       setFormError(await apiErrorMessage(error));

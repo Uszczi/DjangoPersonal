@@ -3,7 +3,7 @@ import { useState } from "react";
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { Button, ErrorAlert, Modal, ModalFooter } from "@/design-system";
 import type { TransactionResponse } from "@personal/shared/generated/api";
-import { useDeleteTransaction } from "@/queries/transactions";
+import { useDeleteTransaction } from "@personal/shared/queries/transactions";
 
 type DeleteTransactionModalProps = {
   transaction: TransactionResponse;

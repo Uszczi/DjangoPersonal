@@ -9,39 +9,30 @@ import {
 import { queryClient } from "@/queryClient";
 import { routeTree } from "@/routeTree.gen";
 import { useAuthStore } from "@personal/shared/stores/auth";
-import { useCategoriesStore } from "@personal/shared/stores/categories";
-import { useCountersStore } from "@personal/shared/stores/counters";
+import { useWalletSelectionStore } from "@personal/shared/stores/walletSelection";
 import { useLayoutStore } from "@/stores/layout";
 import { useModalStore } from "@/stores/modal";
-import { useProjectsStore } from "@personal/shared/stores/projects";
-import { useTasksStore } from "@personal/shared/stores/tasks";
-import { useTimerStore } from "@personal/shared/stores/timer";
-import { useTransactionsStore } from "@personal/shared/stores/transactions";
-import { useWalletsStore } from "@personal/shared/stores/wallets";
-import { useWhiteboardsStore } from "@/stores/whiteboards";
-import { useFoldersStore } from "@/stores/folders";
+import { useProjectSelectionStore } from "@/stores/projectSelection";
 
 /**
- * Reset every Zustand store so each render starts from a clean slate. Browser storage is
+ * Reset every Zustand store and the server-state cache so each render starts from a clean slate. Browser storage is
  * cleared too unless `preserveStorage`, for tests of what a page remembers between visits.
  */
 export function resetStores(options?: { preserveStorage?: boolean }) {
   if (!options?.preserveStorage) window.localStorage.clear();
   useAuthStore.setState(useAuthStore.getInitialState());
-  useCategoriesStore.setState(useCategoriesStore.getInitialState());
-  useCountersStore.setState(useCountersStore.getInitialState());
   useLayoutStore.setState(useLayoutStore.getInitialState());
   useModalStore.setState(useModalStore.getInitialState());
-  useProjectsStore.setState(useProjectsStore.getInitialState());
-  useTasksStore.setState(useTasksStore.getInitialState());
-  useTimerStore.setState(useTimerStore.getInitialState());
-  useTransactionsStore.setState(useTransactionsStore.getInitialState());
-  useWalletsStore.setState(useWalletsStore.getInitialState());
-  useWhiteboardsStore.setState(useWhiteboardsStore.getInitialState());
-  useFoldersStore.setState(useFoldersStore.getInitialState());
-  // The server-state cache too; no retries, so a mocked failure shows at once.
+  useProjectSelectionStore.setState(useProjectSelectionStore.getInitialState());
+  useWalletSelectionStore.setState(useWalletSelectionStore.getInitialState());
+  // No retries, so a mocked failure shows at once; the app's other defaults
+  // (such as how long data stays fresh) stay as they are.
   queryClient.clear();
-  queryClient.setDefaultOptions({ queries: { retry: false } });
+  const defaults = queryClient.getDefaultOptions();
+  queryClient.setDefaultOptions({
+    ...defaults,
+    queries: { ...defaults.queries, retry: false },
+  });
 }
 
 export function renderApp(

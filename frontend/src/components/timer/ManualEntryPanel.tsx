@@ -5,7 +5,7 @@ import type {
   ProjectResponse,
   TaskResponse,
 } from "@personal/shared/generated/api";
-import { useTimerStore } from "@personal/shared/stores/timer";
+import { useAddManualEntry } from "@personal/shared/queries/timer";
 import { todayKey } from "@personal/shared/timeFormat";
 import { Button, TextInput } from "@/design-system";
 
@@ -23,7 +23,7 @@ export function ManualEntryPanel({
   tasks: TaskResponse[];
   defaultProjectId: string;
 }) {
-  const addManualEntry = useTimerStore((state) => state.addManualEntry);
+  const addManualEntry = useAddManualEntry();
   const [form, setForm] = useState({
     date: todayKey(),
     projectId: "",
@@ -46,7 +46,7 @@ export function ManualEntryPanel({
     }
     setError("");
     try {
-      await addManualEntry(parsed.input);
+      await addManualEntry.mutateAsync(parsed.input);
       setForm((current) => ({
         date: todayKey(),
         projectId: current.projectId,

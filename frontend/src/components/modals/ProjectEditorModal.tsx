@@ -25,9 +25,9 @@ import {
 import type { ProjectResponse } from "@personal/shared/generated/api";
 import { ShowModal } from "@/stores/modal";
 import {
-  useProjectsStore,
+  useSaveProject,
   type ProjectInput,
-} from "@personal/shared/stores/projects";
+} from "@personal/shared/queries/projects";
 import { useSortSensors } from "@/lib/useSortSensors";
 
 type ProjectEditorModalProps = {
@@ -108,7 +108,7 @@ export function ProjectEditorModal({
   onClose,
 }: ProjectEditorModalProps) {
   const navigate = useNavigate();
-  const saveProject = useProjectsStore((state) => state.saveProject);
+  const saveProject = useSaveProject();
   const sensors = useSortSensors();
 
   const [form, setForm] = useState({
@@ -193,7 +193,7 @@ export function ProjectEditorModal({
     setFormError("");
 
     try {
-      const savedProject = await saveProject(input, project);
+      const savedProject = await saveProject.mutateAsync({ input, project });
       navigate({ to: "/tasks", search: { project: savedProject.id } });
       onClose();
     } catch (error) {

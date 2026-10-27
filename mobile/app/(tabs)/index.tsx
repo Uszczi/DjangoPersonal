@@ -1,39 +1,33 @@
 import { Link, router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 
-import { useProjectsStore } from "@personal/shared/stores/projects";
+import { PROJECTS_LOAD_ERROR } from "@personal/shared/loadErrors";
+import { useProjects } from "@personal/shared/queries/projects";
 
 import { Fab } from "../../src/Fab";
 import { colors, common } from "../../src/theme";
 
 export default function ProjectsScreen() {
-  const projects = useProjectsStore((state) => state.projects);
-  const isLoading = useProjectsStore((state) => state.isLoading);
-  const pageError = useProjectsStore((state) => state.pageError);
-  const loadProjects = useProjectsStore((state) => state.loadProjects);
+  const { data: projects = [], isPending, isError, refetch } = useProjects();
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  useEffect(() => {
-    void loadProjects();
-  }, [loadProjects]);
 
   async function refresh() {
     setIsRefreshing(true);
-    await loadProjects();
+    await refetch();
     setIsRefreshing(false);
   }
 
   return (
     <View style={common.screen}>
-      {pageError !== "" && <Text style={common.error}>{pageError}</Text>}
+      {isError && <Text style={common.error}>{PROJECTS_LOAD_ERROR}</Text>}
       <FlatList
         data={projects}
         contentContainerStyle={{ paddingBottom: 96 }}
         keyExtractor={(project) => String(project.id)}
         refreshControl={
           <RefreshControl
-            refreshing={isRefreshing || (isLoading && projects.length === 0)}
+            refreshing={isRefreshing || isPending}
             onRefresh={() => void refresh()}
           />
         }

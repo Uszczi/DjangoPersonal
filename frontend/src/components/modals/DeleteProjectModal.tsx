@@ -4,7 +4,11 @@ import { useNavigate } from "@tanstack/react-router";
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { Button, ErrorAlert, Modal, ModalFooter } from "@/design-system";
 import type { ProjectResponse } from "@personal/shared/generated/api";
-import { useProjectsStore } from "@personal/shared/stores/projects";
+import {
+  defaultProject,
+  useDeleteProject,
+  useProjects,
+} from "@personal/shared/queries/projects";
 
 type DeleteProjectModalProps = {
   project: ProjectResponse;
@@ -16,9 +20,8 @@ export function DeleteProjectModal({
   onClose,
 }: DeleteProjectModalProps) {
   const navigate = useNavigate();
-  const confirmProjectDelete = useProjectsStore(
-    (state) => state.confirmProjectDelete,
-  );
+  const { data: projects = [] } = useProjects();
+  const deleteProject = useDeleteProject();
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -32,7 +35,10 @@ export function DeleteProjectModal({
     setDeleteError("");
 
     try {
-      const fallbackProject = await confirmProjectDelete(project);
+      await deleteProject.mutateAsync(project);
+      const fallbackProject = defaultProject(
+        projects.filter((item) => item.id !== project.id),
+      );
       onClose();
       if (fallbackProject) {
         navigate({ to: "/tasks", search: { project: fallbackProject.id } });
