@@ -40,11 +40,6 @@ function ProjectRow({ project, onEdit, dragHandle, ref, style }: ProjectRowProps
           <div className="min-w-0">
             <ListRowTitle>{project.name}</ListRowTitle>
             {project.description && <ListRowSubtitle>{project.description}</ListRowSubtitle>}
-            {project.isInbox && (
-              <span className="mt-1 inline-block rounded-full border border-signal bg-signal-pale px-2 py-0.5 text-[10px] font-semibold tracking-wide text-signal">
-                DOMYŚLNY
-              </span>
-            )}
           </div>
         </ListRowButton>
       </>

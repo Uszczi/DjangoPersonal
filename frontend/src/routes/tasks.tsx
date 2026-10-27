@@ -134,9 +134,8 @@ function TasksPage() {
         />
         <section className="flex min-w-0 flex-1 flex-col" aria-labelledby="tasks-heading">
           <PageHeader
-            title="Zadania"
+            title={selectedProject.name}
             titleId="tasks-heading"
-            subtitle={<span title="Aktualny projekt">{selectedProject.name}</span>}
             leading={
               <ProjectsDrawerToggle
                 isOpen={isProjectsDrawerOpen}
