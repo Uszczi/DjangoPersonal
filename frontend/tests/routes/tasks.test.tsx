@@ -312,7 +312,7 @@ describe('Projects', () => {
 
     renderApp('/tasks')
 
-    await screen.findByRole('heading', { name: 'Zadania' })
+    await screen.findByRole('heading', { level: 1, name: 'Inbox' })
     await screen.findByText('Open note')
     expect(fetchMock).toHaveBeenCalledTimes(2)
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
