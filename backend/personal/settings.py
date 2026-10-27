@@ -72,6 +72,11 @@ class Settings(BaseSettings):
         default=None, validation_alias='OTEL_EXPORTER_OTLP_ENDPOINT'
     )
 
+    ollama_url: str = Field(default='http://localhost:11434', validation_alias='OLLAMA_URL')
+    embedding_model: str = Field(
+        default='embeddinggemma-2:270m', validation_alias='EMBEDDING_MODEL'
+    )
+
     access_token_lifetime: timedelta = timedelta(minutes=15)
     refresh_token_lifetime: timedelta = timedelta(days=14)
 

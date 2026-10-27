@@ -10,6 +10,7 @@ from .base import Base
 from .category import Category
 from .counter import Counter, CounterEntry
 from .folder import Folder
+from .note_chunk import NoteChunk
 from .project import Project
 from .task import Task
 from .time_entry import TimeEntry
@@ -24,6 +25,7 @@ __all__ = [
     'Counter',
     'CounterEntry',
     'Folder',
+    'NoteChunk',
     'Project',
     'Task',
     'TimeEntry',

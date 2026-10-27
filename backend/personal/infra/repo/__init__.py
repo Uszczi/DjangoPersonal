@@ -16,6 +16,7 @@ from .errors import (
     TaskHasTimeEntries,
 )
 from .folders import FolderRepository
+from .note_chunks import NoteChunkRepository, ScoredChunk
 from .projects import ProjectRepository
 from .tasks import TaskRepository
 from .time_entries import TimeEntryRepository
@@ -37,9 +38,11 @@ __all__ = [
     'DuplicateWhiteboardName',
     'InboxProtected',
     'InvalidFolderName',
+    'NoteChunkRepository',
     'ProjectHasTimeEntries',
     'ProjectRepository',
     'RepositoryError',
+    'ScoredChunk',
     'TaskHasTimeEntries',
     'TaskRepository',
     'TimeEntryRepository',
