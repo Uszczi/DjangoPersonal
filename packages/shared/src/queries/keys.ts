@@ -39,3 +39,7 @@ export const counterKeys = {
   all: ["counters"] as const,
   entries: (counterId: number) => ["counterEntries", counterId] as const,
 };
+
+export const pozycjaKeys = {
+  all: ["pozycje"] as const,
+};
