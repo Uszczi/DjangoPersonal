@@ -14,3 +14,9 @@ backend/staticfiles/*
 node_modules/
 frontend/dist/
 frontend/storybook-static/
+
+# Temporary copy made by `just mobile-apk`
+mobile/eas.json.bak
+
+# APKs built by `just mobile-apk-local`
+*.apk

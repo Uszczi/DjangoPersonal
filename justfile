@@ -64,6 +64,50 @@ frontend:
 mobile:
     cd mobile && npx expo start
 
+# Print the bare host name from DOMAIN in .env (quotes, scheme and a trailing
+# slash stripped); fails when it is missing.
+_domain:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    domain=$(grep -E '^DOMAIN=' .env | tail -n1 | cut -d= -f2- | tr -d "\"' \r")
+    domain=${domain#http://}; domain=${domain#https://}; domain=${domain%/}
+    [ -n "$domain" ] || { echo "DOMAIN is not set in .env" >&2; exit 1; }
+    echo "$domain"
+
+# The [[DOMAIN]] placeholder in mobile/eas.json is filled only for the build.
+# Build an Android APK in the EAS cloud against https://$DOMAIN (from .env).
+mobile-apk:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    domain=$(just _domain)
+    eas="$PWD/mobile/eas.json"
+    cp "$eas" "$eas.bak"
+    trap 'mv "$eas.bak" "$eas"' EXIT
+    sed -i "s|\[\[DOMAIN\]\]|$domain|g" "$eas"
+    echo "Building APK against https://$domain"
+    cd mobile && npx eas-cli build --platform android --profile apk
+
+# Needs the Android SDK (ANDROID_HOME, default ~/Android/Sdk) and JDK 17
+# (JAVA_HOME, default /usr/lib/jvm/java-17-openjdk when it exists).
+# Output: mobile/djangopersonal.apk, signed with the template's debug key.
+# Build the APK on this machine (no Expo account) against https://$DOMAIN.
+mobile-apk-local:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    domain=$(just _domain)
+    export ANDROID_HOME=${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Android/Sdk}}
+    [ -d "$ANDROID_HOME" ] || { echo "Android SDK not found at $ANDROID_HOME; set ANDROID_HOME" >&2; exit 1; }
+    if [ -z "${JAVA_HOME:-}" ] && [ -d /usr/lib/jvm/java-17-openjdk ]; then
+        export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+    fi
+    export EXPO_PUBLIC_API_URL="https://$domain"
+    echo "Building APK locally against $EXPO_PUBLIC_API_URL"
+    cd mobile
+    npx expo prebuild --platform android --clean --no-install
+    (cd android && ./gradlew assembleRelease)
+    cp android/app/build/outputs/apk/release/app-release.apk djangopersonal.apk
+    echo "APK: $PWD/djangopersonal.apk"
+
 # Run Storybook (component workshop) on port 6006.
 storybook:
     cd frontend && npm run storybook

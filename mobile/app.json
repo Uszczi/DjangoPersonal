@@ -6,10 +6,23 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
+    "android": {
+      "package": "com.roalec.djangopersonal"
+    },
     "plugins": [
       "expo-router",
       "expo-secure-store",
       "@react-native-community/datetimepicker"
-    ]
+    ],
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "0c3e9fa6-6fe0-4207-b1c0-080cd58ab474"
+      }
+    }
   }
 }
