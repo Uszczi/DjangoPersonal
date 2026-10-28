@@ -67,6 +67,16 @@ describe("theme", () => {
     }
   });
 
+  test("every theme's colours are valid CSS colours", () => {
+    for (const [name, theme] of Object.entries(themes)) {
+      for (const [token, value] of Object.entries(theme.colors)) {
+        expect(value, `${name}.${token}`).toMatch(
+          /^(#[0-9a-f]{6}([0-9a-f]{2})?|rgb\(.+\))$/,
+        );
+      }
+    }
+  });
+
   test("follows the system scheme by default", () => {
     const setSystemScheme = mockSystemScheme("dark");
     stop = startTheme();
@@ -89,8 +99,13 @@ describe("theme", () => {
     expect(document.documentElement.dataset.theme).toBe("sepia");
     expect(cssVariable("signal")).toBe(themes.sepia.colors.signal);
     expect(document.documentElement.style.colorScheme).toBe("light");
+
+    useThemeStore.getState().setPreference("mocha");
+    expect(cssVariable("canvas")).toBe("#181825");
+    expect(cssVariable("signal")).toBe("#cba6f7");
+    expect(document.documentElement.style.colorScheme).toBe("dark");
     expect(JSON.parse(localStorage.getItem("theme") ?? "{}")).toMatchObject({
-      state: { preference: "sepia" },
+      state: { preference: "mocha" },
     });
   });
 

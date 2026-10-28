@@ -220,7 +220,205 @@ const sepia: Theme = {
   },
 };
 
-export const themes = { light, dark, sepia } satisfies Record<string, Theme>;
+/** The named colours of a Catppuccin flavour (https://catppuccin.com/palette). */
+type CatppuccinFlavor = {
+  mauve: string;
+  red: string;
+  maroon: string;
+  peach: string;
+  yellow: string;
+  green: string;
+  teal: string;
+  lavender: string;
+  text: string;
+  subtext1: string;
+  subtext0: string;
+  overlay2: string;
+  overlay1: string;
+  overlay0: string;
+  surface2: string;
+  surface1: string;
+  surface0: string;
+  base: string;
+  mantle: string;
+  crust: string;
+};
+
+/** `a` blended into `b`: `amount` 0 is all `b`, 1 all `a` (both `#rrggbb`). */
+function mix(a: string, b: string, amount: number): string {
+  const channel = (hex: string, index: number) =>
+    parseInt(hex.slice(1 + index * 2, 3 + index * 2), 16);
+  return `#${[0, 1, 2]
+    .map((index) =>
+      Math.round(channel(a, index) * amount + channel(b, index) * (1 - amount))
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
+}
+
+/**
+ * A Catppuccin flavour mapped onto the app's tokens: mauve is the brand
+ * colour, the navigation keeps a dark bar (Latte uses its text colour).
+ */
+function catppuccin(
+  label: string,
+  scheme: "light" | "dark",
+  c: CatppuccinFlavor,
+): Theme {
+  const isLight = scheme === "light";
+  return {
+    label,
+    scheme,
+    colors: {
+      canvas: c.mantle,
+      paper: c.base,
+      surface: c.base,
+      input: isLight ? c.base : c.crust,
+      wash: isLight ? c.mantle : c.surface0,
+      deepInk: isLight ? c.text : c.crust,
+      ink: c.text,
+      inkSoft: c.subtext1,
+      bodySoft: c.subtext1,
+      muted: c.subtext0,
+      hint: c.overlay2,
+      placeholder: c.overlay0,
+      line: c.surface1,
+      lineSoft: c.surface0,
+      rowLine: c.surface0,
+      cardLine: c.surface0,
+      controlBorder: c.surface1,
+      controlBorderHover: c.overlay0,
+      icon: c.overlay2,
+      iconWash: isLight ? c.crust : c.surface0,
+      dragHandle: c.overlay0,
+      accent: c.teal,
+      done: c.green,
+      signal: c.mauve,
+      signalPale: mix(c.mauve, c.base, 0.16),
+      signalStrong: c.lavender,
+      onSignal: isLight ? c.base : c.crust,
+      focusRing: c.lavender,
+      danger: c.red,
+      dangerStrong: c.maroon,
+      dangerPale: mix(c.red, c.base, 0.14),
+      dangerInk: c.red,
+      overlay: isLight ? `${c.text}73` : `${c.crust}a6`,
+      navText: isLight ? c.base : c.text,
+      navMuted: isLight ? c.surface1 : c.subtext0,
+      navSelected: isLight ? c.subtext0 : c.surface0,
+      navHover: isLight ? c.subtext1 : c.mantle,
+      navLine: isLight ? c.subtext0 : c.surface1,
+      navLineStrong: c.overlay1,
+      mdMark: c.peach,
+      mdCodeBg: c.mantle,
+      searchMatch: mix(c.yellow, c.base, 0.35),
+      searchCurrent: mix(c.peach, c.base, 0.5),
+    },
+  };
+}
+
+const latte = catppuccin("Catppuccin Latte", "light", {
+  mauve: "#8839ef",
+  red: "#d20f39",
+  maroon: "#e64553",
+  peach: "#fe640b",
+  yellow: "#df8e1d",
+  green: "#40a02b",
+  teal: "#179299",
+  lavender: "#7287fd",
+  text: "#4c4f69",
+  subtext1: "#5c5f77",
+  subtext0: "#6c6f85",
+  overlay2: "#7c7f93",
+  overlay1: "#8c8fa1",
+  overlay0: "#9ca0b0",
+  surface2: "#acb0be",
+  surface1: "#bcc0cc",
+  surface0: "#ccd0da",
+  base: "#eff1f5",
+  mantle: "#e6e9ef",
+  crust: "#dce0e8",
+});
+
+const frappe = catppuccin("Catppuccin Frappé", "dark", {
+  mauve: "#ca9ee6",
+  red: "#e78284",
+  maroon: "#ea999c",
+  peach: "#ef9f76",
+  yellow: "#e5c890",
+  green: "#a6d189",
+  teal: "#81c8be",
+  lavender: "#babbf1",
+  text: "#c6d0f5",
+  subtext1: "#b5bfe2",
+  subtext0: "#a5adce",
+  overlay2: "#949cbb",
+  overlay1: "#838ba7",
+  overlay0: "#737994",
+  surface2: "#626880",
+  surface1: "#51576d",
+  surface0: "#414559",
+  base: "#303446",
+  mantle: "#292c3c",
+  crust: "#232634",
+});
+
+const macchiato = catppuccin("Catppuccin Macchiato", "dark", {
+  mauve: "#c6a0f6",
+  red: "#ed8796",
+  maroon: "#ee99a0",
+  peach: "#f5a97f",
+  yellow: "#eed49f",
+  green: "#a6da95",
+  teal: "#8bd5ca",
+  lavender: "#b7bdf8",
+  text: "#cad3f5",
+  subtext1: "#b8c0e0",
+  subtext0: "#a5adcb",
+  overlay2: "#939ab7",
+  overlay1: "#8087a2",
+  overlay0: "#6e738d",
+  surface2: "#5b6078",
+  surface1: "#494d64",
+  surface0: "#363a4f",
+  base: "#24273a",
+  mantle: "#1e2030",
+  crust: "#181926",
+});
+
+const mocha = catppuccin("Catppuccin Mocha", "dark", {
+  mauve: "#cba6f7",
+  red: "#f38ba8",
+  maroon: "#eba0ac",
+  peach: "#fab387",
+  yellow: "#f9e2af",
+  green: "#a6e3a1",
+  teal: "#94e2d5",
+  lavender: "#b4befe",
+  text: "#cdd6f4",
+  subtext1: "#bac2de",
+  subtext0: "#a6adc8",
+  overlay2: "#9399b2",
+  overlay1: "#7f849c",
+  overlay0: "#6c7086",
+  surface2: "#585b70",
+  surface1: "#45475a",
+  surface0: "#313244",
+  base: "#1e1e2e",
+  mantle: "#181825",
+  crust: "#11111b",
+});
+
+export const themes = {
+  light,
+  dark,
+  sepia,
+  latte,
+  frappe,
+  macchiato,
+  mocha,
+} satisfies Record<string, Theme>;
 
 export type ThemeName = keyof typeof themes;
 
