@@ -1,6 +1,6 @@
 # Mobile app (Expo)
 
-The React Native client: Projekty (with tasks), Czas, Wydatki, Liczniki and Konto — everything the web has except Notatki. Logic (API client, stores) comes from `@personal/shared`; this app only has the screens. See `docs/adr/0004-mobile-app-and-shared-package.md`.
+The React Native client: Projekty (with tasks), Czas, Wydatki, Liczniki and Konto — everything the web has except Notatki. Logic (API client, stores) comes from `@personal/shared`; this app only has the screens.
 
 ## Run on a phone
 

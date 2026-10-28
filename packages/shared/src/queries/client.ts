@@ -1,6 +1,5 @@
 /**
- * The server-state cache both clients share (TanStack Query; see
- * docs/adr/0005-tanstack-query-for-server-state.md). Each app creates one
+ * The server-state cache both clients share (TanStack Query). Each app creates one
  * client at module level and provides it at its root.
  */
 import { QueryClient } from "@tanstack/react-query";

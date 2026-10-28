@@ -1,7 +1,7 @@
 """Baseline schema: every table the app uses, created from scratch.
 
 The first revision of the SQLAlchemy schema; it does not follow the old Django
-``infra_*`` tables (see ``.scratch/fastapi-migration/spec.md``).
+``infra_*`` tables.
 
 Revision ID: 0001
 Revises: 
