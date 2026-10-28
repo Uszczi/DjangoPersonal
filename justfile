@@ -64,6 +64,9 @@ frontend:
 mobile:
     cd mobile && npx expo start
 
+mobile-install:
+    adb install -r ./mobile/djangopersonal.apk
+
 # Print the bare host name from DOMAIN in .env (quotes, scheme and a trailing
 # slash stripped); fails when it is missing.
 _domain:
