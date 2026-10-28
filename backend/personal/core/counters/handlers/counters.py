@@ -1,4 +1,8 @@
+from datetime import UTC, tzinfo
+
+from personal.core.counters.recency import recency
 from personal.core.shared.errors import NotFound
+from personal.core.work import clock
 from personal.core.shared.patch import apply_provided
 from personal.infra.models import Counter as CounterModel
 from personal.infra.models import CounterEntry as CounterEntryModel
@@ -20,6 +24,19 @@ def _get_counter(repository: CounterRepository, counter_id: int, *, user: User) 
     return counter
 
 
+def _with_recency(
+    repository: CounterRepository, counters: list[CounterModel], *, user: User, tz: tzinfo
+) -> list[CounterModel]:
+    """Fill in each counter's streak and days since its last entry, as of now in ``tz``."""
+    now = clock.now()
+    times = repository.entry_times(counters, user=user)
+    for counter in counters:
+        found = recency(times[counter.id], now=now, tz=tz)
+        counter.streak_days = found.streak_days
+        counter.days_since_last_entry = found.days_since_last_entry
+    return counters
+
+
 def _get_entry(
     repository: CounterEntryRepository, entry_id: int, *, user: User
 ) -> CounterEntryModel:
@@ -30,41 +47,57 @@ def _get_entry(
 
 
 class ListCounters:
-    def __init__(self, counters: CounterRepository, user: User):
+    """``tz`` is the caller's time zone: it sets where days begin for the streak."""
+
+    def __init__(self, counters: CounterRepository, user: User, tz: tzinfo = UTC):
         self.counters = counters
         self.user = user
+        self.tz = tz
 
     def execute(self) -> list[CounterModel]:
-        return self.counters.list_all(user=self.user)
+        counters = self.counters.list_all(user=self.user)
+        return _with_recency(self.counters, counters, user=self.user, tz=self.tz)
 
 
 class GetCounter:
-    def __init__(self, counters: CounterRepository, user: User):
+    """``tz`` is the caller's time zone: it sets where days begin for the streak."""
+
+    def __init__(self, counters: CounterRepository, user: User, tz: tzinfo = UTC):
         self.counters = counters
         self.user = user
+        self.tz = tz
 
     def execute(self, counter_id: int) -> CounterModel:
-        return _get_counter(self.counters, counter_id, user=self.user)
+        counter = _get_counter(self.counters, counter_id, user=self.user)
+        return _with_recency(self.counters, [counter], user=self.user, tz=self.tz)[0]
 
 
 class CreateCounter:
-    def __init__(self, counters: CounterRepository, user: User):
+    """``tz`` is the caller's time zone: it sets where days begin for the streak."""
+
+    def __init__(self, counters: CounterRepository, user: User, tz: tzinfo = UTC):
         self.counters = counters
         self.user = user
+        self.tz = tz
 
     def execute(self, data: CounterRequest) -> CounterModel:
-        return self.counters.save(CounterModel(user=self.user, name=data.name))
+        counter = self.counters.save(CounterModel(user=self.user, name=data.name))
+        return _with_recency(self.counters, [counter], user=self.user, tz=self.tz)[0]
 
 
 class UpdateCounter:
-    def __init__(self, counters: CounterRepository, user: User):
+    """``tz`` is the caller's time zone: it sets where days begin for the streak."""
+
+    def __init__(self, counters: CounterRepository, user: User, tz: tzinfo = UTC):
         self.counters = counters
         self.user = user
+        self.tz = tz
 
     def execute(self, counter_id: int, data: PatchedCounterRequest) -> CounterModel:
         counter = _get_counter(self.counters, counter_id, user=self.user)
         apply_provided(data, counter)
-        return self.counters.save(counter)
+        counter = self.counters.save(counter)
+        return _with_recency(self.counters, [counter], user=self.user, tz=self.tz)[0]
 
 
 class DeleteCounter:

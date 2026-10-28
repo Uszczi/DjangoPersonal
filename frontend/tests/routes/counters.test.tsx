@@ -12,7 +12,14 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { renderApp } from "../renderApp";
 
-type Counter = { id: number; name: string; created_at: string };
+type Counter = {
+  id: number;
+  name: string;
+  created_at: string;
+  /** What the server would count from the entry days; set per test. */
+  streak_days?: number;
+  days_since_last_entry?: number | null;
+};
 type Entry = {
   id: number;
   counter_id: number;
@@ -45,6 +52,8 @@ function fakeBackend(
       ...counter,
       entry_count: own.length,
       total: own.reduce((sum, entry) => sum + entry.value, 0),
+      streak_days: counter.streak_days ?? 0,
+      days_since_last_entry: counter.days_since_last_entry ?? null,
     };
   }
 
@@ -53,12 +62,14 @@ function fakeBackend(
     init?: RequestInit,
   ): Promise<Response> => {
     const path = String(url);
+    // The counter endpoints take the caller's time zone as `?tz=`.
+    const bare = path.split("?")[0];
     const method = init?.method ?? "GET";
     const body = init?.body ? JSON.parse(String(init.body)) : {};
     if (path.includes("/projects/")) return jsonResponse([]);
 
-    const counterMatch = path.match(/\/counters\/(\d+)\/$/);
-    if (path.endsWith("/counters/")) {
+    const counterMatch = bare.match(/\/counters\/(\d+)\/$/);
+    if (bare.endsWith("/counters/")) {
       if (method === "POST") {
         const counter = {
           id: nextId++,
@@ -239,6 +250,42 @@ describe("Counters", () => {
     );
     expect(await within(list).findByLabelText("Suma: 1")).toBeInTheDocument();
     expect(window.localStorage.getItem("countersView")).toBe("tiles");
+  });
+
+  test("tiles show the streak, or the days since the last entry", async () => {
+    fetchMock.mockImplementation(
+      fakeBackend({
+        counters: [
+          { ...coffee, streak_days: 3, days_since_last_entry: 0 },
+          {
+            id: 2,
+            name: "Bieganie",
+            created_at: "2026-10-01T10:00:00Z",
+            days_since_last_entry: 5,
+          },
+          { id: 3, name: "Woda", created_at: "2026-10-01T10:00:00Z" },
+        ],
+      }),
+    );
+
+    const user = userEvent.setup();
+
+    renderApp("/counters");
+    const views = await screen.findByRole("group", { name: "Widok liczników" });
+    await user.click(within(views).getByRole("button", { name: "Kafelki" }));
+    const list = screen.getByRole("list", { name: "Liczniki" });
+
+    expect(within(list).getByText("3 dni pod rząd")).toBeInTheDocument();
+    expect(
+      within(list).getByText("5 dni od ostatniego wpisu"),
+    ).toBeInTheDocument();
+    expect(within(list).getAllByRole("listitem")[2]).not.toHaveTextContent(
+      /pod rząd|od ostatniego/,
+    );
+    const listUrl = String(fetchMock.mock.calls[0][0]);
+    expect(new URL(listUrl, "http://x").searchParams.get("tz")).toBe(
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+    );
   });
 
   test("user can add, edit and delete entries", async () => {

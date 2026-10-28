@@ -26,3 +26,23 @@ export function entryCountLabel(count: number) {
   }
   return `${count} wpisów`;
 }
+
+/**
+ * How recently a Counter was used, for its tile: the streak while it lasts
+ * (`3 dni pod rząd`), else the days since the last entry
+ * (`5 dni od ostatniego wpisu`); `null` before the first entry.
+ */
+export function counterRecencyLabel(counter: {
+  streakDays: number;
+  daysSinceLastEntry: number | null;
+}): string | null {
+  if (counter.streakDays > 0) {
+    return `${dayCountLabel(counter.streakDays)} pod rząd`;
+  }
+  if (counter.daysSinceLastEntry === null) return null;
+  return `${dayCountLabel(counter.daysSinceLastEntry)} od ostatniego wpisu`;
+}
+
+function dayCountLabel(days: number) {
+  return days === 1 ? "1 dzień" : `${days} dni`;
+}

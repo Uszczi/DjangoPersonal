@@ -34,6 +34,10 @@ class CounterResponse(BaseModel):
     created_at: datetime = Field(..., json_schema_extra={'readOnly': True})
     entry_count: int = Field(..., json_schema_extra={'readOnly': True})
     total: int = Field(..., json_schema_extra={'readOnly': True})
+    #: Days in a row with an entry, ending today or yesterday; 0 otherwise.
+    streak_days: int = Field(..., json_schema_extra={'readOnly': True})
+    #: Days since the day of the last entry; ``None`` with no entries.
+    days_since_last_entry: int | None = Field(..., json_schema_extra={'readOnly': True})
 
 
 class _CounterEntryPayload(BaseModel):

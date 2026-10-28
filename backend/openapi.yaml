@@ -1133,29 +1133,59 @@ paths:
       - personal
       summary: List Counters
       operationId: counters_list
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: tz
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: zoneinfo
+          - type: 'null'
+          description: IANA time zone where days begin, e.g. Europe/Warsaw (default
+            UTC).
+          title: Tz
+        description: IANA time zone where days begin, e.g. Europe/Warsaw (default
+          UTC).
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
+                type: array
                 items:
                   $ref: '#/components/schemas/CounterResponse'
-                type: array
                 title: Response Counters List
-      security:
-      - JWTAuth: []
     post:
       tags:
       - personal
       summary: Create Counter
       operationId: counters_create
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: tz
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: zoneinfo
+          - type: 'null'
+          description: IANA time zone where days begin, e.g. Europe/Warsaw (default
+            UTC).
+          title: Tz
+        description: IANA time zone where days begin, e.g. Europe/Warsaw (default
+          UTC).
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CounterRequest'
-        required: true
       responses:
         '201':
           description: Successful Response
@@ -1163,8 +1193,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CounterResponse'
-      security:
-      - JWTAuth: []
   /api/v1/counters/{id}/:
     get:
       tags:
@@ -1180,6 +1208,19 @@ paths:
         schema:
           type: integer
           title: Id
+      - name: tz
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: zoneinfo
+          - type: 'null'
+          description: IANA time zone where days begin, e.g. Europe/Warsaw (default
+            UTC).
+          title: Tz
+        description: IANA time zone where days begin, e.g. Europe/Warsaw (default
+          UTC).
       responses:
         '200':
           description: Successful Response
@@ -1201,6 +1242,19 @@ paths:
         schema:
           type: integer
           title: Id
+      - name: tz
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: zoneinfo
+          - type: 'null'
+          description: IANA time zone where days begin, e.g. Europe/Warsaw (default
+            UTC).
+          title: Tz
+        description: IANA time zone where days begin, e.g. Europe/Warsaw (default
+          UTC).
       requestBody:
         required: true
         content:
@@ -1494,6 +1548,16 @@ components:
           type: integer
           title: Total
           readOnly: true
+        streak_days:
+          type: integer
+          title: Streak Days
+          readOnly: true
+        days_since_last_entry:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Days Since Last Entry
+          readOnly: true
       type: object
       required:
       - id
@@ -1501,6 +1565,8 @@ components:
       - created_at
       - entry_count
       - total
+      - streak_days
+      - days_since_last_entry
       title: CounterResponse
     FolderRequest:
       properties:

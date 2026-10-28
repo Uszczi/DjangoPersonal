@@ -13,36 +13,46 @@ from personal.entrypoints.http.deps import (
     CounterEntryRepositoryDep,
     CounterRepositoryDep,
     CurrentUser,
+    TimeZoneDep,
 )
 
 router = APIRouter(tags=['personal'])
 
 
 @router.get('/counters/', operation_id='counters_list')
-def list_counters(user: CurrentUser, counters: CounterRepositoryDep) -> list[CounterResponse]:
+def list_counters(
+    user: CurrentUser, counters: CounterRepositoryDep, tz: TimeZoneDep
+) -> list[CounterResponse]:
     return [
         CounterResponse.model_validate(counter)
-        for counter in handlers.ListCounters(counters, user).execute()
+        for counter in handlers.ListCounters(counters, user, tz).execute()
     ]
 
 
 @router.post('/counters/', status_code=status.HTTP_201_CREATED, operation_id='counters_create')
 def create_counter(
-    payload: CounterRequest, user: CurrentUser, counters: CounterRepositoryDep
+    payload: CounterRequest, user: CurrentUser, counters: CounterRepositoryDep, tz: TimeZoneDep
 ) -> CounterResponse:
-    return CounterResponse.model_validate(handlers.CreateCounter(counters, user).execute(payload))
+    counter = handlers.CreateCounter(counters, user, tz).execute(payload)
+    return CounterResponse.model_validate(counter)
 
 
 @router.get('/counters/{id}/', operation_id='counters_retrieve')
-def get_counter(id: int, user: CurrentUser, counters: CounterRepositoryDep) -> CounterResponse:
-    return CounterResponse.model_validate(handlers.GetCounter(counters, user).execute(id))
+def get_counter(
+    id: int, user: CurrentUser, counters: CounterRepositoryDep, tz: TimeZoneDep
+) -> CounterResponse:
+    return CounterResponse.model_validate(handlers.GetCounter(counters, user, tz).execute(id))
 
 
 @router.patch('/counters/{id}/', operation_id='counters_partial_update')
 def update_counter(
-    id: int, payload: PatchedCounterRequest, user: CurrentUser, counters: CounterRepositoryDep
+    id: int,
+    payload: PatchedCounterRequest,
+    user: CurrentUser,
+    counters: CounterRepositoryDep,
+    tz: TimeZoneDep,
 ) -> CounterResponse:
-    counter = handlers.UpdateCounter(counters, user).execute(id, payload)
+    counter = handlers.UpdateCounter(counters, user, tz).execute(id, payload)
     return CounterResponse.model_validate(counter)
 
 

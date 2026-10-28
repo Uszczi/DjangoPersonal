@@ -40,6 +40,14 @@ export interface CounterResponse {
      *
      */
     readonly total: number;
+    /**
+     *
+     */
+    readonly streakDays: number;
+    /**
+     *
+     */
+    readonly daysSinceLastEntry: number | null;
 }
 
 /**
@@ -51,6 +59,8 @@ export function instanceOfCounterResponse(value: object): value is CounterRespon
     if ((!('createdAt' in (value as Record<string, any>)) && !('created_at' in (value as Record<string, any>))) || ((value as Record<string, any>)['createdAt'] === undefined && (value as Record<string, any>)['created_at'] === undefined)) return false;
     if ((!('entryCount' in (value as Record<string, any>)) && !('entry_count' in (value as Record<string, any>))) || ((value as Record<string, any>)['entryCount'] === undefined && (value as Record<string, any>)['entry_count'] === undefined)) return false;
     if (!('total' in value) || value['total'] === undefined) return false;
+    if ((!('streakDays' in (value as Record<string, any>)) && !('streak_days' in (value as Record<string, any>))) || ((value as Record<string, any>)['streakDays'] === undefined && (value as Record<string, any>)['streak_days'] === undefined)) return false;
+    if ((!('daysSinceLastEntry' in (value as Record<string, any>)) && !('days_since_last_entry' in (value as Record<string, any>))) || ((value as Record<string, any>)['daysSinceLastEntry'] === undefined && (value as Record<string, any>)['days_since_last_entry'] === undefined)) return false;
     return true;
 }
 
@@ -69,6 +79,8 @@ export function CounterResponseFromJSONTyped(json: any, ignoreDiscriminator: boo
         'createdAt': (json['created_at'] == null ? json['created_at'] : parseDateTime(json['created_at'])),
         'entryCount': json['entry_count'],
         'total': json['total'],
+        'streakDays': json['streak_days'],
+        'daysSinceLastEntry': json['days_since_last_entry'],
     };
 }
 
@@ -76,7 +88,7 @@ export function CounterResponseToJSON(json: any): CounterResponse {
     return CounterResponseToJSONTyped(json, false);
 }
 
-export function CounterResponseToJSONTyped(value?: Omit<CounterResponse, 'id'|'createdAt'|'entryCount'|'total'> | null, ignoreDiscriminator: boolean = false): any {
+export function CounterResponseToJSONTyped(value?: Omit<CounterResponse, 'id'|'createdAt'|'entryCount'|'total'|'streakDays'|'daysSinceLastEntry'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

@@ -6,9 +6,11 @@ and exposes the ``*Dep`` aliases the routers declare.
 """
 
 from collections.abc import Callable, Iterator
+from datetime import UTC, tzinfo
 from typing import Annotated, Any
+from zoneinfo import ZoneInfo
 
-from fastapi import Depends, HTTPException, Request, Security, status
+from fastapi import Depends, HTTPException, Query, Request, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
@@ -61,6 +63,19 @@ def get_settings(request: Request) -> Settings:
 
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]
+
+
+def get_time_zone(
+    tz: Annotated[
+        ZoneInfo | None,
+        Query(description='IANA time zone where days begin, e.g. Europe/Warsaw (default UTC).'),
+    ] = None,
+) -> tzinfo:
+    """The caller's time zone, for answers counted in calendar days."""
+    return tz or UTC
+
+
+TimeZoneDep = Annotated[tzinfo, Depends(get_time_zone)]
 
 
 def _per_session[T](provider: Callable[[Session], T]) -> Any:

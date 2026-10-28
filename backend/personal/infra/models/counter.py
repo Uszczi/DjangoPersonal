@@ -14,6 +14,9 @@ class Counter(Base):
     """A named tally; its total is the sum of its entries' values."""
 
     __tablename__ = 'counters'
+    # The computed attributes below are plain annotations, not columns;
+    # without this, SQLAlchemy refuses ``int | None`` outside ``Mapped[]``.
+    __allow_unmapped__ = True
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
@@ -26,6 +29,10 @@ class Counter(Base):
     #: counter; not stored.
     entry_count: int = 0
     total: int = 0
+    #: Set by the counters use cases from the entry times, in the caller's
+    #: time zone (``personal.core.counters.recency``); not stored.
+    streak_days: int = 0
+    days_since_last_entry: int | None = None
 
     def __repr__(self) -> str:
         return f'<Counter {self.id} {self.name!r}>'

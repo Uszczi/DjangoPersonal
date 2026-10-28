@@ -183,3 +183,27 @@ def test_counters_are_private(
 def test_counters_require_auth(anon_client: ApiClient) -> None:
     assert anon_client.get('/api/v1/counters/').status_code == 401
     assert anon_client.get('/api/v1/counter-entries/?counter=1').status_code == 401
+
+
+def test_counter_streak_and_days_since_last_entry(
+    post_json: Any, api_client: ApiClient, fixed_clock: Any
+) -> None:
+    # The fixed clock is 2026-10-14 12:00 UTC.
+    counter_id = _counter(post_json)
+    created = api_client.get(f'/api/v1/counters/{counter_id}/').json()
+    assert created['streak_days'] == 0
+    assert created['days_since_last_entry'] is None
+
+    _entry(post_json, counter_id, occurred_at='2026-10-13T08:00:00Z')
+    _entry(post_json, counter_id, occurred_at='2026-10-12T08:00:00Z')
+    # Already the 14th in Warsaw, still the 13th in UTC.
+    _entry(post_json, counter_id, occurred_at='2026-10-13T22:30:00Z')
+
+    in_utc = api_client.get('/api/v1/counters/').json()[0]
+    assert (in_utc['streak_days'], in_utc['days_since_last_entry']) == (2, 1)
+    in_warsaw = api_client.get('/api/v1/counters/?tz=Europe/Warsaw').json()[0]
+    assert (in_warsaw['streak_days'], in_warsaw['days_since_last_entry']) == (3, 0)
+
+
+def test_unknown_time_zone_is_rejected(api_client: ApiClient) -> None:
+    assert api_client.get('/api/v1/counters/?tz=Mars/Olympus').status_code == 422

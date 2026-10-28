@@ -9,6 +9,7 @@ import { ActivityIndicator, View } from "react-native";
 import { useAuthStore } from "@personal/shared/stores/auth";
 import { useThemeStore } from "@personal/shared/stores/theme";
 
+import { useCounterViewStore } from "../src/counterView";
 import { queryClient } from "../src/queryClient";
 import { useNativeColorScheme, useTheme } from "../src/theme";
 
@@ -19,12 +20,13 @@ export default function RootLayout() {
   useNativeColorScheme();
 
   // The persisted stores were created before setup pointed them at secure
-  // storage, so read the saved session and theme again from there before
-  // showing any screen.
+  // storage, so read the saved session, theme and view choices again from
+  // there before showing any screen.
   useEffect(() => {
     void Promise.allSettled([
       useAuthStore.persist.rehydrate(),
       useThemeStore.persist.rehydrate(),
+      useCounterViewStore.persist.rehydrate(),
     ]).finally(() => setIsHydrated(true));
   }, []);
 
