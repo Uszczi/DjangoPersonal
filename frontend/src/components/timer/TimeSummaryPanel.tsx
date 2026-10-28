@@ -94,7 +94,7 @@ function SummaryCard({
   children: ReactNode;
 }) {
   return (
-    <div className="rounded border border-[#dce4df] bg-surface p-4">
+    <div className="rounded border border-card-line bg-surface p-4">
       <h3 className="font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">
         {title}
       </h3>

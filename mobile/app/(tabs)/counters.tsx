@@ -1,13 +1,6 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import {
-  FlatList,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { entryCountLabel } from "@personal/shared/counterFormat";
@@ -20,9 +13,11 @@ import {
 
 import { Fab } from "../../src/Fab";
 import { plusOneEntry } from "../../src/plusOne";
-import { colors, common, fonts } from "../../src/theme";
+import { makeStyles, fonts, useTheme } from "../../src/theme";
 
 export default function CountersScreen() {
+  const { common } = useTheme();
+  const styles = useStyles();
   const { data: counters = [], isPending, isError, refetch } = useCounters();
   const saveEntry = useSaveCounterEntry();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -116,16 +111,16 @@ export default function CountersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   listContent: { paddingBottom: 96 },
   empty: { padding: 24, textAlign: "center" },
-  name: { fontSize: 14, fontWeight: "500", color: colors.text },
+  name: { fontSize: 14, fontWeight: "500", color: colors.ink },
   total: {
     marginRight: 4,
     fontFamily: fonts.utility,
     fontSize: 18,
     fontWeight: "600",
-    color: colors.text,
+    color: colors.ink,
     fontVariant: ["tabular-nums"],
   },
   plusOne: {
@@ -136,5 +131,5 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   pressed: { opacity: 0.6 },
-  plusOneLabel: { color: colors.textSoft, fontWeight: "600", fontSize: 13 },
-});
+  plusOneLabel: { color: colors.inkSoft, fontWeight: "600", fontSize: 13 },
+}));

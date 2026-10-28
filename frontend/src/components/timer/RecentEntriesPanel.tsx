@@ -52,7 +52,7 @@ export function RecentEntriesPanel({
       <label className="flex items-center gap-2 text-[12px] font-semibold text-ink-soft">
         <span>Zakres</span>
         <select
-          className="rounded border border-control-border bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-accent focus:ring-[3px] focus:ring-accent/15"
+          className="rounded border border-control-border bg-input px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-accent focus:ring-[3px] focus:ring-accent/15"
           value={range}
           onChange={(event) => setRange(event.target.value as EntryRange)}
         >

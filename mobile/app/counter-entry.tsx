@@ -19,7 +19,7 @@ import {
 
 import { Button } from "../src/Button";
 import { DateTimeField } from "../src/DateTimeField";
-import { common, form } from "../src/theme";
+import { useTheme } from "../src/theme";
 
 function validateValue(raw: string): string {
   if (!raw) return "Podaj wartość.";
@@ -30,6 +30,7 @@ function validateValue(raw: string): string {
 
 /** Adds a Counter entry (`?counterId=`) or edits one (`&entryId=`). */
 export default function CounterEntryEditorScreen() {
+  const { common, form } = useTheme();
   const params = useLocalSearchParams<{
     counterId: string;
     entryId?: string;

@@ -16,9 +16,9 @@ type TopTabPath =
 
 /** Link colors for the dark header bar and for the light mobile drawer. */
 const tabToneClasses = {
-  dark: "text-[#b5c6c6] hover:text-white data-[selected]:bg-[#29474d] data-[selected]:text-white",
+  dark: "text-nav-muted hover:text-nav-text data-[selected]:bg-nav-selected data-[selected]:text-nav-text",
   light:
-    "text-ink-soft hover:bg-wash hover:text-ink data-[selected]:bg-deep-ink data-[selected]:text-white",
+    "text-ink-soft hover:bg-wash hover:text-ink data-[selected]:bg-deep-ink data-[selected]:text-nav-text",
 };
 
 function TopTabLink({
@@ -70,7 +70,7 @@ export function Navbar() {
 
   return (
     <>
-      <header className="bg-deep-ink text-[#f4f7f4]">
+      <header className="bg-deep-ink text-nav-text">
         <div className="mx-auto flex h-[68px] w-full max-w-app items-center justify-between gap-7 px-[38px]">
           <Link
             className="inline-flex items-center gap-[11px] text-[15px] font-bold tracking-[-0.03em] text-inherit no-underline"
@@ -78,7 +78,7 @@ export function Navbar() {
             aria-label="DjangoPersonal — strona główna"
           >
             <span
-              className="inline-flex h-[29px] w-[29px] items-center justify-center rounded-[5px_5px_5px_1px] bg-signal font-utility text-[13px] text-white -rotate-[3deg]"
+              className="inline-flex h-[29px] w-[29px] items-center justify-center rounded-[5px_5px_5px_1px] bg-signal font-utility text-[13px] text-on-signal -rotate-[3deg]"
               aria-hidden="true"
             >
               D
@@ -94,7 +94,7 @@ export function Navbar() {
           </nav>
           <button
             type="button"
-            className="md:hidden inline-flex items-center justify-center rounded-md border border-transparent bg-transparent text-[24px] leading-none text-[#b5c6c6] transition-all hover:-translate-y-px cursor-pointer"
+            className="md:hidden inline-flex items-center justify-center rounded-md border border-transparent bg-transparent text-[24px] leading-none text-nav-muted transition-all hover:-translate-y-px cursor-pointer"
             aria-label={isNavOpen ? "Zamknij menu" : "Otwórz menu"}
             aria-expanded={isNavOpen}
             aria-controls="mobile-nav"
@@ -105,7 +105,7 @@ export function Navbar() {
           {user && (
             <div className="hidden md:flex items-center gap-4">
               <Link
-                className="text-[13px] font-medium text-[#b5c6c6] no-underline transition-colors hover:text-white"
+                className="text-[13px] font-medium text-nav-muted no-underline transition-colors hover:text-nav-text"
                 to="/user"
               >
                 {user.username}
@@ -131,7 +131,7 @@ export function Navbar() {
           title={
             <div className="inline-flex items-center gap-[11px] text-[15px] font-bold tracking-[-0.03em]">
               <span
-                className="inline-flex h-[29px] w-[29px] items-center justify-center rounded-[5px_5px_5px_1px] bg-signal font-utility text-[13px] text-white -rotate-[3deg]"
+                className="inline-flex h-[29px] w-[29px] items-center justify-center rounded-[5px_5px_5px_1px] bg-signal font-utility text-[13px] text-on-signal -rotate-[3deg]"
                 aria-hidden="true"
               >
                 D

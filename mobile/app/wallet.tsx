@@ -24,7 +24,7 @@ import { Button } from "../src/Button";
 import { ColorPicker } from "../src/ColorPicker";
 import { confirmDestructive } from "../src/confirm";
 import { IconPicker } from "../src/IconPicker";
-import { common, form } from "../src/theme";
+import { useTheme } from "../src/theme";
 
 /**
  * Creates a Wallet (with an opening balance), or edits one (`?walletId=`):
@@ -32,6 +32,7 @@ import { common, form } from "../src/theme";
  * recorded by the server as a System correction.
  */
 export default function WalletEditorScreen() {
+  const { common, form } = useTheme();
   const params = useLocalSearchParams<{ walletId?: string }>();
   const walletId = params.walletId ? Number(params.walletId) : null;
   const { data: wallets = [] } = useWallets();

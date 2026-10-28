@@ -54,7 +54,7 @@ export function SortableTaskRow({
           {...listeners}
         />
         <button
-          className={`inline-flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded border p-0 text-[11px] text-white${isCompleted ? " border-[#668b79] bg-[#668b79]" : " border-[#9aafaa] bg-transparent"}`}
+          className={`inline-flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded border p-0 text-[11px] text-on-signal${isCompleted ? " border-done bg-done" : " border-drag-handle bg-transparent"}`}
           type="button"
           data-completed={isCompleted ? true : undefined}
           aria-label={`${isCompleted ? "Otwórz zadanie" : "Oznacz jako ukończone"}: ${task.title}`}

@@ -85,7 +85,7 @@ function StatusRow({
         {...listeners}
       />
       <input
-        className="min-w-0 flex-1 rounded border border-control-border bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-accent focus:ring-[3px] focus:ring-accent/15"
+        className="min-w-0 flex-1 rounded border border-control-border bg-input px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none transition-shadow focus:border-accent focus:ring-[3px] focus:ring-accent/15"
         value={status.name}
         onChange={(event) => onChange(event.target.value)}
         aria-label={`Status ${index + 1}`}

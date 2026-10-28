@@ -24,7 +24,7 @@ import { Button } from "../src/Button";
 import { ChipGroup } from "../src/ChipGroup";
 import { confirmDestructive } from "../src/confirm";
 import { DateTimeField } from "../src/DateTimeField";
-import { common, form } from "../src/theme";
+import { useTheme } from "../src/theme";
 
 /** `0` stands for "no category" in the chip group, which needs a non-null value. */
 const NO_CATEGORY = 0;
@@ -45,6 +45,7 @@ function validateAmount(raw: string): string {
  * that Wallet's loaded pages, like the web TransactionEditorModal.
  */
 export default function TransactionEditorScreen() {
+  const { common, form } = useTheme();
   const params = useLocalSearchParams<{
     walletId: string;
     transactionId?: string;

@@ -113,7 +113,7 @@ export function CategoryPanel() {
           suggestions={CATEGORY_ICON_SUGGESTIONS}
         />
         <input
-          className="min-w-0 flex-1 rounded border border-control-border bg-white px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none focus:border-accent focus:ring-[3px] focus:ring-accent/15"
+          className="min-w-0 flex-1 rounded border border-control-border bg-input px-[11px] py-[10px] font-normal text-sm leading-relaxed text-ink outline-none focus:border-accent focus:ring-[3px] focus:ring-accent/15"
           placeholder="Nowa kategoria"
           aria-label="Nowa kategoria"
           maxLength={100}
@@ -137,7 +137,7 @@ export function CategoryPanel() {
           {CATEGORIES_LOAD_ERROR}
         </p>
       ) : visibleCategories.length === 0 ? (
-        <p className="m-0 border-b border-dashed border-[#ccd8d4] px-2 py-6 text-[13px] text-hint">
+        <p className="m-0 border-b border-dashed border-control-border px-2 py-6 text-[13px] text-hint">
           Brak kategorii.
         </p>
       ) : (

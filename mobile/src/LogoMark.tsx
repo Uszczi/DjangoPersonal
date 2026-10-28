@@ -1,9 +1,10 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
-import { colors, fonts } from "./theme";
+import { makeStyles, fonts } from "./theme";
 
 /** The tilted orange "D" of the web Navbar, shown at the left of the tab headers. */
 export function LogoMark() {
+  const styles = useStyles();
   return (
     <View style={styles.mark} accessible={false}>
       <Text style={styles.letter}>D</Text>
@@ -11,14 +12,14 @@ export function LogoMark() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   mark: {
     width: 29,
     height: 29,
     marginLeft: 16,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.primary,
+    backgroundColor: colors.signal,
     borderTopLeftRadius: 5,
     borderTopRightRadius: 5,
     borderBottomRightRadius: 5,
@@ -29,6 +30,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.utility,
     fontSize: 13,
     fontWeight: "700",
-    color: colors.onPrimary,
+    color: colors.onSignal,
   },
-});
+}));

@@ -46,7 +46,7 @@ export function DeleteWalletModal({ wallet, onClose }: DeleteWalletModalProps) {
       onClose={close}
       size="md"
     >
-      <p className="m-0 mt-5 text-[13px] leading-relaxed text-[#40595c] break-words">
+      <p className="m-0 mt-5 text-[13px] leading-relaxed text-body-soft break-words">
         Portfel „{wallet.name}" zostanie trwale usunięty wraz ze wszystkimi jego
         transakcjami.
       </p>

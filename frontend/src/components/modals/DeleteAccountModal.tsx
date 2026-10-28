@@ -46,7 +46,7 @@ export function DeleteAccountModal({ onClose }: DeleteAccountModalProps) {
       onClose={close}
       size="md"
     >
-      <p className="m-0 mt-5 text-[13px] leading-relaxed text-[#40595c] break-words">
+      <p className="m-0 mt-5 text-[13px] leading-relaxed text-body-soft break-words">
         Konto „{user?.username}" wraz z wszystkimi danymi zostanie trwale
         usunięte. Tej operacji nie można cofnąć.
       </p>

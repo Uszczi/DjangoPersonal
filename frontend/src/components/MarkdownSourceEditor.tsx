@@ -231,7 +231,7 @@ export function MarkdownSourceEditor({
           </IconButton>
         </div>
       )}
-      <div className="relative h-[70vh] overflow-hidden rounded-lg border border-[#d1d5db] bg-[#fafafa]">
+      <div className="relative h-[70vh] overflow-hidden rounded-lg border border-control-border bg-input">
         {matches.length > 0 && (
           <pre
             ref={marksRef}
@@ -254,7 +254,7 @@ export function MarkdownSourceEditor({
         )}
         <textarea
           ref={textareaRef}
-          className={`absolute inset-0 h-full w-full resize-none border-0 bg-transparent p-3 font-mono text-sm leading-relaxed caret-ink-soft outline-none placeholder:text-[#93a5a2] [tab-size:2] ${gutter} ${
+          className={`absolute inset-0 h-full w-full resize-none border-0 bg-transparent p-3 font-mono text-sm leading-relaxed caret-ink-soft outline-none placeholder:text-placeholder [tab-size:2] ${gutter} ${
             highlight
               ? "text-transparent [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               : "text-ink"

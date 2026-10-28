@@ -1,13 +1,12 @@
 import {
   ActivityIndicator,
   Pressable,
-  StyleSheet,
   Text,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
 
-import { colors } from "./theme";
+import { makeStyles, useTheme } from "./theme";
 
 type ButtonProps = {
   label: string;
@@ -28,6 +27,9 @@ export function Button({
   style,
   accessibilityLabel,
 }: ButtonProps) {
+  const { colors } = useTheme();
+  const styles = useStyles();
+  const labelStyles = useLabelStyles();
   const isDisabled = disabled || isBusy;
   return (
     <Pressable
@@ -45,7 +47,7 @@ export function Button({
     >
       {isBusy ? (
         <ActivityIndicator
-          color={variant === "secondary" ? colors.textSoft : colors.onPrimary}
+          color={variant === "secondary" ? colors.inkSoft : colors.onSignal}
         />
       ) : (
         <Text style={[styles.label, labelStyles[variant]]}>{label}</Text>
@@ -54,7 +56,7 @@ export function Button({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   // The web Button: 5px corners, a 1px border and a small semibold label.
   base: {
     flex: 1,
@@ -67,7 +69,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  primary: { backgroundColor: colors.primary },
+  primary: { backgroundColor: colors.signal },
   secondary: {
     borderColor: colors.controlBorder,
     backgroundColor: "transparent",
@@ -75,10 +77,10 @@ const styles = StyleSheet.create({
   danger: { backgroundColor: colors.danger },
   dimmed: { opacity: 0.7 },
   label: { fontSize: 13, fontWeight: "600" },
-});
+}));
 
-const labelStyles = StyleSheet.create({
-  primary: { color: colors.onPrimary },
-  secondary: { color: colors.textSoft },
-  danger: { color: colors.onPrimary },
-});
+const useLabelStyles = makeStyles((colors) => ({
+  primary: { color: colors.onSignal },
+  secondary: { color: colors.inkSoft },
+  danger: { color: colors.onSignal },
+}));

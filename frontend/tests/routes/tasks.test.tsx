@@ -524,17 +524,17 @@ describe("Projects", () => {
     const openButton = screen.getByRole("button", {
       name: "Oznacz jako ukończone: Prepare outline",
     });
-    expect(openButton).not.toHaveClass("bg-[#668b79]");
+    expect(openButton).not.toHaveClass("bg-done");
     expect(
       screen.getByRole("button", { name: "Otwórz zadanie: Completed note" }),
-    ).toHaveClass("bg-[#668b79]");
+    ).toHaveClass("bg-done");
 
     await user.click(openButton);
     const reopenButton = await screen.findByRole("button", {
       name: "Otwórz zadanie: Prepare outline",
     });
     expect(listedTaskTitles()).toEqual(["Completed note", "Prepare outline"]);
-    expect(reopenButton).toHaveClass("bg-[#668b79]");
+    expect(reopenButton).toHaveClass("bg-done");
     await user.click(reopenButton);
 
     expect(fetchMock).toHaveBeenNthCalledWith(

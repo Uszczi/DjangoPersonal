@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 
+import { useThemeName } from "@/theme";
+
 /** Side of the dial in CSS pixels. */
 const SIZE = 132;
 
@@ -15,7 +17,8 @@ type Palette = {
  * A kitchen-timer dial drawn on a canvas: the wedge is the part of the limit
  * still left, shrinking back towards 12 o'clock. Purely visual — the digits
  * next to it carry the same information, so it is hidden from assistive tech.
- * It redraws whenever `remaining` changes (the page ticks once a second).
+ * It redraws whenever `remaining` changes (the page ticks once a second)
+ * and when the theme changes.
  */
 export function CountdownDial({
   remaining,
@@ -27,6 +30,7 @@ export function CountdownDial({
   total: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const themeName = useThemeName();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -44,7 +48,8 @@ export function CountdownDial({
     const fraction =
       total > 0 ? Math.min(1, Math.max(0, remaining / total)) : 0;
     drawDial(context, fraction, readPalette(canvas));
-  }, [remaining, total]);
+    // The theme's colours are read from the CSS variables, so repaint on a switch.
+  }, [remaining, total, themeName]);
 
   return (
     <canvas
@@ -56,7 +61,7 @@ export function CountdownDial({
   );
 }
 
-/** The design tokens from `index.css`, with fallbacks in case they are missing. */
+/** The current theme's design tokens, with fallbacks in case they are missing. */
 function readPalette(element: Element): Palette {
   const styles = getComputedStyle(element);
   const token = (name: string, fallback: string) =>

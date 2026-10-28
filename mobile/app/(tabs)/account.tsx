@@ -4,16 +4,25 @@ import { ScrollView, Text, View } from "react-native";
 import { api } from "@personal/shared/api";
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { useAuthStore } from "@personal/shared/stores/auth";
+import { useThemeStore } from "@personal/shared/stores/theme";
+import {
+  themePreferenceLabels,
+  themePreferences,
+} from "@personal/shared/themes";
 
 import { Button } from "../../src/Button";
+import { ChipGroup } from "../../src/ChipGroup";
 import { confirmDestructive } from "../../src/confirm";
-import { card, common, form } from "../../src/theme";
+import { useTheme } from "../../src/theme";
 
 export default function AccountScreen() {
+  const { common, card, form } = useTheme();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const [deleteError, setDeleteError] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const themePreference = useThemeStore((state) => state.preference);
+  const setThemePreference = useThemeStore((state) => state.setPreference);
 
   async function deleteAccount() {
     const confirmed = await confirmDestructive(
@@ -40,6 +49,18 @@ export default function AccountScreen() {
       <View style={card.section}>
         <Text style={common.eyebrow}>KONTO</Text>
         <Text style={common.pageTitle}>{user?.username}</Text>
+      </View>
+      <View style={card.section}>
+        <Text style={card.kicker}>MOTYW</Text>
+        <ChipGroup
+          options={themePreferences.map((value) => ({
+            value,
+            label: themePreferenceLabels[value],
+          }))}
+          value={themePreference}
+          onChange={setThemePreference}
+        />
+        <Text style={form.hint}>Zapisywany na tym urządzeniu.</Text>
       </View>
       <View style={[card.section, { gap: 12 }]}>
         <View style={{ flexDirection: "row" }}>

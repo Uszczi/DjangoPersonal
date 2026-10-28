@@ -6,9 +6,10 @@ import { PROJECTS_LOAD_ERROR } from "@personal/shared/loadErrors";
 import { useProjects } from "@personal/shared/queries/projects";
 
 import { Fab } from "../../src/Fab";
-import { common } from "../../src/theme";
+import { useTheme } from "../../src/theme";
 
 export default function ProjectsScreen() {
+  const { common } = useTheme();
   const { data: projects = [], isPending, isError, refetch } = useProjects();
   const [isRefreshing, setIsRefreshing] = useState(false);
 

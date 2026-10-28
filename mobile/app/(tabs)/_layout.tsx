@@ -4,7 +4,7 @@ import type { ComponentProps } from "react";
 import type { ColorValue } from "react-native";
 
 import { LogoMark } from "../../src/LogoMark";
-import { colors, fonts } from "../../src/theme";
+import { fonts, useTheme } from "../../src/theme";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -19,6 +19,7 @@ function tabIcon(name: IconName) {
 }
 
 export default function TabsLayout() {
+  const { colors } = useTheme();
   return (
     <Tabs
       screenOptions={{
@@ -28,12 +29,12 @@ export default function TabsLayout() {
         headerTitleStyle: { fontWeight: "700", fontSize: 16 },
         headerShadowVisible: false,
         headerLeft: () => <LogoMark />,
-        sceneStyle: { backgroundColor: colors.background },
+        sceneStyle: { backgroundColor: colors.canvas },
         tabBarStyle: {
           backgroundColor: colors.deepInk,
           borderTopColor: colors.deepInk,
         },
-        tabBarActiveTintColor: colors.onPrimary,
+        tabBarActiveTintColor: colors.onSignal,
         tabBarInactiveTintColor: colors.navMuted,
         tabBarActiveBackgroundColor: colors.navSelected,
         tabBarLabelStyle: {

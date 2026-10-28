@@ -7,10 +7,11 @@ import { useCategories } from "@personal/shared/queries/categories";
 
 import { Fab } from "../src/Fab";
 import { NamedIcon } from "../src/NamedIcon";
-import { colors, common } from "../src/theme";
+import { useTheme } from "../src/theme";
 
 /** The categories a transaction can have; the System category is not managed here. */
 export default function CategoriesScreen() {
+  const { colors, common } = useTheme();
   const {
     data: categories = [],
     isPending: isLoading,

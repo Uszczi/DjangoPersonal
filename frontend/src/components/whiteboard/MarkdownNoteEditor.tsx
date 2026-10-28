@@ -62,7 +62,7 @@ export function MarkdownNoteEditor({
           <MarkdownPreview
             markdown={value}
             highlight={activeQuery}
-            className="h-[70vh] overflow-y-auto rounded-lg border border-control-border bg-white px-[11px] py-[10px] text-sm leading-relaxed text-ink"
+            className="h-[70vh] overflow-y-auto rounded-lg border border-control-border bg-input px-[11px] py-[10px] text-sm leading-relaxed text-ink"
           />
         )}
       </div>

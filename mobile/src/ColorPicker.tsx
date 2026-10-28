@@ -1,8 +1,8 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { WALLET_COLORS } from "@personal/shared/walletColors";
 
-import { colors } from "./theme";
+import { makeStyles } from "./theme";
 
 type ColorPickerProps = {
   value: string;
@@ -16,6 +16,7 @@ export function ColorPicker({
   onChange,
   disabled = false,
 }: ColorPickerProps) {
+  const styles = useStyles();
   return (
     <View style={styles.row} accessibilityRole="radiogroup">
       {WALLET_COLORS.map((color) => {
@@ -38,7 +39,7 @@ export function ColorPicker({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   row: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   ring: {
     padding: 3,
@@ -46,6 +47,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "transparent",
   },
-  ringSelected: { borderColor: colors.text },
+  ringSelected: { borderColor: colors.ink },
   swatch: { width: 32, height: 32, borderRadius: 16 },
-});
+}));

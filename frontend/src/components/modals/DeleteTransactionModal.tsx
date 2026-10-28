@@ -46,7 +46,7 @@ export function DeleteTransactionModal({
       onClose={close}
       size="md"
     >
-      <p className="m-0 mt-5 text-[13px] leading-relaxed text-[#40595c] break-words">
+      <p className="m-0 mt-5 text-[13px] leading-relaxed text-body-soft break-words">
         Transakcja „{transaction.title}" zostanie trwale usunięta.
       </p>
       {deleteError && <ErrorAlert>{deleteError}</ErrorAlert>}

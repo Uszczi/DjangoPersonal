@@ -5,7 +5,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -22,7 +21,7 @@ import {
 import { Button } from "../src/Button";
 import { ChipGroup } from "../src/ChipGroup";
 import { confirmDestructive } from "../src/confirm";
-import { colors, common, form } from "../src/theme";
+import { makeStyles, useTheme } from "../src/theme";
 
 /** A status being edited; `id` stays stable while statuses are renamed and reordered. */
 type StatusDraft = { id: number; name: string };
@@ -38,6 +37,8 @@ function newStatus(name: string): StatusDraft {
  * drag and drop.
  */
 export default function ProjectEditorScreen() {
+  const { common, form } = useTheme();
+  const styles = useStyles();
   const params = useLocalSearchParams<{ projectId?: string }>();
   const projectId = params.projectId ? Number(params.projectId) : null;
   const { data: projects = [] } = useProjects();
@@ -290,6 +291,7 @@ function IconButton({
   disabled: boolean;
   onPress: () => void;
 }) {
+  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="button"
@@ -304,7 +306,7 @@ function IconButton({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   readOnly: { color: colors.muted },
   statusRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   iconButton: {
@@ -319,4 +321,4 @@ const styles = StyleSheet.create({
   },
   iconButtonDisabled: { opacity: 0.35 },
   iconButtonLabel: { fontSize: 18, color: colors.icon },
-});
+}));

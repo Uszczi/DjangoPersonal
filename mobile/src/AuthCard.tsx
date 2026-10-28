@@ -4,7 +4,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -12,7 +11,7 @@ import {
 } from "react-native";
 
 import { Button } from "./Button";
-import { card, colors, common, form } from "./theme";
+import { makeStyles, useTheme } from "./theme";
 
 /** The centred card the public account screens are drawn in (web `AuthCard`). */
 export function AuthCard({
@@ -36,6 +35,8 @@ export function AuthCard({
   /** The form's fields (`AuthField`s). */
   children: ReactNode;
 }) {
+  const { common, card } = useTheme();
+  const styles = useStyles();
   return (
     <KeyboardAvoidingView
       style={common.screen}
@@ -76,6 +77,8 @@ export function AuthField({
   label,
   ...inputProps
 }: { label: string } & TextInputProps) {
+  const { colors, form } = useTheme();
+  const styles = useStyles();
   return (
     <View style={styles.field}>
       <Text style={[form.label, styles.label]}>{label}</Text>
@@ -88,7 +91,7 @@ export function AuthField({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: { flexGrow: 1, justifyContent: "center", paddingVertical: 24 },
   card: { padding: 29, gap: 0 },
   title: { marginTop: 4, marginBottom: 24 },
@@ -99,4 +102,4 @@ const styles = StyleSheet.create({
   submit: { flex: 0 },
   footer: { marginTop: 20, color: colors.muted, fontSize: 13 },
   link: { color: colors.accent, fontWeight: "600" },
-});
+}));

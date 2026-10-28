@@ -6,7 +6,7 @@ import { Platform, Pressable, Text, View } from "react-native";
 
 import { formatEntryTime } from "@personal/shared/counterFormat";
 
-import { colors, form } from "./theme";
+import { useTheme } from "./theme";
 
 const dayFormatter = new Intl.DateTimeFormat("pl-PL", {
   day: "numeric",
@@ -37,6 +37,7 @@ export function DateTimeField({
   mode = "datetime",
   disabled = false,
 }: DateTimeFieldProps) {
+  const { colors, form } = useTheme();
   const emit = (date: Date) =>
     onChange(mode === "date" ? startOfDay(date) : date);
 
@@ -89,7 +90,7 @@ export function DateTimeField({
       onPress={pickOnAndroid}
       style={form.input}
     >
-      <Text style={{ fontSize: 14, color: colors.text }}>
+      <Text style={{ fontSize: 14, color: colors.ink }}>
         {mode === "date" ? dayFormatter.format(value) : formatEntryTime(value)}
       </Text>
     </Pressable>

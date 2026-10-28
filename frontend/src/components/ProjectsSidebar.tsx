@@ -6,7 +6,7 @@ import { ShowModal } from "@/stores/modal";
 import { useProjects } from "@personal/shared/queries/projects";
 
 const toggleButtonClasses =
-  "inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md border bg-transparent text-[20px] leading-none text-[#f3f7f3] transition-colors hover:border-[#6e8b8d] hover:bg-[#29474d]";
+  "inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md border bg-transparent text-[20px] leading-none text-nav-text transition-colors hover:border-nav-line-strong hover:bg-nav-selected";
 
 type ProjectNavListProps = {
   selectedProjectId: number | null;
@@ -26,9 +26,9 @@ export function ProjectNavList({
 
   const linkTone =
     tone === "dark"
-      ? "text-[#c2d0ce] hover:bg-[#203f45] hover:text-white aria-[current]:bg-[#28474c] aria-[current]:text-white"
+      ? "text-nav-muted hover:bg-nav-hover hover:text-nav-text aria-[current]:bg-nav-selected aria-[current]:text-nav-text"
       : "text-ink-soft hover:bg-wash hover:text-ink aria-[current]:bg-wash aria-[current]:text-ink";
-  const dotTone = tone === "dark" ? "bg-[#6e8b8d]" : "bg-icon";
+  const dotTone = tone === "dark" ? "bg-nav-line-strong" : "bg-icon";
 
   return (
     <nav className="flex flex-col gap-1" aria-label="Projekty">
@@ -50,7 +50,7 @@ export function ProjectNavList({
               aria-hidden="true"
             >
               {item.isInbox ? (
-                <span className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full bg-signal text-[13px] text-white">
+                <span className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-full bg-signal text-[13px] text-on-signal">
                   <InboxIcon />
                 </span>
               ) : (
@@ -83,7 +83,7 @@ export function ProjectsSidebar({
   onToggleCollapse,
 }: ProjectsSidebarProps) {
   const panelClasses =
-    "sticky top-8 h-[calc(100vh-132px)] shrink-0 self-start overflow-y-auto rounded-lg bg-deep-ink text-[#edf3f0] max-md:hidden";
+    "sticky top-8 h-[calc(100vh-132px)] shrink-0 self-start overflow-y-auto rounded-lg bg-deep-ink text-nav-text max-md:hidden";
 
   if (isCollapsed) {
     return (
@@ -106,11 +106,11 @@ export function ProjectsSidebar({
       aria-label="Nawigacja projektów"
     >
       <div className="flex items-center gap-1 pl-[10px]">
-        <h2 className="mr-auto font-display text-[17px] font-bold tracking-[-0.02em] text-white">
+        <h2 className="mr-auto font-display text-[17px] font-bold tracking-[-0.02em] text-nav-text">
           Projekty
         </h2>
         <button
-          className={`${toggleButtonClasses} border-[#456066]`}
+          className={`${toggleButtonClasses} border-nav-line`}
           onClick={() => ShowModal(ProjectEditorModal)}
           aria-label="Nowy projekt"
           title="Nowy projekt"

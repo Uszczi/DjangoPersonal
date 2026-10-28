@@ -30,7 +30,7 @@ import { ChipGroup } from "../src/ChipGroup";
 import { confirmDestructive } from "../src/confirm";
 import { DateTimeField } from "../src/DateTimeField";
 import { TitleSuggestions } from "../src/TitleSuggestions";
-import { common, form } from "../src/theme";
+import { useTheme } from "../src/theme";
 
 function validate(date: string, title: string, minutes: number) {
   if (!date) return "Podaj datę wpisu.";
@@ -43,6 +43,7 @@ function validate(date: string, title: string, minutes: number) {
 
 /** Adds a time entry by hand, or edits one (`?entryId=`), like the web Timer page's forms. */
 export default function TimeEntryEditorScreen() {
+  const { common, form } = useTheme();
   const params = useLocalSearchParams<{ entryId?: string }>();
   const entryId = params.entryId ? Number(params.entryId) : null;
 

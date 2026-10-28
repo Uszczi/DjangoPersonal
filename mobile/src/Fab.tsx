@@ -1,6 +1,6 @@
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, Text } from "react-native";
 
-import { colors } from "./theme";
+import { makeStyles } from "./theme";
 
 type FabProps = { accessibilityLabel: string; onPress: () => void };
 
@@ -9,6 +9,7 @@ type FabProps = { accessibilityLabel: string; onPress: () => void };
  * body rather than the native header, where buttons can miss taps on Android.
  */
 export function Fab({ accessibilityLabel, onPress }: FabProps) {
+  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="button"
@@ -21,7 +22,7 @@ export function Fab({ accessibilityLabel, onPress }: FabProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   fab: {
     position: "absolute",
     right: 20,
@@ -30,7 +31,7 @@ const styles = StyleSheet.create({
     height: 56,
     // Echoes the web's signal tiles and logo mark rather than a round FAB.
     borderRadius: 10,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.signal,
     alignItems: "center",
     justifyContent: "center",
     elevation: 4,
@@ -40,5 +41,5 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
   },
   pressed: { opacity: 0.8 },
-  label: { color: colors.onPrimary, fontSize: 30, lineHeight: 32 },
-});
+  label: { color: colors.onSignal, fontSize: 30, lineHeight: 32 },
+}));

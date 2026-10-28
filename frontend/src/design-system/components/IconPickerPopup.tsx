@@ -85,7 +85,7 @@ export default function IconPickerPopup({
       id={id}
       role="group"
       aria-label={label}
-      className="absolute left-0 top-full z-10 mt-1 w-[19rem] rounded border border-line bg-white p-2 shadow-lg"
+      className="absolute left-0 top-full z-10 mt-1 w-[19rem] rounded border border-line bg-input p-2 shadow-lg"
     >
       <input
         autoFocus
@@ -95,7 +95,7 @@ export default function IconPickerPopup({
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         onKeyDown={handleSearchKeyDown}
-        className="mb-2 w-full rounded border border-control-border bg-white px-[9px] py-[6px] text-sm text-ink outline-none focus:border-accent focus:ring-[3px] focus:ring-accent/15"
+        className="mb-2 w-full rounded border border-control-border bg-input px-[9px] py-[6px] text-sm text-ink outline-none focus:border-accent focus:ring-[3px] focus:ring-accent/15"
       />
       {shown.length === 0 && !offersNone ? (
         <p className="m-0 px-1 py-3 text-[12px] text-muted">

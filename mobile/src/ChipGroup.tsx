@@ -1,6 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
-import { colors } from "./theme";
+import { makeStyles } from "./theme";
 
 type ChipOption<T> = { value: T; label: string };
 
@@ -21,6 +21,7 @@ export function ChipGroup<T extends string | number>({
   disabled = false,
   nowrap = false,
 }: ChipGroupProps<T>) {
+  const styles = useStyles();
   return (
     <View
       style={[styles.group, nowrap && styles.nowrap]}
@@ -47,7 +48,7 @@ export function ChipGroup<T extends string | number>({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   group: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   nowrap: { flexWrap: "nowrap" },
   // The web ToggleGroup: secondary buttons, the chosen one primary.
@@ -60,9 +61,9 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   chipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: colors.signal,
+    borderColor: colors.signal,
   },
-  label: { color: colors.textSoft, fontSize: 13, fontWeight: "600" },
-  labelSelected: { color: colors.onPrimary },
-});
+  label: { color: colors.inkSoft, fontSize: 13, fontWeight: "600" },
+  labelSelected: { color: colors.onSignal },
+}));

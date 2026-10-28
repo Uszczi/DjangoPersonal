@@ -22,7 +22,7 @@ import {
 import { Button } from "../src/Button";
 import { ChipGroup } from "../src/ChipGroup";
 import { confirmDestructive } from "../src/confirm";
-import { common, form } from "../src/theme";
+import { useTheme } from "../src/theme";
 
 /**
  * Creates a Task in `?projectId=`, or edits `?taskId=` of that Project, like
@@ -31,6 +31,7 @@ import { common, form } from "../src/theme";
  * in for the web's drag and drop.
  */
 export default function TaskEditorScreen() {
+  const { common, form } = useTheme();
   const params = useLocalSearchParams<{
     projectId?: string;
     taskId?: string;

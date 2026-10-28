@@ -16,7 +16,7 @@ export function TimerPanel({
 }) {
   return (
     <section
-      className="mb-6 rounded-[7px] border border-[#dce4df] bg-paper p-[27px_32px_22px_37px] shadow-[0_14px_35px_rgb(29_55_57/5%)]"
+      className="mb-6 rounded-[7px] border border-card-line bg-paper p-[27px_32px_22px_37px] shadow-[0_14px_35px_rgb(29_55_57/5%)]"
       aria-labelledby={title ? headingId : undefined}
       aria-label={title ? undefined : label}
     >

@@ -5,7 +5,6 @@ import {
   Pressable,
   RefreshControl,
   SectionList,
-  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -22,7 +21,7 @@ import { useStartTimer } from "@personal/shared/queries/timer";
 
 import { Button } from "../../src/Button";
 import { Fab } from "../../src/Fab";
-import { colors, common, fonts } from "../../src/theme";
+import { makeStyles, fonts, useTheme } from "../../src/theme";
 
 type StatusSection = { title: string; data: TaskResponse[] };
 
@@ -42,6 +41,8 @@ function sectionsByStatus(
 }
 
 export default function ProjectTasksScreen() {
+  const { colors, common } = useTheme();
+  const styles = useStyles();
   const { id } = useLocalSearchParams<{ id: string }>();
   const projectId = Number(id);
 
@@ -176,7 +177,7 @@ export default function ProjectTasksScreen() {
                   onPress={() => void startTimer(item)}
                   style={styles.play}
                 >
-                  <Ionicons name="play" size={16} color={colors.primary} />
+                  <Ionicons name="play" size={16} color={colors.signal} />
                 </Pressable>
               )}
             </Pressable>
@@ -193,7 +194,7 @@ export default function ProjectTasksScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   header: { padding: 16, gap: 12 },
   error: { color: colors.danger },
   empty: { padding: 24, textAlign: "center" },
@@ -221,8 +222,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     borderColor: colors.accent,
   },
-  checkmark: { color: colors.onPrimary, fontSize: 14, fontWeight: "700" },
-  title: { fontSize: 14, fontWeight: "500", color: colors.text },
+  checkmark: { color: colors.onSignal, fontSize: 14, fontWeight: "700" },
+  title: { fontSize: 14, fontWeight: "500", color: colors.ink },
   titleDone: { color: colors.muted, textDecorationLine: "line-through" },
   play: {
     width: 34,
@@ -234,4 +235,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-});
+}));

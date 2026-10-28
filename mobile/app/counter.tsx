@@ -17,10 +17,11 @@ import {
 } from "@personal/shared/queries/counters";
 
 import { Button } from "../src/Button";
-import { common, form } from "../src/theme";
+import { useTheme } from "../src/theme";
 
 /** Creates a Counter, or renames one (`?counterId=`). */
 export default function CounterEditorScreen() {
+  const { common, form } = useTheme();
   const params = useLocalSearchParams<{ counterId?: string }>();
   const counterId = params.counterId ? Number(params.counterId) : null;
   const { data: counters = [] } = useCounters();

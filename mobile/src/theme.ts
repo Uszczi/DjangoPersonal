@@ -1,44 +1,21 @@
-import { Platform, StyleSheet } from "react-native";
+import { useEffect } from "react";
+import { Appearance, Platform, StyleSheet, useColorScheme } from "react-native";
+
+import { useThemeStore } from "@personal/shared/stores/theme";
+import {
+  resolveTheme,
+  themes,
+  type ThemeName,
+  type ThemePalette,
+} from "@personal/shared/themes";
 
 /**
- * The web's design tokens (the `@theme` block of `frontend/src/index.css`),
- * so both clients share one look. Keep the two in step.
+ * The app's look. Colours come from the theme palettes shared with the web
+ * (`@personal/shared/themes`), so they change with the user's pick: styles
+ * are built per theme by `makeStyles` and read in components through hooks,
+ * never at module scope, or they would keep the colours of the first render.
  */
-export const colors = {
-  /** Page background (web `canvas`). */
-  background: "#e9eff0",
-  /** Cards and sheets (web `paper`). */
-  surface: "#f8faf7",
-  /** Form controls. */
-  input: "#ffffff",
-  wash: "#f0f4f1",
-  border: "#d2ddda",
-  borderSoft: "#e1e8e3",
-  rowLine: "#dce5e1",
-  controlBorder: "#cbd7d3",
-  controlBorderHover: "#9db0ad",
-  text: "#1b3439",
-  textSoft: "#344d52",
-  deepInk: "#18343b",
-  muted: "#6c8082",
-  hint: "#718487",
-  icon: "#64797c",
-  iconWash: "#eaf0ed",
-  accent: "#477c7c",
-  /** The web's `signal`: primary buttons, the logo, active choices. */
-  primary: "#d45b3e",
-  primaryPale: "#f5e3dc",
-  onPrimary: "#ffffff",
-  danger: "#a23a28",
-  dangerPale: "#fff0eb",
-  dangerInk: "#873b2b",
-  success: "#477c7c",
-  chip: "#f0f4f1",
-  /** The dark navigation bar (web Navbar). */
-  navText: "#f4f7f4",
-  navMuted: "#b5c6c6",
-  navSelected: "#29474d",
-};
+export type Colors = ThemePalette;
 
 /** The web's font roles; phones lack the web fonts, so each maps to a close system font. */
 export const fonts = {
@@ -46,14 +23,56 @@ export const fonts = {
   utility: Platform.select({ ios: "Menlo", default: "monospace" }),
 };
 
-export const common = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
+/** The theme on screen: the user's pick, or the system's light/dark scheme. */
+export function useThemeName(): ThemeName {
+  const preference = useThemeStore((state) => state.preference);
+  const systemScheme = useColorScheme();
+  return resolveTheme(preference, systemScheme);
+}
+
+/**
+ * Point the native UI (date pickers, alerts, the keyboard) at the chosen
+ * theme's scheme; "unspecified" hands it back to the system. Mounted once, in
+ * the root layout.
+ */
+export function useNativeColorScheme() {
+  const preference = useThemeStore((state) => state.preference);
+  useEffect(() => {
+    Appearance.setColorScheme(
+      preference === "system" ? "unspecified" : themes[preference].scheme,
+    );
+  }, [preference]);
+}
+
+/**
+ * A hook returning `factory(colors)` as a StyleSheet for the current theme.
+ * Each theme's sheet is built once and cached.
+ */
+type Styles = Parameters<typeof StyleSheet.create>[0];
+
+export function makeStyles<T extends Styles>(
+  factory: (colors: Colors) => T & Styles,
+): () => Readonly<T> {
+  const cache = new Map<ThemeName, Readonly<T>>();
+  return function useStyles() {
+    const name = useThemeName();
+    let styles = cache.get(name);
+    if (!styles) {
+      styles = StyleSheet.create(factory(themes[name].colors));
+      cache.set(name, styles);
+    }
+    return styles;
+  };
+}
+
+const useCommon = makeStyles((colors) => ({
+  screen: { flex: 1, backgroundColor: colors.canvas },
   center: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     padding: 24,
-    backgroundColor: colors.background,
+    backgroundColor: colors.canvas,
   },
   error: { color: colors.danger, padding: 16, fontSize: 13 },
   muted: { color: colors.muted, fontSize: 12 },
@@ -69,7 +88,7 @@ export const common = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.rowLine,
   },
-  rowTitle: { fontSize: 14, fontWeight: "500", color: colors.text },
+  rowTitle: { fontSize: 14, fontWeight: "500", color: colors.ink },
   rowSubtitle: { fontSize: 12, color: colors.muted, marginTop: 2 },
   /** Small all-caps line above a title (web `PageHeader` eyebrow). */
   eyebrow: {
@@ -85,7 +104,7 @@ export const common = StyleSheet.create({
     fontSize: 28,
     fontWeight: "700",
     letterSpacing: -0.5,
-    color: colors.text,
+    color: colors.ink,
   },
   pageHeader: {
     paddingHorizontal: 16,
@@ -96,7 +115,7 @@ export const common = StyleSheet.create({
   /** The boxed form error (web `ErrorAlert`). */
   alert: {
     borderLeftWidth: 3,
-    borderLeftColor: colors.primary,
+    borderLeftColor: colors.signal,
     backgroundColor: colors.dangerPale,
     paddingHorizontal: 11,
     paddingVertical: 9,
@@ -104,9 +123,9 @@ export const common = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
   },
-});
+}));
 
-export const card = StyleSheet.create({
+const useCard = makeStyles((colors) => ({
   /** A section card (web `TimerPanel`, `AuthCard`). */
   section: {
     marginHorizontal: 16,
@@ -115,8 +134,8 @@ export const card = StyleSheet.create({
     gap: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#dce4df",
-    backgroundColor: colors.surface,
+    borderColor: colors.cardLine,
+    backgroundColor: colors.paper,
     shadowColor: "#1d3739",
     shadowOpacity: 0.06,
     shadowRadius: 18,
@@ -128,9 +147,9 @@ export const card = StyleSheet.create({
     fontSize: 22,
     fontWeight: "700",
     letterSpacing: -0.4,
-    color: colors.text,
+    color: colors.ink,
   },
-  /** Small all-caps line in a card (web eyebrow); colour it `primary` to flag state. */
+  /** Small all-caps line in a card (web eyebrow); colour it `signal` to flag state. */
   kicker: {
     fontFamily: fonts.utility,
     fontSize: 11,
@@ -138,13 +157,13 @@ export const card = StyleSheet.create({
     letterSpacing: 0.9,
     color: colors.muted,
   },
-});
+}));
 
-export const form = StyleSheet.create({
+const useForm = makeStyles((colors) => ({
   content: { padding: 20, gap: 8 },
   /** Field label (web `Field`). */
   label: {
-    color: colors.textSoft,
+    color: colors.inkSoft,
     fontSize: 12,
     fontWeight: "600",
     marginTop: 10,
@@ -158,7 +177,7 @@ export const form = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 14,
     backgroundColor: colors.input,
-    color: colors.text,
+    color: colors.ink,
   },
   multiline: { minHeight: 96, textAlignVertical: "top" },
   error: { color: colors.dangerInk, marginTop: 8, fontSize: 12 },
@@ -169,15 +188,32 @@ export const form = StyleSheet.create({
     marginTop: 26,
     paddingTop: 18,
     borderTopWidth: 1,
-    borderTopColor: colors.borderSoft,
+    borderTopColor: colors.lineSoft,
   },
-});
+}));
 
 /** Shared screen options: the dark header of the web Navbar. */
-export const headerOptions = {
-  headerStyle: { backgroundColor: colors.deepInk },
-  headerTintColor: colors.navText,
-  headerTitleStyle: { fontWeight: "700" as const, fontSize: 16 },
-  headerShadowVisible: false,
-  contentStyle: { backgroundColor: colors.background },
-};
+function headerOptions(colors: Colors) {
+  return {
+    headerStyle: { backgroundColor: colors.deepInk },
+    headerTintColor: colors.navText,
+    headerTitleStyle: { fontWeight: "700" as const, fontSize: 16 },
+    headerShadowVisible: false,
+    contentStyle: { backgroundColor: colors.canvas },
+  };
+}
+
+/** Everything a screen styles itself with, for the current theme. */
+export function useTheme() {
+  const name = useThemeName();
+  const colors = themes[name].colors;
+  return {
+    name,
+    scheme: themes[name].scheme,
+    colors,
+    common: useCommon(),
+    card: useCard(),
+    form: useForm(),
+    headerOptions: headerOptions(colors),
+  };
+}

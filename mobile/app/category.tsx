@@ -24,10 +24,11 @@ import {
 import { Button } from "../src/Button";
 import { confirmDestructive } from "../src/confirm";
 import { IconPicker } from "../src/IconPicker";
-import { common, form } from "../src/theme";
+import { useTheme } from "../src/theme";
 
 /** Creates a Category, or edits one (`?categoryId=`): its name and icon. */
 export default function CategoryEditorScreen() {
+  const { common, form } = useTheme();
   const params = useLocalSearchParams<{ categoryId?: string }>();
   const categoryId = params.categoryId ? Number(params.categoryId) : null;
   const { data: categories = [] } = useCategories();

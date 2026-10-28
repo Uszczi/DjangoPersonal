@@ -16,9 +16,9 @@ export function NavTiles() {
         <Link
           key={tile.to}
           to={tile.to}
-          className="flex items-center gap-4 rounded-lg border border-[#dce4df] bg-paper p-5 shadow-[0_14px_35px_rgb(29_55_57/5%)] transition-all hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgb(29_55_57/8%)]"
+          className="flex items-center gap-4 rounded-lg border border-card-line bg-paper p-5 shadow-[0_14px_35px_rgb(29_55_57/5%)] transition-all hover:-translate-y-0.5 hover:shadow-[0_20px_45px_rgb(29_55_57/8%)]"
         >
-          <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-signal text-xl text-white">
+          <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-signal text-xl text-on-signal">
             {tile.icon}
           </span>
           <span className="font-display text-lg font-semibold text-ink">

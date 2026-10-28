@@ -7,20 +7,25 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 
 import { useAuthStore } from "@personal/shared/stores/auth";
+import { useThemeStore } from "@personal/shared/stores/theme";
 
 import { queryClient } from "../src/queryClient";
-import { common, headerOptions } from "../src/theme";
+import { useNativeColorScheme, useTheme } from "../src/theme";
 
 export default function RootLayout() {
+  const { common, headerOptions } = useTheme();
   const [isHydrated, setIsHydrated] = useState(false);
   const isSignedIn = useAuthStore((state) => state.user !== null);
+  useNativeColorScheme();
 
-  // The auth store was created before setup pointed it at secure storage,
-  // so read the saved session again from there before showing any screen.
+  // The persisted stores were created before setup pointed them at secure
+  // storage, so read the saved session and theme again from there before
+  // showing any screen.
   useEffect(() => {
-    void Promise.resolve(useAuthStore.persist.rehydrate()).finally(() =>
-      setIsHydrated(true),
-    );
+    void Promise.allSettled([
+      useAuthStore.persist.rehydrate(),
+      useThemeStore.persist.rehydrate(),
+    ]).finally(() => setIsHydrated(true));
   }, []);
 
   if (!isHydrated) {

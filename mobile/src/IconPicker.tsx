@@ -1,9 +1,9 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 import type { IconSuggestion } from "@personal/shared/iconSuggestion";
 
 import { NamedIcon } from "./NamedIcon";
-import { colors } from "./theme";
+import { makeStyles, useTheme } from "./theme";
 
 type IconPickerProps = {
   value: string | null;
@@ -27,6 +27,8 @@ export function IconPicker({
   fallback,
   disabled = false,
 }: IconPickerProps) {
+  const { colors } = useTheme();
+  const styles = useStyles();
   const options =
     value && !suggestions.some((item) => item.value === value)
       ? [{ value, label: value }, ...suggestions]
@@ -61,7 +63,7 @@ export function IconPicker({
             <NamedIcon
               name={option.value}
               fallback={fallback}
-              color={isSelected ? colors.onPrimary : colors.text}
+              color={isSelected ? colors.onSignal : colors.ink}
               size={22}
             />
           </Pressable>
@@ -71,7 +73,7 @@ export function IconPicker({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   cell: {
     width: 44,
@@ -84,8 +86,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   cellSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: colors.signal,
+    borderColor: colors.signal,
   },
   none: { fontSize: 18, color: colors.muted },
-});
+}));

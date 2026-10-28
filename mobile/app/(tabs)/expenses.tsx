@@ -5,7 +5,6 @@ import {
   RefreshControl,
   ScrollView,
   SectionList,
-  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -24,7 +23,7 @@ import { Button } from "../../src/Button";
 import { Fab } from "../../src/Fab";
 import { NamedIcon } from "../../src/NamedIcon";
 import { WalletMark } from "../../src/WalletMark";
-import { card, colors, common, fonts } from "../../src/theme";
+import { makeStyles, fonts, useTheme } from "../../src/theme";
 import { useRefreshOnFocus } from "../../src/useRefreshOnFocus";
 
 const dayFormatter = new Intl.DateTimeFormat("pl-PL", {
@@ -50,6 +49,8 @@ function groupByDay(transactions: TransactionResponse[]): DaySection[] {
 
 /** The web Wydatki page: one wallet at a time, its transactions by day. */
 export default function ExpensesScreen() {
+  const { colors, common, card } = useTheme();
+  const styles = useStyles();
   const {
     data: wallets = [],
     isPending: isLoading,
@@ -274,7 +275,7 @@ export default function ExpensesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   walletTabs: { gap: 8, paddingHorizontal: 16, paddingTop: 16 },
   walletTab: {
     flexDirection: "row",
@@ -290,14 +291,14 @@ const styles = StyleSheet.create({
     borderColor: colors.deepInk,
     backgroundColor: colors.deepInk,
   },
-  walletTabLabel: { color: colors.textSoft, fontSize: 13, fontWeight: "600" },
-  walletTabLabelActive: { color: colors.onPrimary },
+  walletTabLabel: { color: colors.inkSoft, fontSize: 13, fontWeight: "600" },
+  walletTabLabelActive: { color: colors.onSignal },
   walletHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
   balance: {
     fontFamily: fonts.utility,
     fontSize: 18,
     fontWeight: "700",
-    color: colors.text,
+    color: colors.ink,
     fontVariant: ["tabular-nums"],
   },
   actions: { flexDirection: "row", gap: 12 },
@@ -312,13 +313,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.9,
     color: colors.muted,
   },
-  title: { fontSize: 14, fontWeight: "500", color: colors.text },
+  title: { fontSize: 14, fontWeight: "500", color: colors.ink },
   category: { flexDirection: "row", alignItems: "center", gap: 4 },
   amount: {
     fontFamily: fonts.utility,
     fontSize: 14,
     fontWeight: "600",
-    color: colors.text,
+    color: colors.ink,
     fontVariant: ["tabular-nums"],
   },
-});
+}));

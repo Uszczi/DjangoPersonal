@@ -5,7 +5,6 @@ import {
   FlatList,
   Pressable,
   RefreshControl,
-  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -26,10 +25,12 @@ import {
 
 import { Button } from "../../src/Button";
 import { plusOneEntry } from "../../src/plusOne";
-import { colors, common, fonts } from "../../src/theme";
+import { makeStyles, fonts, useTheme } from "../../src/theme";
 
 /** One Counter: its total, quick +1, and the entries to add, edit and delete. */
 export default function CounterScreen() {
+  const { common } = useTheme();
+  const styles = useStyles();
   const { id: rawId } = useLocalSearchParams<{ id: string }>();
   const id = Number(rawId);
 
@@ -194,14 +195,14 @@ export default function CounterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   listContent: { paddingBottom: 32 },
   header: { padding: 16, gap: 4 },
   total: {
     fontFamily: fonts.utility,
     fontSize: 44,
     fontWeight: "700",
-    color: colors.text,
+    color: colors.ink,
     fontVariant: ["tabular-nums"],
   },
   actions: { flexDirection: "row", gap: 12, marginTop: 12 },
@@ -215,12 +216,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.9,
   },
   empty: { padding: 24, textAlign: "center" },
-  entryTime: { fontSize: 14, fontWeight: "500", color: colors.text },
+  entryTime: { fontSize: 14, fontWeight: "500", color: colors.ink },
   entryValue: {
     fontFamily: fonts.utility,
     fontSize: 14,
     fontWeight: "600",
-    color: colors.text,
+    color: colors.ink,
   },
   negative: { color: colors.danger },
-});
+}));

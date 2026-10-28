@@ -45,7 +45,7 @@ export function DeleteCategoryModal({
       onClose={close}
       size="md"
     >
-      <p className="m-0 mt-5 text-[13px] leading-relaxed text-[#40595c] break-words">
+      <p className="m-0 mt-5 text-[13px] leading-relaxed text-body-soft break-words">
         Kategoria „{category.name}" zostanie trwale usunięta wraz ze wszystkimi
         transakcjami, które do niej należą.
       </p>

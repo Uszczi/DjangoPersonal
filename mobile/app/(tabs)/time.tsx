@@ -4,7 +4,6 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -35,7 +34,7 @@ import { timerLimitOptions, timerRemaining } from "@personal/shared/timerLimit";
 import { Button } from "../../src/Button";
 import { ChipGroup } from "../../src/ChipGroup";
 import { TitleSuggestions } from "../../src/TitleSuggestions";
-import { card, colors, common, form, fonts } from "../../src/theme";
+import { makeStyles, fonts, useTheme } from "../../src/theme";
 import { useRefreshOnFocus } from "../../src/useRefreshOnFocus";
 
 type EntryRange = "today" | "7" | "30" | "all";
@@ -58,6 +57,8 @@ function daysAgoKey(now: number, days: number) {
 
 /** The web Timer page: the running timer, recent entries and the time summary. */
 export default function TimeScreen() {
+  const { colors, common, card, form } = useTheme();
+  const styles = useStyles();
   const { data: projects = [], refetch: refetchProjects } = useProjects();
   const timer = useTimer();
   const entriesQuery = useTimeEntries();
@@ -247,7 +248,7 @@ export default function TimeScreen() {
       <View style={card.section}>
         {runningEntry ? (
           <>
-            <Text style={[card.kicker, { color: colors.primary }]}>
+            <Text style={[card.kicker, { color: colors.signal }]}>
               TIMER AKTYWNY
             </Text>
             <Text style={card.title}>{entryTitle(runningEntry)}</Text>
@@ -432,12 +433,12 @@ export default function TimeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   elapsed: {
     fontFamily: fonts.utility,
     fontSize: 36,
     fontWeight: "700",
-    color: colors.text,
+    color: colors.ink,
     fontVariant: ["tabular-nums"],
   },
   sectionHeader: {
@@ -458,18 +459,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontVariant: ["tabular-nums"],
   },
-  entryTitle: { flex: 1, color: colors.text, fontSize: 14, fontWeight: "500" },
+  entryTitle: { flex: 1, color: colors.ink, fontSize: 14, fontWeight: "500" },
   entryDuration: { color: colors.muted, fontSize: 12, fontWeight: "600" },
   total: {
     fontFamily: fonts.utility,
     fontSize: 24,
     fontWeight: "700",
-    color: colors.text,
+    color: colors.ink,
   },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     gap: 12,
   },
-  summaryLabel: { flex: 1, color: colors.text },
-});
+  summaryLabel: { flex: 1, color: colors.ink },
+}));
