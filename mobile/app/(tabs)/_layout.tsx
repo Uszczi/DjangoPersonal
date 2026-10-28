@@ -3,7 +3,8 @@ import { Tabs } from "expo-router";
 import type { ComponentProps } from "react";
 import type { ColorValue } from "react-native";
 
-import { colors } from "../../src/theme";
+import { LogoMark } from "../../src/LogoMark";
+import { colors, fonts } from "../../src/theme";
 
 type IconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -19,7 +20,30 @@ function tabIcon(name: IconName) {
 
 export default function TabsLayout() {
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: colors.primary }}>
+    <Tabs
+      screenOptions={{
+        // The web Navbar: a deep-ink bar with small monospace labels.
+        headerStyle: { backgroundColor: colors.deepInk },
+        headerTintColor: colors.navText,
+        headerTitleStyle: { fontWeight: "700", fontSize: 16 },
+        headerShadowVisible: false,
+        headerLeft: () => <LogoMark />,
+        sceneStyle: { backgroundColor: colors.background },
+        tabBarStyle: {
+          backgroundColor: colors.deepInk,
+          borderTopColor: colors.deepInk,
+        },
+        tabBarActiveTintColor: colors.onPrimary,
+        tabBarInactiveTintColor: colors.navMuted,
+        tabBarActiveBackgroundColor: colors.navSelected,
+        tabBarLabelStyle: {
+          fontFamily: fonts.utility,
+          fontSize: 10,
+          fontWeight: "600",
+          letterSpacing: 0.6,
+        },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{ title: "Projekty", tabBarIcon: tabIcon("folder-outline") }}

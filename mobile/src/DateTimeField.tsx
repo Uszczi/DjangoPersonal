@@ -89,7 +89,7 @@ export function DateTimeField({
       onPress={pickOnAndroid}
       style={form.input}
     >
-      <Text style={{ fontSize: 16, color: colors.text }}>
+      <Text style={{ fontSize: 14, color: colors.text }}>
         {mode === "date" ? dayFormatter.format(value) : formatEntryTime(value)}
       </Text>
     </Pressable>

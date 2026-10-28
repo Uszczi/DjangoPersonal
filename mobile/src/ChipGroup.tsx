@@ -50,18 +50,19 @@ export function ChipGroup<T extends string | number>({
 const styles = StyleSheet.create({
   group: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   nowrap: { flexWrap: "nowrap" },
+  // The web ToggleGroup: secondary buttons, the chosen one primary.
   chip: {
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: colors.surface,
+    borderColor: colors.controlBorder,
+    borderRadius: 5,
+    paddingHorizontal: 13,
+    paddingVertical: 9,
+    backgroundColor: "transparent",
   },
   chipSelected: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
-  label: { color: colors.text },
-  labelSelected: { color: colors.onPrimary, fontWeight: "600" },
+  label: { color: colors.textSoft, fontSize: 13, fontWeight: "600" },
+  labelSelected: { color: colors.onPrimary },
 });

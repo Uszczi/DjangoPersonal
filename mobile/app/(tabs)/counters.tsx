@@ -20,7 +20,7 @@ import {
 
 import { Fab } from "../../src/Fab";
 import { plusOneEntry } from "../../src/plusOne";
-import { colors, common } from "../../src/theme";
+import { colors, common, fonts } from "../../src/theme";
 
 export default function CountersScreen() {
   const { data: counters = [], isPending, isError, refetch } = useCounters();
@@ -83,7 +83,7 @@ export default function CountersScreen() {
           >
             <View style={{ flex: 1 }}>
               <Text style={styles.name}>{item.name}</Text>
-              <Text style={common.muted}>
+              <Text style={common.rowSubtitle}>
                 {entryCountLabel(item.entryCount)}
               </Text>
             </View>
@@ -119,21 +119,22 @@ export default function CountersScreen() {
 const styles = StyleSheet.create({
   listContent: { paddingBottom: 96 },
   empty: { padding: 24, textAlign: "center" },
-  name: { fontSize: 16, color: colors.text },
+  name: { fontSize: 14, fontWeight: "500", color: colors.text },
   total: {
-    fontSize: 20,
-    fontWeight: "700",
+    marginRight: 4,
+    fontFamily: fonts.utility,
+    fontSize: 18,
+    fontWeight: "600",
     color: colors.text,
     fontVariant: ["tabular-nums"],
   },
   plusOne: {
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
+    borderColor: colors.controlBorder,
+    borderRadius: 5,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    backgroundColor: colors.surface,
   },
   pressed: { opacity: 0.6 },
-  plusOneLabel: { color: colors.primary, fontWeight: "700", fontSize: 16 },
+  plusOneLabel: { color: colors.textSoft, fontWeight: "600", fontSize: 13 },
 });

@@ -45,7 +45,7 @@ export function Button({
     >
       {isBusy ? (
         <ActivityIndicator
-          color={variant === "primary" ? colors.onPrimary : colors.text}
+          color={variant === "secondary" ? colors.textSoft : colors.onPrimary}
         />
       ) : (
         <Text style={[styles.label, labelStyles[variant]]}>{label}</Text>
@@ -55,31 +55,30 @@ export function Button({
 }
 
 const styles = StyleSheet.create({
+  // The web Button: 5px corners, a 1px border and a small semibold label.
   base: {
     flex: 1,
-    borderRadius: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    minHeight: 44,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "transparent",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
     alignItems: "center",
     justifyContent: "center",
   },
   primary: { backgroundColor: colors.primary },
   secondary: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    borderColor: colors.controlBorder,
+    backgroundColor: "transparent",
   },
-  danger: {
-    borderWidth: 1,
-    borderColor: colors.danger,
-    backgroundColor: colors.surface,
-  },
-  dimmed: { opacity: 0.6 },
-  label: { fontSize: 16, fontWeight: "600" },
+  danger: { backgroundColor: colors.danger },
+  dimmed: { opacity: 0.7 },
+  label: { fontSize: 13, fontWeight: "600" },
 });
 
 const labelStyles = StyleSheet.create({
   primary: { color: colors.onPrimary },
-  secondary: { color: colors.text },
-  danger: { color: colors.danger },
+  secondary: { color: colors.textSoft },
+  danger: { color: colors.onPrimary },
 });

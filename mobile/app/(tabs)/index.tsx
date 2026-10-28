@@ -6,7 +6,7 @@ import { PROJECTS_LOAD_ERROR } from "@personal/shared/loadErrors";
 import { useProjects } from "@personal/shared/queries/projects";
 
 import { Fab } from "../../src/Fab";
-import { colors, common } from "../../src/theme";
+import { common } from "../../src/theme";
 
 export default function ProjectsScreen() {
   const { data: projects = [], isPending, isError, refetch } = useProjects();
@@ -38,11 +38,9 @@ export default function ProjectsScreen() {
           >
             <Pressable style={common.row}>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 16, color: colors.text }}>
-                  {item.name}
-                </Text>
+                <Text style={common.rowTitle}>{item.name}</Text>
                 {item.description !== "" && (
-                  <Text style={common.muted} numberOfLines={1}>
+                  <Text style={common.rowSubtitle} numberOfLines={1}>
                     {item.description}
                   </Text>
                 )}

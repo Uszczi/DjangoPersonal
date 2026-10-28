@@ -22,7 +22,7 @@ import { useStartTimer } from "@personal/shared/queries/timer";
 
 import { Button } from "../../src/Button";
 import { Fab } from "../../src/Fab";
-import { colors, common } from "../../src/theme";
+import { colors, common, fonts } from "../../src/theme";
 
 type StatusSection = { title: string; data: TaskResponse[] };
 
@@ -163,7 +163,7 @@ export default function ProjectTasksScreen() {
                   {item.title}
                 </Text>
                 {item.description !== "" && (
-                  <Text style={common.muted} numberOfLines={1}>
+                  <Text style={common.rowSubtitle} numberOfLines={1}>
                     {item.description}
                   </Text>
                 )}
@@ -202,33 +202,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 6,
+    fontFamily: fonts.utility,
     fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.8,
+    fontWeight: "600",
+    letterSpacing: 0.9,
     color: colors.muted,
   },
   checkbox: {
     width: 22,
     height: 22,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: colors.muted,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: colors.controlBorderHover,
     alignItems: "center",
     justifyContent: "center",
   },
   checkboxChecked: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   checkmark: { color: colors.onPrimary, fontSize: 14, fontWeight: "700" },
-  title: { fontSize: 16, color: colors.text },
+  title: { fontSize: 14, fontWeight: "500", color: colors.text },
   titleDone: { color: colors.muted, textDecorationLine: "line-through" },
   play: {
     width: 34,
     height: 34,
-    borderRadius: 17,
+    borderRadius: 6,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: "transparent",
+    backgroundColor: colors.iconWash,
     alignItems: "center",
     justifyContent: "center",
   },

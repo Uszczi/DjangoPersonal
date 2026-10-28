@@ -76,10 +76,10 @@ const styles = StyleSheet.create({
   cell: {
     width: 44,
     height: 44,
-    borderRadius: 10,
+    borderRadius: 5,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    borderColor: colors.controlBorder,
+    backgroundColor: colors.input,
     alignItems: "center",
     justifyContent: "center",
   },

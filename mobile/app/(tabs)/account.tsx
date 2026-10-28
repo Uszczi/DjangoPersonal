@@ -38,8 +38,8 @@ export default function AccountScreen() {
   return (
     <ScrollView style={common.screen}>
       <View style={card.section}>
-        <Text style={card.kicker}>KONTO</Text>
-        <Text style={card.title}>{user?.username}</Text>
+        <Text style={common.eyebrow}>KONTO</Text>
+        <Text style={common.pageTitle}>{user?.username}</Text>
       </View>
       <View style={[card.section, { gap: 12 }]}>
         <View style={{ flexDirection: "row" }}>

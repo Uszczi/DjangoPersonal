@@ -24,7 +24,7 @@ import { Button } from "../../src/Button";
 import { Fab } from "../../src/Fab";
 import { NamedIcon } from "../../src/NamedIcon";
 import { WalletMark } from "../../src/WalletMark";
-import { card, colors, common } from "../../src/theme";
+import { card, colors, common, fonts } from "../../src/theme";
 import { useRefreshOnFocus } from "../../src/useRefreshOnFocus";
 
 const dayFormatter = new Intl.DateTimeFormat("pl-PL", {
@@ -280,18 +280,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    borderRadius: 999,
+    borderRadius: 5,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    borderColor: colors.controlBorder,
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
-  walletTabActive: { borderColor: colors.text },
-  walletTabLabel: { color: colors.text },
-  walletTabLabelActive: { fontWeight: "700" },
+  walletTabActive: {
+    borderColor: colors.deepInk,
+    backgroundColor: colors.deepInk,
+  },
+  walletTabLabel: { color: colors.textSoft, fontSize: 13, fontWeight: "600" },
+  walletTabLabelActive: { color: colors.onPrimary },
   walletHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
   balance: {
+    fontFamily: fonts.utility,
     fontSize: 18,
     fontWeight: "700",
     color: colors.text,
@@ -303,14 +306,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 20,
     paddingBottom: 6,
-    fontSize: 15,
-    fontWeight: "700",
-    color: colors.text,
+    fontFamily: fonts.utility,
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.9,
+    color: colors.muted,
   },
-  title: { fontSize: 16, color: colors.text },
+  title: { fontSize: 14, fontWeight: "500", color: colors.text },
   category: { flexDirection: "row", alignItems: "center", gap: 4 },
   amount: {
-    fontSize: 15,
+    fontFamily: fonts.utility,
+    fontSize: 14,
     fontWeight: "600",
     color: colors.text,
     fontVariant: ["tabular-nums"],

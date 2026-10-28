@@ -48,11 +48,9 @@ export default function CategoriesScreen() {
             <NamedIcon
               name={item.icon}
               fallback={DEFAULT_CATEGORY_ICON}
-              color={colors.text}
+              color={colors.icon}
             />
-            <Text style={{ flex: 1, fontSize: 16, color: colors.text }}>
-              {item.name}
-            </Text>
+            <Text style={[common.rowTitle, { flex: 1 }]}>{item.name}</Text>
             <Text style={common.muted}>›</Text>
           </Pressable>
         )}

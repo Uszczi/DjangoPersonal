@@ -26,7 +26,7 @@ import {
 
 import { Button } from "../../src/Button";
 import { plusOneEntry } from "../../src/plusOne";
-import { colors, common } from "../../src/theme";
+import { colors, common, fonts } from "../../src/theme";
 
 /** One Counter: its total, quick +1, and the entries to add, edit and delete. */
 export default function CounterScreen() {
@@ -198,7 +198,8 @@ const styles = StyleSheet.create({
   listContent: { paddingBottom: 32 },
   header: { padding: 16, gap: 4 },
   total: {
-    fontSize: 56,
+    fontFamily: fonts.utility,
+    fontSize: 44,
     fontWeight: "700",
     color: colors.text,
     fontVariant: ["tabular-nums"],
@@ -208,11 +209,18 @@ const styles = StyleSheet.create({
   sectionTitle: {
     marginTop: 20,
     color: colors.muted,
-    fontSize: 13,
+    fontFamily: fonts.utility,
+    fontSize: 11,
     fontWeight: "600",
+    letterSpacing: 0.9,
   },
   empty: { padding: 24, textAlign: "center" },
-  entryTime: { fontSize: 15, color: colors.text },
-  entryValue: { fontSize: 16, fontWeight: "600", color: colors.text },
+  entryTime: { fontSize: 14, fontWeight: "500", color: colors.text },
+  entryValue: {
+    fontFamily: fonts.utility,
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.text,
+  },
   negative: { color: colors.danger },
 });

@@ -35,7 +35,7 @@ import { timerLimitOptions, timerRemaining } from "@personal/shared/timerLimit";
 import { Button } from "../../src/Button";
 import { ChipGroup } from "../../src/ChipGroup";
 import { TitleSuggestions } from "../../src/TitleSuggestions";
-import { card, colors, common, form } from "../../src/theme";
+import { card, colors, common, form, fonts } from "../../src/theme";
 import { useRefreshOnFocus } from "../../src/useRefreshOnFocus";
 
 type EntryRange = "today" | "7" | "30" | "all";
@@ -247,7 +247,7 @@ export default function TimeScreen() {
       <View style={card.section}>
         {runningEntry ? (
           <>
-            <Text style={[card.kicker, { color: colors.success }]}>
+            <Text style={[card.kicker, { color: colors.primary }]}>
               TIMER AKTYWNY
             </Text>
             <Text style={card.title}>{entryTitle(runningEntry)}</Text>
@@ -434,7 +434,8 @@ export default function TimeScreen() {
 
 const styles = StyleSheet.create({
   elapsed: {
-    fontSize: 40,
+    fontFamily: fonts.utility,
+    fontSize: 36,
     fontWeight: "700",
     color: colors.text,
     fontVariant: ["tabular-nums"],
@@ -449,17 +450,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.rowLine,
   },
   entryClock: {
     color: colors.muted,
     fontSize: 12,
     fontVariant: ["tabular-nums"],
   },
-  entryTitle: { flex: 1, color: colors.text, fontSize: 15 },
+  entryTitle: { flex: 1, color: colors.text, fontSize: 14, fontWeight: "500" },
   entryDuration: { color: colors.muted, fontSize: 12, fontWeight: "600" },
-  total: { fontSize: 24, fontWeight: "700", color: colors.text },
+  total: {
+    fontFamily: fonts.utility,
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.text,
+  },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",

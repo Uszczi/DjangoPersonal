@@ -9,7 +9,7 @@ import { ActivityIndicator, View } from "react-native";
 import { useAuthStore } from "@personal/shared/stores/auth";
 
 import { queryClient } from "../src/queryClient";
-import { common } from "../src/theme";
+import { common, headerOptions } from "../src/theme";
 
 export default function RootLayout() {
   const [isHydrated, setIsHydrated] = useState(false);
@@ -33,8 +33,8 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <StatusBar style="auto" />
-      <Stack>
+      <StatusBar style="light" />
+      <Stack screenOptions={headerOptions}>
         <Stack.Protected guard={isSignedIn}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="projects/[id]" options={{ title: "Zadania" }} />
