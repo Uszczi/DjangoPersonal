@@ -61,3 +61,18 @@ A named tally a user keeps of anything countable — coffees, push-ups, days wit
 
 **Counter entry**:
 One change to a Counter: a non-zero whole-number value (default 1; negative values subtract), the moment it happened (date and time, stored in UTC), and an optional note. An entry stays in the Counter it was added to.
+
+**Bibliografia**:
+The section of the app where a user keeps track of the films they watch and the books they read, as Pozycje.
+_Avoid_: Bibliografia for a single film or book (that is a Pozycja)
+
+**Pozycja** (Item):
+One film or one book a user tracks in the Bibliografia. Has a kind (film or book) and a title; optionally a creator (author or director, as written), a year, a length (pages for a book, minutes for a film) and one note. Films and books are the same concept, differing only in kind. Watching or reading it again is a new Podejście on the same Pozycja, never a new Pozycja.
+_Avoid_: Entry, Wpis (a Counter entry is something else), Bibliografia
+
+**Podejście** (Attempt):
+One time a user watches or reads a Pozycja: in progress, finished or abandoned, with its dates (day precision, no time of day). A Pozycja has any number of Podejścia but at most one in progress; returning to a finished or abandoned Pozycja starts a new Podejście.
+_Avoid_: Seans, Lektura (one word per kind), Wpis (that is a Counter entry)
+
+**Pozycja status**:
+Where a Pozycja stands for its user: to watch/read (Do obejrzenia / Do przeczytania), in progress (W trakcie), finished (Ukończone), or abandoned (Porzucone). Never set directly: it follows from the Pozycja's latest Podejście (none yet means to watch/read), like a Wallet balance follows from its Transactions.
