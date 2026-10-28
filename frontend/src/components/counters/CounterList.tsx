@@ -6,7 +6,10 @@ import {
   ListRowTitle,
 } from "@/design-system";
 import type { CounterViewMode } from "@/lib/counterViewMode";
-import { entryCountLabel } from "@personal/shared/counterFormat";
+import {
+  counterRecencyLabel,
+  entryCountLabel,
+} from "@personal/shared/counterFormat";
 import type { CounterResponse } from "@personal/shared/generated/api";
 
 type CounterItemProps = {
@@ -31,13 +34,14 @@ function AddOneButton({
 }
 
 function CounterTile({ counter, onOpen, onAddOne }: CounterItemProps) {
+  const recency = counterRecencyLabel(counter);
   return (
     <li className="flex flex-col rounded-lg border border-row-line bg-surface">
       <button
         type="button"
         aria-label={`Otwórz licznik: ${counter.name}`}
         onClick={onOpen}
-        className="flex min-w-0 flex-1 cursor-pointer flex-col items-start gap-1 rounded-t-lg border-0 bg-transparent px-4 pt-4 pb-3 text-left font-inherit transition-colors hover:bg-wash focus-visible:outline-2 focus-visible:outline-accent"
+        className="flex min-w-0 flex-1 cursor-pointer flex-col items-center gap-1 rounded-t-lg border-0 bg-transparent px-4 pt-4 pb-3 text-center font-inherit transition-colors hover:bg-wash focus-visible:outline-2 focus-visible:outline-accent"
       >
         <span className="w-full truncate text-[14px] font-medium text-ink">
           {counter.name}
@@ -51,8 +55,15 @@ function CounterTile({ counter, onOpen, onAddOne }: CounterItemProps) {
         <small className="text-[12px] text-muted">
           {entryCountLabel(counter.entryCount)}
         </small>
+        {recency !== null && (
+          <small
+            className={`text-[12px] font-medium ${counter.streakDays > 0 ? "text-ink" : "text-muted"}`}
+          >
+            {recency}
+          </small>
+        )}
       </button>
-      <div className="flex justify-end border-t border-row-line px-3 py-2">
+      <div className="flex justify-center border-t border-row-line px-3 py-2">
         <AddOneButton counter={counter} onAddOne={onAddOne} />
       </div>
     </li>

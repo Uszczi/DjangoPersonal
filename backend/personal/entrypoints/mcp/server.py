@@ -15,6 +15,7 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from datetime import date as date_type
 from typing import Any, TypeAlias
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import anyio.to_thread
 from mcp.server.auth.settings import AuthSettings, ClientRegistrationOptions
@@ -664,19 +665,31 @@ def delete_transaction(ctx: ToolContext, transaction_id: int) -> str:
 # --- counters ---------------------------------------------------------------
 
 
+def _zone(name: str) -> ZoneInfo:
+    try:
+        return ZoneInfo(name)
+    except (ZoneInfoNotFoundError, ValueError):
+        raise ValueError(f'Unknown time zone: {name!r}.') from None
+
+
 @_tool
-def list_counters(ctx: ToolContext) -> list[dict[str, Any]]:
-    """List counters with their entry count and total."""
+def list_counters(ctx: ToolContext, time_zone: str = 'UTC') -> list[dict[str, Any]]:
+    """List counters with their entry count, total, streak and days since the last entry.
+
+    ``time_zone`` (IANA, e.g. ``Europe/Warsaw``) sets where days begin.
+    """
+    tz = _zone(time_zone)
     with _unit_of_work(ctx) as (session, user):
-        handler = counter_handlers.ListCounters(wiring.counter_repository(session), user)
+        handler = counter_handlers.ListCounters(wiring.counter_repository(session), user, tz)
         return counters(handler.execute())
 
 
 @_tool
-def get_counter(ctx: ToolContext, counter_id: int) -> dict[str, Any]:
-    """Fetch a single counter by id."""
+def get_counter(ctx: ToolContext, counter_id: int, time_zone: str = 'UTC') -> dict[str, Any]:
+    """Fetch a single counter by id; ``time_zone`` as in ``list_counters``."""
+    tz = _zone(time_zone)
     with _unit_of_work(ctx) as (session, user):
-        handler = counter_handlers.GetCounter(wiring.counter_repository(session), user)
+        handler = counter_handlers.GetCounter(wiring.counter_repository(session), user, tz)
         return counter(handler.execute(counter_id))
 
 

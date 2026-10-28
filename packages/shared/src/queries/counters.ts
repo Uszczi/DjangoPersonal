@@ -21,6 +21,19 @@ export type CounterEntryInput = {
   note: string;
 };
 
+/**
+ * This device's time zone: the server counts a Counter's streak in calendar
+ * days, and only the client knows where its days begin. `undefined` (no Intl
+ * time zone) leaves the server on UTC.
+ */
+function localTimeZone(): string | undefined {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** Newest first, matching the server's order (occurred_at desc, then id desc). */
 function newestFirst(entries: CounterEntryResponse[]): CounterEntryResponse[] {
   return [...entries].sort(
@@ -30,7 +43,8 @@ function newestFirst(entries: CounterEntryResponse[]): CounterEntryResponse[] {
 
 export const countersQuery = queryOptions({
   queryKey: counterKeys.all,
-  queryFn: ({ signal }) => api.countersList({ signal }),
+  queryFn: ({ signal }) =>
+    api.countersList({ tz: localTimeZone() }, { signal }),
 });
 
 export const counterEntriesQuery = (counterId: number) =>
@@ -67,7 +81,7 @@ export function useCreateCounter() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (name: string) =>
-      api.countersCreate({ counterRequest: { name } }),
+      api.countersCreate({ counterRequest: { name }, tz: localTimeZone() }),
     onSuccess: (created) => {
       // A counter with no entries yet sorts by its creation, so it goes first.
       queryClient.setQueryData(
@@ -82,7 +96,11 @@ export function useRenameCounter() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, name }: { id: number; name: string }) =>
-      api.countersPartialUpdate({ id, patchedCounterRequest: { name } }),
+      api.countersPartialUpdate({
+        id,
+        patchedCounterRequest: { name },
+        tz: localTimeZone(),
+      }),
     onSuccess: (updated) => {
       queryClient.setQueryData(countersQuery.queryKey, (list) =>
         list?.map((item) => (item.id === updated.id ? updated : item)),

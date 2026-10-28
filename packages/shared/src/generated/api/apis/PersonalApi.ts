@@ -343,6 +343,10 @@ export interface CountersCreateRequest {
      *
      */
     counterRequest: CounterRequest;
+    /**
+     * IANA time zone where days begin, e.g. Europe/Warsaw (default UTC).
+     */
+    tz?: string | null;
 }
 
 export interface CountersDestroyRequest {
@@ -350,6 +354,13 @@ export interface CountersDestroyRequest {
      *
      */
     id: number;
+}
+
+export interface CountersListRequest {
+    /**
+     * IANA time zone where days begin, e.g. Europe/Warsaw (default UTC).
+     */
+    tz?: string | null;
 }
 
 export interface CountersPartialUpdateRequest {
@@ -361,6 +372,10 @@ export interface CountersPartialUpdateRequest {
      *
      */
     patchedCounterRequest: PatchedCounterRequest;
+    /**
+     * IANA time zone where days begin, e.g. Europe/Warsaw (default UTC).
+     */
+    tz?: string | null;
 }
 
 export interface CountersRetrieveRequest {
@@ -368,6 +383,10 @@ export interface CountersRetrieveRequest {
      *
      */
     id: number;
+    /**
+     * IANA time zone where days begin, e.g. Europe/Warsaw (default UTC).
+     */
+    tz?: string | null;
 }
 
 export interface FoldersCreateRequest {
@@ -1522,6 +1541,10 @@ export class PersonalApi extends runtime.BaseAPI {
 
         const queryParameters: any = {};
 
+        if (requestParameters['tz'] != null) {
+            queryParameters['tz'] = requestParameters['tz'];
+        }
+
         const headerParameters: runtime.HTTPHeaders = {};
 
         headerParameters['Content-Type'] = 'application/json';
@@ -1619,8 +1642,12 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * Creates request options for countersList without sending the request
      */
-    async countersListRequestOpts(): Promise<runtime.RequestOpts> {
+    async countersListRequestOpts(requestParameters: CountersListRequest): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
+
+        if (requestParameters['tz'] != null) {
+            queryParameters['tz'] = requestParameters['tz'];
+        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 
@@ -1646,8 +1673,8 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * List Counters
      */
-    async countersListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<CounterResponse>>> {
-        const requestOptions = await this.countersListRequestOpts();
+    async countersListRaw(requestParameters: CountersListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<CounterResponse>>> {
+        const requestOptions = await this.countersListRequestOpts(requestParameters);
         const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(CounterResponseFromJSON));
@@ -1656,8 +1683,8 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * List Counters
      */
-    async countersList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<CounterResponse>> {
-        const response = await this.countersListRaw(initOverrides);
+    async countersList(requestParameters: CountersListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<CounterResponse>> {
+        const response = await this.countersListRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -1680,6 +1707,10 @@ export class PersonalApi extends runtime.BaseAPI {
         }
 
         const queryParameters: any = {};
+
+        if (requestParameters['tz'] != null) {
+            queryParameters['tz'] = requestParameters['tz'];
+        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 
@@ -1736,6 +1767,10 @@ export class PersonalApi extends runtime.BaseAPI {
         }
 
         const queryParameters: any = {};
+
+        if (requestParameters['tz'] != null) {
+            queryParameters['tz'] = requestParameters['tz'];
+        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 

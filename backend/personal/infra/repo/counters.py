@@ -1,3 +1,6 @@
+from collections.abc import Sequence
+from datetime import datetime
+
 from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.orm import Session
 
@@ -48,6 +51,20 @@ class CounterRepository:
         """The counter with this id for ``user`` (with count and total), or ``None``."""
         found = self._with_totals(CounterModel.id == counter_id, CounterModel.user_id == user.id)
         return found[0] if found else None
+
+    def entry_times(
+        self, counters: Sequence[CounterModel], *, user: User
+    ) -> dict[int, list[datetime]]:
+        """When each of ``user``'s entries in these counters happened, by counter id."""
+        times: dict[int, list[datetime]] = {counter.id: [] for counter in counters}
+        if not times:
+            return times
+        query = select(CounterEntryModel.counter_id, CounterEntryModel.occurred_at).where(
+            CounterEntryModel.user_id == user.id, CounterEntryModel.counter_id.in_(times)
+        )
+        for counter_id, occurred_at in self.session.execute(query):
+            times[counter_id].append(occurred_at)
+        return times
 
     def save(self, counter: CounterModel) -> CounterModel:
         """Persist a new or existing counter and return it with fresh totals."""
