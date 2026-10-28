@@ -20,12 +20,15 @@ models/PatchedCategoryRequest.ts
 models/PatchedCounterEntryRequest.ts
 models/PatchedCounterRequest.ts
 models/PatchedFolderRequest.ts
+models/PatchedPozycjaRequest.ts
 models/PatchedProjectRequest.ts
 models/PatchedTaskUpdateRequest.ts
 models/PatchedTimeEntryRequest.ts
 models/PatchedTransactionRequest.ts
 models/PatchedWalletRequest.ts
 models/PatchedWhiteboardRequest.ts
+models/PozycjaRequest.ts
+models/PozycjaResponse.ts
 models/ProjectRequest.ts
 models/ProjectResponse.ts
 models/RefreshRequest.ts

@@ -209,6 +209,38 @@
   },
   {
     "method": "GET",
+    "path": "/api/v1/pozycje/",
+    "operation_id": "pozycje_list",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/pozycje/",
+    "operation_id": "pozycje_create",
+    "status_codes": [
+      "201"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/pozycje/{id}/",
+    "operation_id": "pozycje_retrieve",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/pozycje/{id}/",
+    "operation_id": "pozycje_partial_update",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "GET",
     "path": "/api/v1/projects/",
     "operation_id": "projects_list",
     "status_codes": [

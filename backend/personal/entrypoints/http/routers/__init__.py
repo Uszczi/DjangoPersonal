@@ -13,6 +13,7 @@ from . import (
     counters,
     folders,
     notes,
+    pozycje,
     projects,
     tasks,
     time_entries,
@@ -37,6 +38,7 @@ for module in (
     categories,
     transactions,
     counters,
+    pozycje,
 ):
     router.include_router(module.router)
 

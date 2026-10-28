@@ -116,6 +116,11 @@ def normalize_counter_name(name: str) -> str:
     return name.strip()
 
 
+def normalize_pozycja_text(text: str) -> str:
+    """A Pozycja's title and creator are kept without surrounding whitespace."""
+    return text.strip()
+
+
 def normalize_folder_name(name: str) -> str:
     return name.strip()
 

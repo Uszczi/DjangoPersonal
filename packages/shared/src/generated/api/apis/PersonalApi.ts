@@ -100,6 +100,11 @@ import {
     PatchedFolderRequestToJSON,
 } from '../models/PatchedFolderRequest';
 import {
+    type PatchedPozycjaRequest,
+    PatchedPozycjaRequestFromJSON,
+    PatchedPozycjaRequestToJSON,
+} from '../models/PatchedPozycjaRequest';
+import {
     type PatchedProjectRequest,
     PatchedProjectRequestFromJSON,
     PatchedProjectRequestToJSON,
@@ -129,6 +134,16 @@ import {
     PatchedWhiteboardRequestFromJSON,
     PatchedWhiteboardRequestToJSON,
 } from '../models/PatchedWhiteboardRequest';
+import {
+    type PozycjaRequest,
+    PozycjaRequestFromJSON,
+    PozycjaRequestToJSON,
+} from '../models/PozycjaRequest';
+import {
+    type PozycjaResponse,
+    PozycjaResponseFromJSON,
+    PozycjaResponseToJSON,
+} from '../models/PozycjaResponse';
 import {
     type ProjectRequest,
     ProjectRequestFromJSON,
@@ -419,6 +434,31 @@ export interface NotesAskRequest {
      *
      */
     askNotesRequest: AskNotesRequest;
+}
+
+export interface PozycjeCreateRequest {
+    /**
+     *
+     */
+    pozycjaRequest: PozycjaRequest;
+}
+
+export interface PozycjePartialUpdateRequest {
+    /**
+     *
+     */
+    id: number;
+    /**
+     *
+     */
+    patchedPozycjaRequest: PatchedPozycjaRequest;
+}
+
+export interface PozycjeRetrieveRequest {
+    /**
+     *
+     */
+    id: number;
 }
 
 export interface ProjectsCreateRequest {
@@ -2081,6 +2121,222 @@ export class PersonalApi extends runtime.BaseAPI {
      */
     async notesAsk(requestParameters: NotesAskRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<NotesAnswer> {
         const response = await this.notesAskRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for pozycjeCreate without sending the request
+     */
+    async pozycjeCreateRequestOpts(requestParameters: PozycjeCreateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['pozycjaRequest'] == null) {
+            throw new runtime.RequiredError(
+                'pozycjaRequest',
+                'Required parameter "pozycjaRequest" was null or undefined when calling pozycjeCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/pozycje/`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PozycjaRequestToJSON(requestParameters['pozycjaRequest']),
+        };
+    }
+
+    /**
+     * Create Pozycja
+     */
+    async pozycjeCreateRaw(requestParameters: PozycjeCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PozycjaResponse>> {
+        const requestOptions = await this.pozycjeCreateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PozycjaResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Create Pozycja
+     */
+    async pozycjeCreate(requestParameters: PozycjeCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PozycjaResponse> {
+        const response = await this.pozycjeCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for pozycjeList without sending the request
+     */
+    async pozycjeListRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/pozycje/`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * List Pozycje
+     */
+    async pozycjeListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<PozycjaResponse>>> {
+        const requestOptions = await this.pozycjeListRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(PozycjaResponseFromJSON));
+    }
+
+    /**
+     * List Pozycje
+     */
+    async pozycjeList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<PozycjaResponse>> {
+        const response = await this.pozycjeListRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for pozycjePartialUpdate without sending the request
+     */
+    async pozycjePartialUpdateRequestOpts(requestParameters: PozycjePartialUpdateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling pozycjePartialUpdate().'
+            );
+        }
+
+        if (requestParameters['patchedPozycjaRequest'] == null) {
+            throw new runtime.RequiredError(
+                'patchedPozycjaRequest',
+                'Required parameter "patchedPozycjaRequest" was null or undefined when calling pozycjePartialUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/pozycje/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedPozycjaRequestToJSON(requestParameters['patchedPozycjaRequest']),
+        };
+    }
+
+    /**
+     * Update Pozycja
+     */
+    async pozycjePartialUpdateRaw(requestParameters: PozycjePartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PozycjaResponse>> {
+        const requestOptions = await this.pozycjePartialUpdateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PozycjaResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Update Pozycja
+     */
+    async pozycjePartialUpdate(requestParameters: PozycjePartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PozycjaResponse> {
+        const response = await this.pozycjePartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for pozycjeRetrieve without sending the request
+     */
+    async pozycjeRetrieveRequestOpts(requestParameters: PozycjeRetrieveRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling pozycjeRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/pozycje/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Get Pozycja
+     */
+    async pozycjeRetrieveRaw(requestParameters: PozycjeRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PozycjaResponse>> {
+        const requestOptions = await this.pozycjeRetrieveRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PozycjaResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get Pozycja
+     */
+    async pozycjeRetrieve(requestParameters: PozycjeRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PozycjaResponse> {
+        const response = await this.pozycjeRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

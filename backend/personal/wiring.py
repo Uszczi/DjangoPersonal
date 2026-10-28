@@ -31,6 +31,7 @@ from personal.infra.repo import (
     CounterRepository,
     FolderRepository,
     NoteChunkRepository,
+    PozycjaRepository,
     ProjectRepository,
     TaskRepository,
     TimeEntryRepository,
@@ -89,6 +90,10 @@ def counter_repository(session: Session) -> CounterRepository:
 
 def counter_entry_repository(session: Session) -> CounterEntryRepository:
     return CounterEntryRepository(session)
+
+
+def pozycja_repository(session: Session) -> PozycjaRepository:
+    return PozycjaRepository(session)
 
 
 def password_hasher() -> PasswordHasher:

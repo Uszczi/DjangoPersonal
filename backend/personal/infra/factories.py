@@ -23,6 +23,7 @@ from personal.infra.models import (
     Counter,
     CounterEntry,
     Folder,
+    Pozycja,
     Project,
     Task,
     TimeEntry,
@@ -188,3 +189,12 @@ class CounterEntryFactory(_Factory[CounterEntry]):
     value = 1
     occurred_at = LazyFunction(lambda: datetime.now(UTC))
     note = ''
+
+
+class PozycjaFactory(_Factory[Pozycja]):
+    class Meta:
+        model = Pozycja
+
+    user = SubFactory(UserFactory)
+    kind = Pozycja.KIND_BOOK
+    title = Sequence(lambda n: f'Pozycja {n}')
