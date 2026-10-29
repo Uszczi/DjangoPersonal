@@ -43,7 +43,7 @@ class BibliographyItem(Base):
     user: Mapped[User] = relationship()
 
     #: The BibliographyItem status, derived by the ``bibliography`` use cases; not stored.
-    #: With no Attempts yet every item is ``planned`` (Do obejrzenia / Do przeczytania).
+    #: With no Attempts yet every item is ``planned`` (to watch or to read).
     status: str = 'planned'
 
     def __repr__(self) -> str:

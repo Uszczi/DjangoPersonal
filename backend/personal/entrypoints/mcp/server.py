@@ -797,7 +797,7 @@ def delete_counter_entry(ctx: ToolContext, entry_id: int) -> str:
         return 'deleted'
 
 
-# --- bibliography: items (Pozycje) and their attempts (Podejścia) -----------
+# --- bibliography: items and their attempts ---------------------------------
 
 
 @_tool

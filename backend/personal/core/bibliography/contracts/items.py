@@ -8,7 +8,7 @@ from personal.core.shared.base import BaseModel
 ItemKind = Literal['film', 'book']
 
 #: Where a BibliographyItem stands; never sent by a client, always derived.
-#: ``planned`` is Do obejrzenia / Do przeczytania (no Attempt yet).
+#: ``planned`` means to watch or to read: no Attempt yet.
 ItemStatus = Literal['planned', 'in_progress', 'finished', 'abandoned']
 
 #: How an Attempt stands: still going, or ended one way or the other.

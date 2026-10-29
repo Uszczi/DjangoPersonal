@@ -18,7 +18,7 @@ export const ITEM_LENGTH_LABELS: Record<ItemKind, string> = {
   book: "Liczba stron",
 };
 
-/** "Do obejrzenia" for a film, "Do przeczytania" for a book, and so on. */
+/** The UI label of a status; for `planned` it depends on the kind (to watch for a film, to read for a book). */
 export function itemStatusLabel(status: ItemStatus, kind: ItemKind) {
   switch (status) {
     case "planned":
