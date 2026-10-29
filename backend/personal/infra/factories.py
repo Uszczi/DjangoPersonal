@@ -19,12 +19,12 @@ from factory.faker import Faker
 from sqlalchemy.orm import Session
 
 from personal.infra.models import (
+    Attempt,
+    BibliographyItem,
     Category,
     Counter,
     CounterEntry,
     Folder,
-    Attempt,
-    BibliographyItem,
     Project,
     Task,
     TimeEntry,

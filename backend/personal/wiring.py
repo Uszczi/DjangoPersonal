@@ -26,13 +26,13 @@ from personal.infra.models import User
 from personal.infra.ollama import OllamaEmbedder
 from personal.infra.rate_limit import InMemoryRateLimiter, RedisRateLimiter
 from personal.infra.repo import (
+    AttemptRepository,
+    BibliographyItemRepository,
     CategoryRepository,
     CounterEntryRepository,
     CounterRepository,
     FolderRepository,
     NoteChunkRepository,
-    AttemptRepository,
-    BibliographyItemRepository,
     ProjectRepository,
     TaskRepository,
     TimeEntryRepository,

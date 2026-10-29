@@ -1,6 +1,7 @@
 """Storage errors; defined in :mod:`personal.infra.errors` so the models can raise them too."""
 
 from personal.infra.errors import (
+    AttemptAlreadyInProgress,
     DuplicateCategoryName,
     DuplicateFolderName,
     DuplicateProjectName,
@@ -9,13 +10,13 @@ from personal.infra.errors import (
     DuplicateWhiteboardName,
     InboxProtected,
     InvalidFolderName,
-    AttemptAlreadyInProgress,
     ProjectHasTimeEntries,
     RepositoryError,
     TaskHasTimeEntries,
 )
 
 __all__ = [
+    'AttemptAlreadyInProgress',
     'DuplicateCategoryName',
     'DuplicateFolderName',
     'DuplicateProjectName',
@@ -24,7 +25,6 @@ __all__ = [
     'DuplicateWhiteboardName',
     'InboxProtected',
     'InvalidFolderName',
-    'AttemptAlreadyInProgress',
     'ProjectHasTimeEntries',
     'RepositoryError',
     'TaskHasTimeEntries',

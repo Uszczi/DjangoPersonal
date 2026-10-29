@@ -877,15 +877,14 @@ def update_bibliography_item(
         return bibliography_item(handler.execute(item_id, payload))
 
 
-def _attempt_handlers(
-    session: Session, user: User
-) -> tuple[bibliography_handlers.CreateAttempt, bibliography_handlers.UpdateAttempt]:
-    attempts_repo = wiring.attempt_repository(session)
-    items_repo = wiring.bibliography_item_repository(session)
-    return (
-        bibliography_handlers.CreateAttempt(attempts_repo, items_repo, user),
-        bibliography_handlers.UpdateAttempt(attempts_repo, user),
+def _create_attempt(session: Session, user: User) -> bibliography_handlers.CreateAttempt:
+    return bibliography_handlers.CreateAttempt(
+        wiring.attempt_repository(session), wiring.bibliography_item_repository(session), user
     )
+
+
+def _update_attempt(session: Session, user: User) -> bibliography_handlers.UpdateAttempt:
+    return bibliography_handlers.UpdateAttempt(wiring.attempt_repository(session), user)
 
 
 def _today(time_zone: str) -> date_type:
@@ -916,8 +915,7 @@ def start_attempt(
         {'item': item_id, 'outcome': 'in_progress', 'started_on': started_on, 'progress': progress}
     )
     with _unit_of_work(ctx) as (session, user):
-        create, _ = _attempt_handlers(session, user)
-        return attempt(create.execute(payload))
+        return attempt(_create_attempt(session, user).execute(payload))
 
 
 @_tool
@@ -940,8 +938,7 @@ def record_attempt(
         }
     )
     with _unit_of_work(ctx) as (session, user):
-        create, _ = _attempt_handlers(session, user)
-        return attempt(create.execute(payload))
+        return attempt(_create_attempt(session, user).execute(payload))
 
 
 def _end_attempt(
@@ -955,8 +952,7 @@ def _end_attempt(
         {'outcome': outcome, 'ended_on': ended_on if ended_on is not None else _today(time_zone)}
     )
     with _unit_of_work(ctx) as (session, user):
-        _, update = _attempt_handlers(session, user)
-        return attempt(update.execute(attempt_id, payload))
+        return attempt(_update_attempt(session, user).execute(attempt_id, payload))
 
 
 @_tool
@@ -993,8 +989,7 @@ def update_attempt(
         fields['progress'] = None
     payload = PatchedAttemptRequest.model_validate(fields)
     with _unit_of_work(ctx) as (session, user):
-        _, update = _attempt_handlers(session, user)
-        return attempt(update.execute(attempt_id, payload))
+        return attempt(_update_attempt(session, user).execute(attempt_id, payload))
 
 
 # --- notatnik: folders, whiteboards and Notatki -----------------------------
