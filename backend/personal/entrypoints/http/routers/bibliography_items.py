@@ -28,7 +28,7 @@ def list_bibliography_items(
     listed = handlers.ListBibliographyItems(items, attempts, user).execute(
         status=status, kind=kind
     )
-    return [BibliographyItemResponse.model_validate(item) for item in listed]
+    return [BibliographyItemResponse.from_item(entry.item, entry.status) for entry in listed]
 
 
 @router.post(
@@ -39,8 +39,8 @@ def list_bibliography_items(
 def create_bibliography_item(
     payload: BibliographyItemRequest, user: CurrentUser, items: BibliographyItemRepositoryDep
 ) -> BibliographyItemResponse:
-    item = handlers.CreateBibliographyItem(items, user).execute(payload)
-    return BibliographyItemResponse.model_validate(item)
+    created = handlers.CreateBibliographyItem(items, user).execute(payload)
+    return BibliographyItemResponse.from_item(created.item, created.status)
 
 
 @router.get('/bibliography-items/{id}/', operation_id='bibliography_items_retrieve')
@@ -50,8 +50,8 @@ def get_bibliography_item(
     items: BibliographyItemRepositoryDep,
     attempts: AttemptRepositoryDep,
 ) -> BibliographyItemResponse:
-    item = handlers.GetBibliographyItem(items, attempts, user).execute(id)
-    return BibliographyItemResponse.model_validate(item)
+    found = handlers.GetBibliographyItem(items, attempts, user).execute(id)
+    return BibliographyItemResponse.from_item(found.item, found.status)
 
 
 @router.patch('/bibliography-items/{id}/', operation_id='bibliography_items_partial_update')
@@ -62,5 +62,5 @@ def update_bibliography_item(
     items: BibliographyItemRepositoryDep,
     attempts: AttemptRepositoryDep,
 ) -> BibliographyItemResponse:
-    item = handlers.UpdateBibliographyItem(items, attempts, user).execute(id, payload)
-    return BibliographyItemResponse.model_validate(item)
+    updated = handlers.UpdateBibliographyItem(items, attempts, user).execute(id, payload)
+    return BibliographyItemResponse.from_item(updated.item, updated.status)

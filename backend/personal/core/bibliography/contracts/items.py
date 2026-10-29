@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Self
 
 from pydantic import ConfigDict, Field, field_validator
 
@@ -73,3 +73,9 @@ class BibliographyItemResponse(BaseModel):
     note: str
     status: ItemStatus = Field(..., json_schema_extra={'readOnly': True})
     created_at: datetime = Field(..., json_schema_extra={'readOnly': True})
+
+    @classmethod
+    def from_item(cls, item: object, status: ItemStatus) -> Self:
+        """Read the stored fields off the item; the status is derived, so it comes apart."""
+        fields = {name: getattr(item, name) for name in cls.model_fields if name != 'status'}
+        return cls.model_validate({**fields, 'status': status})

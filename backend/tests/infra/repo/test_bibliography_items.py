@@ -15,7 +15,6 @@ def test_save_trims_title_and_creator(session: Session, user: User) -> None:
 
     assert item.title == 'Rejs'
     assert item.creator == 'Marek Piwowski'
-    assert item.status == 'planned'
 
 
 def test_list_and_find_see_only_the_users_items(session: Session, user: User) -> None:

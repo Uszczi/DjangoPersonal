@@ -4,8 +4,10 @@ from .attempts import CreateAttempt, GetAttempt, ListAttempts, UpdateAttempt
 from .items import (
     CreateBibliographyItem,
     GetBibliographyItem,
+    ItemWithStatus,
     ListBibliographyItems,
     UpdateBibliographyItem,
+    item_statuses,
 )
 
 __all__ = [
@@ -14,9 +16,11 @@ __all__ = [
     'DomainError',
     'GetAttempt',
     'GetBibliographyItem',
+    'ItemWithStatus',
     'ListAttempts',
     'ListBibliographyItems',
     'NotFound',
     'UpdateAttempt',
     'UpdateBibliographyItem',
+    'item_statuses',
 ]

@@ -13,7 +13,7 @@ from personal.infra.repo import (
 from ..contracts import AttemptRequest, PatchedAttemptRequest
 from ..progress import check_progress_within_length
 from ..status import is_in_progress
-from .items import _get_bibliography_item
+from .items import get_bibliography_item
 
 ALREADY_IN_PROGRESS = 'This bibliography item already has an Attempt in progress.'
 PROGRESS_ONLY_IN_PROGRESS = 'Progress is set only on an Attempt in progress.'
@@ -108,7 +108,7 @@ class ListAttempts:
         self.user = user
 
     def execute(self, item_id: int) -> list[AttemptModel]:
-        item = _get_bibliography_item(self.items, item_id, user=self.user)
+        item = get_bibliography_item(self.items, item_id, user=self.user)
         return history_order(self.attempts.list_for_item(item.id, user=self.user))
 
 
@@ -132,7 +132,7 @@ class CreateAttempt:
         self.user = user
 
     def execute(self, data: AttemptRequest) -> AttemptModel:
-        item = _get_bibliography_item(self.items, data.item, user=self.user)
+        item = get_bibliography_item(self.items, data.item, user=self.user)
         others = self.attempts.list_for_item(item.id, user=self.user)
         attempt = AttemptModel(
             user=self.user,

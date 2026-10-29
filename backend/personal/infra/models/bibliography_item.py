@@ -13,12 +13,11 @@ from .user import User
 class BibliographyItem(Base):
     """One film or one book a user tracks in the Bibliography.
 
-    Its status is not stored: it follows from its Attempts (see ``GLOSSARY.md``).
+    Its status is not stored: the ``bibliography`` use cases derive it from its Attempts
+    (see ``GLOSSARY.md``).
     """
 
     __tablename__ = 'bibliography_items'
-    # ``status`` below is a plain annotation, not a column.
-    __allow_unmapped__ = True
     __table_args__ = (
         CheckConstraint("kind IN ('film', 'book')", name='kind'),
         CheckConstraint('year IS NULL OR year > 0', name='year_positive'),
@@ -41,10 +40,6 @@ class BibliographyItem(Base):
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utc_now)
 
     user: Mapped[User] = relationship()
-
-    #: The BibliographyItem status, derived by the ``bibliography`` use cases; not stored.
-    #: With no Attempts yet every item is ``planned`` (to watch or to read).
-    status: str = 'planned'
 
     def __repr__(self) -> str:
         return f'<BibliographyItem {self.id} {self.kind} {self.title!r}>'

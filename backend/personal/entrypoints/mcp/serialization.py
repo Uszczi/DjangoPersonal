@@ -7,6 +7,7 @@ from typing import Any
 
 from personal.core.accounts.contracts.auth import UserResponse
 from personal.core.bibliography.contracts import AttemptResponse, BibliographyItemResponse
+from personal.core.bibliography.handlers import ItemWithStatus
 from personal.core.counters.contracts import CounterEntryResponse, CounterResponse
 from personal.core.expenses.contracts import (
     CategoryResponse,
@@ -24,7 +25,6 @@ from personal.core.work.contracts import (
 )
 from personal.infra.models import (
     Attempt,
-    BibliographyItem,
     Category,
     Counter,
     CounterEntry,
@@ -119,11 +119,11 @@ def counter_entries(objs: Iterable[CounterEntry]) -> list[dict[str, Any]]:
     return [counter_entry(o) for o in objs]
 
 
-def bibliography_item(obj: BibliographyItem) -> dict[str, Any]:
-    return BibliographyItemResponse.model_validate(obj).model_dump(mode='json')
+def bibliography_item(obj: ItemWithStatus) -> dict[str, Any]:
+    return BibliographyItemResponse.from_item(obj.item, obj.status).model_dump(mode='json')
 
 
-def bibliography_items(objs: Iterable[BibliographyItem]) -> list[dict[str, Any]]:
+def bibliography_items(objs: Iterable[ItemWithStatus]) -> list[dict[str, Any]]:
     return [bibliography_item(o) for o in objs]
 
 

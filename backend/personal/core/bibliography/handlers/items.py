@@ -1,3 +1,6 @@
+from collections.abc import Sequence
+from typing import NamedTuple
+
 from personal.core.shared.errors import NotFound
 from personal.core.shared.patch import apply_provided
 from personal.infra.models import BibliographyItem as BibliographyItemModel
@@ -14,23 +17,40 @@ from ..progress import check_progress_within_length
 from ..status import item_status
 
 
-def _get_bibliography_item(
+class ItemWithStatus(NamedTuple):
+    """A BibliographyItem and its status, which is derived and never stored on it."""
+
+    item: BibliographyItemModel
+    status: ItemStatus
+
+
+def get_bibliography_item(
     repository: BibliographyItemRepository, item_id: int, *, user: User
 ) -> BibliographyItemModel:
+    """The user's BibliographyItem, or ``NotFound``."""
     item = repository.find(item_id, user=user)
     if item is None:
         raise NotFound('Bibliography item not found.')
     return item
 
 
+def item_statuses(
+    attempts: AttemptRepository, items: Sequence[BibliographyItemModel], *, user: User
+) -> dict[int, ItemStatus]:
+    """Each of the user's BibliographyItems' status (by id), from its Attempts.
+
+    The one place the status is derived from storage: the use cases and the admin
+    panel both ask here, so they always agree.
+    """
+    by_item = attempts.by_item(items, user=user)
+    return {item.id: item_status(by_item[item.id]) for item in items}
+
+
 def _with_status(
     attempts: AttemptRepository, items: list[BibliographyItemModel], *, user: User
-) -> list[BibliographyItemModel]:
-    """Set each BibliographyItem's derived status from its Attempts."""
-    by_item = attempts.by_item(items, user=user)
-    for item in items:
-        item.status = item_status(by_item[item.id])
-    return items
+) -> list[ItemWithStatus]:
+    statuses = item_statuses(attempts, items, user=user)
+    return [ItemWithStatus(item, statuses[item.id]) for item in items]
 
 
 class ListBibliographyItems:
@@ -49,13 +69,13 @@ class ListBibliographyItems:
 
     def execute(
         self, *, status: ItemStatus | None = None, kind: ItemKind | None = None
-    ) -> list[BibliographyItemModel]:
-        items = _with_status(
+    ) -> list[ItemWithStatus]:
+        listed = _with_status(
             self.attempts, self.items.list_all(user=self.user, kind=kind), user=self.user
         )
         if status is None:
-            return items
-        return [item for item in items if item.status == status]
+            return listed
+        return [entry for entry in listed if entry.status == status]
 
 
 class GetBibliographyItem:
@@ -66,8 +86,8 @@ class GetBibliographyItem:
         self.attempts = attempts
         self.user = user
 
-    def execute(self, item_id: int) -> BibliographyItemModel:
-        item = _get_bibliography_item(self.items, item_id, user=self.user)
+    def execute(self, item_id: int) -> ItemWithStatus:
+        item = get_bibliography_item(self.items, item_id, user=self.user)
         return _with_status(self.attempts, [item], user=self.user)[0]
 
 
@@ -78,8 +98,9 @@ class CreateBibliographyItem:
         self.items = items
         self.user = user
 
-    def execute(self, data: BibliographyItemRequest) -> BibliographyItemModel:
-        return self.items.save(BibliographyItemModel(user=self.user, **data.model_dump()))
+    def execute(self, data: BibliographyItemRequest) -> ItemWithStatus:
+        item = self.items.save(BibliographyItemModel(user=self.user, **data.model_dump()))
+        return ItemWithStatus(item, 'planned')
 
 
 class UpdateBibliographyItem:
@@ -95,8 +116,8 @@ class UpdateBibliographyItem:
         self.attempts = attempts
         self.user = user
 
-    def execute(self, item_id: int, data: PatchedBibliographyItemRequest) -> BibliographyItemModel:
-        item = _get_bibliography_item(self.items, item_id, user=self.user)
+    def execute(self, item_id: int, data: PatchedBibliographyItemRequest) -> ItemWithStatus:
+        item = get_bibliography_item(self.items, item_id, user=self.user)
         attempts = self.attempts.list_for_item(item.id, user=self.user)
         apply_provided(data, item)
         for attempt in attempts:

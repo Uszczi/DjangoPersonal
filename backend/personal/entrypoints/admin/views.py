@@ -19,7 +19,9 @@ from sqladmin.pagination import Pagination
 from sqlalchemy.orm import Session
 from starlette.requests import Request
 
-from personal.core.bibliography.status import item_status
+from personal import wiring
+from personal.core.bibliography.contracts import ItemStatus
+from personal.core.bibliography.handlers import item_statuses
 from personal.infra.models import (
     Attempt,
     BibliographyItem,
@@ -36,7 +38,6 @@ from personal.infra.models import (
     Whiteboard,
 )
 from personal.infra.repo import (
-    AttemptRepository,
     FolderRepository,
     ProjectRepository,
     UserRepository,
@@ -223,28 +224,53 @@ class BibliographyItemView(_AppView, model=BibliographyItem):
 
     async def list(self, request: Request) -> Pagination:
         page = await super().list(request)
-        await anyio.to_thread.run_sync(self._derive_statuses, page.rows)
+        request.state.item_statuses = await anyio.to_thread.run_sync(
+            self._derive_statuses, page.rows
+        )
         return page
 
     async def get_object_for_details(self, request: Request) -> Any:
         item = await super().get_object_for_details(request)
         if item is not None:
-            await anyio.to_thread.run_sync(self._derive_statuses, [item])
+            request.state.item_statuses = await anyio.to_thread.run_sync(
+                self._derive_statuses, [item]
+            )
         return item
 
-    def _derive_statuses(self, items: Sequence[BibliographyItem]) -> None:
-        """Set each item's ``status``; the rows span users, so ask per owner."""
+    async def get_list_value(
+        self, obj: Any, prop: str, request: Request | None = None
+    ) -> tuple[Any, Any]:
+        if prop == 'status':
+            return self._status_value(obj, request)
+        return await super().get_list_value(obj, prop, request)
+
+    async def get_detail_value(
+        self, obj: Any, prop: str, request: Request | None = None
+    ) -> tuple[Any, Any]:
+        if prop == 'status':
+            return self._status_value(obj, request)
+        return await super().get_detail_value(obj, prop, request)
+
+    @staticmethod
+    def _status_value(item: BibliographyItem, request: Request | None) -> tuple[str, str]:
+        statuses: dict[int, str] = getattr(request.state, 'item_statuses', {}) if request else {}
+        status = statuses.get(item.id, '')
+        return status, status
+
+    def _derive_statuses(self, items: Sequence[BibliographyItem]) -> dict[int, ItemStatus]:
+        """Each item's status, as the app derives it; the rows span users, so ask per owner."""
         by_owner: defaultdict[int, list[BibliographyItem]] = defaultdict(list)
         for item in items:
             by_owner[item.user_id].append(item)
+        statuses: dict[int, ItemStatus] = {}
         with self.session_maker() as session:
-            repository = AttemptRepository(session)
+            users = wiring.user_repository(session)
+            attempts = wiring.attempt_repository(session)
             for owner_id, owned in by_owner.items():
-                owner = session.get(User, owner_id)
+                owner = users.find(owner_id)
                 assert owner is not None
-                attempts = repository.by_item(owned, user=owner)
-                for item in owned:
-                    item.status = item_status(attempts[item.id])
+                statuses.update(item_statuses(attempts, owned, user=owner))
+        return statuses
 
 
 class AttemptView(_AppView, model=Attempt):
