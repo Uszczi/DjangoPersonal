@@ -16,6 +16,7 @@ from . import (
     folders,
     notes,
     projects,
+    settings,
     tasks,
     time_entries,
     timer,
@@ -28,6 +29,7 @@ from . import (
 router = APIRouter()
 for module in (
     auth,
+    settings,
     projects,
     tasks,
     time_entries,

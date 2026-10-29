@@ -150,6 +150,11 @@ import {
     PatchedTransactionRequestToJSON,
 } from '../models/PatchedTransactionRequest';
 import {
+    type PatchedUserSettingsRequest,
+    PatchedUserSettingsRequestFromJSON,
+    PatchedUserSettingsRequestToJSON,
+} from '../models/PatchedUserSettingsRequest';
+import {
     type PatchedWalletRequest,
     PatchedWalletRequestFromJSON,
     PatchedWalletRequestToJSON,
@@ -234,6 +239,11 @@ import {
     UserResponseFromJSON,
     UserResponseToJSON,
 } from '../models/UserResponse';
+import {
+    type UserSettingsResponse,
+    UserSettingsResponseFromJSON,
+    UserSettingsResponseToJSON,
+} from '../models/UserSettingsResponse';
 import {
     type WalletCreateRequest,
     WalletCreateRequestFromJSON,
@@ -574,6 +584,13 @@ export interface ProjectsUpdateRequest {
      *
      */
     projectRequest: ProjectRequest;
+}
+
+export interface SettingsPartialUpdateRequest {
+    /**
+     *
+     */
+    patchedUserSettingsRequest: PatchedUserSettingsRequest;
 }
 
 export interface TasksCreateRequest {
@@ -3079,6 +3096,106 @@ export class PersonalApi extends runtime.BaseAPI {
      */
     async projectsUpdate(requestParameters: ProjectsUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ProjectResponse> {
         const response = await this.projectsUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for settingsPartialUpdate without sending the request
+     */
+    async settingsPartialUpdateRequestOpts(requestParameters: SettingsPartialUpdateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['patchedUserSettingsRequest'] == null) {
+            throw new runtime.RequiredError(
+                'patchedUserSettingsRequest',
+                'Required parameter "patchedUserSettingsRequest" was null or undefined when calling settingsPartialUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/settings/`;
+
+        return {
+            path: urlPath,
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedUserSettingsRequestToJSON(requestParameters['patchedUserSettingsRequest']),
+        };
+    }
+
+    /**
+     * Update Settings
+     */
+    async settingsPartialUpdateRaw(requestParameters: SettingsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserSettingsResponse>> {
+        const requestOptions = await this.settingsPartialUpdateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => UserSettingsResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Update Settings
+     */
+    async settingsPartialUpdate(requestParameters: SettingsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserSettingsResponse> {
+        const response = await this.settingsPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for settingsRetrieve without sending the request
+     */
+    async settingsRetrieveRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/settings/`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Get Settings
+     */
+    async settingsRetrieveRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserSettingsResponse>> {
+        const requestOptions = await this.settingsRetrieveRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => UserSettingsResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get Settings
+     */
+    async settingsRetrieve(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserSettingsResponse> {
+        const response = await this.settingsRetrieveRaw(initOverrides);
         return await response.value();
     }
 

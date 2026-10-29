@@ -1,45 +1,72 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Stack, router, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { Platform, Pressable, RefreshControl, Text, View } from "react-native";
 import {
-  Pressable,
-  RefreshControl,
-  SectionList,
-  Text,
-  View,
-} from "react-native";
+  NestedReorderableList,
+  ScrollViewContainer,
+  useReorderableDrag,
+  type ReorderableListReorderEvent,
+} from "react-native-reorderable-list";
+import { scheduleOnRN } from "react-native-worklets";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import type { TaskResponse } from "@personal/shared/generated/api";
 import { TASKS_LOAD_ERROR } from "@personal/shared/loadErrors";
 import { useProjects } from "@personal/shared/queries/projects";
 import {
+  useMoveTask,
   useProjectTasks,
   useToggleTaskStatus,
 } from "@personal/shared/queries/tasks";
 import { useStartTimer } from "@personal/shared/queries/timer";
 
-import { Button } from "../../src/Button";
 import { Fab } from "../../src/Fab";
+import { ScreenHeader } from "../../src/ScreenHeader";
 import { makeStyles, fonts, useTheme } from "../../src/theme";
 
-type StatusSection = { title: string; data: TaskResponse[] };
+// A plain boolean, so the drag worklets capture it instead of `Platform`.
+const isAndroid = Platform.OS === "android";
 
-/** One section per status, in the Project's order, like the web task list. */
+type StatusSection = {
+  title: string;
+  /** How many Tasks have this status, shown even while collapsed. */
+  count: number;
+  isCollapsed: boolean;
+  data: TaskResponse[];
+};
+
+/**
+ * One section per status, in the Project's order, like the web task list. A
+ * collapsed section keeps its header but renders no rows.
+ */
 function sectionsByStatus(
   tasks: TaskResponse[],
   statuses: string[],
+  collapsed: ReadonlySet<string>,
 ): StatusSection[] {
   const order = [...statuses, ...tasks.map((task) => task.status)];
   const titles = [...new Set(order)];
   return titles
-    .map((title) => ({
-      title,
-      data: tasks.filter((task) => task.status === title),
-    }))
-    .filter((section) => section.data.length > 0);
+    .map((title) => {
+      const statusTasks = tasks.filter((task) => task.status === title);
+      const isCollapsed = collapsed.has(title);
+      return {
+        title,
+        count: statusTasks.length,
+        isCollapsed,
+        data: isCollapsed ? [] : statusTasks,
+      };
+    })
+    .filter((section) => section.count > 0);
 }
 
+/**
+ * The Tasks of one Project, one collapsible section per status. Each section
+ * is its own reorderable list, so a long press drags a Task only within its
+ * status, the same constraint as the web, where Tasks are ordered within
+ * their status.
+ */
 export default function ProjectTasksScreen() {
   const { colors, common } = useTheme();
   const styles = useStyles();
@@ -50,9 +77,23 @@ export default function ProjectTasksScreen() {
   const project = projects.find((item) => item.id === projectId) ?? null;
   const tasksQuery = useProjectTasks(project);
   const toggleTaskStatus = useToggleTaskStatus();
+  const moveTask = useMoveTask();
   const startTaskTimer = useStartTimer();
   const [actionError, setActionError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [collapsedStatuses, setCollapsedStatuses] = useState<
+    ReadonlySet<string>
+  >(new Set());
+
+  function toggleSection(status: string) {
+    setCollapsedStatuses((current) => {
+      const next = new Set(current);
+      if (next.has(status)) next.delete(status);
+      else next.add(status);
+      return next;
+    });
+  }
 
   async function refresh() {
     setIsRefreshing(true);
@@ -80,110 +121,133 @@ export default function ProjectTasksScreen() {
     router.navigate("/time");
   }
 
+  async function reorder(section: StatusSection, from: number, to: number) {
+    const task = section.data[from];
+    if (!task || from === to) return;
+    setActionError("");
+    try {
+      // The cached list moves at once; a refused move snaps back on reload.
+      await moveTask.mutateAsync({ task, position: to });
+    } catch (error) {
+      setActionError(await apiErrorMessage(error));
+    }
+  }
+
+  // On Android a pull-to-refresh can fight the drag (the library's advice):
+  // switch it off while a Task is held.
+  const handleDragStart = useCallback(() => {
+    "worklet";
+    if (isAndroid) scheduleOnRN(setIsDragging, true);
+  }, []);
+  const handleDragEnd = useCallback(() => {
+    "worklet";
+    if (isAndroid) scheduleOnRN(setIsDragging, false);
+  }, []);
+
   const tasks = tasksQuery.data ?? null;
   const terminalStatus = project?.terminalStatus;
   const errorMessage = tasksQuery.isError ? TASKS_LOAD_ERROR : actionError;
   const sections = sectionsByStatus(
     tasks ?? [],
     project?.projectStatuses ?? [],
+    collapsedStatuses,
   );
 
   return (
     <View style={common.screen}>
-      <Stack.Screen options={{ title: project?.name ?? "Zadania" }} />
-      <SectionList
-        sections={sections}
-        keyExtractor={(task) => String(task.id)}
+      <Stack.Screen
+        options={{
+          header: () => (
+            <ScreenHeader
+              title={project?.name ?? "Zadania"}
+              actions={
+                project
+                  ? [
+                      {
+                        icon: "pencil",
+                        accessibilityLabel: "Edytuj projekt",
+                        onPress: () =>
+                          router.push({
+                            pathname: "/project",
+                            params: { projectId },
+                          }),
+                      },
+                    ]
+                  : []
+              }
+            />
+          ),
+        }}
+      />
+      <ScrollViewContainer
         contentContainerStyle={styles.listContent}
-        stickySectionHeadersEnabled={false}
         refreshControl={
           <RefreshControl
+            enabled={!isDragging || isRefreshing}
             refreshing={isRefreshing || (tasks === null && !tasksQuery.isError)}
             onRefresh={() => void refresh()}
           />
         }
-        ListHeaderComponent={
-          <View style={styles.header}>
-            {project?.description ? (
-              <Text style={common.muted}>{project.description}</Text>
-            ) : null}
-            {project && (
-              <View style={{ flexDirection: "row" }}>
-                <Button
-                  label="Edytuj projekt"
-                  variant="secondary"
-                  onPress={() =>
-                    router.push({ pathname: "/project", params: { projectId } })
-                  }
-                />
-              </View>
-            )}
-            {errorMessage !== "" && (
-              <Text style={styles.error}>{errorMessage}</Text>
-            )}
-          </View>
-        }
-        ListEmptyComponent={
-          tasks !== null ? (
-            <Text style={[common.muted, styles.empty]}>
-              Brak zadań w tym projekcie.
-            </Text>
-          ) : undefined
-        }
-        renderSectionHeader={({ section }) => (
-          <Text style={styles.sectionTitle}>
-            {section.title.toUpperCase()} · {section.data.length}
+      >
+        <View style={styles.header}>
+          {project?.description ? (
+            <Text style={common.muted}>{project.description}</Text>
+          ) : null}
+          {errorMessage !== "" && (
+            <Text style={styles.error}>{errorMessage}</Text>
+          )}
+        </View>
+        {tasks !== null && sections.length === 0 && (
+          <Text style={[common.muted, styles.empty]}>
+            Brak zadań w tym projekcie.
           </Text>
         )}
-        renderItem={({ item }) => {
-          const isDone = item.status === terminalStatus;
-          return (
+        {sections.map((section) => (
+          <View key={section.title}>
             <Pressable
-              style={common.row}
+              style={styles.sectionHeader}
               accessibilityRole="button"
-              accessibilityLabel={`Edytuj zadanie: ${item.title}`}
-              onPress={() =>
-                router.push({
-                  pathname: "/task",
-                  params: { taskId: item.id, projectId },
-                })
-              }
+              accessibilityState={{ expanded: !section.isCollapsed }}
+              accessibilityLabel={`${section.isCollapsed ? "Rozwiń" : "Zwiń"} status ${section.title}`}
+              onPress={() => toggleSection(section.title)}
             >
-              <Pressable
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: isDone }}
-                accessibilityLabel={`${isDone ? "Otwórz zadanie" : "Oznacz jako ukończone"}: ${item.title}`}
-                hitSlop={12}
-                onPress={() => void toggleTask(item)}
-                style={[styles.checkbox, isDone && styles.checkboxChecked]}
-              >
-                {isDone && <Text style={styles.checkmark}>✓</Text>}
-              </Pressable>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.title, isDone && styles.titleDone]}>
-                  {item.title}
-                </Text>
-                {item.description !== "" && (
-                  <Text style={common.rowSubtitle} numberOfLines={1}>
-                    {item.description}
-                  </Text>
-                )}
-              </View>
-              {!isDone && (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={`Uruchom timer: ${item.title}`}
-                  hitSlop={10}
-                  onPress={() => void startTimer(item)}
-                  style={styles.play}
-                >
-                  <Ionicons name="play" size={16} color={colors.signal} />
-                </Pressable>
-              )}
+              <Ionicons
+                name={section.isCollapsed ? "chevron-forward" : "chevron-down"}
+                size={14}
+                color={colors.muted}
+              />
+              <Text style={styles.sectionTitle}>
+                {section.title.toUpperCase()} · {section.count}
+              </Text>
             </Pressable>
-          );
-        }}
-      />
+            {!section.isCollapsed && (
+              <NestedReorderableList
+                data={section.data}
+                keyExtractor={(task) => String(task.id)}
+                onReorder={({ from, to }: ReorderableListReorderEvent) =>
+                  void reorder(section, from, to)
+                }
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                renderItem={({ item }) => (
+                  <TaskRow
+                    task={item}
+                    isDone={item.status === terminalStatus}
+                    onOpen={() =>
+                      router.push({
+                        pathname: "/task",
+                        params: { taskId: item.id, projectId },
+                      })
+                    }
+                    onToggle={() => void toggleTask(item)}
+                    onStartTimer={() => void startTimer(item)}
+                  />
+                )}
+              />
+            )}
+          </View>
+        ))}
+      </ScrollViewContainer>
       <Fab
         accessibilityLabel="Dodaj zadanie"
         onPress={() =>
@@ -194,21 +258,105 @@ export default function ProjectTasksScreen() {
   );
 }
 
+/**
+ * One Task in a reorderable section. A long press anywhere on the row, or a
+ * shorter one on the grip, picks it up; taps still open it, tick it off or
+ * start its timer, and a plain swipe scrolls the list.
+ */
+function TaskRow({
+  task,
+  isDone,
+  onOpen,
+  onToggle,
+  onStartTimer,
+}: {
+  task: TaskResponse;
+  isDone: boolean;
+  onOpen: () => void;
+  onToggle: () => void;
+  onStartTimer: () => void;
+}) {
+  const { colors, common } = useTheme();
+  const styles = useStyles();
+  const drag = useReorderableDrag();
+
+  return (
+    <Pressable
+      style={[common.row, styles.row]}
+      accessibilityRole="button"
+      accessibilityLabel={`Edytuj zadanie: ${task.title}`}
+      accessibilityHint="Przytrzymaj, aby zmienić kolejność"
+      onPress={onOpen}
+      onLongPress={drag}
+    >
+      <Pressable
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: isDone }}
+        accessibilityLabel={`${isDone ? "Otwórz zadanie" : "Oznacz jako ukończone"}: ${task.title}`}
+        hitSlop={12}
+        onPress={onToggle}
+        style={[styles.checkbox, isDone && styles.checkboxChecked]}
+      >
+        {isDone && <Text style={styles.checkmark}>✓</Text>}
+      </Pressable>
+      <View style={{ flex: 1 }}>
+        <Text style={[styles.title, isDone && styles.titleDone]}>
+          {task.title}
+        </Text>
+        {task.description !== "" && (
+          <Text style={common.rowSubtitle} numberOfLines={1}>
+            {task.description}
+          </Text>
+        )}
+      </View>
+      {!isDone && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Uruchom timer: ${task.title}`}
+          hitSlop={10}
+          onPress={onStartTimer}
+          style={styles.play}
+        >
+          <Ionicons name="play" size={16} color={colors.signal} />
+        </Pressable>
+      )}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Przenieś zadanie: ${task.title}`}
+        accessibilityHint="Przytrzymaj i przeciągnij, aby zmienić kolejność"
+        hitSlop={8}
+        delayLongPress={150}
+        onLongPress={drag}
+        style={styles.grip}
+      >
+        <Ionicons name="reorder-three" size={22} color={colors.muted} />
+      </Pressable>
+    </Pressable>
+  );
+}
+
 const useStyles = makeStyles((colors) => ({
   header: { padding: 16, gap: 12 },
   error: { color: colors.danger },
   empty: { padding: 24, textAlign: "center" },
   listContent: { paddingBottom: 96 },
-  sectionTitle: {
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 6,
+  },
+  sectionTitle: {
     fontFamily: fonts.utility,
     fontSize: 11,
     fontWeight: "600",
     letterSpacing: 0.9,
     color: colors.muted,
   },
+  // A dragged row floats over its neighbours, so it needs its own fill.
+  row: { backgroundColor: colors.canvas },
   checkbox: {
     width: 22,
     height: 22,
@@ -232,6 +380,12 @@ const useStyles = makeStyles((colors) => ({
     borderWidth: 1,
     borderColor: "transparent",
     backgroundColor: colors.iconWash,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  grip: {
+    width: 28,
+    height: 34,
     alignItems: "center",
     justifyContent: "center",
   },

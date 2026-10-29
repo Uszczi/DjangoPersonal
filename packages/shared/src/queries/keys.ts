@@ -15,6 +15,11 @@ import {
   type ItemStatus,
 } from "../bibliographyFormat";
 
+/** The account's settings (the theme). */
+export const settingsKeys = {
+  all: ["settings"] as const,
+};
+
 export const categoryKeys = {
   all: ["categories"] as const,
 };

@@ -492,6 +492,18 @@ export const themePreferenceLabels: Record<ThemePreference, string> = {
   ) as Record<ThemeName, string>),
 };
 
+/**
+ * A stored theme id as a preference. The server keeps any well-formed id
+ * without knowing the palettes, so an id this client does not have (a theme
+ * removed since, or added by a newer client) falls back to following the system.
+ */
+export function toThemePreference(id: unknown): ThemePreference {
+  return typeof id === "string" &&
+    (id === "system" || Object.hasOwn(themes, id))
+    ? (id as ThemePreference)
+    : "system";
+}
+
 /** The theme to show for a preference, given the system's scheme (null when unknown). */
 export function resolveTheme(
   preference: ThemePreference,

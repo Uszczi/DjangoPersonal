@@ -15,6 +15,10 @@ import { ShowModal } from "@/stores/modal";
 import type { TaskResponse } from "@personal/shared/generated/api";
 import { useProjects } from "@personal/shared/queries/projects";
 import { useSaveTask, type TaskInput } from "@personal/shared/queries/tasks";
+import {
+  initialNewTaskStatus,
+  useNewTaskStatusStore,
+} from "@personal/shared/stores/newTaskStatus";
 
 type TaskEditorModalProps = {
   /** Omit (or pass `null`) to create a new TaskResponse; pass a TaskResponse to edit it. */
@@ -31,15 +35,26 @@ export function TaskEditorModal({
 }: TaskEditorModalProps) {
   const { data: projects = [] } = useProjects();
   const saveTask = useSaveTask();
+  const lastStatusByProject = useNewTaskStatusStore(
+    (state) => state.lastStatusByProject,
+  );
+  const rememberStatus = useNewTaskStatusStore((state) => state.rememberStatus);
 
   const initialProjectId = task?.projectId ?? projectId ?? 0;
 
-  const [form, setForm] = useState<TaskInput>({
+  const [form, setForm] = useState<TaskInput>(() => ({
     title: task?.title ?? "",
     description: task?.description ?? "",
     project: initialProjectId,
-    status: task?.status ?? "",
-  });
+    status:
+      task?.status ??
+      initialNewTaskStatus(
+        lastStatusByProject,
+        initialProjectId,
+        projects.find((item) => item.id === initialProjectId)
+          ?.projectStatuses ?? [],
+      ),
+  }));
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(!task);
@@ -96,6 +111,7 @@ export function TaskEditorModal({
 
     try {
       await saveTask.mutateAsync({ input, task });
+      if (!task && status) rememberStatus(input.project, status);
       onClose();
     } catch (error) {
       setFormError(await apiErrorMessage(error));

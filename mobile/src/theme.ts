@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Appearance, Platform, StyleSheet, useColorScheme } from "react-native";
 
+import { useAccountThemeSync } from "@personal/shared/queries/settings";
 import { useThemeStore } from "@personal/shared/stores/theme";
 import {
   resolveTheme,
@@ -23,7 +24,18 @@ export const fonts = {
   utility: Platform.select({ ios: "Menlo", default: "monospace" }),
 };
 
-/** The theme on screen: the user's pick, or the system's light/dark scheme. */
+/**
+ * Copies the account's theme onto this device once signed in. The theme store
+ * is only this device's copy of it (persisted so startup and the sign-in
+ * screens show the last known theme); mounted once, inside the root layout's
+ * query provider.
+ */
+export function AccountThemeSync(): null {
+  useAccountThemeSync();
+  return null;
+}
+
+/** The theme on screen: the account's pick, or the system's light/dark scheme. */
 export function useThemeName(): ThemeName {
   const preference = useThemeStore((state) => state.preference);
   const systemScheme = useColorScheme();

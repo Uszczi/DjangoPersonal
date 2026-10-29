@@ -18,6 +18,7 @@ from .task import Task
 from .time_entry import TimeEntry
 from .transaction import Transaction
 from .user import User
+from .user_settings import UserSettings
 from .wallet import Wallet
 from .whiteboard import Whiteboard
 
@@ -35,6 +36,7 @@ __all__ = [
     'TimeEntry',
     'Transaction',
     'User',
+    'UserSettings',
     'Wallet',
     'Whiteboard',
 ]

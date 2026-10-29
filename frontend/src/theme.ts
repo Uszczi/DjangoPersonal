@@ -10,7 +10,9 @@ import {
 } from "@personal/shared/themes";
 
 /**
- * Applies the chosen theme to the page. The palettes live in
+ * Applies the chosen theme to the page: this device's copy of the account's
+ * theme (`@personal/shared/stores/theme`, kept in step with the server by
+ * `useAccountThemeSync` in the root route). The palettes live in
  * `@personal/shared/themes`; here each colour becomes the CSS custom property
  * Tailwind's utilities read (`--color-paper`, …), set inline on `<html>` so it
  * overrides the light defaults declared in `index.css`'s `@theme` block.

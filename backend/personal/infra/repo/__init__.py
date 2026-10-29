@@ -24,6 +24,7 @@ from .projects import ProjectRepository
 from .tasks import TaskRepository
 from .time_entries import TimeEntryRepository
 from .transactions import TransactionKey, TransactionRepository
+from .user_settings import UserSettingsRepository
 from .users import UserRepository
 from .wallets import WalletRepository
 from .whiteboards import WhiteboardRepository
@@ -55,6 +56,7 @@ __all__ = [
     'TransactionKey',
     'TransactionRepository',
     'UserRepository',
+    'UserSettingsRepository',
     'WalletRepository',
     'WhiteboardRepository',
     'day_start',

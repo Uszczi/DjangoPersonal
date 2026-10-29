@@ -146,9 +146,37 @@ export function useToggleTaskStatus() {
 }
 
 /**
+ * `tasks` with `task` moved to index `position` among the Tasks of `status`
+ * (its own when omitted), that status's positions renumbered from 0 the way
+ * the server does it.
+ */
+export function moveTaskInList(
+  tasks: TaskResponse[],
+  task: TaskResponse,
+  position: number,
+  status: string = task.status,
+): TaskResponse[] {
+  const byPosition = (left: TaskResponse, right: TaskResponse) =>
+    (left.position ?? left.id) - (right.position ?? right.id) ||
+    left.id - right.id;
+  const group = tasks
+    .filter((item) => item.status === status && item.id !== task.id)
+    .sort(byPosition);
+  const index = Math.max(0, Math.min(position, group.length));
+  group.splice(index, 0, { ...task, status });
+  const moved = new Map(
+    group.map((item, newPosition) => [
+      item.id,
+      { ...item, position: newPosition },
+    ]),
+  );
+  return tasks.map((item) => moved.get(item.id) ?? item);
+}
+
+/**
  * Move a Task to `position` within `status` (its own when omitted). The
- * server renumbers its neighbours, so the list is reloaded either way and a
- * refused move snaps back.
+ * cached list moves at once; the server renumbers its neighbours, so the list
+ * is reloaded either way and a refused move snaps back.
  */
 export function useMoveTask() {
   const queryClient = useQueryClient();
@@ -166,6 +194,13 @@ export function useMoveTask() {
         id: task.id,
         patchedTaskUpdateRequest: { position, ...(status ? { status } : {}) },
       }),
+    onMutate: async ({ task, position, status }) => {
+      const queryKey = taskKeys.project(task.projectId);
+      await queryClient.cancelQueries({ queryKey });
+      updateProjectTasks(queryClient, task.projectId, (tasks) =>
+        moveTaskInList(tasks, task, position, status),
+      );
+    },
     onSettled: (_, __, { task }) =>
       queryClient.invalidateQueries({
         queryKey: taskKeys.project(task.projectId),
