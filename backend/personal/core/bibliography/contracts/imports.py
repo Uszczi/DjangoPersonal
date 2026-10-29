@@ -9,6 +9,8 @@ from .items import BibliographyItemRequest
 
 #: Most items one import may carry: room for years of history in one call.
 MAX_IMPORTED_ITEMS = 2000
+#: Most Attempts one imported item may carry.
+MAX_IMPORTED_ATTEMPTS = 100
 
 
 class ImportedAttempt(BaseModel):
@@ -22,7 +24,9 @@ class ImportedAttempt(BaseModel):
 class ImportedBibliographyItem(BibliographyItemRequest):
     """A BibliographyItem together with the Attempts already made at it."""
 
-    attempts: list[ImportedAttempt] = Field(default_factory=list)
+    attempts: list[ImportedAttempt] = Field(
+        default_factory=list, max_length=MAX_IMPORTED_ATTEMPTS
+    )
 
 
 class BibliographyImportRequest(BaseModel):

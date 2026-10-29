@@ -34,7 +34,9 @@ class ImportBibliography:
                     self.create_attempt.execute(request)
                 except DomainError as error:
                     raise DomainError(
-                        f'Item {position} ({entry.title!r}): {error.message}', code=error.code
+                        f'Item {position} ({entry.title!r}): {error.message}',
+                        code=error.code,
+                        status=error.status,
                     ) from error
                 attempts_recorded += 1
         return BibliographyImportResponse(
