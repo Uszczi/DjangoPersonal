@@ -32,6 +32,21 @@ export function itemStatusLabel(status: ItemStatus, kind: ItemKind) {
   }
 }
 
+export const ITEM_KINDS: readonly ItemKind[] = ["film", "book"];
+
+export const ITEM_STATUSES: readonly ItemStatus[] = [
+  "planned",
+  "in_progress",
+  "finished",
+  "abandoned",
+];
+
+/** A status filter's label: as on the items of `kind`, or naming both kinds when the list mixes them. */
+export function itemStatusFilterLabel(status: ItemStatus, kind?: ItemKind) {
+  if (status === "planned" && !kind) return "Do obejrzenia / przeczytania";
+  return itemStatusLabel(status, kind ?? "book");
+}
+
 /** The creator and year line, e.g. `Bolesław Prus · 1890`; empty when neither is known. */
 export function itemByline({
   creator,

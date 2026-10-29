@@ -8,6 +8,7 @@ from personal.infra.models import User
 from tests.harness import ApiClient
 
 ITEMS = '/api/v1/bibliography-items/'
+ATTEMPTS = '/api/v1/bibliography-attempts/'
 
 
 def _item(post_json: Any, **fields: Any) -> dict[str, Any]:
@@ -109,6 +110,43 @@ def test_list_shows_newest_first(post_json: Any, api_client: ApiClient) -> None:
         ('film', 'Rejs', 'planned'),
         ('book', 'Lalka', 'planned'),
     ]
+
+
+def _attempt(post_json: Any, item: dict[str, Any], outcome: str) -> None:
+    payload: dict[str, Any] = {'item': item['id'], 'outcome': outcome}
+    if outcome != 'in_progress':
+        payload['ended_on'] = '2026-10-20'
+    response = post_json(ATTEMPTS, payload)
+    assert response.status_code == HTTPStatus.CREATED, response.json()
+
+
+def _listed(api_client: ApiClient, query: str) -> list[str]:
+    response = api_client.get(f'{ITEMS}?{query}')
+    assert response.status_code == HTTPStatus.OK, response.json()
+    return [p['title'] for p in response.json()]
+
+
+def test_list_filters_by_kind_and_derived_status(post_json: Any, api_client: ApiClient) -> None:
+    _item(post_json, kind='book', title='Lalka')
+    _attempt(post_json, _item(post_json, kind='book', title='Chłopi'), 'in_progress')
+    _attempt(post_json, _item(post_json, kind='film', title='Rejs'), 'finished')
+    abandoned_then_restarted = _item(post_json, kind='film', title='Miś')
+    _attempt(post_json, abandoned_then_restarted, 'abandoned')
+    _attempt(post_json, abandoned_then_restarted, 'in_progress')
+    _item(post_json, kind='film', title='Seksmisja')
+
+    assert _listed(api_client, 'kind=book') == ['Chłopi', 'Lalka']
+    assert _listed(api_client, 'status=in_progress') == ['Miś', 'Chłopi']
+    assert _listed(api_client, 'status=in_progress&kind=film') == ['Miś']
+    assert _listed(api_client, 'status=planned&kind=film') == ['Seksmisja']
+    assert _listed(api_client, 'status=finished') == ['Rejs']
+    assert _listed(api_client, 'status=abandoned') == []
+    assert _listed(api_client, 'status=planned&kind=book') == ['Lalka']
+
+
+def test_list_rejects_an_unknown_filter_value(api_client: ApiClient) -> None:
+    assert api_client.get(f'{ITEMS}?status=reading').status_code == 422
+    assert api_client.get(f'{ITEMS}?kind=serial').status_code == 422
 
 
 def test_unknown_item_is_404(api_client: ApiClient, patch_json: Any) -> None:

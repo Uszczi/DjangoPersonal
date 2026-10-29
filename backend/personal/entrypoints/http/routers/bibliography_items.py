@@ -4,6 +4,8 @@ from personal.core.bibliography import handlers
 from personal.core.bibliography.contracts import (
     BibliographyItemRequest,
     BibliographyItemResponse,
+    ItemKind,
+    ItemStatus,
     PatchedBibliographyItemRequest,
 )
 from personal.entrypoints.http.deps import (
@@ -17,12 +19,16 @@ router = APIRouter(tags=['personal'])
 
 @router.get('/bibliography-items/', operation_id='bibliography_items_list')
 def list_bibliography_items(
-    user: CurrentUser, items: BibliographyItemRepositoryDep, attempts: AttemptRepositoryDep
+    user: CurrentUser,
+    items: BibliographyItemRepositoryDep,
+    attempts: AttemptRepositoryDep,
+    status: ItemStatus | None = None,
+    kind: ItemKind | None = None,
 ) -> list[BibliographyItemResponse]:
-    return [
-        BibliographyItemResponse.model_validate(item)
-        for item in handlers.ListBibliographyItems(items, attempts, user).execute()
-    ]
+    listed = handlers.ListBibliographyItems(items, attempts, user).execute(
+        status=status, kind=kind
+    )
+    return [BibliographyItemResponse.model_validate(item) for item in listed]
 
 
 @router.post(

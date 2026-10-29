@@ -1402,29 +1402,56 @@ paths:
       - personal
       summary: List Bibliography Items
       operationId: bibliography_items_list
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - enum:
+            - planned
+            - in_progress
+            - finished
+            - abandoned
+            type: string
+          - type: 'null'
+          title: Status
+      - name: kind
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - enum:
+            - film
+            - book
+            type: string
+          - type: 'null'
+          title: Kind
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
+                type: array
                 items:
                   $ref: '#/components/schemas/BibliographyItemResponse'
-                type: array
                 title: Response Bibliography Items List
-      security:
-      - JWTAuth: []
     post:
       tags:
       - personal
       summary: Create Bibliography Item
       operationId: bibliography_items_create
+      security:
+      - JWTAuth: []
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/BibliographyItemRequest'
-        required: true
       responses:
         '201':
           description: Successful Response
@@ -1432,8 +1459,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BibliographyItemResponse'
-      security:
-      - JWTAuth: []
   /api/v1/bibliography-items/{id}/:
     get:
       tags:

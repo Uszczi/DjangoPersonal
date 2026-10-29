@@ -51,8 +51,8 @@ function fakeBackend(
   initial: BibliographyItem[] = [],
   initialAttempts: Attempt[] = [],
 ) {
-  const items = [...initial];
-  const attempts = [...initialAttempts];
+  const items = initial.map((item) => ({ ...item }));
+  const attempts = initialAttempts.map((attempt) => ({ ...attempt }));
   const requests: Array<{ method: string; path: string; body: unknown }> = [];
   let nextId = 100;
 
@@ -73,7 +73,8 @@ function fakeBackend(
     requests.push({ method, path, body });
     if (path.includes("/projects/")) return jsonResponse([]);
 
-    if (path.endsWith("/bibliography-items/")) {
+    const listPath = path.match(/\/bibliography-items\/(\?.*)?$/);
+    if (listPath) {
       if (method === "POST") {
         const item: BibliographyItem = {
           creator: "",
@@ -89,7 +90,18 @@ function fakeBackend(
         items.unshift(item);
         return jsonResponse(item, 201);
       }
-      return jsonResponse(items.map(withStatus));
+      const filters = new URLSearchParams(listPath[1] ?? "");
+      const status = filters.get("status");
+      const kind = filters.get("kind");
+      return jsonResponse(
+        items
+          .map(withStatus)
+          .filter(
+            (item) =>
+              (!status || item.status === status) &&
+              (!kind || item.kind === kind),
+          ),
+      );
     }
     const itemMatch = path.match(/\/bibliography-items\/(\d+)\/$/);
     if (itemMatch) {
@@ -574,5 +586,174 @@ describe("Bibliography", () => {
     expect(
       screen.queryByRole("button", { name: "Postęp" }),
     ).not.toBeInTheDocument();
+  });
+
+  describe("filters", () => {
+    const chlopi: BibliographyItem = { ...lalka, id: 3, title: "Chłopi" };
+    const seksmisja: BibliographyItem = { ...rejs, id: 4, title: "Seksmisja" };
+    const shelf = () =>
+      fakeBackend(
+        [seksmisja, chlopi, rejs, lalka],
+        [
+          attempt({
+            id: 61,
+            item_id: chlopi.id,
+            outcome: "in_progress",
+            ended_on: null,
+          }),
+          attempt({ id: 62, item_id: rejs.id, outcome: "finished" }),
+        ],
+      );
+
+    async function listedTitles() {
+      const list = screen.queryByRole("list", { name: "Pozycje" });
+      if (!list) return [];
+      return within(list)
+        .getAllByRole("listitem")
+        .map((row) =>
+          within(row)
+            .getByRole("button")
+            .getAttribute("aria-label")
+            ?.replace("Otwórz pozycję: ", ""),
+        );
+    }
+
+    function statusFilter() {
+      return screen.getByRole("group", { name: "Filtr statusu" });
+    }
+
+    function kindFilter() {
+      return screen.getByRole("group", { name: "Filtr rodzaju" });
+    }
+
+    test("both filters default to all", async () => {
+      fetchMock.mockImplementation(shelf().handler);
+
+      renderApp("/bibliography");
+      await screen.findByRole("list", { name: "Pozycje" });
+
+      expect(
+        within(statusFilter()).getByRole("button", { name: "Wszystkie" }),
+      ).toHaveAttribute("aria-pressed", "true");
+      expect(
+        within(kindFilter()).getByRole("button", { name: "Wszystkie" }),
+      ).toHaveAttribute("aria-pressed", "true");
+      expect(await listedTitles()).toEqual([
+        "Seksmisja",
+        "Chłopi",
+        "Rejs",
+        "Lalka",
+      ]);
+    });
+
+    test("status and kind filters combine", async () => {
+      fetchMock.mockImplementation(shelf().handler);
+      const user = userEvent.setup();
+
+      renderApp("/bibliography");
+      await screen.findByRole("list", { name: "Pozycje" });
+
+      await user.click(
+        within(kindFilter()).getByRole("button", { name: "Książki" }),
+      );
+      await vi.waitFor(async () =>
+        expect(await listedTitles()).toEqual(["Chłopi", "Lalka"]),
+      );
+
+      await user.click(
+        within(statusFilter()).getByRole("button", { name: "W trakcie" }),
+      );
+      await vi.waitFor(async () =>
+        expect(await listedTitles()).toEqual(["Chłopi"]),
+      );
+      const list = screen.getByRole("list", { name: "Pozycje" });
+      expect(within(list).getByText("W trakcie")).toBeInTheDocument();
+
+      await user.click(
+        within(kindFilter()).getByRole("button", { name: "Filmy" }),
+      );
+      expect(
+        await screen.findByText("Brak pozycji pasujących do filtrów"),
+      ).toBeInTheDocument();
+
+      await user.click(
+        within(statusFilter()).getByRole("button", { name: "Ukończone" }),
+      );
+      await vi.waitFor(async () =>
+        expect(await listedTitles()).toEqual(["Rejs"]),
+      );
+    });
+
+    test("the to-watch/to-read filter is named after the chosen kind", async () => {
+      fetchMock.mockImplementation(shelf().handler);
+      const user = userEvent.setup();
+
+      renderApp("/bibliography");
+      await screen.findByRole("list", { name: "Pozycje" });
+      expect(
+        within(statusFilter()).getByRole("button", {
+          name: "Do obejrzenia / przeczytania",
+        }),
+      ).toBeInTheDocument();
+
+      await user.click(
+        within(kindFilter()).getByRole("button", { name: "Filmy" }),
+      );
+      await user.click(
+        within(statusFilter()).getByRole("button", { name: "Do obejrzenia" }),
+      );
+      await vi.waitFor(async () =>
+        expect(await listedTitles()).toEqual(["Seksmisja"]),
+      );
+
+      await user.click(
+        within(kindFilter()).getByRole("button", { name: "Książki" }),
+      );
+      expect(
+        within(statusFilter()).getByRole("button", { name: "Do przeczytania" }),
+      ).toHaveAttribute("aria-pressed", "true");
+      await vi.waitFor(async () =>
+        expect(await listedTitles()).toEqual(["Lalka"]),
+      );
+    });
+
+    test("the filters are kept in the address", async () => {
+      fetchMock.mockImplementation(shelf().handler);
+
+      renderApp("/bibliography?status=planned&kind=film");
+
+      await vi.waitFor(async () =>
+        expect(await listedTitles()).toEqual(["Seksmisja"]),
+      );
+      expect(
+        within(kindFilter()).getByRole("button", { name: "Filmy" }),
+      ).toHaveAttribute("aria-pressed", "true");
+    });
+
+    test("a new item shows only where it matches the filters", async () => {
+      fetchMock.mockImplementation(shelf().handler);
+      const user = userEvent.setup();
+
+      renderApp("/bibliography?status=in_progress");
+      await vi.waitFor(async () =>
+        expect(await listedTitles()).toEqual(["Chłopi"]),
+      );
+
+      await user.click(screen.getByRole("button", { name: "Nowa pozycja" }));
+      await user.selectOptions(screen.getByLabelText("Rodzaj"), "book");
+      await user.type(screen.getByLabelText("Tytuł"), "Solaris");
+      await user.click(screen.getByRole("button", { name: "Dodaj pozycję" }));
+      await vi.waitFor(() =>
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+      );
+      expect(await listedTitles()).toEqual(["Chłopi"]);
+
+      await user.click(
+        within(statusFilter()).getByRole("button", { name: "Wszystkie" }),
+      );
+      await vi.waitFor(async () =>
+        expect((await listedTitles())[0]).toBe("Solaris"),
+      );
+    });
   });
 });

@@ -325,6 +325,17 @@ export interface BibliographyItemsCreateRequest {
     bibliographyItemRequest: BibliographyItemRequest;
 }
 
+export interface BibliographyItemsListRequest {
+    /**
+     *
+     */
+    status?: BibliographyItemsListStatusEnum;
+    /**
+     *
+     */
+    kind?: BibliographyItemsListKindEnum;
+}
+
 export interface BibliographyItemsPartialUpdateRequest {
     /**
      *
@@ -1290,8 +1301,16 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * Creates request options for bibliographyItemsList without sending the request
      */
-    async bibliographyItemsListRequestOpts(): Promise<runtime.RequestOpts> {
+    async bibliographyItemsListRequestOpts(requestParameters: BibliographyItemsListRequest): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
+
+        if (requestParameters['status'] != null) {
+            queryParameters['status'] = requestParameters['status'];
+        }
+
+        if (requestParameters['kind'] != null) {
+            queryParameters['kind'] = requestParameters['kind'];
+        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 
@@ -1317,8 +1336,8 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * List Bibliography Items
      */
-    async bibliographyItemsListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<BibliographyItemResponse>>> {
-        const requestOptions = await this.bibliographyItemsListRequestOpts();
+    async bibliographyItemsListRaw(requestParameters: BibliographyItemsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<BibliographyItemResponse>>> {
+        const requestOptions = await this.bibliographyItemsListRequestOpts(requestParameters);
         const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(BibliographyItemResponseFromJSON));
@@ -1327,8 +1346,8 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * List Bibliography Items
      */
-    async bibliographyItemsList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<BibliographyItemResponse>> {
-        const response = await this.bibliographyItemsListRaw(initOverrides);
+    async bibliographyItemsList(requestParameters: BibliographyItemsListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<BibliographyItemResponse>> {
+        const response = await this.bibliographyItemsListRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -4544,3 +4563,22 @@ export class PersonalApi extends runtime.BaseAPI {
     }
 
 }
+
+/**
+ * @export
+ */
+export const BibliographyItemsListStatusEnum = {
+    Planned: 'planned',
+    InProgress: 'in_progress',
+    Finished: 'finished',
+    Abandoned: 'abandoned',
+} as const;
+export type BibliographyItemsListStatusEnum = typeof BibliographyItemsListStatusEnum[keyof typeof BibliographyItemsListStatusEnum];
+/**
+ * @export
+ */
+export const BibliographyItemsListKindEnum = {
+    Film: 'film',
+    Book: 'book',
+} as const;
+export type BibliographyItemsListKindEnum = typeof BibliographyItemsListKindEnum[keyof typeof BibliographyItemsListKindEnum];

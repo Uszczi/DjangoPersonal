@@ -4,7 +4,12 @@ from personal.infra.models import BibliographyItem as BibliographyItemModel
 from personal.infra.models import User
 from personal.infra.repo import AttemptRepository, BibliographyItemRepository
 
-from ..contracts import BibliographyItemRequest, PatchedBibliographyItemRequest
+from ..contracts import (
+    BibliographyItemRequest,
+    ItemKind,
+    ItemStatus,
+    PatchedBibliographyItemRequest,
+)
 from ..progress import check_progress_within_length
 from ..status import item_status
 
@@ -29,7 +34,11 @@ def _with_status(
 
 
 class ListBibliographyItems:
-    """Every BibliographyItem of the user, the most recently added first, with its status."""
+    """Every BibliographyItem of the user, the most recently added first, with its status.
+
+    The status is derived from the Attempts, not stored, so the status filter is applied
+    after deriving it: a filtered list always agrees with the status each item shows.
+    """
 
     def __init__(
         self, items: BibliographyItemRepository, attempts: AttemptRepository, user: User
@@ -38,8 +47,15 @@ class ListBibliographyItems:
         self.attempts = attempts
         self.user = user
 
-    def execute(self) -> list[BibliographyItemModel]:
-        return _with_status(self.attempts, self.items.list_all(user=self.user), user=self.user)
+    def execute(
+        self, *, status: ItemStatus | None = None, kind: ItemKind | None = None
+    ) -> list[BibliographyItemModel]:
+        items = _with_status(
+            self.attempts, self.items.list_all(user=self.user, kind=kind), user=self.user
+        )
+        if status is None:
+            return items
+        return [item for item in items if item.status == status]
 
 
 class GetBibliographyItem:
