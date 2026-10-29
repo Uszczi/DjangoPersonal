@@ -118,7 +118,9 @@ services:
     container_name: djangopersonal-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      # Loopback only: Redis has no password, and Docker-published ports bypass
+      # ufw. The services reach it over the compose network.
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis-data:/data
     command: ["redis-server", "--save", "60", "1", "--loglevel", "warning", "--appendonly", "yes"]
