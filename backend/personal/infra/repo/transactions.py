@@ -2,7 +2,7 @@ from datetime import date
 from typing import NamedTuple
 
 from sqlalchemy import select, tuple_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from personal.infra.models import Transaction as TransactionModel
 from personal.infra.models import User
@@ -40,8 +40,11 @@ class TransactionRepository:
         offset, this stays correct when rows are added between pages and reads
         the ``(wallet_id, date, id)`` index instead of skipping rows.
         """
-        query = select(TransactionModel).where(
-            TransactionModel.wallet_id == wallet_id, TransactionModel.user_id == user.id
+        # The category comes with the page: each row's kind is read off it.
+        query = (
+            select(TransactionModel)
+            .options(joinedload(TransactionModel.category))
+            .where(TransactionModel.wallet_id == wallet_id, TransactionModel.user_id == user.id)
         )
         if after is not None:
             # A row-value comparison, so Postgres turns it into one index range.

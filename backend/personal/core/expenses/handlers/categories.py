@@ -9,7 +9,7 @@ from personal.infra.rules import category_name_key, normalize_category_name
 
 from ..contracts import CategoryRequest, PatchedCategoryRequest
 
-#: The labels every new user starts with, created with their first wallet,
+#: The Expense labels every new user starts with, created at registration,
 #: each with its icon.
 BASE_CATEGORIES: dict[str, str] = {
     'Jedzenie': 'utensils',
@@ -22,6 +22,15 @@ BASE_CATEGORIES: dict[str, str] = {
     'Edukacja': 'graduation-cap',
     'Podróże': 'plane',
     'Inne': 'tag',
+}
+
+#: The Income labels seeded next to them. "Inne przychody" because "Inne" is
+#: taken: names are unique per user across both kinds.
+BASE_INCOME_CATEGORIES: dict[str, str] = {
+    'Wynagrodzenie': 'banknote',
+    'Sprzedaż': 'store',
+    'Prezenty': 'gift',
+    'Inne przychody': 'circle-plus',
 }
 
 #: The category balance corrections are filed under: an initial balance on
@@ -38,10 +47,14 @@ def seed_base_categories(repository: CategoryRepository, user: User) -> None:
     a category before their first wallet still ends up with the full base set,
     and no seeded name can clash with one they already made.
     """
-    for name, icon in BASE_CATEGORIES.items():
-        if repository.name_taken(category_name_key(name), user=user):
-            continue
-        repository.save(CategoryModel(user=user, name=name, icon=icon))
+    for kind, categories in (
+        (CategoryModel.KIND_EXPENSE, BASE_CATEGORIES),
+        (CategoryModel.KIND_INCOME, BASE_INCOME_CATEGORIES),
+    ):
+        for name, icon in categories.items():
+            if repository.name_taken(category_name_key(name), user=user):
+                continue
+            repository.save(CategoryModel(user=user, name=name, icon=icon, kind=kind))
     ensure_system_category(repository, user)
 
 
@@ -91,6 +104,17 @@ def _validate_name(
     return name
 
 
+def _keep_kind(category: CategoryModel, kind: object) -> object:
+    """The kind is fixed at creation: re-sending it passes, changing it does not.
+
+    Changing it would flip the direction of every transaction filed under the
+    category, and the wallet balances with them.
+    """
+    if kind != category.kind:
+        raise DomainError('The kind of a category cannot be changed.')
+    return kind
+
+
 def _save(repository: CategoryRepository, category: CategoryModel) -> CategoryModel:
     """Persist a category, presenting a name clash as a domain error."""
     try:
@@ -133,6 +157,7 @@ class CreateCategory:
             user=self.user,
             name=_validate_name(self.categories, data.name, user=self.user),
             icon=data.icon,
+            kind=data.kind,
         )
         return _save(self.categories, category)
 
@@ -149,7 +174,8 @@ class ReplaceCategory:
             data,
             category,
             resolve={
-                'name': partial(_validate_name, self.categories, current=category, user=self.user)
+                'name': partial(_validate_name, self.categories, current=category, user=self.user),
+                'kind': partial(_keep_kind, category),
             },
         )
         return _save(self.categories, category)
@@ -168,7 +194,8 @@ class UpdateCategory:
             data,
             category,
             resolve={
-                'name': partial(_validate_name, self.categories, current=category, user=self.user)
+                'name': partial(_validate_name, self.categories, current=category, user=self.user),
+                'kind': partial(_keep_kind, category),
             },
         )
 

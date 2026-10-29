@@ -1,9 +1,14 @@
-from pydantic import Field, field_validator
+from typing import Literal
+
+from pydantic import Field, field_validator, model_validator
 
 from personal.core.shared.base import BaseModel
 from personal.infra.rules import DEFAULT_CATEGORY_ICON, normalize_category_name
 
 from .icons import IconName
+
+#: The direction of every transaction filed under a category. Fixed at creation.
+CategoryKind = Literal['expense', 'income']
 
 
 class _CategoryPayload(BaseModel):
@@ -21,7 +26,7 @@ class _CategoryPayload(BaseModel):
                 raise ValueError('This field may not be blank.')
         return value
 
-    @field_validator('name', 'icon', check_fields=False)
+    @field_validator('name', 'icon', 'kind', check_fields=False)
     @classmethod
     def reject_null(cls, value: object) -> object:
         """An explicit ``null`` is not "leave it alone" — it is a 400."""
@@ -33,11 +38,13 @@ class _CategoryPayload(BaseModel):
 class CategoryRequest(_CategoryPayload):
     name: str = Field(min_length=1, max_length=100)
     icon: IconName = DEFAULT_CATEGORY_ICON
+    kind: CategoryKind = 'expense'
 
 
 class PatchedCategoryRequest(_CategoryPayload):
     name: str | None = Field(default=None, min_length=1, max_length=100)
     icon: IconName | None = None
+    kind: CategoryKind | None = None
 
 
 class CategoryResponse(BaseModel):
@@ -45,3 +52,11 @@ class CategoryResponse(BaseModel):
     name: str
     icon: str
     is_system: bool = Field(default=False, json_schema_extra={'readOnly': True})
+    #: ``null`` for the System category: its entries carry their own sign.
+    kind: CategoryKind | None
+
+    @model_validator(mode='after')
+    def system_has_no_kind(self) -> 'CategoryResponse':
+        if self.is_system:
+            self.kind = None
+        return self

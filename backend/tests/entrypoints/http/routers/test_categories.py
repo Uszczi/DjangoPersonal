@@ -189,20 +189,21 @@ def test_delete_category(post_json: Any, api_client: Any) -> None:
 def test_registering_seeds_base_categories_and_system(post_json: Any, anon_client: Any) -> None:
     from personal.core.expenses.handlers.categories import (
         BASE_CATEGORIES,
+        BASE_INCOME_CATEGORIES,
         SYSTEM_CATEGORY_ICON,
         SYSTEM_CATEGORY_NAME,
     )
 
-    assert len(BASE_CATEGORIES) == 10
+    assert (len(BASE_CATEGORIES), len(BASE_INCOME_CATEGORIES)) == (10, 4)
     client = _register(anon_client)
 
     listing = client.get('/api/v1/categories/').json()
 
-    assert len(listing) == 11
-    assert {c['name'] for c in listing} == set(BASE_CATEGORIES) | {SYSTEM_CATEGORY_NAME}
-    assert {c['name']: c['icon'] for c in listing} == {
-        **BASE_CATEGORIES,
-        SYSTEM_CATEGORY_NAME: SYSTEM_CATEGORY_ICON,
+    assert len(listing) == 15
+    assert {c['name']: (c['icon'], c['kind']) for c in listing} == {
+        **{name: (icon, 'expense') for name, icon in BASE_CATEGORIES.items()},
+        **{name: (icon, 'income') for name, icon in BASE_INCOME_CATEGORIES.items()},
+        SYSTEM_CATEGORY_NAME: (SYSTEM_CATEGORY_ICON, None),
     }
 
     system = next(c for c in listing if c['name'] == SYSTEM_CATEGORY_NAME)
@@ -217,7 +218,7 @@ def test_creating_a_wallet_does_not_seed_categories(post_json: Any, anon_client:
     post_json('/api/v1/wallets/', {'name': 'Business'})
 
     # The categories came with the account; the wallets add none.
-    assert len(client.get('/api/v1/categories/').json()) == 11
+    assert len(client.get('/api/v1/categories/').json()) == 15
 
 
 def test_seeding_categories_is_idempotent(
@@ -234,7 +235,7 @@ def test_seeding_categories_is_idempotent(
     seed_base_categories(CategoryRepository(session), user)
     session.commit()
 
-    assert len(client.get('/api/v1/categories/').json()) == 11
+    assert len(client.get('/api/v1/categories/').json()) == 15
 
 
 def test_system_category_cannot_be_renamed(post_json: Any, anon_client: Any) -> None:
@@ -261,6 +262,38 @@ def test_system_category_cannot_be_deleted(post_json: Any, anon_client: Any) -> 
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
     assert any(c['is_system'] for c in client.get('/api/v1/categories/').json())
+
+
+def test_a_category_is_an_expense_one_unless_created_as_income(post_json: Any) -> None:
+    hobby = post_json('/api/v1/categories/', {'name': 'Hobby'})
+    bonus = post_json('/api/v1/categories/', {'name': 'Premia', 'kind': 'income'})
+    unknown = post_json('/api/v1/categories/', {'name': 'Odd', 'kind': 'transfer'})
+
+    assert (hobby.json()['kind'], bonus.json()['kind']) == ('expense', 'income')
+    assert unknown.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_the_kind_of_a_category_cannot_be_changed(
+    post_json: Any, patch_json: Any, put_json: Any
+) -> None:
+    bonus_id = post_json('/api/v1/categories/', {'name': 'Premia', 'kind': 'income'}).json()['id']
+
+    same = patch_json(f'/api/v1/categories/{bonus_id}/', {'kind': 'income', 'icon': 'gift'})
+    patched = patch_json(f'/api/v1/categories/{bonus_id}/', {'kind': 'expense'})
+    replaced = put_json(f'/api/v1/categories/{bonus_id}/', {'name': 'Premia', 'kind': 'expense'})
+
+    assert same.status_code == HTTPStatus.OK
+    assert [patched.status_code, replaced.status_code] == [HTTPStatus.BAD_REQUEST] * 2
+    assert patched.json()['detail'] == 'The kind of a category cannot be changed.'
+
+
+def test_existing_categories_read_as_expense_ones(api_client: Any, api_user: Any) -> None:
+    CategoryFactory.create(user=api_user, name='Old')
+    CategoryFactory.create(user=api_user, name='System', is_system=True)
+
+    listing = api_client.get('/api/v1/categories/').json()
+
+    assert {c['name']: c['kind'] for c in listing} == {'Old': 'expense', 'System': None}
 
 
 def test_openapi_schema_describes_versioned_category_endpoints(api_client: Any) -> None:

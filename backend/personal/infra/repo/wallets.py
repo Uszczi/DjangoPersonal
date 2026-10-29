@@ -15,12 +15,14 @@ from .errors import DuplicateWalletName
 _MONEY = Numeric(10, 2)
 
 #: A transaction's signed contribution to its wallet: System-category entries
-#: (the opening balance and later corrections) add to it, every other entry is
-#: spending and subtracts. An uncategorized transaction is spending too.
+#: (the opening balance and later corrections) add their signed amount, an
+#: entry under an Income category adds, and anything else is an Expense and
+#: subtracts. An uncategorized transaction is an Expense too.
 _BALANCE: ColumnElement[Decimal] = func.coalesce(
     func.sum(
         case(
             (CategoryModel.is_system == true(), TransactionModel.amount),
+            (CategoryModel.kind == CategoryModel.KIND_INCOME, TransactionModel.amount),
             else_=-TransactionModel.amount,
         )
     ),

@@ -4,7 +4,9 @@ from datetime import date
 from http import HTTPStatus
 from typing import Any
 
+from personal.core.expenses.handlers.wallets import OPENING_BALANCE_TITLE
 from personal.infra.factories import CategoryFactory, TransactionFactory, WalletFactory
+from tests.harness import ApiClient
 
 
 def test_create_transaction(post_json: Any, api_client: Any) -> None:
@@ -477,3 +479,106 @@ def test_openapi_schema_describes_versioned_transaction_endpoints(api_client: An
     assert '/api/v1/transactions/' in schema['paths']
     assert '/api/v1/transactions/{id}/' in schema['paths']
     assert '/api/transactions/' not in schema['paths']
+
+
+def _registered_wallet(anon_client: ApiClient) -> tuple[ApiClient, int, dict[str, int]]:
+    """A registered user's client, a wallet opened with 100.00, and their category ids."""
+    password = 'StrongPass123!'
+    tokens = anon_client.post(
+        '/api/v1/auth/register/',
+        {'username': 'earner', 'password': password, 'password_confirm': password},
+    ).json()
+    client = anon_client.authenticated(tokens['access'])
+    wallet_id = client.post(
+        '/api/v1/wallets/', {'name': 'Main', 'initial_balance': '100.00'}
+    ).json()['id']
+    categories = {c['name']: c['id'] for c in client.get('/api/v1/categories/').json()}
+    return client, wallet_id, categories
+
+
+def test_income_raises_the_balance_and_expenses_lower_it(anon_client: ApiClient) -> None:
+    client, wallet_id, categories = _registered_wallet(anon_client)
+    for category, amount in [
+        ('Wynagrodzenie', '500.00'),
+        ('Jedzenie', '42.00'),
+        (None, '8.00'),
+    ]:
+        response = client.post(
+            '/api/v1/transactions/',
+            {
+                'title': 'Entry',
+                'amount': amount,
+                'date': '2026-10-30',
+                'wallet': wallet_id,
+                'category': categories[category] if category else None,
+            },
+        )
+        assert response.status_code == HTTPStatus.CREATED, response.text
+
+    wallet = client.get(f'/api/v1/wallets/{wallet_id}/').json()
+
+    assert wallet['balance'] == '550.00'
+
+
+def test_a_transaction_carries_the_kind_of_its_category(anon_client: ApiClient) -> None:
+    client, wallet_id, categories = _registered_wallet(anon_client)
+    for title, category in [('Salary', 'Wynagrodzenie'), ('Lunch', 'Jedzenie'), ('Loose', None)]:
+        client.post(
+            '/api/v1/transactions/',
+            {
+                'title': title,
+                'amount': '10.00',
+                'date': '2026-10-30',
+                'wallet': wallet_id,
+                'category': categories[category] if category else None,
+            },
+        )
+
+    items = client.get(f'/api/v1/transactions/?wallet={wallet_id}').json()['items']
+    single = client.get(f'/api/v1/transactions/{items[0]["id"]}/').json()
+
+    assert {t['title']: t['kind'] for t in items} == {
+        'Salary': 'income',
+        'Lunch': 'expense',
+        'Loose': 'expense',
+        OPENING_BALANCE_TITLE: None,
+    }
+    assert single['kind'] == items[0]['kind']
+
+
+def test_filing_under_system_and_editing_a_system_entry_are_rejected(
+    anon_client: ApiClient,
+) -> None:
+    client, wallet_id, categories = _registered_wallet(anon_client)
+    opening = client.get(f'/api/v1/transactions/?wallet={wallet_id}').json()['items'][0]
+    lunch = client.post(
+        '/api/v1/transactions/',
+        {
+            'title': 'Lunch',
+            'amount': '10.00',
+            'date': '2026-10-30',
+            'wallet': wallet_id,
+            'category': categories['Jedzenie'],
+        },
+    ).json()
+    into_system = {
+        'title': 'Sneaky',
+        'amount': '10.00',
+        'date': '2026-10-30',
+        'wallet': wallet_id,
+        'category': categories['System'],
+    }
+
+    created = client.post('/api/v1/transactions/', into_system)
+    moved = client.patch(f'/api/v1/transactions/{lunch["id"]}/', {'category': categories['System']})
+    edited = client.patch(f'/api/v1/transactions/{opening["id"]}/', {'title': 'Renamed'})
+    replaced = client.put(
+        f'/api/v1/transactions/{opening["id"]}/', {**into_system, 'category': None}
+    )
+    deleted = client.delete(f'/api/v1/transactions/{opening["id"]}/')
+
+    assert [created.status_code, moved.status_code] == [HTTPStatus.BAD_REQUEST] * 2
+    assert created.json()['detail'] == 'Transactions cannot be filed under the System category.'
+    assert [edited.status_code, replaced.status_code] == [HTTPStatus.BAD_REQUEST] * 2
+    assert edited.json()['detail'] == 'System entries can only be deleted.'
+    assert deleted.status_code == HTTPStatus.NO_CONTENT

@@ -140,3 +140,29 @@ def test_folder_names_lose_spaces_and_slashes(alembic_config: Config) -> None:
         rows = connection.execute(text('SELECT id, name FROM folders')).all()
     names: dict[int, str] = {row[0]: row[1] for row in rows}
     assert names == {1: 'Klient-A', 2: 'Klient-A-2', 3: 'Praca-2026', 4: 'Klient-A'}
+
+
+def test_existing_categories_become_expense_ones(alembic_config: Config) -> None:
+    command.upgrade(alembic_config, '0018')
+    engine = create_engine(alembic_config.get_main_option('sqlalchemy.url') or '')
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO users (id, username, password, is_active, is_staff, date_joined)"
+                " VALUES (1, 'user1', 'x', 1, 0, '2026-01-01')"
+            )
+        )
+        for id_, name, is_system in [(1, 'Jedzenie', 0), (2, 'System', 1)]:
+            connection.execute(
+                text(
+                    "INSERT INTO categories (id, user_id, name, normalized_name, is_system, icon)"
+                    " VALUES (:id, 1, :name, :key, :system, 'tag')"
+                ),
+                {'id': id_, 'name': name, 'key': name.casefold(), 'system': is_system},
+            )
+
+    command.upgrade(alembic_config, 'head')
+
+    with engine.connect() as connection:
+        rows = connection.execute(text('SELECT id, kind FROM categories')).all()
+    assert {row[0]: row[1] for row in rows} == {1: 'expense', 2: 'expense'}
