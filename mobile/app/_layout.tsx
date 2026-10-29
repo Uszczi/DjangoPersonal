@@ -74,6 +74,22 @@ export default function RootLayout() {
             name="transaction"
             options={{ presentation: "modal", title: "Transakcja" }}
           />
+          <Stack.Screen
+            name="bibliography/[id]"
+            options={{ title: "Pozycja" }}
+          />
+          <Stack.Screen
+            name="bibliography-item"
+            options={{ presentation: "modal", title: "Pozycja" }}
+          />
+          <Stack.Screen
+            name="attempt"
+            options={{ presentation: "modal", title: "Podejście" }}
+          />
+          <Stack.Screen
+            name="attempt-progress"
+            options={{ presentation: "modal", title: "Postęp" }}
+          />
           <Stack.Screen name="categories" options={{ title: "Kategorie" }} />
           <Stack.Screen
             name="category"

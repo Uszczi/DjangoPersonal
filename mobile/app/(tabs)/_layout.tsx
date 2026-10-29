@@ -65,6 +65,15 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="bibliography"
+        options={{
+          title: "Bibliografia",
+          // Six tabs leave no room for the full word under the icon.
+          tabBarLabel: "Biblio",
+          tabBarIcon: tabIcon("library-outline"),
+        }}
+      />
+      <Tabs.Screen
         name="account"
         options={{
           title: "Konto",
