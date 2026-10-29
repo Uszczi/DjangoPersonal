@@ -9,6 +9,7 @@ from pydantic import AnyUrl
 
 from personal.entrypoints.mcp import oauth, runtime
 from personal.entrypoints.mcp.asgi import create_app
+from personal.entrypoints.mcp.clients import InMemoryClientStore
 from personal.infra.db import Database
 from personal.infra.models import User
 from personal.settings import Settings
@@ -28,7 +29,9 @@ def test_a_login_is_traced_with_its_sql_queries_from_the_worker_thread(
     traced = Database(settings, tracer_provider)
     monkeypatch.setattr(runtime, 'database', traced)
     client = OAuthClientInformationFull(client_id='client-1', redirect_uris=[AnyUrl(REDIRECT)])
-    monkeypatch.setitem(oauth._CLIENTS, 'client-1', client)
+    store = InMemoryClientStore()
+    store.add(client)
+    monkeypatch.setattr(runtime, 'clients', store)
     form = {
         'username': 'mcp-user',
         'password': DEFAULT_PASSWORD,

@@ -1,9 +1,13 @@
-"""In-memory OAuth authorization server for the MCP server.
+"""OAuth authorization server for the MCP server.
 
 Implements ``OAuthAuthorizationServerProvider`` so OpenCode can drive the full
 OAuth flow (``opencode mcp auth``) instead of requiring a hand-managed JWT.
 The resource owner signs in on ``/login`` with their account's username and
 password, checked by the same use case as the API login.
+
+Registered clients live in ``runtime.clients`` (Redis when configured), so they
+survive a restart. Codes and tokens are kept in process memory: after a restart
+a client signs in on ``/login`` again, with the client id it already has.
 """
 
 import functools
@@ -32,7 +36,6 @@ from personal.infra.repo import UserRepository
 from . import runtime
 from .auth import request_address
 
-_CLIENTS: dict[str, OAuthClientInformationFull] = {}
 _AUTH_CODES: dict[str, AuthorizationCode] = {}
 _ACCESS_TOKENS: dict[str, AccessToken] = {}
 _REFRESH_TOKENS: dict[str, RefreshToken] = {}
@@ -42,17 +45,17 @@ def _now() -> float:
     return time.time()
 
 
-class InMemoryOAuthProvider:
-    """OAuth provider keeping clients, codes and tokens in process memory.
+class OAuthProvider:
+    """OAuth provider with clients in ``runtime.clients`` and the rest in memory.
 
-    A restart forgets them, so clients go through ``/login`` again.
+    The client store is synchronous (Redis), so calls to it run in a worker thread.
     """
 
     async def get_client(self, client_id: str) -> OAuthClientInformationFull | None:
-        return _CLIENTS.get(client_id)
+        return await anyio.to_thread.run_sync(runtime.clients.get, client_id)
 
     async def register_client(self, client_info: OAuthClientInformationFull) -> None:
-        _CLIENTS[str(client_info.client_id)] = client_info
+        await anyio.to_thread.run_sync(runtime.clients.add, client_info)
 
     async def authorize(self, client: OAuthClientInformationFull, params: AuthorizationParams) -> str:
         query = urlencode(
@@ -172,7 +175,7 @@ class InMemoryOAuthProvider:
             _REFRESH_TOKENS.pop(token.token, None)
 
 
-provider = InMemoryOAuthProvider()
+provider = OAuthProvider()
 
 
 _LOGIN_HTML = """<!doctype html>
@@ -249,7 +252,7 @@ def _login_sync(data: dict[str, str], *, client_address: str) -> Response:
     scope = data.get("scope", "")
     resource = data.get("resource", "") or None
 
-    client = _CLIENTS.get(client_id)
+    client = runtime.clients.get(client_id)
     if client is None or not _is_registered_redirect(client, redirect_uri):
         # The form is user-supplied: only a registered client's own redirect
         # URI may receive a code, or a crafted link could send it elsewhere.

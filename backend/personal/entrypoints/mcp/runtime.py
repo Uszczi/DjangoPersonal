@@ -15,6 +15,8 @@ from personal.infra import tracing
 from personal.infra.db import Database
 from personal.settings import Settings
 
+from .clients import ClientStore, client_store
+
 settings = Settings()
 # One process (no uvicorn workers), so building it at import is safe; ``None``
 # without an OTLP endpoint, as in the tests.
@@ -25,6 +27,8 @@ hasher: PasswordHasher = wiring.password_hasher()
 #: Counts failed logins (the ``/login`` page and the ``login_user`` tool);
 #: shared with the API through Redis when ``REDIS_URL`` is set.
 limiter: RateLimiter = wiring.rate_limiter(settings)
+#: Registered OAuth clients; in Redis when ``REDIS_URL`` is set, so a restart keeps them.
+clients: ClientStore = client_store(settings)
 #: The models behind ``ask_notes``; their HTTP clients pool connections across calls.
 embedder: Embedder = wiring.embedder(settings)
 answer_generator: AnswerGenerator = wiring.answer_generator(settings)

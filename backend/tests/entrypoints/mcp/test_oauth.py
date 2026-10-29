@@ -9,7 +9,8 @@ from starlette.applications import Starlette
 from starlette.routing import Route
 from starlette.testclient import TestClient
 
-from personal.entrypoints.mcp import oauth
+from personal.entrypoints.mcp import oauth, runtime
+from personal.entrypoints.mcp.clients import InMemoryClientStore
 from personal.infra.models import User
 from tests.conftest import DEFAULT_PASSWORD
 
@@ -19,7 +20,9 @@ REDIRECT = 'http://localhost:9999/callback'
 @pytest.fixture
 def oauth_client(monkeypatch: pytest.MonkeyPatch) -> OAuthClientInformationFull:
     client = OAuthClientInformationFull(client_id='client-1', redirect_uris=[AnyUrl(REDIRECT)])
-    monkeypatch.setitem(oauth._CLIENTS, 'client-1', client)
+    store = InMemoryClientStore()
+    store.add(client)
+    monkeypatch.setattr(runtime, 'clients', store)
     return client
 
 
