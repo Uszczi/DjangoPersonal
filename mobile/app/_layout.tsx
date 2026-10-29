@@ -14,7 +14,7 @@ import { useThemeStore } from "@personal/shared/stores/theme";
 import { useCounterViewStore } from "../src/counterView";
 import { queryClient } from "../src/queryClient";
 import { useTabBarStore } from "../src/tabBar";
-import { useNativeColorScheme, useTheme } from "../src/theme";
+import { AccountThemeSync, useNativeColorScheme, useTheme } from "../src/theme";
 
 export default function RootLayout() {
   const { common, headerOptions } = useTheme();
@@ -47,6 +47,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
+        <AccountThemeSync />
         <StatusBar style="light" />
         <Stack screenOptions={headerOptions}>
           <Stack.Protected guard={isSignedIn}>

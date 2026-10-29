@@ -30,6 +30,7 @@ models/PatchedProjectRequest.ts
 models/PatchedTaskUpdateRequest.ts
 models/PatchedTimeEntryRequest.ts
 models/PatchedTransactionRequest.ts
+models/PatchedUserSettingsRequest.ts
 models/PatchedWalletRequest.ts
 models/PatchedWhiteboardRequest.ts
 models/ProjectRequest.ts
@@ -47,6 +48,7 @@ models/TransactionPageResponse.ts
 models/TransactionRequest.ts
 models/TransactionResponse.ts
 models/UserResponse.ts
+models/UserSettingsResponse.ts
 models/WalletCreateRequest.ts
 models/WalletRequest.ts
 models/WalletResponse.ts

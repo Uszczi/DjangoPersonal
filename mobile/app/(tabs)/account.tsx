@@ -3,6 +3,7 @@ import { ScrollView, Text, View } from "react-native";
 
 import { api } from "@personal/shared/api";
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
+import { useUpdateTheme } from "@personal/shared/queries/settings";
 import { useAuthStore } from "@personal/shared/stores/auth";
 import { useThemeStore } from "@personal/shared/stores/theme";
 import {
@@ -23,7 +24,7 @@ export default function AccountScreen() {
   const [deleteError, setDeleteError] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const themePreference = useThemeStore((state) => state.preference);
-  const setThemePreference = useThemeStore((state) => state.setPreference);
+  const updateTheme = useUpdateTheme();
 
   async function deleteAccount() {
     const confirmed = await confirmDestructive(
@@ -59,9 +60,16 @@ export default function AccountScreen() {
             label: themePreferenceLabels[value],
           }))}
           value={themePreference}
-          onChange={setThemePreference}
+          onChange={(theme) => updateTheme.mutate(theme)}
         />
-        <Text style={form.hint}>Zapisywany na tym urządzeniu.</Text>
+        {updateTheme.isError && (
+          <Text style={form.error}>
+            Nie udało się zapisać motywu. Spróbuj ponownie.
+          </Text>
+        )}
+        <Text style={form.hint}>
+          Zapisywany na koncie, wspólny dla wszystkich urządzeń.
+        </Text>
       </View>
       <TabBarSettings />
       <View style={[card.section, { gap: 12 }]}>

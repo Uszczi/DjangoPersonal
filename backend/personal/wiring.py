@@ -38,6 +38,7 @@ from personal.infra.repo import (
     TimeEntryRepository,
     TransactionRepository,
     UserRepository,
+    UserSettingsRepository,
     WalletRepository,
     WhiteboardRepository,
 )
@@ -47,6 +48,10 @@ from personal.settings import Settings
 
 def user_repository(session: Session) -> UserRepository:
     return UserRepository(session)
+
+
+def user_settings_repository(session: Session) -> UserSettingsRepository:
+    return UserSettingsRepository(session)
 
 
 def project_repository(session: Session) -> ProjectRepository:

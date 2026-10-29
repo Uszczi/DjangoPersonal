@@ -8,6 +8,8 @@ import {
 
 import { queryClient } from "@/queryClient";
 import { routeTree } from "@/routeTree.gen";
+import type { UserSettingsResponse } from "@personal/shared/generated/api";
+import { settingsKeys } from "@personal/shared/queries/keys";
 import { useAuthStore } from "@personal/shared/stores/auth";
 import { useNewTaskStatusStore } from "@personal/shared/stores/newTaskStatus";
 import { useThemeStore } from "@personal/shared/stores/theme";
@@ -39,9 +41,18 @@ export function resetStores(options?: { preserveStorage?: boolean }) {
   });
 }
 
+/**
+ * `settings` seeds the account's settings, which the root route loads for
+ * every signed-in page, so tests of other pages need not answer
+ * `/api/v1/settings/`; pass `null` to leave them to the (mocked) server.
+ */
 export function renderApp(
   path = "/",
-  options?: { authenticated?: boolean; preserveStorage?: boolean },
+  options?: {
+    authenticated?: boolean;
+    preserveStorage?: boolean;
+    settings?: UserSettingsResponse | null;
+  },
 ) {
   resetStores({ preserveStorage: options?.preserveStorage });
 
@@ -51,6 +62,11 @@ export function renderApp(
       access: "test-access-token",
       refresh: "test-refresh-token",
     });
+    const settings =
+      options?.settings === undefined
+        ? { theme: useThemeStore.getState().preference }
+        : options.settings;
+    if (settings) queryClient.setQueryData(settingsKeys.all, settings);
   }
 
   const router = createRouter({

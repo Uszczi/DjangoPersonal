@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { Button, PageHeader, ToggleGroup } from "@/design-system";
+import { Button, ErrorAlert, PageHeader, ToggleGroup } from "@/design-system";
 import { DeleteAccountModal } from "@/components/modals/DeleteAccountModal";
+import { useUpdateTheme } from "@personal/shared/queries/settings";
 import { useAuthStore } from "@personal/shared/stores/auth";
 import { useThemeStore } from "@personal/shared/stores/theme";
 import {
@@ -17,7 +18,7 @@ export const Route = createFileRoute("/user")({
 function UserPage() {
   const user = useAuthStore((state) => state.user);
   const themePreference = useThemeStore((state) => state.preference);
-  const setThemePreference = useThemeStore((state) => state.setPreference);
+  const updateTheme = useUpdateTheme();
 
   function openDeleteDialog() {
     ShowModal(DeleteAccountModal);
@@ -37,11 +38,16 @@ function UserPage() {
           options={themePreferences}
           labels={themePreferenceLabels}
           value={themePreference}
-          onChange={setThemePreference}
+          onChange={(theme) => updateTheme.mutate(theme)}
           className="flex-wrap"
         />
+        {updateTheme.isError && (
+          <ErrorAlert className="mb-0">
+            Nie udało się zapisać motywu. Spróbuj ponownie.
+          </ErrorAlert>
+        )}
         <small className="text-[11px] text-hint">
-          Zapisywany na tym urządzeniu.
+          Zapisywany na koncie, wspólny dla wszystkich urządzeń.
         </small>
       </div>
       <div className="flex items-center gap-4">

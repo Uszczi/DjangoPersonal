@@ -86,6 +86,41 @@ paths:
           description: Successful Response
       security:
       - JWTAuth: []
+  /api/v1/settings/:
+    get:
+      tags:
+      - personal
+      summary: Get Settings
+      operationId: settings_retrieve
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSettingsResponse'
+      security:
+      - JWTAuth: []
+    patch:
+      tags:
+      - personal
+      summary: Update Settings
+      operationId: settings_partial_update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserSettingsRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSettingsResponse'
+      security:
+      - JWTAuth: []
   /api/v1/projects/:
     get:
       tags:
@@ -2396,6 +2431,17 @@ components:
           title: Wallet
       type: object
       title: PatchedTransactionRequest
+    PatchedUserSettingsRequest:
+      properties:
+        theme:
+          anyOf:
+          - type: string
+            maxLength: 32
+            pattern: ^[a-z][a-z0-9-]*$
+          - type: 'null'
+          title: Theme
+      type: object
+      title: PatchedUserSettingsRequest
     PatchedWalletRequest:
       properties:
         name:
@@ -2835,6 +2881,15 @@ components:
       - id
       - username
       title: UserResponse
+    UserSettingsResponse:
+      properties:
+        theme:
+          type: string
+          title: Theme
+      type: object
+      required:
+      - theme
+      title: UserSettingsResponse
     WalletCreateRequest:
       properties:
         name:

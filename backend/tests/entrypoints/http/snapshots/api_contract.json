@@ -337,6 +337,22 @@
   },
   {
     "method": "GET",
+    "path": "/api/v1/settings/",
+    "operation_id": "settings_retrieve",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/settings/",
+    "operation_id": "settings_partial_update",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "GET",
     "path": "/api/v1/tasks/",
     "operation_id": "tasks_list",
     "status_codes": [

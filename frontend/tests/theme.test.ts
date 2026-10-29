@@ -90,7 +90,7 @@ describe("theme", () => {
     expect(cssVariable("canvas")).toBe(themes.light.colors.canvas);
   });
 
-  test("a picked theme wins over the system and is remembered", () => {
+  test("the device's copy of the account theme wins over the system and is persisted", () => {
     mockSystemScheme("dark");
     stop = startTheme();
 
