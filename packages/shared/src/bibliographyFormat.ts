@@ -60,6 +60,19 @@ export function itemByline({
     .join(" · ");
 }
 
+/** What the list's search matches a BibliographyItem by: its title, creator and year. */
+export function itemSearchText({
+  title,
+  creator,
+  year,
+}: {
+  title: string;
+  creator: string;
+  year: number | null;
+}) {
+  return [title, creator, year === null ? "" : String(year)].join(" ");
+}
+
 /** A calendar day as `dd.mm.yyyy`. */
 function formatDay(date: Date) {
   const day = String(date.getDate()).padStart(2, "0");

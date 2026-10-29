@@ -248,6 +248,38 @@ describe("Bibliography", () => {
     expect(within(second).getByText("Do przeczytania")).toBeInTheDocument();
   });
 
+  test("the search finds items fuzzily by title or creator", async () => {
+    fetchMock.mockImplementation(fakeBackend([rejs, lalka]).handler);
+    const user = userEvent.setup();
+
+    renderApp("/bibliography");
+    const list = await screen.findByRole("list", { name: "Pozycje" });
+    const search = screen.getByRole("searchbox", {
+      name: "Szukaj w Bibliografii",
+    });
+
+    await user.type(search, "boleslaw");
+    expect(within(list).getAllByRole("listitem")).toHaveLength(1);
+    expect(within(list).getByText("Lalka")).toBeInTheDocument();
+
+    await user.clear(search);
+    await user.type(search, "rjs");
+    expect(within(list).getByText("Rejs")).toBeInTheDocument();
+    expect(within(list).queryByText("Lalka")).not.toBeInTheDocument();
+
+    await user.type(search, "xyz");
+    expect(
+      screen.getByText("Brak pozycji pasujących do wyszukiwania"),
+    ).toBeInTheDocument();
+
+    await user.type(search, "{Escape}");
+    expect(
+      within(await screen.findByRole("list", { name: "Pozycje" })).getAllByRole(
+        "listitem",
+      ),
+    ).toHaveLength(2);
+  });
+
   test("user can add a book with only a title", async () => {
     const backend = fakeBackend();
     fetchMock.mockImplementation(backend.handler);
