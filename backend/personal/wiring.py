@@ -29,11 +29,13 @@ from personal.infra.repo import (
     AttemptRepository,
     BibliographyItemRepository,
     CategoryRepository,
+    CommentAttachmentRepository,
     CounterEntryRepository,
     CounterRepository,
     FolderRepository,
     NoteChunkRepository,
     ProjectRepository,
+    TaskCommentRepository,
     TaskRepository,
     TimeEntryRepository,
     TransactionRepository,
@@ -60,6 +62,14 @@ def project_repository(session: Session) -> ProjectRepository:
 
 def task_repository(session: Session) -> TaskRepository:
     return TaskRepository(session)
+
+
+def task_comment_repository(session: Session) -> TaskCommentRepository:
+    return TaskCommentRepository(session)
+
+
+def comment_attachment_repository(session: Session) -> CommentAttachmentRepository:
+    return CommentAttachmentRepository(session)
 
 
 def time_entry_repository(session: Session) -> TimeEntryRepository:

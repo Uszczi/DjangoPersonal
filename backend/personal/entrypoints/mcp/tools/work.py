@@ -7,9 +7,11 @@ from personal import wiring
 from personal.core.work import clock, handlers
 from personal.core.work.contracts import (
     PatchedProjectRequest,
+    PatchedTaskCommentRequest,
     PatchedTaskUpdateRequest,
     PatchedTimeEntryRequest,
     ProjectRequest,
+    TaskCommentCreateRequest,
     TaskCreateRequest,
     TimeEntryCreateRequest,
     TimerStartRequest,
@@ -20,6 +22,8 @@ from ..serialization import (
     project,
     projects,
     task,
+    task_comment,
+    task_comments,
     tasks,
     time_entries,
     time_entry,
@@ -160,6 +164,46 @@ def delete_task(ctx: ToolContext, task_id: int) -> str:
     """Delete a task (refused if time has been recorded)."""
     with unit_of_work(ctx) as (session, user):
         handlers.DeleteTask(wiring.task_repository(session), user).execute(task_id)
+        return 'deleted'
+
+
+@tool
+def list_task_comments(ctx: ToolContext, task_id: int) -> list[dict[str, Any]]:
+    """List a task's comments, oldest first, with their attached files' names and sizes."""
+    with unit_of_work(ctx) as (session, user):
+        handler = handlers.ListTaskComments(
+            wiring.task_repository(session), wiring.task_comment_repository(session), user
+        )
+        return task_comments(handler.execute(task_id))
+
+
+@tool
+def add_task_comment(ctx: ToolContext, task_id: int, body: str) -> dict[str, Any]:
+    """Comment on a task."""
+    payload = TaskCommentCreateRequest.model_validate({'task': task_id, 'body': body})
+    with unit_of_work(ctx) as (session, user):
+        handler = handlers.CreateTaskComment(
+            wiring.task_repository(session), wiring.task_comment_repository(session), user
+        )
+        return task_comment(handler.execute(payload))
+
+
+@tool
+def update_task_comment(ctx: ToolContext, comment_id: int, body: str) -> dict[str, Any]:
+    """Change a comment's text."""
+    payload = PatchedTaskCommentRequest.model_validate({'body': body})
+    with unit_of_work(ctx) as (session, user):
+        handler = handlers.UpdateTaskComment(wiring.task_comment_repository(session), user)
+        return task_comment(handler.execute(comment_id, payload))
+
+
+@tool
+def delete_task_comment(ctx: ToolContext, comment_id: int) -> str:
+    """Delete a comment together with its attached files."""
+    with unit_of_work(ctx) as (session, user):
+        handlers.DeleteTaskComment(wiring.task_comment_repository(session), user).execute(
+            comment_id
+        )
         return 'deleted'
 
 

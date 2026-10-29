@@ -9,6 +9,7 @@ models/BibliographyItemRequest.ts
 models/BibliographyItemResponse.ts
 models/CategoryRequest.ts
 models/CategoryResponse.ts
+models/CommentAttachmentResponse.ts
 models/CounterEntryRequest.ts
 models/CounterEntryResponse.ts
 models/CounterRequest.ts
@@ -27,6 +28,7 @@ models/PatchedCounterEntryRequest.ts
 models/PatchedCounterRequest.ts
 models/PatchedFolderRequest.ts
 models/PatchedProjectRequest.ts
+models/PatchedTaskCommentRequest.ts
 models/PatchedTaskUpdateRequest.ts
 models/PatchedTimeEntryRequest.ts
 models/PatchedTransactionRequest.ts
@@ -38,6 +40,8 @@ models/ProjectResponse.ts
 models/RefreshRequest.ts
 models/RefreshResponse.ts
 models/RegisterRequest.ts
+models/TaskCommentCreateRequest.ts
+models/TaskCommentResponse.ts
 models/TaskCreateRequest.ts
 models/TaskResponse.ts
 models/TimeEntryCreateRequest.ts

@@ -21,6 +21,7 @@ from .errors import (
 from .folders import FolderRepository
 from .note_chunks import NoteChunkRepository, ScoredChunk
 from .projects import ProjectRepository
+from .task_comments import CommentAttachmentRepository, TaskCommentRepository
 from .tasks import TaskRepository
 from .time_entries import TimeEntryRepository
 from .transactions import TransactionKey, TransactionRepository
@@ -34,6 +35,7 @@ __all__ = [
     'AttemptRepository',
     'BibliographyItemRepository',
     'CategoryRepository',
+    'CommentAttachmentRepository',
     'CounterEntryRepository',
     'CounterRepository',
     'DuplicateCategoryName',
@@ -50,6 +52,7 @@ __all__ = [
     'ProjectRepository',
     'RepositoryError',
     'ScoredChunk',
+    'TaskCommentRepository',
     'TaskHasTimeEntries',
     'TaskRepository',
     'TimeEntryRepository',

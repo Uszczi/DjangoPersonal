@@ -19,6 +19,7 @@ dependencies = [
     "psycopg[binary]>=3.3.6",
     "pydantic-settings>=2.16.0",
     "pyjwt>=2.15.1",
+    "python-multipart>=0.0.32",
     "redis>=5",
     "sqladmin>=0.32",
     "sqlalchemy[asyncio]>=2",  # sqladmin imports the asyncio extension (greenlet)

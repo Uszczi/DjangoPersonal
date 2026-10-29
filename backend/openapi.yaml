@@ -351,6 +351,164 @@ paths:
       responses:
         '204':
           description: Successful Response
+  /api/v1/task-comments/:
+    get:
+      tags:
+      - personal
+      summary: List Task Comments
+      operationId: task_comments_list
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: task
+        in: query
+        required: true
+        schema:
+          type: integer
+          title: Task
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskCommentResponse'
+                title: Response Task Comments List
+    post:
+      tags:
+      - personal
+      summary: Create Task Comment
+      operationId: task_comments_create
+      security:
+      - JWTAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCommentCreateRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCommentResponse'
+  /api/v1/task-comments/{id}/:
+    patch:
+      tags:
+      - personal
+      summary: Update Task Comment
+      operationId: task_comments_partial_update
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskCommentRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCommentResponse'
+    delete:
+      tags:
+      - personal
+      summary: Delete Task Comment
+      operationId: task_comments_destroy
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      responses:
+        '204':
+          description: Successful Response
+  /api/v1/task-comments/{id}/attachments/:
+    post:
+      tags:
+      - personal
+      summary: Add Comment Attachment
+      operationId: task_comments_attachments_create
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_task_comments_attachments_create'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentAttachmentResponse'
+  /api/v1/comment-attachments/{id}/:
+    get:
+      tags:
+      - personal
+      summary: Download Comment Attachment
+      operationId: comment_attachments_retrieve
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      responses:
+        '200':
+          description: The file as it was uploaded.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+    delete:
+      tags:
+      - personal
+      summary: Delete Comment Attachment
+      operationId: comment_attachments_destroy
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      responses:
+        '204':
+          description: Successful Response
   /api/v1/time-entries/:
     get:
       tags:
@@ -1891,6 +2049,17 @@ components:
       - status
       - created_at
       title: BibliographyItemResponse
+    Body_task_comments_attachments_create:
+      properties:
+        file:
+          type: string
+          contentMediaType: application/octet-stream
+          title: File
+          description: The file, stored exactly as sent.
+      type: object
+      required:
+      - file
+      title: Body_task_comments_attachments_create
     CategoryRequest:
       properties:
         name:
@@ -1931,6 +2100,47 @@ components:
       - name
       - icon
       title: CategoryResponse
+    CommentAttachmentResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+          readOnly: true
+        comment_id:
+          type: integer
+          title: Comment Id
+          readOnly: true
+        file_name:
+          type: string
+          title: File Name
+          readOnly: true
+        content_type:
+          type: string
+          title: Content Type
+          readOnly: true
+        size:
+          type: integer
+          title: Size
+          readOnly: true
+        is_image:
+          type: boolean
+          title: Is Image
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+          readOnly: true
+      type: object
+      required:
+      - id
+      - comment_id
+      - file_name
+      - content_type
+      - size
+      - is_image
+      - created_at
+      title: CommentAttachmentResponse
     CounterEntryRequest:
       properties:
         counter:
@@ -2339,6 +2549,16 @@ components:
           title: Terminal Status
       type: object
       title: PatchedProjectRequest
+    PatchedTaskCommentRequest:
+      properties:
+        body:
+          anyOf:
+          - type: string
+            maxLength: 10000
+          - type: 'null'
+          title: Body
+      type: object
+      title: PatchedTaskCommentRequest
     PatchedTaskUpdateRequest:
       properties:
         title:
@@ -2615,6 +2835,52 @@ components:
       - password
       - password_confirm
       title: RegisterRequest
+    TaskCommentCreateRequest:
+      properties:
+        task:
+          type: integer
+          title: Task
+        body:
+          type: string
+          maxLength: 10000
+          title: Body
+          default: ''
+      type: object
+      required:
+      - task
+      title: TaskCommentCreateRequest
+    TaskCommentResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+          readOnly: true
+        task_id:
+          type: integer
+          title: Task Id
+          readOnly: true
+        body:
+          type: string
+          title: Body
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+          readOnly: true
+        attachments:
+          items:
+            $ref: '#/components/schemas/CommentAttachmentResponse'
+          type: array
+          title: Attachments
+          readOnly: true
+      type: object
+      required:
+      - id
+      - task_id
+      - body
+      - created_at
+      - attachments
+      title: TaskCommentResponse
     TaskCreateRequest:
       properties:
         title:

@@ -24,6 +24,7 @@ import {
 
 import { Button } from "../src/Button";
 import { ChipGroup } from "../src/ChipGroup";
+import { TaskComments } from "../src/TaskComments";
 import { confirmDestructive } from "../src/confirm";
 import { useTheme } from "../src/theme";
 
@@ -31,7 +32,8 @@ import { useTheme } from "../src/theme";
  * Creates a Task in `?projectId=`, or edits `?taskId=` of that Project, like
  * the web TaskEditorModal. The edited Task comes from the Project's cached
  * task list, which is the list the user tapped it in. Reordering is done by
- * dragging on the Project screen, like the web's drag and drop.
+ * dragging on the Project screen, like the web's drag and drop. An existing
+ * Task also shows its comments, where photos can be attached.
  */
 export default function TaskEditorScreen() {
   const { common, form } = useTheme();
@@ -239,6 +241,8 @@ export default function TaskEditorScreen() {
             />
           </View>
         )}
+
+        {task && <TaskComments task={task} />}
       </ScrollView>
     </KeyboardAvoidingView>
   );

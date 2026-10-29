@@ -9,6 +9,7 @@ framework-specific, so the suite describes the HTTP contract and nothing else.
 """
 
 import json as jsonlib
+import uuid
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol
 
@@ -40,7 +41,7 @@ class Transport(Protocol):
 
 
 class ApiClient:
-    """A JSON API client, optionally authenticated with a bearer token."""
+    """A JSON API client (plus file uploads), optionally authenticated with a bearer token."""
 
     def __init__(self, transport: Transport, *, token: str | None = None):
         self.transport = transport
@@ -85,6 +86,27 @@ class ApiClient:
 
     def delete(self, path: str, *, headers: dict[str, str] | None = None) -> Response:
         return self.request('DELETE', path, headers=headers)
+
+    def upload(
+        self,
+        path: str,
+        *,
+        field: str = 'file',
+        file_name: str,
+        data: bytes,
+        content_type: str = 'application/octet-stream',
+    ) -> Response:
+        """POST one file as ``multipart/form-data``, the way a browser sends it."""
+        boundary = uuid.uuid4().hex
+        body = (
+            f'--{boundary}\r\n'
+            f'Content-Disposition: form-data; name="{field}"; filename="{file_name}"\r\n'
+            f'Content-Type: {content_type}\r\n\r\n'
+        ).encode() + data + f'\r\n--{boundary}--\r\n'.encode()
+        headers = {'Content-Type': f'multipart/form-data; boundary={boundary}'}
+        if self.token is not None:
+            headers['Authorization'] = f'Bearer {self.token}'
+        return self.transport.request('POST', path, body=body, headers=headers)
 
 
 class FastAPITransport:

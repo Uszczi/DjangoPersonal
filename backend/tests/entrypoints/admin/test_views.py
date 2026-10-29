@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from personal.infra import factories
-from personal.infra.models import Project, User, Whiteboard
+from personal.infra.models import CommentAttachment, Project, TaskComment, User, Whiteboard
 from tests.entrypoints.admin.helpers import sign_in
 
 
@@ -66,3 +66,37 @@ def test_every_view_renders(
     assert panel.get(f'/admin/project/details/{project.id}').status_code == 200
     assert panel.get(f'/admin/project/edit/{project.id}').status_code == 200
     assert panel.get(f'/admin/user/edit/{owner.id}').status_code == 200
+
+
+def test_comments_and_attachments_views(
+    panel: TestClient, make_user: Callable[..., User], session: Session
+) -> None:
+    make_user('boss', is_staff=True)
+    owner = make_user('owner')
+    task = factories.TaskFactory.create(project=factories.ProjectFactory.create(user=owner))
+    comment = TaskComment(user=owner, task=task, body='Looks good')
+    attachment = CommentAttachment(
+        user=owner,
+        comment=comment,
+        file_name='secret-bytes.txt',
+        content_type='text/plain',
+        size=5,
+        data=b'SECRET',
+    )
+    session.add_all([comment, attachment])
+    session.commit()
+    attachment_id = attachment.id
+    sign_in(panel, 'boss')
+
+    for identity in ('task-comment', 'comment-attachment'):
+        assert panel.get(f'/admin/{identity}/list').status_code == 200, identity
+    assert panel.get(f'/admin/task-comment/edit/{comment.id}').status_code == 200
+    details = panel.get(f'/admin/comment-attachment/details/{attachment.id}')
+    assert details.status_code == 200
+    assert 'secret-bytes.txt' in details.text
+    assert 'SECRET' not in details.text
+
+    panel.delete(f'/admin/task-comment/delete?pks={comment.id}')
+
+    session.expire_all()
+    assert session.get(CommentAttachment, attachment_id) is None

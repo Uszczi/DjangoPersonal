@@ -15,6 +15,7 @@ from .folder import Folder
 from .note_chunk import NoteChunk
 from .project import Project
 from .task import Task
+from .task_comment import INLINE_IMAGE_TYPES, CommentAttachment, TaskComment
 from .time_entry import TimeEntry
 from .transaction import Transaction
 from .user import User
@@ -27,12 +28,15 @@ __all__ = [
     'Base',
     'BibliographyItem',
     'Category',
+    'CommentAttachment',
     'Counter',
     'CounterEntry',
     'Folder',
     'NoteChunk',
     'Project',
+    'INLINE_IMAGE_TYPES',
     'Task',
+    'TaskComment',
     'TimeEntry',
     'Transaction',
     'User',

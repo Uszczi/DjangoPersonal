@@ -35,3 +35,17 @@ def test_timer_tool_takes_a_limit(mcp_user: User) -> None:
     started = call('start_timer', task_id=task['id'], duration_minutes=25)
 
     assert started['entry']['planned_end'] is not None
+
+
+def test_task_comment_tools(mcp_user: User) -> None:
+    task = call('create_task', title='Review')
+
+    comment = call('add_task_comment', task_id=task['id'], body=' Looks good ')
+    assert comment['body'] == 'Looks good'
+    assert comment['attachments'] == []
+
+    call('update_task_comment', comment_id=comment['id'], body='Ship it')
+    assert [c['body'] for c in call('list_task_comments', task_id=task['id'])] == ['Ship it']
+
+    assert call('delete_task_comment', comment_id=comment['id']) == 'deleted'
+    assert call('list_task_comments', task_id=task['id']) == []

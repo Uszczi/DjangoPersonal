@@ -74,6 +74,20 @@ function jsonResponse(data: unknown, status = 200) {
   });
 }
 
+/**
+ * `fetchMock` behind a stand-in that answers the task editor's comment list
+ * with none, so the tests' queued responses and call counts cover only the
+ * requests they are about.
+ */
+function answeringTaskComments(
+  fetchMock: (input: RequestInfo | URL, init?: RequestInit) => unknown,
+) {
+  return (input: RequestInfo | URL, init?: RequestInit) =>
+    String(input).includes("/api/v1/task-comments/")
+      ? Promise.resolve(jsonResponse([]))
+      : fetchMock(input, init);
+}
+
 function deferred<T>() {
   let resolve: (value: T) => void = () => {};
   const promise = new Promise<T>((resolvePromise) => {
@@ -87,7 +101,7 @@ describe("Projects", () => {
 
   beforeEach(() => {
     fetchMock.mockReset();
-    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("fetch", answeringTaskComments(fetchMock));
   });
 
   afterEach(() => {
@@ -923,7 +937,7 @@ describe("Deleting tasks and projects", () => {
 
   beforeEach(() => {
     fetchMock.mockReset();
-    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("fetch", answeringTaskComments(fetchMock));
   });
 
   afterEach(() => {

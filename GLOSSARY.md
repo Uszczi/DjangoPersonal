@@ -10,6 +10,13 @@ A named space that groups tasks.
 **Task**:
 An action item with a title, optional description, and a status drawn from its project's ordered list of statuses. Every task belongs to exactly one project.
 
+**Comment** (Komentarz):
+A note left on a Task: optional text plus any number of Attachments. A Task's comments read oldest first, like a conversation. Deleting a Task deletes its comments.
+
+**Attachment** (Załącznik):
+A file attached to a Comment, kept byte for byte as uploaded (original name, type and size). Pictures (JPEG, PNG, GIF, WebP — recognised from the file's bytes) are shown in place; any other file is only downloaded. At most 25 MB each. Deleting a Comment deletes its Attachments.
+_Avoid_: Image (it may be any file), Upload
+
 **Project status**:
 A named state a Task can be in, defined per Project as an ordered list. The list order is the order statuses and their tasks are displayed in. One status in the list is the Project's terminal status — its "done" status.
 
