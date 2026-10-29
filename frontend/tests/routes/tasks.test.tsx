@@ -291,6 +291,62 @@ describe("Projects", () => {
     );
   });
 
+  test("user can drag a task into another status", async () => {
+    const doneTask = { ...task, id: 8, title: "Ship it", status: "Zrobione" };
+    fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+      if (url === "/api/v1/projects/") return jsonResponse([inbox, planning]);
+      if (url.startsWith("/api/v1/tasks/?"))
+        return jsonResponse([task, doneTask]);
+      if (url === "/api/v1/tasks/7/" && init?.method === "PATCH")
+        return jsonResponse({ ...task, status: "Zrobione", position: 0 });
+      throw new Error(`Unexpected request: ${url}`);
+    });
+    // jsdom has no layout: Todo rows sit at y=0, Zrobione rows 100px below.
+    const tops: Record<string, number> = { Todo: 0, Zrobione: 100 };
+    const rect = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockImplementation(function (this: HTMLElement) {
+        const taskId = this.dataset.taskId;
+        const list = this.firstElementChild?.matches("ul[aria-label]")
+          ? this.firstElementChild.getAttribute("aria-label")
+          : null;
+        const top = taskId
+          ? taskId === "7"
+            ? 0
+            : 100
+          : list
+            ? tops[list]
+            : undefined;
+        return DOMRect.fromRect({
+          x: 0,
+          y: top ?? 0,
+          width: 300,
+          height: top === undefined ? 0 : 40,
+        });
+      });
+    const user = userEvent.setup();
+
+    renderApp("/tasks?project=2");
+    const handle = await screen.findByRole("button", {
+      name: "Przeciągnij zadanie: Prepare outline",
+    });
+    handle.focus();
+    await user.keyboard("[Space]");
+    await user.keyboard("[ArrowDown]");
+    await user.keyboard("[Space]");
+    rect.mockRestore();
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/v1/tasks/7/",
+        expect.objectContaining({
+          method: "PATCH",
+          body: JSON.stringify({ status: "Zrobione", position: 0 }),
+        }),
+      ),
+    );
+  });
+
   test("user sees Inbox first and other Projects alphabetically", async () => {
     fetchMock
       .mockResolvedValueOnce(
