@@ -5,6 +5,7 @@ from personal.infra.models import User
 from personal.infra.repo import AttemptRepository, BibliographyItemRepository
 
 from ..contracts import BibliographyItemRequest, PatchedBibliographyItemRequest
+from ..progress import check_progress_within_length
 from ..status import item_status
 
 
@@ -66,7 +67,10 @@ class CreateBibliographyItem:
 
 
 class UpdateBibliographyItem:
-    """Apply the supplied fields (PATCH); the kind stays what it was created with."""
+    """Apply the supplied fields (PATCH); the kind stays what it was created with.
+
+    A new length must still fit the progress of the Attempt in progress.
+    """
 
     def __init__(
         self, items: BibliographyItemRepository, attempts: AttemptRepository, user: User
@@ -77,6 +81,9 @@ class UpdateBibliographyItem:
 
     def execute(self, item_id: int, data: PatchedBibliographyItemRequest) -> BibliographyItemModel:
         item = _get_bibliography_item(self.items, item_id, user=self.user)
+        attempts = self.attempts.list_for_item(item.id, user=self.user)
         apply_provided(data, item)
+        for attempt in attempts:
+            check_progress_within_length(attempt.progress, item.length)
         saved = self.items.save(item)
         return _with_status(self.attempts, [saved], user=self.user)[0]

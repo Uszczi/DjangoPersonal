@@ -15,7 +15,10 @@
 
 import { mapValues, parseDate, parseDateTime, serializeDate, serializeDateTime } from '../runtime';
 /**
- * Finish, abandon or re-date an Attempt; it stays on its BibliographyItem.
+ * Finish, abandon, re-date or move on an Attempt; it stays on its BibliographyItem.
+ *
+ * ``progress`` is a page (book) or minute (film), set only while in progress;
+ * ``null`` clears it.
  * @export
  * @interface PatchedAttemptRequest
  */
@@ -32,6 +35,10 @@ export interface PatchedAttemptRequest {
      *
      */
     endedOn?: Date | null;
+    /**
+     *
+     */
+    progress?: number | null;
 }
 
 
@@ -66,6 +73,7 @@ export function PatchedAttemptRequestFromJSONTyped(json: any, ignoreDiscriminato
         'outcome': json['outcome'] === undefined ? undefined : json['outcome'] === null ? null : json['outcome'],
         'startedOn': json['started_on'] === undefined ? undefined : json['started_on'] === null ? null : (parseDate(json['started_on'])),
         'endedOn': json['ended_on'] === undefined ? undefined : json['ended_on'] === null ? null : (parseDate(json['ended_on'])),
+        'progress': json['progress'] === undefined ? undefined : json['progress'] === null ? null : json['progress'],
     };
 }
 
@@ -83,6 +91,7 @@ export function PatchedAttemptRequestToJSONTyped(value?: PatchedAttemptRequest |
         'outcome': value['outcome'],
         'started_on': value['startedOn'] == null ? value['startedOn'] : serializeDate(value['startedOn']),
         'ended_on': value['endedOn'] == null ? value['endedOn'] : serializeDate(value['endedOn']),
+        'progress': value['progress'],
     };
 }
 

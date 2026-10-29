@@ -13,7 +13,8 @@ class Attempt(Base):
 
     The use cases enforce the rules with friendly errors; the constraints here are
     the safety net: an end date exactly when it has ended, never before the start,
-    and at most one Attempt in progress per BibliographyItem.
+    progress only while in progress, and at most one Attempt in progress per
+    BibliographyItem. Progress against the item's length is checked by the use cases.
     """
 
     __tablename__ = 'bibliography_attempts'
@@ -27,6 +28,10 @@ class Attempt(Base):
         CheckConstraint(
             'started_on IS NULL OR ended_on IS NULL OR ended_on >= started_on',
             name='ends_after_start',
+        ),
+        CheckConstraint(
+            "progress IS NULL OR (progress >= 0 AND outcome = 'in_progress')",
+            name='progress_only_in_progress',
         ),
         Index(
             'uq_bibliography_attempts_one_in_progress',
@@ -50,6 +55,8 @@ class Attempt(Base):
     #: Calendar days, no time of day.
     started_on: Mapped[date | None] = mapped_column(default=None)
     ended_on: Mapped[date | None] = mapped_column(default=None)
+    #: How far the user is (a page for a book, a minute for a film); only while in progress.
+    progress: Mapped[int | None] = mapped_column(default=None)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utc_now)
 
     user: Mapped[User] = relationship()

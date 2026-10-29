@@ -263,3 +263,92 @@ def test_attempts_require_authentication(anon_client: ApiClient) -> None:
     assert anon_client.get(f'{ATTEMPTS}?item=1').status_code == 401
     response = anon_client.post(ATTEMPTS, {'item': 1, 'outcome': 'in_progress'})
     assert response.status_code == 401
+
+
+def test_progress_is_set_on_the_attempt_in_progress(
+    post_json: Any, patch_json: Any, api_client: ApiClient
+) -> None:
+    item = _item(post_json, length=300)
+    attempt = _attempt(post_json, item, outcome='in_progress')
+    assert attempt['progress'] is None
+
+    response = patch_json(f'{ATTEMPTS}{attempt["id"]}/', {'progress': 120})
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json()['progress'] == 120
+    assert api_client.get(f'{ATTEMPTS}{attempt["id"]}/').json()['progress'] == 120
+
+
+def test_progress_is_rejected_on_an_ended_attempt(post_json: Any, patch_json: Any) -> None:
+    item = _item(post_json)
+    finished = _attempt(post_json, item, outcome='finished', ended_on='2026-10-01')
+
+    response = patch_json(f'{ATTEMPTS}{finished["id"]}/', {'progress': 10})
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {'detail': 'Progress is set only on an Attempt in progress.'}
+
+    response = post_json(
+        ATTEMPTS, {'item': item, 'outcome': 'abandoned', 'ended_on': '2026-10-02', 'progress': 5}
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+def test_ending_an_attempt_clears_its_progress(post_json: Any, patch_json: Any) -> None:
+    item = _item(post_json)
+    attempt = _attempt(post_json, item, outcome='in_progress', progress=40)
+
+    response = patch_json(
+        f'{ATTEMPTS}{attempt["id"]}/', {'outcome': 'abandoned', 'ended_on': '2026-10-28'}
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json()['progress'] is None
+
+
+def test_progress_is_a_whole_number_not_past_the_length(
+    post_json: Any, patch_json: Any
+) -> None:
+    item = _item(post_json, kind='film', title='Rejs', length=67)
+    url = f'{ATTEMPTS}{_attempt(post_json, item, outcome="in_progress")["id"]}/'
+
+    assert patch_json(url, {'progress': -1}).status_code == 422
+    assert patch_json(url, {'progress': 1.5}).status_code == 422
+    response = patch_json(url, {'progress': 68})
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {'detail': 'Progress cannot be greater than the length (67).'}
+    assert patch_json(url, {'progress': 0}).json()['progress'] == 0
+
+
+def test_progress_has_no_upper_bound_without_a_length(post_json: Any) -> None:
+    item = _item(post_json)
+
+    attempt = _attempt(post_json, item, outcome='in_progress', progress=5000)
+
+    assert attempt['progress'] == 5000
+
+
+def test_reaching_the_length_does_not_finish_the_attempt(
+    post_json: Any, patch_json: Any, api_client: ApiClient
+) -> None:
+    item = _item(post_json, length=300)
+    attempt = _attempt(post_json, item, outcome='in_progress')
+
+    response = patch_json(f'{ATTEMPTS}{attempt["id"]}/', {'progress': 300})
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['outcome'] == 'in_progress'
+    assert response.json()['ended_on'] is None
+    assert _status(api_client, item) == 'in_progress'
+
+
+def test_the_length_cannot_drop_below_the_open_progress(
+    post_json: Any, patch_json: Any
+) -> None:
+    item = _item(post_json, length=300)
+    _attempt(post_json, item, outcome='in_progress', progress=120)
+
+    response = patch_json(f'{ITEMS}{item}/', {'length': 100})
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.json() == {'detail': 'Progress cannot be greater than the length (100).'}
+    assert patch_json(f'{ITEMS}{item}/', {'length': 120}).status_code == HTTPStatus.OK
+    assert patch_json(f'{ITEMS}{item}/', {'length': None}).status_code == HTTPStatus.OK

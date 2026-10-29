@@ -39,6 +39,10 @@ export interface AttemptRequest {
      *
      */
     endedOn?: Date | null;
+    /**
+     *
+     */
+    progress?: number | null;
 }
 
 
@@ -76,6 +80,7 @@ export function AttemptRequestFromJSONTyped(json: any, ignoreDiscriminator: bool
         'outcome': json['outcome'],
         'startedOn': json['started_on'] === undefined ? undefined : json['started_on'] === null ? null : (parseDate(json['started_on'])),
         'endedOn': json['ended_on'] === undefined ? undefined : json['ended_on'] === null ? null : (parseDate(json['ended_on'])),
+        'progress': json['progress'] === undefined ? undefined : json['progress'] === null ? null : json['progress'],
     };
 }
 
@@ -94,6 +99,7 @@ export function AttemptRequestToJSONTyped(value?: AttemptRequest | null, ignoreD
         'outcome': value['outcome'],
         'started_on': value['startedOn'] == null ? value['startedOn'] : serializeDate(value['startedOn']),
         'ended_on': value['endedOn'] == null ? value['endedOn'] : serializeDate(value['endedOn']),
+        'progress': value['progress'],
     };
 }
 

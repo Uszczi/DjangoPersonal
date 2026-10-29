@@ -43,6 +43,10 @@ export interface AttemptResponse {
     /**
      *
      */
+    progress: number | null;
+    /**
+     *
+     */
     readonly createdAt: Date;
 }
 
@@ -67,6 +71,7 @@ export function instanceOfAttemptResponse(value: object): value is AttemptRespon
     if (!('outcome' in value) || value['outcome'] === undefined) return false;
     if ((!('startedOn' in (value as Record<string, any>)) && !('started_on' in (value as Record<string, any>))) || ((value as Record<string, any>)['startedOn'] === undefined && (value as Record<string, any>)['started_on'] === undefined)) return false;
     if ((!('endedOn' in (value as Record<string, any>)) && !('ended_on' in (value as Record<string, any>))) || ((value as Record<string, any>)['endedOn'] === undefined && (value as Record<string, any>)['ended_on'] === undefined)) return false;
+    if (!('progress' in value) || value['progress'] === undefined) return false;
     if ((!('createdAt' in (value as Record<string, any>)) && !('created_at' in (value as Record<string, any>))) || ((value as Record<string, any>)['createdAt'] === undefined && (value as Record<string, any>)['created_at'] === undefined)) return false;
     return true;
 }
@@ -86,6 +91,7 @@ export function AttemptResponseFromJSONTyped(json: any, ignoreDiscriminator: boo
         'outcome': json['outcome'],
         'startedOn': (json['started_on'] == null ? null : parseDate(json['started_on'])),
         'endedOn': (json['ended_on'] == null ? null : parseDate(json['ended_on'])),
+        'progress': json['progress'],
         'createdAt': (json['created_at'] == null ? json['created_at'] : parseDateTime(json['created_at'])),
     };
 }
@@ -104,6 +110,7 @@ export function AttemptResponseToJSONTyped(value?: Omit<AttemptResponse, 'id'|'i
         'outcome': value['outcome'],
         'started_on': value['startedOn'] == null ? value['startedOn'] : serializeDate(value['startedOn']),
         'ended_on': value['endedOn'] == null ? value['endedOn'] : serializeDate(value['endedOn']),
+        'progress': value['progress'],
     };
 }
 

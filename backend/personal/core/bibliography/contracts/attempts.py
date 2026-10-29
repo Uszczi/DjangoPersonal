@@ -30,16 +30,22 @@ class AttemptRequest(_AttemptPayload):
     outcome: AttemptOutcome
     started_on: date | None = None
     ended_on: date | None = None
+    progress: int | None = Field(None, ge=0)
 
 
 class PatchedAttemptRequest(_AttemptPayload):
-    """Finish, abandon or re-date an Attempt; it stays on its BibliographyItem."""
+    """Finish, abandon, re-date or move on an Attempt; it stays on its BibliographyItem.
+
+    ``progress`` is a page (book) or minute (film), set only while in progress;
+    ``null`` clears it.
+    """
 
     model_config = ConfigDict(extra='forbid')
 
     outcome: AttemptOutcome | None = None
     started_on: date | None = None
     ended_on: date | None = None
+    progress: int | None = Field(None, ge=0)
 
 
 class AttemptResponse(BaseModel):
@@ -48,4 +54,5 @@ class AttemptResponse(BaseModel):
     outcome: AttemptOutcome
     started_on: date | None
     ended_on: date | None
+    progress: int | None
     created_at: datetime = Field(..., json_schema_extra={'readOnly': True})

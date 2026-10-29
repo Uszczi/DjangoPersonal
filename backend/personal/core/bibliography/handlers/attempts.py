@@ -11,9 +11,11 @@ from personal.infra.repo import (
 )
 
 from ..contracts import AttemptRequest, PatchedAttemptRequest
+from ..progress import check_progress_within_length
 from .items import _get_bibliography_item
 
 ALREADY_IN_PROGRESS = 'This bibliography item already has an Attempt in progress.'
+PROGRESS_ONLY_IN_PROGRESS = 'Progress is set only on an Attempt in progress.'
 
 
 def _get_attempt(repository: AttemptRepository, attempt_id: int, *, user: User) -> AttemptModel:
@@ -36,6 +38,22 @@ def _check_dates(attempt: AttemptModel) -> None:
         and attempt.ended_on < attempt.started_on
     ):
         raise DomainError('The end date cannot be before the start date.')
+
+
+def _settle_progress(attempt: AttemptModel, *, progress_given: bool) -> None:
+    """Progress means something only while the Attempt is in progress.
+
+    Asking for it on an ended Attempt is an error; ending an Attempt simply drops
+    the progress it had. Reaching the length does not end it.
+    """
+    if attempt.outcome == AttemptModel.OUTCOME_IN_PROGRESS:
+        check_progress_within_length(attempt.progress, attempt.item.length)
+        return
+    if attempt.progress is None:
+        return
+    if progress_given:
+        raise DomainError(PROGRESS_ONLY_IN_PROGRESS)
+    attempt.progress = None
 
 
 def _check_one_in_progress(attempt: AttemptModel, others: list[AttemptModel]) -> None:
@@ -112,8 +130,10 @@ class CreateAttempt:
             outcome=data.outcome,
             started_on=data.started_on,
             ended_on=data.ended_on,
+            progress=data.progress,
         )
         _check_dates(attempt)
+        _settle_progress(attempt, progress_given=True)
         _check_one_in_progress(attempt, others)
         return _save(self.attempts, attempt)
 
@@ -130,5 +150,6 @@ class UpdateAttempt:
         others = self.attempts.list_for_item(attempt.item_id, user=self.user)
         apply_provided(data, attempt)
         _check_dates(attempt)
+        _settle_progress(attempt, progress_given='progress' in data.model_fields_set)
         _check_one_in_progress(attempt, others)
         return _save(self.attempts, attempt)

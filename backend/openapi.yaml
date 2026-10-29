@@ -1614,6 +1614,12 @@ components:
             format: date
           - type: 'null'
           title: Ended On
+        progress:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Progress
       type: object
       required:
       - item
@@ -1655,6 +1661,11 @@ components:
             format: date
           - type: 'null'
           title: Ended On
+        progress:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Progress
         created_at:
           type: string
           format: date-time
@@ -1667,6 +1678,7 @@ components:
       - outcome
       - started_on
       - ended_on
+      - progress
       - created_at
       title: AttemptResponse
     AuthResponse:
@@ -2072,10 +2084,22 @@ components:
             format: date
           - type: 'null'
           title: Ended On
+        progress:
+          anyOf:
+          - type: integer
+            minimum: 0.0
+          - type: 'null'
+          title: Progress
       additionalProperties: false
       type: object
       title: PatchedAttemptRequest
-      description: Finish, abandon or re-date an Attempt; it stays on its BibliographyItem.
+      description: 'Finish, abandon, re-date or move on an Attempt; it stays on its
+        BibliographyItem.
+
+
+        ``progress`` is a page (book) or minute (film), set only while in progress;
+
+        ``null`` clears it.'
     PatchedBibliographyItemRequest:
       properties:
         title:
