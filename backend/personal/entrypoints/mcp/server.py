@@ -30,7 +30,9 @@ from personal.core.accounts.contracts.auth import LoginRequest, RefreshRequest, 
 from personal.core.bibliography import handlers as bibliography_handlers
 from personal.core.bibliography.contracts import (
     AttemptRequest,
+    BibliographyImportRequest,
     BibliographyItemRequest,
+    ImportedBibliographyItem,
     ItemKind,
     ItemStatus,
     PatchedAttemptRequest,
@@ -875,6 +877,21 @@ def update_bibliography_item(
             wiring.bibliography_item_repository(session), wiring.attempt_repository(session), user
         )
         return bibliography_item(handler.execute(item_id, payload))
+
+
+@_tool
+def import_bibliography(
+    ctx: ToolContext, items: list[ImportedBibliographyItem]
+) -> dict[str, Any]:
+    """Add many films and books at once, each with its past attempts (``finished`` or
+    ``abandoned``, ``ended_on`` YYYY-MM-DD required). All or nothing: one broken rule
+    fails the whole import and names the item. Returns the counts added."""
+    payload = BibliographyImportRequest(items=items)
+    with _unit_of_work(ctx) as (session, user):
+        handler = bibliography_handlers.ImportBibliography(
+            wiring.bibliography_item_repository(session), wiring.attempt_repository(session), user
+        )
+        return handler.execute(payload).model_dump(mode='json')
 
 
 def _create_attempt(session: Session, user: User) -> bibliography_handlers.CreateAttempt:

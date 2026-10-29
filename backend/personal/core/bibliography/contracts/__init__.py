@@ -1,4 +1,10 @@
 from .attempts import AttemptRequest, AttemptResponse, PatchedAttemptRequest
+from .imports import (
+    BibliographyImportRequest,
+    BibliographyImportResponse,
+    ImportedAttempt,
+    ImportedBibliographyItem,
+)
 from .items import (
     AttemptOutcome,
     BibliographyItemRequest,
@@ -12,8 +18,12 @@ __all__ = [
     'AttemptOutcome',
     'AttemptRequest',
     'AttemptResponse',
+    'BibliographyImportRequest',
+    'BibliographyImportResponse',
     'BibliographyItemRequest',
     'BibliographyItemResponse',
+    'ImportedAttempt',
+    'ImportedBibliographyItem',
     'ItemKind',
     'ItemStatus',
     'PatchedAttemptRequest',

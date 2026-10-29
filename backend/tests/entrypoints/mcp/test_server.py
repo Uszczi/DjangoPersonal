@@ -358,6 +358,53 @@ def test_attempt_rule_violations_are_tool_errors(mcp_user: User) -> None:
     assert call('list_attempts', item_id=book['id'])[0]['progress'] is None
 
 
+def test_import_bibliography_adds_items_with_their_attempts(mcp_user: User) -> None:
+    result = call(
+        'import_bibliography',
+        items=[
+            {
+                'kind': 'film',
+                'title': 'Rejs',
+                'creator': 'Marek Piwowski',
+                'year': 1970,
+                'attempts': [{'ended_on': '2020-03-01'}, {'ended_on': '2024-06-16'}],
+            },
+            {'kind': 'book', 'title': 'Lalka', 'note': 'ebook'},
+            {
+                'kind': 'book',
+                'title': 'Solaris',
+                'attempts': [{'outcome': 'abandoned', 'ended_on': '2021-01-01'}],
+            },
+        ],
+    )
+
+    assert result == {'items_created': 3, 'attempts_recorded': 3}
+    listed = {i['title']: i for i in call('list_bibliography_items')}
+    assert {t: i['status'] for t, i in listed.items()} == {
+        'Rejs': 'finished',
+        'Lalka': 'planned',
+        'Solaris': 'abandoned',
+    }
+    assert listed['Lalka']['note'] == 'ebook'
+    history = call('list_attempts', item_id=listed['Rejs']['id'])
+    assert [a['ended_on'] for a in history] == ['2024-06-16', '2020-03-01']
+
+
+def test_a_broken_rule_fails_the_whole_import(mcp_user: User) -> None:
+    items = [
+        {'kind': 'book', 'title': 'Lalka', 'attempts': [{'ended_on': '2020-01-01'}]},
+        {
+            'kind': 'film',
+            'title': 'Rejs',
+            'attempts': [{'started_on': '2020-02-01', 'ended_on': '2020-01-01'}],
+        },
+    ]
+
+    with pytest.raises(ToolError, match=r"Item 2 \('Rejs'\): The end date cannot be before"):
+        call('import_bibliography', items=items)
+    assert call('list_bibliography_items') == []
+
+
 def test_progress_can_be_cleared(mcp_user: User) -> None:
     book = call('create_bibliography_item', kind='book', title='Lalka')
     started = call('start_attempt', item_id=book['id'], progress=40)
