@@ -19,8 +19,8 @@ import {
 } from "@personal/shared/queries/tasks";
 import { useStartTimer } from "@personal/shared/queries/timer";
 
-import { Button } from "../../src/Button";
 import { Fab } from "../../src/Fab";
+import { ScreenHeader } from "../../src/ScreenHeader";
 import { makeStyles, fonts, useTheme } from "../../src/theme";
 
 type StatusSection = {
@@ -119,7 +119,30 @@ export default function ProjectTasksScreen() {
 
   return (
     <View style={common.screen}>
-      <Stack.Screen options={{ title: project?.name ?? "Zadania" }} />
+      <Stack.Screen
+        options={{
+          header: () => (
+            <ScreenHeader
+              title={project?.name ?? "Zadania"}
+              actions={
+                project
+                  ? [
+                      {
+                        icon: "pencil",
+                        accessibilityLabel: "Edytuj projekt",
+                        onPress: () =>
+                          router.push({
+                            pathname: "/project",
+                            params: { projectId },
+                          }),
+                      },
+                    ]
+                  : []
+              }
+            />
+          ),
+        }}
+      />
       <SectionList
         sections={sections}
         keyExtractor={(task) => String(task.id)}
@@ -136,17 +159,6 @@ export default function ProjectTasksScreen() {
             {project?.description ? (
               <Text style={common.muted}>{project.description}</Text>
             ) : null}
-            {project && (
-              <View style={{ flexDirection: "row" }}>
-                <Button
-                  label="Edytuj projekt"
-                  variant="secondary"
-                  onPress={() =>
-                    router.push({ pathname: "/project", params: { projectId } })
-                  }
-                />
-              </View>
-            )}
             {errorMessage !== "" && (
               <Text style={styles.error}>{errorMessage}</Text>
             )}
