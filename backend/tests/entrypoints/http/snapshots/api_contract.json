@@ -41,6 +41,38 @@
   },
   {
     "method": "GET",
+    "path": "/api/v1/bibliography-items/",
+    "operation_id": "bibliography_items_list",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/bibliography-items/",
+    "operation_id": "bibliography_items_create",
+    "status_codes": [
+      "201"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/bibliography-items/{id}/",
+    "operation_id": "bibliography_items_retrieve",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/bibliography-items/{id}/",
+    "operation_id": "bibliography_items_partial_update",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "GET",
     "path": "/api/v1/categories/",
     "operation_id": "categories_list",
     "status_codes": [
@@ -203,38 +235,6 @@
     "method": "POST",
     "path": "/api/v1/notes/ask/",
     "operation_id": "notes_ask",
-    "status_codes": [
-      "200"
-    ]
-  },
-  {
-    "method": "GET",
-    "path": "/api/v1/pozycje/",
-    "operation_id": "pozycje_list",
-    "status_codes": [
-      "200"
-    ]
-  },
-  {
-    "method": "POST",
-    "path": "/api/v1/pozycje/",
-    "operation_id": "pozycje_create",
-    "status_codes": [
-      "201"
-    ]
-  },
-  {
-    "method": "GET",
-    "path": "/api/v1/pozycje/{id}/",
-    "operation_id": "pozycje_retrieve",
-    "status_codes": [
-      "200"
-    ]
-  },
-  {
-    "method": "PATCH",
-    "path": "/api/v1/pozycje/{id}/",
-    "operation_id": "pozycje_partial_update",
     "status_codes": [
       "200"
     ]

@@ -1,25 +1,25 @@
-/** Polish labels for a Pozycja's kind and status, shared by the web and the mobile app. */
+/** Polish labels for a BibliographyItem's kind and status, shared by the web and the mobile app. */
 import type {
-  PozycjaResponseKindEnum,
-  PozycjaResponseStatusEnum,
+  BibliographyItemResponseKindEnum,
+  BibliographyItemResponseStatusEnum,
 } from "./generated/api";
 
-export type PozycjaKind = PozycjaResponseKindEnum;
-export type PozycjaStatus = PozycjaResponseStatusEnum;
+export type ItemKind = BibliographyItemResponseKindEnum;
+export type ItemStatus = BibliographyItemResponseStatusEnum;
 
-export const POZYCJA_KIND_LABELS: Record<PozycjaKind, string> = {
+export const ITEM_KIND_LABELS: Record<ItemKind, string> = {
   film: "Film",
   book: "Książka",
 };
 
-/** What a Pozycja's length counts: pages for a book, minutes for a film. */
-export const POZYCJA_LENGTH_LABELS: Record<PozycjaKind, string> = {
+/** What a BibliographyItem's length counts: pages for a book, minutes for a film. */
+export const ITEM_LENGTH_LABELS: Record<ItemKind, string> = {
   film: "Czas trwania (min)",
   book: "Liczba stron",
 };
 
 /** "Do obejrzenia" for a film, "Do przeczytania" for a book, and so on. */
-export function pozycjaStatusLabel(status: PozycjaStatus, kind: PozycjaKind) {
+export function itemStatusLabel(status: ItemStatus, kind: ItemKind) {
   switch (status) {
     case "planned":
       return kind === "film" ? "Do obejrzenia" : "Do przeczytania";
@@ -33,7 +33,7 @@ export function pozycjaStatusLabel(status: PozycjaStatus, kind: PozycjaKind) {
 }
 
 /** The creator and year line, e.g. `Bolesław Prus · 1890`; empty when neither is known. */
-export function pozycjaByline({
+export function itemByline({
   creator,
   year,
 }: {

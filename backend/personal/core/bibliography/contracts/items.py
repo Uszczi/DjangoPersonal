@@ -5,14 +5,14 @@ from pydantic import ConfigDict, Field, field_validator
 
 from personal.core.shared.base import BaseModel
 
-PozycjaKind = Literal['film', 'book']
+ItemKind = Literal['film', 'book']
 
-#: Where a Pozycja stands; never sent by a client, always derived.
-#: ``planned`` is Do obejrzenia / Do przeczytania (no Podejście yet).
-PozycjaStatus = Literal['planned', 'in_progress', 'finished', 'abandoned']
+#: Where a BibliographyItem stands; never sent by a client, always derived.
+#: ``planned`` is Do obejrzenia / Do przeczytania (no Attempt yet).
+ItemStatus = Literal['planned', 'in_progress', 'finished', 'abandoned']
 
 
-class _PozycjaPayload(BaseModel):
+class _BibliographyItemPayload(BaseModel):
     """``check_fields=False`` because this base declares no fields itself."""
 
     @field_validator('kind', 'title', 'creator', 'note', mode='before', check_fields=False)
@@ -38,8 +38,8 @@ class _PozycjaPayload(BaseModel):
         return value.strip()
 
 
-class PozycjaRequest(_PozycjaPayload):
-    kind: PozycjaKind
+class BibliographyItemRequest(_BibliographyItemPayload):
+    kind: ItemKind
     title: str = Field(min_length=1, max_length=300)
     creator: str = Field(default='', max_length=200)
     year: int | None = Field(default=None, gt=0, le=9999)
@@ -48,7 +48,7 @@ class PozycjaRequest(_PozycjaPayload):
     note: str = Field(default='', max_length=10_000)
 
 
-class PatchedPozycjaRequest(_PozycjaPayload):
+class PatchedBibliographyItemRequest(_BibliographyItemPayload):
     """The kind is fixed at creation, so it is not a field here: sending it is an error."""
 
     model_config = ConfigDict(extra='forbid')
@@ -60,13 +60,13 @@ class PatchedPozycjaRequest(_PozycjaPayload):
     note: str | None = Field(default=None, max_length=10_000)
 
 
-class PozycjaResponse(BaseModel):
+class BibliographyItemResponse(BaseModel):
     id: int = Field(..., json_schema_extra={'readOnly': True})
-    kind: PozycjaKind
+    kind: ItemKind
     title: str
     creator: str
     year: int | None
     length: int | None
     note: str
-    status: PozycjaStatus = Field(..., json_schema_extra={'readOnly': True})
+    status: ItemStatus = Field(..., json_schema_extra={'readOnly': True})
     created_at: datetime = Field(..., json_schema_extra={'readOnly': True})

@@ -11,26 +11,26 @@ import {
   TextArea,
   TextInput,
 } from "@/design-system";
-import type { PozycjaResponse } from "@personal/shared/generated/api";
+import type { BibliographyItemResponse } from "@personal/shared/generated/api";
 import {
-  POZYCJA_KIND_LABELS,
-  POZYCJA_LENGTH_LABELS,
-  type PozycjaKind,
-} from "@personal/shared/pozycjaFormat";
+  ITEM_KIND_LABELS,
+  ITEM_LENGTH_LABELS,
+  type ItemKind,
+} from "@personal/shared/bibliographyFormat";
 import {
-  useCreatePozycja,
-  useUpdatePozycja,
-} from "@personal/shared/queries/pozycje";
+  useCreateBibliographyItem,
+  useUpdateBibliographyItem,
+} from "@personal/shared/queries/bibliographyItems";
 
-type PozycjaEditorModalProps = {
-  /** Omit to add a new Pozycja; pass one to edit it. */
-  pozycja?: PozycjaResponse | null;
+type BibliographyItemEditorModalProps = {
+  /** Omit to add a new BibliographyItem; pass one to edit it. */
+  item?: BibliographyItemResponse | null;
   onClose: () => void;
 };
 
-const KINDS: PozycjaKind[] = ["film", "book"];
+const KINDS: ItemKind[] = ["film", "book"];
 
-const CREATOR_LABELS: Record<PozycjaKind, string> = {
+const CREATOR_LABELS: Record<ItemKind, string> = {
   film: "Reżyser",
   book: "Autor",
 };
@@ -48,19 +48,19 @@ function numberText(value: number | null | undefined) {
   return value === null || value === undefined ? "" : String(value);
 }
 
-export function PozycjaEditorModal({
-  pozycja = null,
+export function BibliographyItemEditorModal({
+  item = null,
   onClose,
-}: PozycjaEditorModalProps) {
-  const createPozycja = useCreatePozycja();
-  const updatePozycja = useUpdatePozycja();
+}: BibliographyItemEditorModalProps) {
+  const createBibliographyItem = useCreateBibliographyItem();
+  const updateBibliographyItem = useUpdateBibliographyItem();
 
-  const [kind, setKind] = useState<PozycjaKind>(pozycja?.kind ?? "film");
-  const [title, setTitle] = useState(pozycja?.title ?? "");
-  const [creator, setCreator] = useState(pozycja?.creator ?? "");
-  const [year, setYear] = useState(numberText(pozycja?.year));
-  const [length, setLength] = useState(numberText(pozycja?.length));
-  const [note, setNote] = useState(pozycja?.note ?? "");
+  const [kind, setKind] = useState<ItemKind>(item?.kind ?? "film");
+  const [title, setTitle] = useState(item?.title ?? "");
+  const [creator, setCreator] = useState(item?.creator ?? "");
+  const [year, setYear] = useState(numberText(item?.year));
+  const [length, setLength] = useState(numberText(item?.length));
+  const [note, setNote] = useState(item?.note ?? "");
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -92,10 +92,13 @@ export function PozycjaEditorModal({
     setIsSaving(true);
     setFormError("");
     try {
-      if (pozycja) {
-        await updatePozycja.mutateAsync({ id: pozycja.id, changes: fields });
+      if (item) {
+        await updateBibliographyItem.mutateAsync({
+          id: item.id,
+          changes: fields,
+        });
       } else {
-        await createPozycja.mutateAsync({ kind, ...fields });
+        await createBibliographyItem.mutateAsync({ kind, ...fields });
       }
       onClose();
     } catch (error) {
@@ -107,25 +110,25 @@ export function PozycjaEditorModal({
 
   return (
     <Modal
-      kicker={pozycja ? "EDYCJA POZYCJI" : "NOWA POZYCJA"}
-      title={pozycja ? "Edytuj pozycję" : "Nowa pozycja"}
-      titleId="pozycja-dialog-title"
+      kicker={item ? "EDYCJA POZYCJI" : "NOWA POZYCJA"}
+      title={item ? "Edytuj pozycję" : "Nowa pozycja"}
+      titleId="item-dialog-title"
       onClose={close}
       size="lg"
     >
       <form onSubmit={handleSubmit} noValidate>
         <Field
           label="Rodzaj"
-          hint={pozycja ? "Rodzaju nie można zmienić." : undefined}
+          hint={item ? "Rodzaju nie można zmienić." : undefined}
         >
           <Select
             value={kind}
-            disabled={pozycja !== null}
-            onChange={(event) => setKind(event.target.value as PozycjaKind)}
+            disabled={item !== null}
+            onChange={(event) => setKind(event.target.value as ItemKind)}
           >
             {KINDS.map((option) => (
               <option key={option} value={option}>
-                {POZYCJA_KIND_LABELS[option]}
+                {ITEM_KIND_LABELS[option]}
               </option>
             ))}
           </Select>
@@ -156,7 +159,7 @@ export function PozycjaEditorModal({
               onChange={(event) => setYear(event.target.value)}
             />
           </Field>
-          <Field label={POZYCJA_LENGTH_LABELS[kind]}>
+          <Field label={ITEM_LENGTH_LABELS[kind]}>
             <TextInput
               type="number"
               min={1}
@@ -183,7 +186,7 @@ export function PozycjaEditorModal({
           <Button variant="primary" type="submit" disabled={isSaving}>
             {isSaving
               ? "Zapisywanie…"
-              : pozycja
+              : item
                 ? "Zapisz zmiany"
                 : "Dodaj pozycję"}
           </Button>

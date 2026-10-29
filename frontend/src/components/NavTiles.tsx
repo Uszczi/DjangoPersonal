@@ -7,7 +7,7 @@ const NAV_TILES = [
   { to: "/whiteboard", label: "Notatnik", icon: "✎" },
   { to: "/expenses", label: "Wydatki", icon: "€" },
   { to: "/counters", label: "Liczniki", icon: "#" },
-  { to: "/bibliografia", label: "Bibliografia", icon: "❡" },
+  { to: "/bibliography", label: "Bibliografia", icon: "❡" },
 ] as const;
 
 export function NavTiles() {

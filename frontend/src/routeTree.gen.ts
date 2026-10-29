@@ -11,7 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SplatRouteImport } from './routes/$'
-import { Route as BibliografiaRouteImport } from './routes/bibliografia'
+import { Route as BibliographyRouteImport } from './routes/bibliography'
 import { Route as CountersRouteImport } from './routes/counters'
 import { Route as ExpensesRouteImport } from './routes/expenses'
 import { Route as LoginRouteImport } from './routes/login'
@@ -39,9 +39,9 @@ const SplatRoute = SplatRouteImport.update({
   path: '/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BibliografiaRoute = BibliografiaRouteImport.update({
-  id: '/bibliografia',
-  path: '/bibliografia',
+const BibliographyRoute = BibliographyRouteImport.update({
+  id: '/bibliography',
+  path: '/bibliography',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CountersRoute = CountersRouteImport.update({
@@ -128,7 +128,7 @@ const WhiteboardAskRoute = WhiteboardAskRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
-  '/bibliografia': typeof BibliografiaRoute
+  '/bibliography': typeof BibliographyRoute
   '/counters': typeof CountersRouteWithChildren
   '/expenses': typeof ExpensesRouteWithChildren
   '/login': typeof LoginRoute
@@ -149,7 +149,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
-  '/bibliografia': typeof BibliografiaRoute
+  '/bibliography': typeof BibliographyRoute
   '/login': typeof LoginRoute
   '/projects': typeof ProjectsRoute
   '/register': typeof RegisterRoute
@@ -168,7 +168,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
-  '/bibliografia': typeof BibliografiaRoute
+  '/bibliography': typeof BibliographyRoute
   '/counters': typeof CountersRouteWithChildren
   '/expenses': typeof ExpensesRouteWithChildren
   '/login': typeof LoginRoute
@@ -191,7 +191,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$'
-    | '/bibliografia'
+    | '/bibliography'
     | '/counters'
     | '/expenses'
     | '/login'
@@ -212,7 +212,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/$'
-    | '/bibliografia'
+    | '/bibliography'
     | '/login'
     | '/projects'
     | '/register'
@@ -230,7 +230,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$'
-    | '/bibliografia'
+    | '/bibliography'
     | '/counters'
     | '/expenses'
     | '/login'
@@ -252,7 +252,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SplatRoute: typeof SplatRoute
-  BibliografiaRoute: typeof BibliografiaRoute
+  BibliographyRoute: typeof BibliographyRoute
   CountersRoute: typeof CountersRouteWithChildren
   ExpensesRoute: typeof ExpensesRouteWithChildren
   LoginRoute: typeof LoginRoute
@@ -280,11 +280,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/bibliografia': {
-      id: '/bibliografia'
-      path: '/bibliografia'
-      fullPath: '/bibliografia'
-      preLoaderRoute: typeof BibliografiaRouteImport
+    '/bibliography': {
+      id: '/bibliography'
+      path: '/bibliography'
+      fullPath: '/bibliography'
+      preLoaderRoute: typeof BibliographyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/counters': {
@@ -449,7 +449,7 @@ const WhiteboardRouteWithChildren = WhiteboardRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
-  BibliografiaRoute: BibliografiaRoute,
+  BibliographyRoute: BibliographyRoute,
   CountersRoute: CountersRouteWithChildren,
   ExpensesRoute: ExpensesRouteWithChildren,
   LoginRoute: LoginRoute,

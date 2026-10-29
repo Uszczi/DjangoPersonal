@@ -23,7 +23,7 @@ from personal.infra.models import (
     Counter,
     CounterEntry,
     Folder,
-    Pozycja,
+    BibliographyItem,
     Project,
     Task,
     TimeEntry,
@@ -191,10 +191,10 @@ class CounterEntryFactory(_Factory[CounterEntry]):
     note = ''
 
 
-class PozycjaFactory(_Factory[Pozycja]):
+class BibliographyItemFactory(_Factory[BibliographyItem]):
     class Meta:
-        model = Pozycja
+        model = BibliographyItem
 
     user = SubFactory(UserFactory)
-    kind = Pozycja.KIND_BOOK
-    title = Sequence(lambda n: f'Pozycja {n}')
+    kind = BibliographyItem.KIND_BOOK
+    title = Sequence(lambda n: f'Item {n}')

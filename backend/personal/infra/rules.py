@@ -116,8 +116,8 @@ def normalize_counter_name(name: str) -> str:
     return name.strip()
 
 
-def normalize_pozycja_text(text: str) -> str:
-    """A Pozycja's title and creator are kept without surrounding whitespace."""
+def normalize_bibliography_item_text(text: str) -> str:
+    """A BibliographyItem's title and creator are kept without surrounding whitespace."""
     return text.strip()
 
 

@@ -1,4 +1,4 @@
-/** User-visible Bibliografia flow tests, against a small in-memory fake of the Pozycje API. */
+/** User-visible Bibliography flow tests, against a small in-memory fake of the BibliographyItems API. */
 
 import { cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { renderApp } from "../renderApp";
 
-type Pozycja = {
+type BibliographyItem = {
   id: number;
   kind: "film" | "book";
   title: string;
@@ -25,9 +25,9 @@ function jsonResponse(data: unknown, status = 200) {
   });
 }
 
-/** Answers the Pozycje endpoints the way the backend does: newest first. */
-function fakeBackend(initial: Pozycja[] = []) {
-  const pozycje = [...initial];
+/** Answers the BibliographyItems endpoints the way the backend does: newest first. */
+function fakeBackend(initial: BibliographyItem[] = []) {
+  const items = [...initial];
   const requests: Array<{ method: string; path: string; body: unknown }> = [];
   let nextId = 100;
 
@@ -41,9 +41,9 @@ function fakeBackend(initial: Pozycja[] = []) {
     requests.push({ method, path, body });
     if (path.includes("/projects/")) return jsonResponse([]);
 
-    if (path.endsWith("/pozycje/")) {
+    if (path.endsWith("/bibliography-items/")) {
       if (method === "POST") {
-        const pozycja: Pozycja = {
+        const item: BibliographyItem = {
           creator: "",
           year: null,
           length: null,
@@ -54,24 +54,25 @@ function fakeBackend(initial: Pozycja[] = []) {
           status: "planned",
           created_at: "2026-10-29T10:00:00Z",
         };
-        pozycje.unshift(pozycja);
-        return jsonResponse(pozycja, 201);
+        items.unshift(item);
+        return jsonResponse(item, 201);
       }
-      return jsonResponse(pozycje);
+      return jsonResponse(items);
     }
-    const match = path.match(/\/pozycje\/(\d+)\/$/);
+    const match = path.match(/\/bibliography-items\/(\d+)\/$/);
     if (match) {
-      const pozycja = pozycje.find((item) => item.id === Number(match[1]));
-      if (!pozycja) return jsonResponse({ detail: "Pozycja not found." }, 404);
-      if (method === "PATCH") Object.assign(pozycja, body);
-      return jsonResponse(pozycja);
+      const item = items.find((item) => item.id === Number(match[1]));
+      if (!item)
+        return jsonResponse({ detail: "BibliographyItem not found." }, 404);
+      if (method === "PATCH") Object.assign(item, body);
+      return jsonResponse(item);
     }
     return jsonResponse({ detail: "Not found" }, 404);
   };
   return { handler, requests };
 }
 
-const lalka: Pozycja = {
+const lalka: BibliographyItem = {
   id: 1,
   kind: "book",
   title: "Lalka",
@@ -83,7 +84,7 @@ const lalka: Pozycja = {
   created_at: "2026-10-01T10:00:00Z",
 };
 
-describe("Bibliografia", () => {
+describe("Bibliography", () => {
   const fetchMock = vi.fn();
 
   beforeEach(() => {
@@ -96,7 +97,7 @@ describe("Bibliografia", () => {
     vi.unstubAllGlobals();
   });
 
-  test("the Bibliografia is reachable from the navigation", async () => {
+  test("the Bibliography is reachable from the navigation", async () => {
     fetchMock.mockImplementation(fakeBackend().handler);
     const user = userEvent.setup();
 
@@ -113,7 +114,7 @@ describe("Bibliografia", () => {
   });
 
   test("the list shows kind, title, creator, year and status", async () => {
-    const rejs: Pozycja = {
+    const rejs: BibliographyItem = {
       ...lalka,
       id: 2,
       kind: "film",
@@ -123,7 +124,7 @@ describe("Bibliografia", () => {
     };
     fetchMock.mockImplementation(fakeBackend([rejs, lalka]).handler);
 
-    renderApp("/bibliografia");
+    renderApp("/bibliography");
     const list = await screen.findByRole("list", { name: "Pozycje" });
     const [first, second] = within(list).getAllByRole("listitem");
 
@@ -143,7 +144,7 @@ describe("Bibliografia", () => {
     fetchMock.mockImplementation(backend.handler);
     const user = userEvent.setup();
 
-    renderApp("/bibliografia");
+    renderApp("/bibliography");
     await user.click(
       await screen.findByRole("button", { name: "Nowa pozycja" }),
     );
@@ -169,7 +170,7 @@ describe("Bibliografia", () => {
     fetchMock.mockImplementation(fakeBackend().handler);
     const user = userEvent.setup();
 
-    renderApp("/bibliografia");
+    renderApp("/bibliography");
     await user.click(
       await screen.findByRole("button", { name: "Nowa pozycja" }),
     );
@@ -178,12 +179,12 @@ describe("Bibliografia", () => {
     expect(await screen.findByText("Podaj tytuł.")).toBeInTheDocument();
   });
 
-  test("user can edit a Pozycja but not its kind", async () => {
+  test("user can edit a BibliographyItem but not its kind", async () => {
     const backend = fakeBackend([lalka]);
     fetchMock.mockImplementation(backend.handler);
     const user = userEvent.setup();
 
-    renderApp("/bibliografia");
+    renderApp("/bibliography");
     await user.click(
       await screen.findByRole("button", { name: "Edytuj pozycję: Lalka" }),
     );

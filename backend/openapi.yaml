@@ -1396,12 +1396,12 @@ paths:
       responses:
         '204':
           description: Successful Response
-  /api/v1/pozycje/:
+  /api/v1/bibliography-items/:
     get:
       tags:
       - personal
-      summary: List Pozycje
-      operationId: pozycje_list
+      summary: List Bibliography Items
+      operationId: bibliography_items_list
       responses:
         '200':
           description: Successful Response
@@ -1409,21 +1409,21 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/PozycjaResponse'
+                  $ref: '#/components/schemas/BibliographyItemResponse'
                 type: array
-                title: Response Pozycje List
+                title: Response Bibliography Items List
       security:
       - JWTAuth: []
     post:
       tags:
       - personal
-      summary: Create Pozycja
-      operationId: pozycje_create
+      summary: Create Bibliography Item
+      operationId: bibliography_items_create
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PozycjaRequest'
+              $ref: '#/components/schemas/BibliographyItemRequest'
         required: true
       responses:
         '201':
@@ -1431,15 +1431,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PozycjaResponse'
+                $ref: '#/components/schemas/BibliographyItemResponse'
       security:
       - JWTAuth: []
-  /api/v1/pozycje/{id}/:
+  /api/v1/bibliography-items/{id}/:
     get:
       tags:
       - personal
-      summary: Get Pozycja
-      operationId: pozycje_retrieve
+      summary: Get Bibliography Item
+      operationId: bibliography_items_retrieve
       security:
       - JWTAuth: []
       parameters:
@@ -1455,12 +1455,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PozycjaResponse'
+                $ref: '#/components/schemas/BibliographyItemResponse'
     patch:
       tags:
       - personal
-      summary: Update Pozycja
-      operationId: pozycje_partial_update
+      summary: Update Bibliography Item
+      operationId: bibliography_items_partial_update
       security:
       - JWTAuth: []
       parameters:
@@ -1475,14 +1475,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedPozycjaRequest'
+              $ref: '#/components/schemas/PatchedBibliographyItemRequest'
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PozycjaResponse'
+                $ref: '#/components/schemas/BibliographyItemResponse'
 components:
   schemas:
     AskNotesRequest:
@@ -1509,6 +1509,105 @@ components:
       - access
       - refresh
       title: AuthResponse
+    BibliographyItemRequest:
+      properties:
+        kind:
+          type: string
+          enum:
+          - film
+          - book
+          title: Kind
+        title:
+          type: string
+          maxLength: 300
+          minLength: 1
+          title: Title
+        creator:
+          type: string
+          maxLength: 200
+          title: Creator
+          default: ''
+        year:
+          anyOf:
+          - type: integer
+            maximum: 9999.0
+            exclusiveMinimum: 0.0
+          - type: 'null'
+          title: Year
+        length:
+          anyOf:
+          - type: integer
+            maximum: 1000000.0
+            exclusiveMinimum: 0.0
+          - type: 'null'
+          title: Length
+        note:
+          type: string
+          maxLength: 10000
+          title: Note
+          default: ''
+      type: object
+      required:
+      - kind
+      - title
+      title: BibliographyItemRequest
+    BibliographyItemResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+          readOnly: true
+        kind:
+          type: string
+          enum:
+          - film
+          - book
+          title: Kind
+        title:
+          type: string
+          title: Title
+        creator:
+          type: string
+          title: Creator
+        year:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Year
+        length:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Length
+        note:
+          type: string
+          title: Note
+        status:
+          type: string
+          enum:
+          - planned
+          - in_progress
+          - finished
+          - abandoned
+          title: Status
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+          readOnly: true
+      type: object
+      required:
+      - id
+      - kind
+      - title
+      - creator
+      - year
+      - length
+      - note
+      - status
+      - created_at
+      title: BibliographyItemResponse
     CategoryRequest:
       properties:
         name:
@@ -1777,6 +1876,46 @@ components:
       - answer
       - sources
       title: NotesAnswer
+    PatchedBibliographyItemRequest:
+      properties:
+        title:
+          anyOf:
+          - type: string
+            maxLength: 300
+            minLength: 1
+          - type: 'null'
+          title: Title
+        creator:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+          title: Creator
+        year:
+          anyOf:
+          - type: integer
+            maximum: 9999.0
+            exclusiveMinimum: 0.0
+          - type: 'null'
+          title: Year
+        length:
+          anyOf:
+          - type: integer
+            maximum: 1000000.0
+            exclusiveMinimum: 0.0
+          - type: 'null'
+          title: Length
+        note:
+          anyOf:
+          - type: string
+            maxLength: 10000
+          - type: 'null'
+          title: Note
+      additionalProperties: false
+      type: object
+      title: PatchedBibliographyItemRequest
+      description: 'The kind is fixed at creation, so it is not a field here: sending
+        it is an error.'
     PatchedCategoryRequest:
       properties:
         name:
@@ -1845,46 +1984,6 @@ components:
           title: Parent Id
       type: object
       title: PatchedFolderRequest
-    PatchedPozycjaRequest:
-      properties:
-        title:
-          anyOf:
-          - type: string
-            maxLength: 300
-            minLength: 1
-          - type: 'null'
-          title: Title
-        creator:
-          anyOf:
-          - type: string
-            maxLength: 200
-          - type: 'null'
-          title: Creator
-        year:
-          anyOf:
-          - type: integer
-            maximum: 9999.0
-            exclusiveMinimum: 0.0
-          - type: 'null'
-          title: Year
-        length:
-          anyOf:
-          - type: integer
-            maximum: 1000000.0
-            exclusiveMinimum: 0.0
-          - type: 'null'
-          title: Length
-        note:
-          anyOf:
-          - type: string
-            maxLength: 10000
-          - type: 'null'
-          title: Note
-      additionalProperties: false
-      type: object
-      title: PatchedPozycjaRequest
-      description: 'The kind is fixed at creation, so it is not a field here: sending
-        it is an error.'
     PatchedProjectRequest:
       properties:
         name:
@@ -2072,105 +2171,6 @@ components:
           title: Folder Id
       type: object
       title: PatchedWhiteboardRequest
-    PozycjaRequest:
-      properties:
-        kind:
-          type: string
-          enum:
-          - film
-          - book
-          title: Kind
-        title:
-          type: string
-          maxLength: 300
-          minLength: 1
-          title: Title
-        creator:
-          type: string
-          maxLength: 200
-          title: Creator
-          default: ''
-        year:
-          anyOf:
-          - type: integer
-            maximum: 9999.0
-            exclusiveMinimum: 0.0
-          - type: 'null'
-          title: Year
-        length:
-          anyOf:
-          - type: integer
-            maximum: 1000000.0
-            exclusiveMinimum: 0.0
-          - type: 'null'
-          title: Length
-        note:
-          type: string
-          maxLength: 10000
-          title: Note
-          default: ''
-      type: object
-      required:
-      - kind
-      - title
-      title: PozycjaRequest
-    PozycjaResponse:
-      properties:
-        id:
-          type: integer
-          title: Id
-          readOnly: true
-        kind:
-          type: string
-          enum:
-          - film
-          - book
-          title: Kind
-        title:
-          type: string
-          title: Title
-        creator:
-          type: string
-          title: Creator
-        year:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Year
-        length:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Length
-        note:
-          type: string
-          title: Note
-        status:
-          type: string
-          enum:
-          - planned
-          - in_progress
-          - finished
-          - abandoned
-          title: Status
-          readOnly: true
-        created_at:
-          type: string
-          format: date-time
-          title: Created At
-          readOnly: true
-      type: object
-      required:
-      - id
-      - kind
-      - title
-      - creator
-      - year
-      - length
-      - note
-      - status
-      - created_at
-      title: PozycjaResponse
     ProjectRequest:
       properties:
         name:

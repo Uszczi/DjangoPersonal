@@ -40,6 +40,6 @@ export const counterKeys = {
   entries: (counterId: number) => ["counterEntries", counterId] as const,
 };
 
-export const pozycjaKeys = {
-  all: ["pozycje"] as const,
+export const bibliographyItemKeys = {
+  all: ["bibliographyItems"] as const,
 };

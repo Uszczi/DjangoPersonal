@@ -4,19 +4,19 @@ from typing import Any
 from sqlalchemy import CheckConstraint, ForeignKey, String, Text, event
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from personal.infra.rules import normalize_pozycja_text
+from personal.infra.rules import normalize_bibliography_item_text
 
 from .base import Base, UTCDateTime, utc_now
 from .user import User
 
 
-class Pozycja(Base):
-    """One film or one book a user tracks in the Bibliografia.
+class BibliographyItem(Base):
+    """One film or one book a user tracks in the Bibliography.
 
-    Its status is not stored: it follows from its Podejścia (see ``GLOSSARY.md``).
+    Its status is not stored: it follows from its Attempts (see ``GLOSSARY.md``).
     """
 
-    __tablename__ = 'pozycje'
+    __tablename__ = 'bibliography_items'
     # ``status`` below is a plain annotation, not a column.
     __allow_unmapped__ = True
     __table_args__ = (
@@ -42,16 +42,16 @@ class Pozycja(Base):
 
     user: Mapped[User] = relationship()
 
-    #: The Pozycja status, derived by the ``bibliografia`` use cases; not stored.
-    #: With no Podejścia yet every Pozycja is ``planned`` (Do obejrzenia / Do przeczytania).
+    #: The BibliographyItem status, derived by the ``bibliography`` use cases; not stored.
+    #: With no Attempts yet every item is ``planned`` (Do obejrzenia / Do przeczytania).
     status: str = 'planned'
 
     def __repr__(self) -> str:
-        return f'<Pozycja {self.id} {self.kind} {self.title!r}>'
+        return f'<BibliographyItem {self.id} {self.kind} {self.title!r}>'
 
 
-@event.listens_for(Pozycja, 'before_insert')
-@event.listens_for(Pozycja, 'before_update')
-def _normalize_pozycja(mapper: Any, connection: Any, pozycja: Pozycja) -> None:
-    pozycja.title = normalize_pozycja_text(pozycja.title)
-    pozycja.creator = normalize_pozycja_text(pozycja.creator or '')
+@event.listens_for(BibliographyItem, 'before_insert')
+@event.listens_for(BibliographyItem, 'before_update')
+def _normalize_bibliography_item(mapper: Any, connection: Any, item: BibliographyItem) -> None:
+    item.title = normalize_bibliography_item_text(item.title)
+    item.creator = normalize_bibliography_item_text(item.creator or '')

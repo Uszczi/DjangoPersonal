@@ -17,7 +17,7 @@ from .errors import (
 )
 from .folders import FolderRepository
 from .note_chunks import NoteChunkRepository, ScoredChunk
-from .pozycje import PozycjaRepository
+from .bibliography_items import BibliographyItemRepository
 from .projects import ProjectRepository
 from .tasks import TaskRepository
 from .time_entries import TimeEntryRepository
@@ -40,7 +40,7 @@ __all__ = [
     'InboxProtected',
     'InvalidFolderName',
     'NoteChunkRepository',
-    'PozycjaRepository',
+    'BibliographyItemRepository',
     'ProjectHasTimeEntries',
     'ProjectRepository',
     'RepositoryError',

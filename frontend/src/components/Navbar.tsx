@@ -13,7 +13,7 @@ type TopTabPath =
   | "/whiteboard"
   | "/expenses"
   | "/counters"
-  | "/bibliografia";
+  | "/bibliography";
 
 /** Link colors for the dark header bar and for the light mobile drawer. */
 const tabToneClasses = {
@@ -57,7 +57,7 @@ const NAV_ITEMS: Array<{ to: TopTabPath; label: string }> = [
   { to: "/whiteboard", label: "Notatnik" },
   { to: "/expenses", label: "Wydatki" },
   { to: "/counters", label: "Liczniki" },
-  { to: "/bibliografia", label: "Bibliografia" },
+  { to: "/bibliography", label: "Bibliografia" },
 ];
 
 export function Navbar() {

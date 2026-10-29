@@ -25,6 +25,16 @@ import {
     AuthResponseToJSON,
 } from '../models/AuthResponse';
 import {
+    type BibliographyItemRequest,
+    BibliographyItemRequestFromJSON,
+    BibliographyItemRequestToJSON,
+} from '../models/BibliographyItemRequest';
+import {
+    type BibliographyItemResponse,
+    BibliographyItemResponseFromJSON,
+    BibliographyItemResponseToJSON,
+} from '../models/BibliographyItemResponse';
+import {
     type CategoryRequest,
     CategoryRequestFromJSON,
     CategoryRequestToJSON,
@@ -80,6 +90,11 @@ import {
     NotesAnswerToJSON,
 } from '../models/NotesAnswer';
 import {
+    type PatchedBibliographyItemRequest,
+    PatchedBibliographyItemRequestFromJSON,
+    PatchedBibliographyItemRequestToJSON,
+} from '../models/PatchedBibliographyItemRequest';
+import {
     type PatchedCategoryRequest,
     PatchedCategoryRequestFromJSON,
     PatchedCategoryRequestToJSON,
@@ -99,11 +114,6 @@ import {
     PatchedFolderRequestFromJSON,
     PatchedFolderRequestToJSON,
 } from '../models/PatchedFolderRequest';
-import {
-    type PatchedPozycjaRequest,
-    PatchedPozycjaRequestFromJSON,
-    PatchedPozycjaRequestToJSON,
-} from '../models/PatchedPozycjaRequest';
 import {
     type PatchedProjectRequest,
     PatchedProjectRequestFromJSON,
@@ -134,16 +144,6 @@ import {
     PatchedWhiteboardRequestFromJSON,
     PatchedWhiteboardRequestToJSON,
 } from '../models/PatchedWhiteboardRequest';
-import {
-    type PozycjaRequest,
-    PozycjaRequestFromJSON,
-    PozycjaRequestToJSON,
-} from '../models/PozycjaRequest';
-import {
-    type PozycjaResponse,
-    PozycjaResponseFromJSON,
-    PozycjaResponseToJSON,
-} from '../models/PozycjaResponse';
 import {
     type ProjectRequest,
     ProjectRequestFromJSON,
@@ -269,6 +269,31 @@ export interface AuthRegisterRequest {
      *
      */
     registerRequest: RegisterRequest;
+}
+
+export interface BibliographyItemsCreateRequest {
+    /**
+     *
+     */
+    bibliographyItemRequest: BibliographyItemRequest;
+}
+
+export interface BibliographyItemsPartialUpdateRequest {
+    /**
+     *
+     */
+    id: number;
+    /**
+     *
+     */
+    patchedBibliographyItemRequest: PatchedBibliographyItemRequest;
+}
+
+export interface BibliographyItemsRetrieveRequest {
+    /**
+     *
+     */
+    id: number;
 }
 
 export interface CategoriesCreateRequest {
@@ -434,31 +459,6 @@ export interface NotesAskRequest {
      *
      */
     askNotesRequest: AskNotesRequest;
-}
-
-export interface PozycjeCreateRequest {
-    /**
-     *
-     */
-    pozycjaRequest: PozycjaRequest;
-}
-
-export interface PozycjePartialUpdateRequest {
-    /**
-     *
-     */
-    id: number;
-    /**
-     *
-     */
-    patchedPozycjaRequest: PatchedPozycjaRequest;
-}
-
-export interface PozycjeRetrieveRequest {
-    /**
-     *
-     */
-    id: number;
 }
 
 export interface ProjectsCreateRequest {
@@ -955,6 +955,222 @@ export class PersonalApi extends runtime.BaseAPI {
      */
     async authRegister(requestParameters: AuthRegisterRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AuthResponse> {
         const response = await this.authRegisterRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for bibliographyItemsCreate without sending the request
+     */
+    async bibliographyItemsCreateRequestOpts(requestParameters: BibliographyItemsCreateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['bibliographyItemRequest'] == null) {
+            throw new runtime.RequiredError(
+                'bibliographyItemRequest',
+                'Required parameter "bibliographyItemRequest" was null or undefined when calling bibliographyItemsCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/bibliography-items/`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: BibliographyItemRequestToJSON(requestParameters['bibliographyItemRequest']),
+        };
+    }
+
+    /**
+     * Create Bibliography Item
+     */
+    async bibliographyItemsCreateRaw(requestParameters: BibliographyItemsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BibliographyItemResponse>> {
+        const requestOptions = await this.bibliographyItemsCreateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => BibliographyItemResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Create Bibliography Item
+     */
+    async bibliographyItemsCreate(requestParameters: BibliographyItemsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BibliographyItemResponse> {
+        const response = await this.bibliographyItemsCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for bibliographyItemsList without sending the request
+     */
+    async bibliographyItemsListRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/bibliography-items/`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * List Bibliography Items
+     */
+    async bibliographyItemsListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<BibliographyItemResponse>>> {
+        const requestOptions = await this.bibliographyItemsListRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(BibliographyItemResponseFromJSON));
+    }
+
+    /**
+     * List Bibliography Items
+     */
+    async bibliographyItemsList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<BibliographyItemResponse>> {
+        const response = await this.bibliographyItemsListRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for bibliographyItemsPartialUpdate without sending the request
+     */
+    async bibliographyItemsPartialUpdateRequestOpts(requestParameters: BibliographyItemsPartialUpdateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling bibliographyItemsPartialUpdate().'
+            );
+        }
+
+        if (requestParameters['patchedBibliographyItemRequest'] == null) {
+            throw new runtime.RequiredError(
+                'patchedBibliographyItemRequest',
+                'Required parameter "patchedBibliographyItemRequest" was null or undefined when calling bibliographyItemsPartialUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/bibliography-items/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedBibliographyItemRequestToJSON(requestParameters['patchedBibliographyItemRequest']),
+        };
+    }
+
+    /**
+     * Update Bibliography Item
+     */
+    async bibliographyItemsPartialUpdateRaw(requestParameters: BibliographyItemsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BibliographyItemResponse>> {
+        const requestOptions = await this.bibliographyItemsPartialUpdateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => BibliographyItemResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Update Bibliography Item
+     */
+    async bibliographyItemsPartialUpdate(requestParameters: BibliographyItemsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BibliographyItemResponse> {
+        const response = await this.bibliographyItemsPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for bibliographyItemsRetrieve without sending the request
+     */
+    async bibliographyItemsRetrieveRequestOpts(requestParameters: BibliographyItemsRetrieveRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling bibliographyItemsRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/bibliography-items/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Get Bibliography Item
+     */
+    async bibliographyItemsRetrieveRaw(requestParameters: BibliographyItemsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BibliographyItemResponse>> {
+        const requestOptions = await this.bibliographyItemsRetrieveRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => BibliographyItemResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get Bibliography Item
+     */
+    async bibliographyItemsRetrieve(requestParameters: BibliographyItemsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BibliographyItemResponse> {
+        const response = await this.bibliographyItemsRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -2121,222 +2337,6 @@ export class PersonalApi extends runtime.BaseAPI {
      */
     async notesAsk(requestParameters: NotesAskRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<NotesAnswer> {
         const response = await this.notesAskRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
-     * Creates request options for pozycjeCreate without sending the request
-     */
-    async pozycjeCreateRequestOpts(requestParameters: PozycjeCreateRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['pozycjaRequest'] == null) {
-            throw new runtime.RequiredError(
-                'pozycjaRequest',
-                'Required parameter "pozycjaRequest" was null or undefined when calling pozycjeCreate().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-        if (this.configuration && this.configuration.accessToken) {
-            const token = this.configuration.accessToken;
-            const tokenString = await token("JWTAuth", []);
-
-            if (tokenString) {
-                headerParameters["Authorization"] = `Bearer ${tokenString}`;
-            }
-        }
-
-        let urlPath = `/api/v1/pozycje/`;
-
-        return {
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-            body: PozycjaRequestToJSON(requestParameters['pozycjaRequest']),
-        };
-    }
-
-    /**
-     * Create Pozycja
-     */
-    async pozycjeCreateRaw(requestParameters: PozycjeCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PozycjaResponse>> {
-        const requestOptions = await this.pozycjeCreateRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => PozycjaResponseFromJSON(jsonValue));
-    }
-
-    /**
-     * Create Pozycja
-     */
-    async pozycjeCreate(requestParameters: PozycjeCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PozycjaResponse> {
-        const response = await this.pozycjeCreateRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
-     * Creates request options for pozycjeList without sending the request
-     */
-    async pozycjeListRequestOpts(): Promise<runtime.RequestOpts> {
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        if (this.configuration && this.configuration.accessToken) {
-            const token = this.configuration.accessToken;
-            const tokenString = await token("JWTAuth", []);
-
-            if (tokenString) {
-                headerParameters["Authorization"] = `Bearer ${tokenString}`;
-            }
-        }
-
-        let urlPath = `/api/v1/pozycje/`;
-
-        return {
-            path: urlPath,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        };
-    }
-
-    /**
-     * List Pozycje
-     */
-    async pozycjeListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<PozycjaResponse>>> {
-        const requestOptions = await this.pozycjeListRequestOpts();
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(PozycjaResponseFromJSON));
-    }
-
-    /**
-     * List Pozycje
-     */
-    async pozycjeList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<PozycjaResponse>> {
-        const response = await this.pozycjeListRaw(initOverrides);
-        return await response.value();
-    }
-
-    /**
-     * Creates request options for pozycjePartialUpdate without sending the request
-     */
-    async pozycjePartialUpdateRequestOpts(requestParameters: PozycjePartialUpdateRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['id'] == null) {
-            throw new runtime.RequiredError(
-                'id',
-                'Required parameter "id" was null or undefined when calling pozycjePartialUpdate().'
-            );
-        }
-
-        if (requestParameters['patchedPozycjaRequest'] == null) {
-            throw new runtime.RequiredError(
-                'patchedPozycjaRequest',
-                'Required parameter "patchedPozycjaRequest" was null or undefined when calling pozycjePartialUpdate().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        headerParameters['Content-Type'] = 'application/json';
-
-        if (this.configuration && this.configuration.accessToken) {
-            const token = this.configuration.accessToken;
-            const tokenString = await token("JWTAuth", []);
-
-            if (tokenString) {
-                headerParameters["Authorization"] = `Bearer ${tokenString}`;
-            }
-        }
-
-        let urlPath = `/api/v1/pozycje/{id}/`;
-        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
-
-        return {
-            path: urlPath,
-            method: 'PATCH',
-            headers: headerParameters,
-            query: queryParameters,
-            body: PatchedPozycjaRequestToJSON(requestParameters['patchedPozycjaRequest']),
-        };
-    }
-
-    /**
-     * Update Pozycja
-     */
-    async pozycjePartialUpdateRaw(requestParameters: PozycjePartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PozycjaResponse>> {
-        const requestOptions = await this.pozycjePartialUpdateRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => PozycjaResponseFromJSON(jsonValue));
-    }
-
-    /**
-     * Update Pozycja
-     */
-    async pozycjePartialUpdate(requestParameters: PozycjePartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PozycjaResponse> {
-        const response = await this.pozycjePartialUpdateRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
-     * Creates request options for pozycjeRetrieve without sending the request
-     */
-    async pozycjeRetrieveRequestOpts(requestParameters: PozycjeRetrieveRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['id'] == null) {
-            throw new runtime.RequiredError(
-                'id',
-                'Required parameter "id" was null or undefined when calling pozycjeRetrieve().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        if (this.configuration && this.configuration.accessToken) {
-            const token = this.configuration.accessToken;
-            const tokenString = await token("JWTAuth", []);
-
-            if (tokenString) {
-                headerParameters["Authorization"] = `Bearer ${tokenString}`;
-            }
-        }
-
-        let urlPath = `/api/v1/pozycje/{id}/`;
-        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
-
-        return {
-            path: urlPath,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        };
-    }
-
-    /**
-     * Get Pozycja
-     */
-    async pozycjeRetrieveRaw(requestParameters: PozycjeRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PozycjaResponse>> {
-        const requestOptions = await this.pozycjeRetrieveRequestOpts(requestParameters);
-        const response = await this.request(requestOptions, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => PozycjaResponseFromJSON(jsonValue));
-    }
-
-    /**
-     * Get Pozycja
-     */
-    async pozycjeRetrieve(requestParameters: PozycjeRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PozycjaResponse> {
-        const response = await this.pozycjeRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
