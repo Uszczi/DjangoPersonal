@@ -21,6 +21,8 @@ import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as TimerRouteImport } from './routes/timer'
 import { Route as UserRouteImport } from './routes/user'
 import { Route as WhiteboardRouteImport } from './routes/whiteboard'
+import { Route as BibliographyIndexRouteImport } from './routes/bibliography/index'
+import { Route as BibliographyItemIdRouteImport } from './routes/bibliography/$itemId'
 import { Route as CountersIndexRouteImport } from './routes/counters/index'
 import { Route as CountersCounterIdRouteImport } from './routes/counters/$counterId'
 import { Route as ExpensesIndexRouteImport } from './routes/expenses/index'
@@ -89,6 +91,16 @@ const WhiteboardRoute = WhiteboardRouteImport.update({
   path: '/whiteboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BibliographyIndexRoute = BibliographyIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BibliographyRoute,
+} as any)
+const BibliographyItemIdRoute = BibliographyItemIdRouteImport.update({
+  id: '/$itemId',
+  path: '/$itemId',
+  getParentRoute: () => BibliographyRoute,
+} as any)
 const CountersIndexRoute = CountersIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -128,7 +140,7 @@ const WhiteboardAskRoute = WhiteboardAskRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
-  '/bibliography': typeof BibliographyRoute
+  '/bibliography': typeof BibliographyRouteWithChildren
   '/counters': typeof CountersRouteWithChildren
   '/expenses': typeof ExpensesRouteWithChildren
   '/login': typeof LoginRoute
@@ -138,10 +150,12 @@ export interface FileRoutesByFullPath {
   '/timer': typeof TimerRoute
   '/user': typeof UserRoute
   '/whiteboard': typeof WhiteboardRouteWithChildren
+  '/bibliography/$itemId': typeof BibliographyItemIdRoute
   '/counters/$counterId': typeof CountersCounterIdRoute
   '/expenses/$walletId': typeof ExpensesWalletIdRoute
   '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
   '/whiteboard/ask': typeof WhiteboardAskRoute
+  '/bibliography/': typeof BibliographyIndexRoute
   '/counters/': typeof CountersIndexRoute
   '/expenses/': typeof ExpensesIndexRoute
   '/whiteboard/': typeof WhiteboardIndexRoute
@@ -149,17 +163,18 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
-  '/bibliography': typeof BibliographyRoute
   '/login': typeof LoginRoute
   '/projects': typeof ProjectsRoute
   '/register': typeof RegisterRoute
   '/tasks': typeof TasksRoute
   '/timer': typeof TimerRoute
   '/user': typeof UserRoute
+  '/bibliography/$itemId': typeof BibliographyItemIdRoute
   '/counters/$counterId': typeof CountersCounterIdRoute
   '/expenses/$walletId': typeof ExpensesWalletIdRoute
   '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
   '/whiteboard/ask': typeof WhiteboardAskRoute
+  '/bibliography': typeof BibliographyIndexRoute
   '/counters': typeof CountersIndexRoute
   '/expenses': typeof ExpensesIndexRoute
   '/whiteboard': typeof WhiteboardIndexRoute
@@ -168,7 +183,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$': typeof SplatRoute
-  '/bibliography': typeof BibliographyRoute
+  '/bibliography': typeof BibliographyRouteWithChildren
   '/counters': typeof CountersRouteWithChildren
   '/expenses': typeof ExpensesRouteWithChildren
   '/login': typeof LoginRoute
@@ -178,10 +193,12 @@ export interface FileRoutesById {
   '/timer': typeof TimerRoute
   '/user': typeof UserRoute
   '/whiteboard': typeof WhiteboardRouteWithChildren
+  '/bibliography/$itemId': typeof BibliographyItemIdRoute
   '/counters/$counterId': typeof CountersCounterIdRoute
   '/expenses/$walletId': typeof ExpensesWalletIdRoute
   '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
   '/whiteboard/ask': typeof WhiteboardAskRoute
+  '/bibliography/': typeof BibliographyIndexRoute
   '/counters/': typeof CountersIndexRoute
   '/expenses/': typeof ExpensesIndexRoute
   '/whiteboard/': typeof WhiteboardIndexRoute
@@ -201,10 +218,12 @@ export interface FileRouteTypes {
     | '/timer'
     | '/user'
     | '/whiteboard'
+    | '/bibliography/$itemId'
     | '/counters/$counterId'
     | '/expenses/$walletId'
     | '/whiteboard/$boardId'
     | '/whiteboard/ask'
+    | '/bibliography/'
     | '/counters/'
     | '/expenses/'
     | '/whiteboard/'
@@ -212,17 +231,18 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/$'
-    | '/bibliography'
     | '/login'
     | '/projects'
     | '/register'
     | '/tasks'
     | '/timer'
     | '/user'
+    | '/bibliography/$itemId'
     | '/counters/$counterId'
     | '/expenses/$walletId'
     | '/whiteboard/$boardId'
     | '/whiteboard/ask'
+    | '/bibliography'
     | '/counters'
     | '/expenses'
     | '/whiteboard'
@@ -240,10 +260,12 @@ export interface FileRouteTypes {
     | '/timer'
     | '/user'
     | '/whiteboard'
+    | '/bibliography/$itemId'
     | '/counters/$counterId'
     | '/expenses/$walletId'
     | '/whiteboard/$boardId'
     | '/whiteboard/ask'
+    | '/bibliography/'
     | '/counters/'
     | '/expenses/'
     | '/whiteboard/'
@@ -252,7 +274,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SplatRoute: typeof SplatRoute
-  BibliographyRoute: typeof BibliographyRoute
+  BibliographyRoute: typeof BibliographyRouteWithChildren
   CountersRoute: typeof CountersRouteWithChildren
   ExpensesRoute: typeof ExpensesRouteWithChildren
   LoginRoute: typeof LoginRoute
@@ -350,6 +372,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WhiteboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/bibliography/': {
+      id: '/bibliography/'
+      path: '/'
+      fullPath: '/bibliography/'
+      preLoaderRoute: typeof BibliographyIndexRouteImport
+      parentRoute: typeof BibliographyRoute
+    }
+    '/bibliography/$itemId': {
+      id: '/bibliography/$itemId'
+      path: '/$itemId'
+      fullPath: '/bibliography/$itemId'
+      preLoaderRoute: typeof BibliographyItemIdRouteImport
+      parentRoute: typeof BibliographyRoute
+    }
     '/counters/': {
       id: '/counters/'
       path: '/'
@@ -402,6 +438,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface BibliographyRouteChildren {
+  BibliographyItemIdRoute: typeof BibliographyItemIdRoute
+  BibliographyIndexRoute: typeof BibliographyIndexRoute
+}
+
+const BibliographyRouteChildren: BibliographyRouteChildren = {
+  BibliographyItemIdRoute: BibliographyItemIdRoute,
+  BibliographyIndexRoute: BibliographyIndexRoute,
+}
+
+const BibliographyRouteWithChildren = BibliographyRoute._addFileChildren(
+  BibliographyRouteChildren,
+)
+
 interface CountersRouteChildren {
   CountersCounterIdRoute: typeof CountersCounterIdRoute
   CountersIndexRoute: typeof CountersIndexRoute
@@ -449,7 +499,7 @@ const WhiteboardRouteWithChildren = WhiteboardRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
-  BibliographyRoute: BibliographyRoute,
+  BibliographyRoute: BibliographyRouteWithChildren,
   CountersRoute: CountersRouteWithChildren,
   ExpensesRoute: ExpensesRouteWithChildren,
   LoginRoute: LoginRoute,

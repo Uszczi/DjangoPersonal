@@ -17,6 +17,8 @@ export const COUNTERS_LOAD_ERROR =
   "Nie udało się wczytać liczników. Odśwież stronę, aby spróbować ponownie.";
 export const COUNTER_ENTRIES_LOAD_ERROR =
   "Nie udało się wczytać wpisów. Spróbuj ponownie.";
+export const ATTEMPTS_LOAD_ERROR =
+  "Nie udało się wczytać podejść. Spróbuj ponownie.";
 export const BIBLIOGRAPHY_ITEMS_LOAD_ERROR =
   "Nie udało się wczytać Bibliografii. Odśwież stronę, aby spróbować ponownie.";
 /** The Notatnik's (web only). */

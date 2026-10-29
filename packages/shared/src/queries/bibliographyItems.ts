@@ -10,7 +10,10 @@ import {
 } from "@tanstack/react-query";
 
 import { api } from "../api";
-import type { PatchedBibliographyItemRequest, BibliographyItemRequest } from "../generated/api";
+import type {
+  PatchedBibliographyItemRequest,
+  BibliographyItemRequest,
+} from "../generated/api";
 import { bibliographyItemKeys } from "./keys";
 
 export const bibliographyItemsQuery = queryOptions({
@@ -46,7 +49,11 @@ export function useUpdateBibliographyItem() {
     }: {
       id: number;
       changes: PatchedBibliographyItemRequest;
-    }) => api.bibliographyItemsPartialUpdate({ id, patchedBibliographyItemRequest: changes }),
+    }) =>
+      api.bibliographyItemsPartialUpdate({
+        id,
+        patchedBibliographyItemRequest: changes,
+      }),
     onSuccess: (updated) => {
       queryClient.setQueryData(bibliographyItemsQuery.queryKey, (list) =>
         list?.map((item) => (item.id === updated.id ? updated : item)),

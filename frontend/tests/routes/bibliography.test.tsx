@@ -1,10 +1,12 @@
-/** User-visible Bibliography flow tests, against a small in-memory fake of the BibliographyItems API. */
+/** User-visible Bibliography flow tests, against a small in-memory fake of the BibliographyItems and Attempts API. */
 
 import { cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { renderApp } from "../renderApp";
+
+type Outcome = "in_progress" | "finished" | "abandoned";
 
 type BibliographyItem = {
   id: number;
@@ -14,7 +16,16 @@ type BibliographyItem = {
   year: number | null;
   length: number | null;
   note: string;
-  status: "planned";
+  status: "planned" | Outcome;
+  created_at: string;
+};
+
+type Attempt = {
+  id: number;
+  item_id: number;
+  outcome: Outcome;
+  started_on: string | null;
+  ended_on: string | null;
   created_at: string;
 };
 
@@ -25,11 +36,31 @@ function jsonResponse(data: unknown, status = 200) {
   });
 }
 
-/** Answers the BibliographyItems endpoints the way the backend does: newest first. */
-function fakeBackend(initial: BibliographyItem[] = []) {
+/** The backend's rule, so the fake answers with the status the server would. */
+function latestFirst(attempts: Attempt[]) {
+  const rank = (p: Attempt) =>
+    p.outcome === "in_progress" ? "9999-99-99" : (p.ended_on ?? "");
+  return [...attempts].sort(
+    (a, b) => rank(b).localeCompare(rank(a)) || b.id - a.id,
+  );
+}
+
+/** Answers the BibliographyItems and Attempts endpoints the way the backend does. */
+function fakeBackend(
+  initial: BibliographyItem[] = [],
+  initialAttempts: Attempt[] = [],
+) {
   const items = [...initial];
+  const attempts = [...initialAttempts];
   const requests: Array<{ method: string; path: string; body: unknown }> = [];
   let nextId = 100;
+
+  function withStatus(item: BibliographyItem): BibliographyItem {
+    const latest = latestFirst(
+      attempts.filter((p) => p.item_id === item.id),
+    )[0];
+    return { ...item, status: latest ? latest.outcome : "planned" };
+  }
 
   const handler = async (
     url: string | URL | Request,
@@ -57,15 +88,43 @@ function fakeBackend(initial: BibliographyItem[] = []) {
         items.unshift(item);
         return jsonResponse(item, 201);
       }
-      return jsonResponse(items);
+      return jsonResponse(items.map(withStatus));
     }
-    const match = path.match(/\/bibliography-items\/(\d+)\/$/);
-    if (match) {
-      const item = items.find((item) => item.id === Number(match[1]));
+    const itemMatch = path.match(/\/bibliography-items\/(\d+)\/$/);
+    if (itemMatch) {
+      const item = items.find((item) => item.id === Number(itemMatch[1]));
       if (!item)
         return jsonResponse({ detail: "BibliographyItem not found." }, 404);
       if (method === "PATCH") Object.assign(item, body);
-      return jsonResponse(item);
+      return jsonResponse(withStatus(item));
+    }
+
+    const listMatch = path.match(/\/bibliography-attempts\/\?item=(\d+)$/);
+    if (listMatch) {
+      return jsonResponse(
+        latestFirst(attempts.filter((p) => p.item_id === Number(listMatch[1]))),
+      );
+    }
+    if (path.endsWith("/bibliography-attempts/") && method === "POST") {
+      const attempt: Attempt = {
+        id: nextId++,
+        item_id: body.item,
+        outcome: body.outcome,
+        started_on: body.started_on ?? null,
+        ended_on: body.ended_on ?? null,
+        created_at: "2026-10-29T10:00:00Z",
+      };
+      attempts.push(attempt);
+      return jsonResponse(attempt, 201);
+    }
+    const attemptMatch = path.match(/\/bibliography-attempts\/(\d+)\/$/);
+    if (attemptMatch && method === "PATCH") {
+      const attempt = attempts.find(
+        (item) => item.id === Number(attemptMatch[1]),
+      );
+      if (!attempt) return jsonResponse({ detail: "Not found." }, 404);
+      Object.assign(attempt, body);
+      return jsonResponse(attempt);
     }
     return jsonResponse({ detail: "Not found" }, 404);
   };
@@ -84,6 +143,27 @@ const lalka: BibliographyItem = {
   created_at: "2026-10-01T10:00:00Z",
 };
 
+const rejs: BibliographyItem = {
+  ...lalka,
+  id: 2,
+  kind: "film",
+  title: "Rejs",
+  creator: "",
+  year: null,
+};
+
+function attempt(fields: Partial<Attempt>): Attempt {
+  return {
+    id: 50,
+    item_id: lalka.id,
+    outcome: "finished",
+    started_on: null,
+    ended_on: "2026-03-01",
+    created_at: "2026-10-01T10:00:00Z",
+    ...fields,
+  };
+}
+
 describe("Bibliography", () => {
   const fetchMock = vi.fn();
 
@@ -94,6 +174,7 @@ describe("Bibliography", () => {
 
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
     vi.unstubAllGlobals();
   });
 
@@ -114,15 +195,12 @@ describe("Bibliography", () => {
   });
 
   test("the list shows kind, title, creator, year and status", async () => {
-    const rejs: BibliographyItem = {
-      ...lalka,
-      id: 2,
-      kind: "film",
-      title: "Rejs",
-      creator: "",
-      year: null,
-    };
-    fetchMock.mockImplementation(fakeBackend([rejs, lalka]).handler);
+    fetchMock.mockImplementation(
+      fakeBackend(
+        [rejs, lalka],
+        [attempt({ item_id: rejs.id, outcome: "in_progress", ended_on: null })],
+      ).handler,
+    );
 
     renderApp("/bibliography");
     const list = await screen.findByRole("list", { name: "Pozycje" });
@@ -130,7 +208,7 @@ describe("Bibliography", () => {
 
     expect(within(first).getByText("Rejs")).toBeInTheDocument();
     expect(within(first).getByText("Film")).toBeInTheDocument();
-    expect(within(first).getByText("Do obejrzenia")).toBeInTheDocument();
+    expect(within(first).getByText("W trakcie")).toBeInTheDocument();
     expect(within(second).getByText("Lalka")).toBeInTheDocument();
     expect(within(second).getByText("Książka")).toBeInTheDocument();
     expect(
@@ -179,14 +257,30 @@ describe("Bibliography", () => {
     expect(await screen.findByText("Podaj tytuł.")).toBeInTheDocument();
   });
 
+  test("a row opens the BibliographyItem's view", async () => {
+    fetchMock.mockImplementation(fakeBackend([lalka]).handler);
+    const user = userEvent.setup();
+
+    renderApp("/bibliography");
+    await user.click(
+      await screen.findByRole("button", { name: "Otwórz pozycję: Lalka" }),
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Lalka" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Do przeczytania")).toBeInTheDocument();
+    expect(await screen.findByText("Brak podejść")).toBeInTheDocument();
+  });
+
   test("user can edit a BibliographyItem but not its kind", async () => {
     const backend = fakeBackend([lalka]);
     fetchMock.mockImplementation(backend.handler);
     const user = userEvent.setup();
 
-    renderApp("/bibliography");
+    renderApp("/bibliography/1");
     await user.click(
-      await screen.findByRole("button", { name: "Edytuj pozycję: Lalka" }),
+      await screen.findByRole("button", { name: "Edytuj pozycję" }),
     );
     expect(screen.getByLabelText("Rodzaj")).toBeDisabled();
     expect(screen.getByLabelText("Liczba stron")).toHaveValue(680);
@@ -196,13 +290,199 @@ describe("Bibliography", () => {
     await user.clear(screen.getByLabelText("Rok"));
     await user.click(screen.getByRole("button", { name: "Zapisz zmiany" }));
 
-    const list = await screen.findByRole("list", { name: "Pozycje" });
     expect(
-      await within(list).findByText("Lalka (wyd. II)"),
+      await screen.findByRole("heading", { name: "Lalka (wyd. II)" }),
     ).toBeInTheDocument();
-    expect(within(list).getByText("Bolesław Prus")).toBeInTheDocument();
+    expect(screen.getByText("Bolesław Prus")).toBeInTheDocument();
     const patch = backend.requests.find((r) => r.method === "PATCH");
     expect(patch?.body).not.toHaveProperty("kind");
     expect(patch?.body).toMatchObject({ title: "Lalka (wyd. II)", year: null });
+  });
+
+  test("user can start an Attempt and then finish it", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 9, 20, 9, 0));
+    const backend = fakeBackend([lalka]);
+    fetchMock.mockImplementation(backend.handler);
+    const user = userEvent.setup();
+
+    renderApp("/bibliography/1");
+    await user.click(await screen.findByRole("button", { name: "Zacznij" }));
+    const startDialog = screen.getByRole("dialog");
+    expect(within(startDialog).getByLabelText("Data rozpoczęcia")).toHaveValue(
+      "2026-10-20",
+    );
+    await user.click(
+      within(startDialog).getByRole("button", { name: "Zacznij" }),
+    );
+
+    const history = await screen.findByRole("list", { name: "Podejścia" });
+    expect(await within(history).findByText("W trakcie")).toBeInTheDocument();
+    expect(within(history).getByText("od 20.10.2026")).toBeInTheDocument();
+    expect(screen.getByLabelText("Status")).toHaveTextContent("W trakcie");
+    expect(
+      screen.queryByRole("button", { name: "Zacznij" }),
+    ).not.toBeInTheDocument();
+
+    vi.setSystemTime(new Date(2026, 9, 28, 9, 0));
+    await user.click(screen.getByRole("button", { name: "Zakończ" }));
+    const finishDialog = screen.getByRole("dialog");
+    expect(within(finishDialog).getByLabelText("Data zakończenia")).toHaveValue(
+      "2026-10-28",
+    );
+    await user.click(
+      within(finishDialog).getByRole("button", { name: "Zakończ" }),
+    );
+
+    expect(await within(history).findByText("Ukończone")).toBeInTheDocument();
+    expect(
+      within(history).getByText("20.10.2026 – 28.10.2026"),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Status")).toHaveTextContent("Ukończone");
+    const [start, finish] = backend.requests.filter(
+      (r) => r.path.includes("/bibliography-attempts/") && r.method !== "GET",
+    );
+    expect(start.body).toEqual({
+      item: 1,
+      outcome: "in_progress",
+      started_on: "2026-10-20",
+      ended_on: null,
+    });
+    expect(finish.body).toEqual({
+      outcome: "finished",
+      ended_on: "2026-10-28",
+    });
+  });
+
+  test("user can abandon an Attempt in progress", async () => {
+    fetchMock.mockImplementation(
+      fakeBackend(
+        [lalka],
+        [attempt({ outcome: "in_progress", ended_on: null })],
+      ).handler,
+    );
+    const user = userEvent.setup();
+
+    renderApp("/bibliography/1");
+    await user.click(await screen.findByRole("button", { name: "Porzuć" }));
+    const dialog = screen.getByRole("dialog");
+    await user.clear(within(dialog).getByLabelText("Data zakończenia"));
+    await user.type(
+      within(dialog).getByLabelText("Data zakończenia"),
+      "2026-10-05",
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Porzuć" }));
+
+    const history = screen.getByRole("list", { name: "Podejścia" });
+    expect(await within(history).findByText("Porzucone")).toBeInTheDocument();
+    expect(screen.getByLabelText("Status")).toHaveTextContent("Porzucone");
+  });
+
+  test("user can record a finished Attempt with only an end date", async () => {
+    const backend = fakeBackend([rejs]);
+    fetchMock.mockImplementation(backend.handler);
+    const user = userEvent.setup();
+
+    renderApp("/bibliography/2");
+    await user.click(
+      await screen.findByRole("button", { name: "Dodaj ukończone" }),
+    );
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByLabelText("Data rozpoczęcia")).toHaveValue("");
+    await user.clear(within(dialog).getByLabelText("Data zakończenia"));
+    await user.type(
+      within(dialog).getByLabelText("Data zakończenia"),
+      "2026-10-28",
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Zapisz" }));
+
+    const history = screen.getByRole("list", { name: "Podejścia" });
+    expect(await within(history).findByText("Ukończone")).toBeInTheDocument();
+    expect(within(history).getByText("28.10.2026")).toBeInTheDocument();
+    const created = backend.requests.find(
+      (r) => r.path.includes("/bibliography-attempts/") && r.method === "POST",
+    );
+    expect(created?.body).toEqual({
+      item: 2,
+      outcome: "finished",
+      started_on: null,
+      ended_on: "2026-10-28",
+    });
+  });
+
+  test("an end date before the start date is rejected before saving", async () => {
+    const backend = fakeBackend([lalka]);
+    fetchMock.mockImplementation(backend.handler);
+    const user = userEvent.setup();
+
+    renderApp("/bibliography/1");
+    await user.click(
+      await screen.findByRole("button", { name: "Dodaj ukończone" }),
+    );
+    const dialog = screen.getByRole("dialog");
+    await user.type(
+      within(dialog).getByLabelText("Data rozpoczęcia"),
+      "2026-10-10",
+    );
+    await user.clear(within(dialog).getByLabelText("Data zakończenia"));
+    await user.type(
+      within(dialog).getByLabelText("Data zakończenia"),
+      "2026-10-01",
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Zapisz" }));
+
+    expect(
+      await within(dialog).findByText(
+        "Data zakończenia nie może być wcześniejsza niż data rozpoczęcia.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      backend.requests.some(
+        (r) =>
+          r.path.includes("/bibliography-attempts/") && r.method === "POST",
+      ),
+    ).toBe(false);
+  });
+
+  test("the history lists the latest Attempt first and its dates can be edited", async () => {
+    const backend = fakeBackend(
+      [lalka],
+      [
+        attempt({ id: 51, outcome: "finished", ended_on: "2026-03-01" }),
+        attempt({ id: 52, outcome: "abandoned", ended_on: "2019-05-01" }),
+      ],
+    );
+    fetchMock.mockImplementation(backend.handler);
+    const user = userEvent.setup();
+
+    renderApp("/bibliography/1");
+    const history = await screen.findByRole("list", { name: "Podejścia" });
+    const [first, second] = within(history).getAllByRole("listitem");
+    expect(within(first).getByText("Ukończone")).toBeInTheDocument();
+    expect(within(second).getByText("Porzucone")).toBeInTheDocument();
+    expect(screen.getByLabelText("Status")).toHaveTextContent("Ukończone");
+
+    await user.click(within(second).getByRole("button", { name: "Edytuj" }));
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByLabelText("Data zakończenia")).toHaveValue(
+      "2019-05-01",
+    );
+    await user.type(
+      within(dialog).getByLabelText("Data rozpoczęcia"),
+      "2019-04-01",
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Zapisz" }));
+
+    expect(
+      await within(history).findByText("01.04.2019 – 01.05.2019"),
+    ).toBeInTheDocument();
+    const patch = backend.requests.find(
+      (r) =>
+        r.path.includes("/bibliography-attempts/52/") && r.method === "PATCH",
+    );
+    expect(patch?.body).toEqual({
+      started_on: "2019-04-01",
+      ended_on: "2019-05-01",
+    });
   });
 });

@@ -42,4 +42,6 @@ export const counterKeys = {
 
 export const bibliographyItemKeys = {
   all: ["bibliographyItems"] as const,
+  /** One item's Attempts. */
+  attempts: (itemId: number) => ["bibliographyAttempts", itemId] as const,
 };

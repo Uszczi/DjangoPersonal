@@ -14,10 +14,10 @@ import {
 /** The user's BibliographyItems, one row each: title, creator and year, kind and status. */
 export function BibliographyItemList({
   items,
-  onEdit,
+  onOpen,
 }: {
   items: BibliographyItemResponse[];
-  onEdit: (item: BibliographyItemResponse) => void;
+  onOpen: (item: BibliographyItemResponse) => void;
 }) {
   return (
     <ul className="flex flex-col" aria-label="Pozycje">
@@ -26,8 +26,8 @@ export function BibliographyItemList({
         return (
           <ListRow key={item.id}>
             <ListRowButton
-              aria-label={`Edytuj pozycję: ${item.title}`}
-              onClick={() => onEdit(item)}
+              aria-label={`Otwórz pozycję: ${item.title}`}
+              onClick={() => onOpen(item)}
             >
               <div className="min-w-0">
                 <ListRowTitle>{item.title}</ListRowTitle>
