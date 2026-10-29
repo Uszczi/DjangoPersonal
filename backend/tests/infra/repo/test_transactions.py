@@ -82,12 +82,12 @@ def test_a_page_reads_every_kind_in_one_query(session: Session, user: User) -> N
     def record(*args: Any) -> None:
         statements.append(args[2])
 
-    event.listen(session.bind, 'before_cursor_execute', record)  # type: ignore[arg-type]
+    event.listen(session.bind, 'before_cursor_execute', record)
     try:
         page = transactions.list_for_wallet(wallet.id, user=user)
         kinds = {t.title: t.kind for t in page}
     finally:
-        event.remove(session.bind, 'before_cursor_execute', record)  # type: ignore[arg-type]
+        event.remove(session.bind, 'before_cursor_execute', record)
 
     assert kinds == {'s': None, 'i': 'income', 'e': 'expense', 'u': 'expense'}
     assert len([s for s in statements if s.startswith('SELECT')]) == 1
