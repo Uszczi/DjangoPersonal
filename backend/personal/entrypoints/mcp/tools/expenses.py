@@ -1,6 +1,6 @@
 """Expense tools: wallets, categories and transactions."""
 
-from typing import Any
+from typing import Any, Literal
 
 from personal import wiring
 from personal.core.expenses import handlers as expense_handlers
@@ -109,9 +109,15 @@ def list_categories(ctx: ToolContext) -> list[dict[str, Any]]:
 
 
 @tool
-def create_category(ctx: ToolContext, name: str, icon: str | None = None) -> dict[str, Any]:
-    """Create a category; ``icon`` is a lucide icon name."""
-    payload = CategoryRequest.model_validate({'name': name, **provided(icon=icon)})
+def create_category(
+    ctx: ToolContext,
+    name: str,
+    icon: str | None = None,
+    kind: Literal['expense', 'income'] = 'expense',
+) -> dict[str, Any]:
+    """Create a category; ``icon`` is a lucide icon name and ``kind`` is
+    ``expense`` or ``income``. The kind is fixed at creation and cannot change."""
+    payload = CategoryRequest.model_validate({'name': name, **provided(icon=icon, kind=kind)})
     with unit_of_work(ctx) as (session, user):
         handler = expense_handlers.CreateCategory(wiring.category_repository(session), user)
         return category(handler.execute(payload))
@@ -169,8 +175,9 @@ def create_transaction(
     description: str = '',
     category_id: int | None = None,
 ) -> dict[str, Any]:
-    """Record an expense in a wallet. ``amount`` is a positive decimal string
-    (``"12.50"``), ``date`` is YYYY-MM-DD."""
+    """Record an expense or an income; the direction follows from the category's
+    kind. ``amount`` is a positive decimal string (``"12.50"``), ``date`` is
+    YYYY-MM-DD. Filing under the System category is refused."""
     payload = TransactionRequest.model_validate(
         {
             'wallet': wallet_id,
