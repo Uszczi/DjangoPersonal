@@ -285,7 +285,7 @@ def test_the_kind_of_a_bibliography_item_cannot_change(mcp_user: User) -> None:
 def test_bibliography_tools_see_only_the_callers_items(
     mcp_user: User, make_user: Callable[..., User]
 ) -> None:
-    other = factories.BibliographyItemFactory(user=make_user('someone-else'), title='Cudze')
+    other = factories.BibliographyItemFactory.create(user=make_user('someone-else'), title='Cudze')
 
     assert call('list_bibliography_items') == []
     with pytest.raises(ToolError, match='Bibliography item not found.'):
@@ -370,8 +370,8 @@ def test_progress_can_be_cleared(mcp_user: User) -> None:
 def test_attempt_tools_see_only_the_callers_attempts(
     mcp_user: User, make_user: Callable[..., User]
 ) -> None:
-    other = factories.BibliographyItemFactory(user=make_user('someone-else'))
-    theirs = factories.AttemptFactory(item=other, outcome='in_progress', ended_on=None)
+    other = factories.BibliographyItemFactory.create(user=make_user('someone-else'))
+    theirs = factories.AttemptFactory.create(item=other, outcome='in_progress', ended_on=None)
 
     with pytest.raises(ToolError, match='Bibliography item not found.'):
         call('list_attempts', item_id=other.id)
