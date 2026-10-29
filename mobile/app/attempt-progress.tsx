@@ -16,7 +16,7 @@ import {
   useAttempts,
   useUpdateAttempt,
 } from "@personal/shared/queries/bibliographyAttempts";
-import { useBibliographyItems } from "@personal/shared/queries/bibliographyItems";
+import { useBibliographyItem } from "@personal/shared/queries/bibliographyItems";
 
 import { Button } from "../src/Button";
 import { useTheme } from "../src/theme";
@@ -31,8 +31,7 @@ export default function AttemptProgressScreen() {
   const params = useLocalSearchParams<{ itemId: string; attemptId: string }>();
   const itemId = Number(params.itemId);
   const attemptId = Number(params.attemptId);
-  const { data: items = [] } = useBibliographyItems();
-  const item = items.find((candidate) => candidate.id === itemId);
+  const { data: item } = useBibliographyItem(itemId);
   const { data: attempts = [] } = useAttempts(itemId);
   const attempt = attempts.find((candidate) => candidate.id === attemptId);
   const updateAttempt = useUpdateAttempt();

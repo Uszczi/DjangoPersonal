@@ -289,6 +289,15 @@ describe("Bibliography", () => {
     expect(await screen.findByText("Brak podejść")).toBeInTheDocument();
   });
 
+  test("an unknown BibliographyItem leads back to the list", async () => {
+    fetchMock.mockImplementation(fakeBackend([lalka]).handler);
+
+    renderApp("/bibliography/999");
+
+    const list = await screen.findByRole("list", { name: "Pozycje" });
+    expect(within(list).getByText("Lalka")).toBeInTheDocument();
+  });
+
   test("user can edit a BibliographyItem but not its kind", async () => {
     const backend = fakeBackend([lalka]);
     fetchMock.mockImplementation(backend.handler);

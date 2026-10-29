@@ -9,20 +9,19 @@ import {
   itemByline,
   itemStatusLabel,
 } from "@personal/shared/bibliographyFormat";
+import type { AttemptAction } from "@personal/shared/bibliographyForms";
+import { isNotFound } from "@personal/shared/apiErrorMessage";
 import type { AttemptResponse } from "@personal/shared/generated/api";
 import {
   ATTEMPTS_LOAD_ERROR,
   BIBLIOGRAPHY_ITEMS_LOAD_ERROR,
 } from "@personal/shared/loadErrors";
 import { useAttempts } from "@personal/shared/queries/bibliographyAttempts";
-import { useBibliographyItems } from "@personal/shared/queries/bibliographyItems";
+import { useBibliographyItem } from "@personal/shared/queries/bibliographyItems";
 
 import { Button } from "../../src/Button";
 import { makeStyles, fonts, useTheme } from "../../src/theme";
 import { useRefreshOnFocus } from "../../src/useRefreshOnFocus";
-
-/** What the Attempt screen does; mirrors the web's AttemptEditorModal. */
-type AttemptAction = "start" | "record" | "finish" | "abandon" | "edit";
 
 /** One film or book: its derived status, the actions its Attempts allow, and their history. */
 export default function BibliographyItemScreen() {
@@ -31,27 +30,30 @@ export default function BibliographyItemScreen() {
   const { id: rawId } = useLocalSearchParams<{ id: string }>();
   const id = Number(rawId);
 
-  const itemsQuery = useBibliographyItems();
-  const item = itemsQuery.data?.find((candidate) => candidate.id === id);
+  const itemQuery = useBibliographyItem(Number.isInteger(id) ? id : null);
+  const item = itemQuery.data;
   const attemptsQuery = useAttempts(item ? id : null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   useRefreshOnFocus(attemptsQuery.refetch);
 
   async function refresh() {
     setIsRefreshing(true);
-    await Promise.all([itemsQuery.refetch(), attemptsQuery.refetch()]);
+    await Promise.all([itemQuery.refetch(), attemptsQuery.refetch()]);
     setIsRefreshing(false);
   }
 
   if (!item) {
+    const isMissing =
+      !Number.isInteger(id) ||
+      (itemQuery.isError && isNotFound(itemQuery.error));
     return (
       <View style={common.center}>
         <Text style={common.muted}>
-          {itemsQuery.isPending
-            ? "Wczytywanie pozycji…"
-            : itemsQuery.isError
+          {isMissing
+            ? "Nie znaleziono pozycji."
+            : itemQuery.isError
               ? BIBLIOGRAPHY_ITEMS_LOAD_ERROR
-              : "Nie znaleziono pozycji."}
+              : "Wczytywanie pozycji…"}
         </Text>
       </View>
     );

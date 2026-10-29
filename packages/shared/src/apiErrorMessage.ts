@@ -16,3 +16,8 @@ export async function apiErrorMessage(error: unknown) {
     ? error.message
     : 'Nie udało się zapisać. Spróbuj ponownie.'
 }
+
+/** Whether the server answered 404: the thing asked for is gone or never existed. */
+export function isNotFound(error: unknown) {
+  return error instanceof ResponseError && error.response?.status === 404
+}

@@ -18,7 +18,7 @@ import {
 } from "@personal/shared/bibliographyFormat";
 import { parseItemNumber } from "@personal/shared/bibliographyForms";
 import {
-  useBibliographyItems,
+  useBibliographyItem,
   useCreateBibliographyItem,
   useUpdateBibliographyItem,
 } from "@personal/shared/queries/bibliographyItems";
@@ -50,11 +50,7 @@ export default function BibliographyItemEditorScreen() {
   const { common, form } = useTheme();
   const params = useLocalSearchParams<{ itemId?: string }>();
   const itemId = params.itemId ? Number(params.itemId) : null;
-  const { data: items = [] } = useBibliographyItems();
-  const item =
-    itemId === null
-      ? null
-      : (items.find((candidate) => candidate.id === itemId) ?? null);
+  const item = useBibliographyItem(itemId).data ?? null;
   const createItem = useCreateBibliographyItem();
   const updateItem = useUpdateBibliographyItem();
 

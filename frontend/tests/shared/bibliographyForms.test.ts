@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import type { AttemptResponse } from "@personal/shared/generated/api";
 import {
   attemptDatesError,
+  attemptFormFields,
+  attemptWrite,
   parseItemNumber,
   parseProgress,
 } from "@personal/shared/bibliographyForms";
@@ -65,5 +68,61 @@ describe("parseItemNumber", () => {
     for (const text of ["0", "-3", "2.5", "x"]) {
       expect(parseItemNumber(text)).toBeUndefined();
     }
+  });
+});
+
+describe("attemptWrite", () => {
+  const ended: AttemptResponse = {
+    id: 7,
+    itemId: 1,
+    outcome: "abandoned",
+    startedOn: null,
+    endedOn: new Date(2026, 9, 1),
+    progress: null,
+    createdAt: new Date(2026, 9, 1),
+  };
+  const start = new Date(2026, 8, 1);
+  const end = new Date(2026, 9, 2);
+
+  it("starts a new Attempt with no end date", () => {
+    expect(
+      attemptWrite("start", {
+        itemId: 1,
+        attempt: null,
+        startedOn: start,
+        endedOn: end,
+      }),
+    ).toEqual({
+      create: {
+        item: 1,
+        outcome: "in_progress",
+        startedOn: start,
+        endedOn: null,
+      },
+    });
+  });
+
+  it("re-dates an ended Attempt without touching its outcome", () => {
+    expect(
+      attemptWrite("edit", {
+        itemId: 1,
+        attempt: ended,
+        startedOn: start,
+        endedOn: end,
+      }),
+    ).toEqual({
+      update: { id: 7, changes: { startedOn: start, endedOn: end } },
+    });
+  });
+
+  it("asks for an end date only while the Attempt is or becomes ended", () => {
+    expect(attemptFormFields("edit", ended).showsEnd).toBe(true);
+    expect(attemptFormFields("edit", { outcome: "in_progress" }).showsEnd).toBe(
+      false,
+    );
+    expect(attemptFormFields("start", null)).toEqual({
+      showsStart: true,
+      showsEnd: false,
+    });
   });
 });

@@ -6,6 +6,15 @@
  * Keys are prefixes of each other on purpose: invalidating `taskKeys.all`
  * covers every Project's list and the all-Tasks list.
  */
+import type { QueryKey } from "@tanstack/react-query";
+
+import {
+  ITEM_KINDS,
+  ITEM_STATUSES,
+  type ItemKind,
+  type ItemStatus,
+} from "../bibliographyFormat";
+
 export const categoryKeys = {
   all: ["categories"] as const,
 };
@@ -40,11 +49,33 @@ export const counterKeys = {
   entries: (counterId: number) => ["counterEntries", counterId] as const,
 };
 
+/** Which BibliographyItems a list shows; a missing filter means all. */
+export type BibliographyItemFilters = { status?: ItemStatus; kind?: ItemKind };
+
 export const bibliographyItemKeys = {
+  /** Every list and every single item. */
   all: ["bibliographyItems"] as const,
+  /** Every cached list, whatever its filters. */
+  lists: ["bibliographyItems", "list"] as const,
   /** The list narrowed by status and kind; `{}` is every item. */
-  list: (filters: { status?: string; kind?: string }) =>
-    ["bibliographyItems", filters] as const,
+  list: (filters: BibliographyItemFilters) =>
+    ["bibliographyItems", "list", filters] as const,
+  /** One item, as the retrieve endpoint returns it. */
+  detail: (itemId: number) => ["bibliographyItems", "detail", itemId] as const,
   /** One item's Attempts. */
   attempts: (itemId: number) => ["bibliographyAttempts", itemId] as const,
 };
+
+/** The filters a cached list was loaded with, read back from its `list` key. */
+export function bibliographyListFilters(
+  queryKey: QueryKey,
+): BibliographyItemFilters {
+  const filters = queryKey[2];
+  if (typeof filters !== "object" || filters === null) return {};
+  const status = "status" in filters ? filters.status : undefined;
+  const kind = "kind" in filters ? filters.kind : undefined;
+  return {
+    status: ITEM_STATUSES.find((known) => known === status),
+    kind: ITEM_KINDS.find((known) => known === kind),
+  };
+}

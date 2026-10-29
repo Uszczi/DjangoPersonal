@@ -1,7 +1,14 @@
 import { useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
-import { attemptDatesError } from "@personal/shared/bibliographyForms";
+import {
+  ATTEMPT_SUBMIT_LABELS,
+  ATTEMPT_TITLES,
+  attemptDatesError,
+  attemptFormFields,
+  attemptWrite,
+  type AttemptAction,
+} from "@personal/shared/bibliographyForms";
 import {
   Button,
   ErrorAlert,
@@ -17,34 +24,12 @@ import {
 } from "@personal/shared/queries/bibliographyAttempts";
 import { dateFromKey, dateKey, todayKey } from "@personal/shared/timeFormat";
 
-/**
- * What the dialog does: start a new Attempt, record one that already ended,
- * finish or abandon the one in progress, or re-date an existing one.
- */
-export type AttemptAction = "start" | "record" | "finish" | "abandon" | "edit";
-
 type AttemptEditorModalProps = {
   itemId: number;
   action: AttemptAction;
   /** The Attempt to finish, abandon or edit; omit for `start` and `record`. */
   attempt?: AttemptResponse | null;
   onClose: () => void;
-};
-
-const TITLES: Record<AttemptAction, string> = {
-  start: "Zacznij podejście",
-  record: "Dodaj ukończone podejście",
-  finish: "Zakończ podejście",
-  abandon: "Porzuć podejście",
-  edit: "Edytuj podejście",
-};
-
-const SUBMIT_LABELS: Record<AttemptAction, string> = {
-  start: "Zacznij",
-  record: "Zapisz",
-  finish: "Zakończ",
-  abandon: "Porzuć",
-  edit: "Zapisz",
 };
 
 function keyOf(date: Date | null | undefined) {
@@ -60,13 +45,7 @@ export function AttemptEditorModal({
   const createAttempt = useCreateAttempt();
   const updateAttempt = useUpdateAttempt();
 
-  const showsStart =
-    action === "start" || action === "record" || action === "edit";
-  const showsEnd =
-    action === "record" ||
-    action === "finish" ||
-    action === "abandon" ||
-    (action === "edit" && attempt?.outcome !== "in_progress");
+  const { showsStart, showsEnd } = attemptFormFields(action, attempt);
 
   const [startedOn, setStartedOn] = useState(
     action === "start" ? todayKey() : keyOf(attempt?.startedOn),
@@ -82,43 +61,15 @@ export function AttemptEditorModal({
   }
 
   async function save() {
-    const start = startedOn ? dateFromKey(startedOn) : null;
-    const end = dateFromKey(endedOn);
-    switch (action) {
-      case "start":
-        return createAttempt.mutateAsync({
-          item: itemId,
-          outcome: "in_progress",
-          startedOn: start,
-          endedOn: null,
-        });
-      case "record":
-        return createAttempt.mutateAsync({
-          item: itemId,
-          outcome: "finished",
-          startedOn: start,
-          endedOn: end,
-        });
-    }
-    if (!attempt) throw new Error("No Attempt to change.");
-    switch (action) {
-      case "finish":
-      case "abandon":
-        return updateAttempt.mutateAsync({
-          id: attempt.id,
-          changes: {
-            outcome: action === "finish" ? "finished" : "abandoned",
-            endedOn: end,
-          },
-        });
-      case "edit":
-        return updateAttempt.mutateAsync({
-          id: attempt.id,
-          changes: showsEnd
-            ? { startedOn: start, endedOn: end }
-            : { startedOn: start },
-        });
-    }
+    const write = attemptWrite(action, {
+      itemId,
+      attempt,
+      startedOn: startedOn ? dateFromKey(startedOn) : null,
+      endedOn: dateFromKey(endedOn),
+    });
+    return "create" in write
+      ? createAttempt.mutateAsync(write.create)
+      : updateAttempt.mutateAsync(write.update);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -146,7 +97,7 @@ export function AttemptEditorModal({
   return (
     <Modal
       kicker="PODEJŚCIE"
-      title={TITLES[action]}
+      title={ATTEMPT_TITLES[action]}
       titleId="attempt-dialog-title"
       onClose={close}
     >
@@ -176,7 +127,7 @@ export function AttemptEditorModal({
             Anuluj
           </Button>
           <Button variant="primary" type="submit" disabled={isSaving}>
-            {isSaving ? "Zapisywanie…" : SUBMIT_LABELS[action]}
+            {isSaving ? "Zapisywanie…" : ATTEMPT_SUBMIT_LABELS[action]}
           </Button>
         </ModalFooter>
       </form>

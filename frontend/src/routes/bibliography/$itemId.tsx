@@ -2,10 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { AttemptList } from "@/components/bibliography/AttemptList";
-import {
-  AttemptEditorModal,
-  type AttemptAction,
-} from "@/components/modals/AttemptEditorModal";
+import { AttemptEditorModal } from "@/components/modals/AttemptEditorModal";
 import { AttemptProgressModal } from "@/components/modals/AttemptProgressModal";
 import { BibliographyItemEditorModal } from "@/components/modals/BibliographyItemEditorModal";
 import {
@@ -20,13 +17,15 @@ import {
   itemByline,
   itemStatusLabel,
 } from "@personal/shared/bibliographyFormat";
+import type { AttemptAction } from "@personal/shared/bibliographyForms";
+import { isNotFound } from "@personal/shared/apiErrorMessage";
 import type { AttemptResponse } from "@personal/shared/generated/api";
 import {
   ATTEMPTS_LOAD_ERROR,
   BIBLIOGRAPHY_ITEMS_LOAD_ERROR,
 } from "@personal/shared/loadErrors";
 import { useAttempts } from "@personal/shared/queries/bibliographyAttempts";
-import { useBibliographyItems } from "@personal/shared/queries/bibliographyItems";
+import { useBibliographyItem } from "@personal/shared/queries/bibliographyItems";
 import { ShowModal } from "@/stores/modal";
 
 export const Route = createFileRoute("/bibliography/$itemId")({
@@ -35,26 +34,26 @@ export const Route = createFileRoute("/bibliography/$itemId")({
 
 /** One film or book: its derived status, the actions its Attempts allow, and their history. */
 function BibliographyItemPage() {
-  const { itemId } = Route.useParams();
-  const id = Number(itemId);
+  const { itemId: rawItemId } = Route.useParams();
+  const parsed = Number(rawItemId);
+  const id = Number.isInteger(parsed) ? parsed : null;
   const navigate = useNavigate();
-  const { data: items = [], isPending, isError } = useBibliographyItems();
-  const item = items.find((candidate) => candidate.id === id);
-  const attemptsQuery = useAttempts(item ? id : null);
+  const { data: item, isPending, isError, error } = useBibliographyItem(id);
+  const attemptsQuery = useAttempts(item ? item.id : null);
 
-  const isMissing = !isPending && !isError && !item;
+  const isMissing = id === null || (isError && isNotFound(error));
   useEffect(() => {
     if (isMissing) navigate({ to: "/bibliography" });
   }, [isMissing, navigate]);
 
+  if (isMissing) {
+    return <LoadingStatus>Przekierowywanie…</LoadingStatus>;
+  }
   if (isPending) {
     return <LoadingStatus>Wczytywanie pozycji…</LoadingStatus>;
   }
   if (isError) {
     return <ErrorMessage>{BIBLIOGRAPHY_ITEMS_LOAD_ERROR}</ErrorMessage>;
-  }
-  if (!item) {
-    return <LoadingStatus>Przekierowywanie…</LoadingStatus>;
   }
 
   const attempts = attemptsQuery.data ?? null;
@@ -68,11 +67,12 @@ function BibliographyItemPage() {
       })
     : "";
 
+  const itemId = item.id;
   function showAttemptEditor(
     action: AttemptAction,
     attempt: AttemptResponse | null = null,
   ) {
-    ShowModal(AttemptEditorModal, { itemId: id, action, attempt });
+    ShowModal(AttemptEditorModal, { itemId, action, attempt });
   }
 
   return (

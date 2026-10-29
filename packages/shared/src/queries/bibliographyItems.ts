@@ -1,7 +1,8 @@
 /**
  * The Bibliography's items as server state. The server lists them newest
  * first and narrows the list by status and kind, so each combination of
- * filters is its own cached list; a write keeps every cached list in step.
+ * filters is its own cached list, and one item is cached on its own for its
+ * page; a write keeps every cached list and the item in step.
  */
 import {
   keepPreviousData,
@@ -17,11 +18,13 @@ import type {
   PatchedBibliographyItemRequest,
   BibliographyItemRequest,
 } from "../generated/api";
-import type { ItemKind, ItemStatus } from "../bibliographyFormat";
-import { bibliographyItemKeys } from "./keys";
+import {
+  bibliographyItemKeys,
+  bibliographyListFilters,
+  type BibliographyItemFilters,
+} from "./keys";
 
-/** Which items a list shows; a missing filter means all. */
-export type BibliographyItemFilters = { status?: ItemStatus; kind?: ItemKind };
+export type { BibliographyItemFilters } from "./keys";
 
 export function bibliographyItemsQuery(filters: BibliographyItemFilters = {}) {
   const { status, kind } = filters;
@@ -39,6 +42,33 @@ export function useBibliographyItems(filters: BibliographyItemFilters = {}) {
   });
 }
 
+export const bibliographyItemQuery = (itemId: number) =>
+  queryOptions({
+    queryKey: bibliographyItemKeys.detail(itemId),
+    queryFn: ({ signal }) => api.bibliographyItemsRetrieve({ id: itemId }, { signal }),
+  });
+
+/**
+ * One item with its status; `null` waits for an id. A cached list's copy is
+ * shown while it loads, so opening an item from the list is instant.
+ */
+export function useBibliographyItem(itemId: number | null) {
+  const queryClient = useQueryClient();
+  return useQuery({
+    ...bibliographyItemQuery(itemId ?? 0),
+    enabled: itemId !== null,
+    placeholderData: () => {
+      for (const [, list] of queryClient.getQueriesData<BibliographyItemResponse[]>({
+        queryKey: bibliographyItemKeys.lists,
+      })) {
+        const cached = list?.find((item) => item.id === itemId);
+        if (cached) return cached;
+      }
+      return undefined;
+    },
+  });
+}
+
 function matches(
   item: BibliographyItemResponse,
   { status, kind }: BibliographyItemFilters,
@@ -52,12 +82,12 @@ export function useCreateBibliographyItem() {
     mutationFn: (bibliographyItemRequest: BibliographyItemRequest) =>
       api.bibliographyItemsCreate({ bibliographyItemRequest }),
     onSuccess: (created) => {
+      queryClient.setQueryData(bibliographyItemKeys.detail(created.id), created);
       const lists = queryClient
         .getQueryCache()
-        .findAll({ queryKey: bibliographyItemKeys.all });
+        .findAll({ queryKey: bibliographyItemKeys.lists });
       for (const { queryKey } of lists) {
-        const filters = (queryKey[1] ?? {}) as BibliographyItemFilters;
-        if (!matches(created, filters)) continue;
+        if (!matches(created, bibliographyListFilters(queryKey))) continue;
         queryClient.setQueryData<BibliographyItemResponse[]>(
           queryKey,
           (list) => list && [created, ...list],
@@ -86,8 +116,9 @@ export function useUpdateBibliographyItem() {
         patchedBibliographyItemRequest: changes,
       }),
     onSuccess: (updated) => {
+      queryClient.setQueryData(bibliographyItemKeys.detail(updated.id), updated);
       queryClient.setQueriesData<BibliographyItemResponse[]>(
-        { queryKey: bibliographyItemKeys.all },
+        { queryKey: bibliographyItemKeys.lists },
         (list) =>
           list?.map((item) => (item.id === updated.id ? updated : item)),
       );

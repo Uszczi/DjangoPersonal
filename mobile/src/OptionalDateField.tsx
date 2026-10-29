@@ -1,5 +1,7 @@
 import { View } from "react-native";
 
+import { dateFromKey, todayKey } from "@personal/shared/timeFormat";
+
 import { Button } from "./Button";
 import { DateTimeField } from "./DateTimeField";
 
@@ -26,12 +28,7 @@ export function OptionalDateField({
           label="Ustaw datę"
           variant="secondary"
           disabled={disabled}
-          onPress={() => {
-            const now = new Date();
-            onChange(
-              new Date(now.getFullYear(), now.getMonth(), now.getDate()),
-            );
-          }}
+          onPress={() => onChange(dateFromKey(todayKey()))}
         />
       </View>
     );
