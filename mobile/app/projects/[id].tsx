@@ -23,21 +23,37 @@ import { Button } from "../../src/Button";
 import { Fab } from "../../src/Fab";
 import { makeStyles, fonts, useTheme } from "../../src/theme";
 
-type StatusSection = { title: string; data: TaskResponse[] };
+type StatusSection = {
+  title: string;
+  /** How many Tasks have this status, shown even while collapsed. */
+  count: number;
+  isCollapsed: boolean;
+  data: TaskResponse[];
+};
 
-/** One section per status, in the Project's order, like the web task list. */
+/**
+ * One section per status, in the Project's order, like the web task list. A
+ * collapsed section keeps its header but renders no rows.
+ */
 function sectionsByStatus(
   tasks: TaskResponse[],
   statuses: string[],
+  collapsed: ReadonlySet<string>,
 ): StatusSection[] {
   const order = [...statuses, ...tasks.map((task) => task.status)];
   const titles = [...new Set(order)];
   return titles
-    .map((title) => ({
-      title,
-      data: tasks.filter((task) => task.status === title),
-    }))
-    .filter((section) => section.data.length > 0);
+    .map((title) => {
+      const statusTasks = tasks.filter((task) => task.status === title);
+      const isCollapsed = collapsed.has(title);
+      return {
+        title,
+        count: statusTasks.length,
+        isCollapsed,
+        data: isCollapsed ? [] : statusTasks,
+      };
+    })
+    .filter((section) => section.count > 0);
 }
 
 export default function ProjectTasksScreen() {
@@ -53,6 +69,18 @@ export default function ProjectTasksScreen() {
   const startTaskTimer = useStartTimer();
   const [actionError, setActionError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [collapsedStatuses, setCollapsedStatuses] = useState<
+    ReadonlySet<string>
+  >(new Set());
+
+  function toggleSection(status: string) {
+    setCollapsedStatuses((current) => {
+      const next = new Set(current);
+      if (next.has(status)) next.delete(status);
+      else next.add(status);
+      return next;
+    });
+  }
 
   async function refresh() {
     setIsRefreshing(true);
@@ -86,6 +114,7 @@ export default function ProjectTasksScreen() {
   const sections = sectionsByStatus(
     tasks ?? [],
     project?.projectStatuses ?? [],
+    collapsedStatuses,
   );
 
   return (
@@ -131,9 +160,22 @@ export default function ProjectTasksScreen() {
           ) : undefined
         }
         renderSectionHeader={({ section }) => (
-          <Text style={styles.sectionTitle}>
-            {section.title.toUpperCase()} · {section.data.length}
-          </Text>
+          <Pressable
+            style={styles.sectionHeader}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: !section.isCollapsed }}
+            accessibilityLabel={`${section.isCollapsed ? "Rozwiń" : "Zwiń"} status ${section.title}`}
+            onPress={() => toggleSection(section.title)}
+          >
+            <Ionicons
+              name={section.isCollapsed ? "chevron-forward" : "chevron-down"}
+              size={14}
+              color={colors.muted}
+            />
+            <Text style={styles.sectionTitle}>
+              {section.title.toUpperCase()} · {section.count}
+            </Text>
+          </Pressable>
         )}
         renderItem={({ item }) => {
           const isDone = item.status === terminalStatus;
@@ -199,10 +241,15 @@ const useStyles = makeStyles((colors) => ({
   error: { color: colors.danger },
   empty: { padding: 24, textAlign: "center" },
   listContent: { paddingBottom: 96 },
-  sectionTitle: {
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 6,
+  },
+  sectionTitle: {
     fontFamily: fonts.utility,
     fontSize: 11,
     fontWeight: "600",
