@@ -166,9 +166,27 @@ def test_items_are_private_to_their_user(
     assert other.get(ITEMS).json() == []
     assert other.get(f'{ITEMS}{item["id"]}/').status_code == 404
     assert other.patch(f'{ITEMS}{item["id"]}/', {'title': 'x'}).status_code == 404
+    assert other.delete(f'{ITEMS}{item["id"]}/').status_code == 404
 
 
 def test_items_require_authentication(anon_client: ApiClient) -> None:
     assert anon_client.get(ITEMS).status_code == 401
     response = anon_client.post(ITEMS, {'kind': 'film', 'title': 'Rejs'})
     assert response.status_code == 401
+
+
+def test_deleting_an_item_removes_its_attempts(post_json: Any, api_client: ApiClient) -> None:
+    item = _item(post_json)
+    kept = _item(post_json, title='Rejs')
+    attempt = post_json(ATTEMPTS, {'item': item['id'], 'outcome': 'in_progress'}).json()
+
+    response = api_client.delete(f'{ITEMS}{item["id"]}/')
+
+    assert response.status_code == HTTPStatus.NO_CONTENT
+    assert api_client.get(f'{ITEMS}{item["id"]}/').status_code == 404
+    assert api_client.get(f'{ATTEMPTS}{attempt["id"]}/').status_code == 404
+    assert [i['id'] for i in api_client.get(ITEMS).json()] == [kept['id']]
+
+
+def test_deleting_an_unknown_item_is_404(api_client: ApiClient) -> None:
+    assert api_client.delete(f'{ITEMS}999/').status_code == 404

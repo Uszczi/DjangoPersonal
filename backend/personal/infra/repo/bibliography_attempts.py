@@ -60,3 +60,7 @@ class AttemptRepository:
         self.session.add(attempt)
         _flush.flush(self.session, on_conflict=AttemptAlreadyInProgress)
         return attempt
+
+    def delete(self, attempt: AttemptModel) -> None:
+        self.session.delete(attempt)
+        self.session.flush()

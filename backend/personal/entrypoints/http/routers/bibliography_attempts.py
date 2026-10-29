@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Response, status
 
 from personal.core.bibliography import handlers
 from personal.core.bibliography.contracts import (
@@ -57,3 +57,13 @@ def update_attempt(
 ) -> AttemptResponse:
     attempt = handlers.UpdateAttempt(attempts, user).execute(id, payload)
     return AttemptResponse.model_validate(attempt)
+
+
+@router.delete(
+    '/bibliography-attempts/{id}/',
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+    operation_id='bibliography_attempts_destroy',
+)
+def delete_attempt(id: int, user: CurrentUser, attempts: AttemptRepositoryDep) -> None:
+    handlers.DeleteAttempt(attempts, user).execute(id)

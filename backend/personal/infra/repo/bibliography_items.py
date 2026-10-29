@@ -32,3 +32,8 @@ class BibliographyItemRepository:
         self.session.add(item)
         self.session.flush()
         return item
+
+    def delete(self, item: BibliographyItemModel) -> None:
+        """Delete a BibliographyItem; its Attempts cascade away in the database."""
+        self.session.delete(item)
+        self.session.flush()

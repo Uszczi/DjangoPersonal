@@ -293,6 +293,13 @@ export interface BibliographyAttemptsCreateRequest {
     attemptRequest: AttemptRequest;
 }
 
+export interface BibliographyAttemptsDestroyRequest {
+    /**
+     *
+     */
+    id: number;
+}
+
 export interface BibliographyAttemptsListRequest {
     /**
      *
@@ -323,6 +330,13 @@ export interface BibliographyItemsCreateRequest {
      *
      */
     bibliographyItemRequest: BibliographyItemRequest;
+}
+
+export interface BibliographyItemsDestroyRequest {
+    /**
+     *
+     */
+    id: number;
 }
 
 export interface BibliographyItemsListRequest {
@@ -1072,6 +1086,58 @@ export class PersonalApi extends runtime.BaseAPI {
     }
 
     /**
+     * Creates request options for bibliographyAttemptsDestroy without sending the request
+     */
+    async bibliographyAttemptsDestroyRequestOpts(requestParameters: BibliographyAttemptsDestroyRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling bibliographyAttemptsDestroy().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/bibliography-attempts/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Delete Attempt
+     */
+    async bibliographyAttemptsDestroyRaw(requestParameters: BibliographyAttemptsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.bibliographyAttemptsDestroyRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Delete Attempt
+     */
+    async bibliographyAttemptsDestroy(requestParameters: BibliographyAttemptsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.bibliographyAttemptsDestroyRaw(requestParameters, initOverrides);
+    }
+
+    /**
      * Creates request options for bibliographyAttemptsList without sending the request
      */
     async bibliographyAttemptsListRequestOpts(requestParameters: BibliographyAttemptsListRequest): Promise<runtime.RequestOpts> {
@@ -1296,6 +1362,58 @@ export class PersonalApi extends runtime.BaseAPI {
     async bibliographyItemsCreate(requestParameters: BibliographyItemsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BibliographyItemResponse> {
         const response = await this.bibliographyItemsCreateRaw(requestParameters, initOverrides);
         return await response.value();
+    }
+
+    /**
+     * Creates request options for bibliographyItemsDestroy without sending the request
+     */
+    async bibliographyItemsDestroyRequestOpts(requestParameters: BibliographyItemsDestroyRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling bibliographyItemsDestroy().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/bibliography-items/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Delete Bibliography Item
+     */
+    async bibliographyItemsDestroyRaw(requestParameters: BibliographyItemsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.bibliographyItemsDestroyRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Delete Bibliography Item
+     */
+    async bibliographyItemsDestroy(requestParameters: BibliographyItemsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.bibliographyItemsDestroyRaw(requestParameters, initOverrides);
     }
 
     /**

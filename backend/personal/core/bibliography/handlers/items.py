@@ -103,6 +103,17 @@ class CreateBibliographyItem:
         return ItemWithStatus(item, 'planned')
 
 
+class DeleteBibliographyItem:
+    """Remove a BibliographyItem together with its whole history of Attempts."""
+
+    def __init__(self, items: BibliographyItemRepository, user: User):
+        self.items = items
+        self.user = user
+
+    def execute(self, item_id: int) -> None:
+        self.items.delete(get_bibliography_item(self.items, item_id, user=self.user))
+
+
 class UpdateBibliographyItem:
     """Apply the supplied fields (PATCH); the kind stays what it was created with.
 

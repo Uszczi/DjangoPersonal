@@ -880,6 +880,16 @@ def update_bibliography_item(
 
 
 @_tool
+def delete_bibliography_item(ctx: ToolContext, item_id: int) -> str:
+    """Delete a film or book together with all its attempts."""
+    with _unit_of_work(ctx) as (session, user):
+        bibliography_handlers.DeleteBibliographyItem(
+            wiring.bibliography_item_repository(session), user
+        ).execute(item_id)
+        return 'deleted'
+
+
+@_tool
 def import_bibliography(
     ctx: ToolContext, items: list[ImportedBibliographyItem]
 ) -> dict[str, Any]:
@@ -987,6 +997,16 @@ def abandon_attempt(
 ) -> dict[str, Any]:
     """Abandon the attempt in progress; ``ended_on`` as in ``finish_attempt``."""
     return _end_attempt(ctx, attempt_id, 'abandoned', ended_on, time_zone)
+
+
+@_tool
+def delete_attempt(ctx: ToolContext, attempt_id: int) -> str:
+    """Delete one attempt (e.g. recorded by mistake); the item's status follows."""
+    with _unit_of_work(ctx) as (session, user):
+        bibliography_handlers.DeleteAttempt(wiring.attempt_repository(session), user).execute(
+            attempt_id
+        )
+        return 'deleted'
 
 
 @_tool

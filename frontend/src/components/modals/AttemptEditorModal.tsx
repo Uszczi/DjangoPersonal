@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 
+import { DeleteAttemptModal } from "@/components/modals/DeleteAttemptModal";
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import {
   ATTEMPT_SUBMIT_LABELS,
@@ -23,6 +24,7 @@ import {
   useUpdateAttempt,
 } from "@personal/shared/queries/bibliographyAttempts";
 import { dateFromKey, dateKey, todayKey } from "@personal/shared/timeFormat";
+import { ShowModal } from "@/stores/modal";
 
 type AttemptEditorModalProps = {
   itemId: number;
@@ -123,6 +125,19 @@ export function AttemptEditorModal({
         )}
         {formError && <ErrorAlert>{formError}</ErrorAlert>}
         <ModalFooter>
+          {action === "edit" && attempt && (
+            <Button
+              variant="ghostDanger"
+              className="mr-auto"
+              onClick={() => {
+                onClose();
+                ShowModal(DeleteAttemptModal, { attempt });
+              }}
+              disabled={isSaving}
+            >
+              Usuń
+            </Button>
+          )}
           <Button variant="secondary" onClick={close} disabled={isSaving}>
             Anuluj
           </Button>

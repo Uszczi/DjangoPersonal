@@ -1,6 +1,13 @@
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
+import {
+  Alert,
+  FlatList,
+  Pressable,
+  RefreshControl,
+  Text,
+  View,
+} from "react-native";
 
 import {
   attemptDates,
@@ -10,14 +17,17 @@ import {
   itemStatusLabel,
 } from "@personal/shared/bibliographyFormat";
 import type { AttemptAction } from "@personal/shared/bibliographyForms";
-import { isNotFound } from "@personal/shared/apiErrorMessage";
+import { apiErrorMessage, isNotFound } from "@personal/shared/apiErrorMessage";
 import type { AttemptResponse } from "@personal/shared/generated/api";
 import {
   ATTEMPTS_LOAD_ERROR,
   BIBLIOGRAPHY_ITEMS_LOAD_ERROR,
 } from "@personal/shared/loadErrors";
 import { useAttempts } from "@personal/shared/queries/bibliographyAttempts";
-import { useBibliographyItem } from "@personal/shared/queries/bibliographyItems";
+import {
+  useBibliographyItem,
+  useDeleteBibliographyItem,
+} from "@personal/shared/queries/bibliographyItems";
 
 import { Button } from "../../src/Button";
 import { makeStyles, fonts, useTheme } from "../../src/theme";
@@ -33,6 +43,8 @@ export default function BibliographyItemScreen() {
   const itemQuery = useBibliographyItem(Number.isInteger(id) ? id : null);
   const item = itemQuery.data;
   const attemptsQuery = useAttempts(item ? id : null);
+  const deleteItem = useDeleteBibliographyItem();
+  const [deleteError, setDeleteError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   useRefreshOnFocus(attemptsQuery.refetch);
 
@@ -70,6 +82,30 @@ export default function BibliographyItemScreen() {
       })
     : "";
   const attemptsError = attemptsQuery.isError ? ATTEMPTS_LOAD_ERROR : "";
+  const errorMessage = deleteError || attemptsError;
+
+  function confirmDelete() {
+    if (!item) return;
+    Alert.alert(
+      "Usunąć pozycję?",
+      `„${item.title}” zostanie usunięta razem ze wszystkimi podejściami.`,
+      [
+        { text: "Anuluj", style: "cancel" },
+        {
+          text: "Usuń pozycję",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteItem.mutateAsync(id);
+              router.back();
+            } catch (error) {
+              setDeleteError(await apiErrorMessage(error));
+            }
+          },
+        },
+      ],
+    );
+  }
 
   function showAttempt(action: AttemptAction, attempt?: AttemptResponse) {
     router.push({
@@ -165,9 +201,14 @@ export default function BibliographyItemScreen() {
                   })
                 }
               />
+              <Button
+                label="Usuń pozycję"
+                variant="danger"
+                onPress={confirmDelete}
+              />
             </View>
-            {attemptsError !== "" && (
-              <Text style={styles.error}>{attemptsError}</Text>
+            {errorMessage !== "" && (
+              <Text style={styles.error}>{errorMessage}</Text>
             )}
             {attempts !== null && attempts.length > 0 && (
               <Text style={[common.eyebrow, styles.sectionTitle]}>

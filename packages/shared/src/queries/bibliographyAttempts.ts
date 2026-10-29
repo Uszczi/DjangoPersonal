@@ -69,3 +69,18 @@ export function useUpdateAttempt() {
     onSuccess: (updated) => afterWrite(queryClient, updated),
   });
 }
+
+/** Delete one Attempt of `itemId`, e.g. one recorded by mistake. */
+export function useDeleteAttempt() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id }: { id: number; itemId: number }) =>
+      api.bibliographyAttemptsDestroy({ id }),
+    onSuccess: (_, { itemId }) => {
+      void queryClient.invalidateQueries({
+        queryKey: bibliographyItemKeys.attempts(itemId),
+      });
+      void queryClient.invalidateQueries({ queryKey: bibliographyItemKeys.all });
+    },
+  });
+}

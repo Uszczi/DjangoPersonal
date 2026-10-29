@@ -1,6 +1,6 @@
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Alert, ScrollView, Text, View } from "react-native";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import {
@@ -15,6 +15,7 @@ import {
 import {
   useAttempts,
   useCreateAttempt,
+  useDeleteAttempt,
   useUpdateAttempt,
 } from "@personal/shared/queries/bibliographyAttempts";
 import { dateFromKey, dateKey, todayKey } from "@personal/shared/timeFormat";
@@ -50,6 +51,7 @@ export default function AttemptEditorScreen() {
       : (attempts.find((candidate) => candidate.id === attemptId) ?? null);
   const createAttempt = useCreateAttempt();
   const updateAttempt = useUpdateAttempt();
+  const deleteAttempt = useDeleteAttempt();
 
   const [startedOn, setStartedOn] = useState<Date | null>(() =>
     action === "start" ? today() : (attempt?.startedOn ?? null),
@@ -100,6 +102,27 @@ export default function AttemptEditorScreen() {
     }
   }
 
+  function confirmDelete() {
+    if (!attempt) return;
+    Alert.alert("Usunąć podejście?", undefined, [
+      { text: "Anuluj", style: "cancel" },
+      {
+        text: "Usuń podejście",
+        style: "destructive",
+        onPress: async () => {
+          setIsSaving(true);
+          try {
+            await deleteAttempt.mutateAsync({ id: attempt.id, itemId });
+            router.back();
+          } catch (error) {
+            setFormError(await apiErrorMessage(error));
+            setIsSaving(false);
+          }
+        },
+      },
+    ]);
+  }
+
   return (
     <View style={common.screen}>
       <Stack.Screen options={{ title: ATTEMPT_TITLES[action] }} />
@@ -143,6 +166,16 @@ export default function AttemptEditorScreen() {
             onPress={() => void submit()}
           />
         </View>
+        {action === "edit" && (
+          <View style={form.actions}>
+            <Button
+              label="Usuń podejście"
+              variant="danger"
+              disabled={isSaving}
+              onPress={confirmDelete}
+            />
+          </View>
+        )}
       </ScrollView>
     </View>
   );

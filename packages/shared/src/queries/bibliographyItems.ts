@@ -125,3 +125,19 @@ export function useUpdateBibliographyItem() {
     },
   });
 }
+
+/** Delete a BibliographyItem; its Attempts go with it on the server. */
+export function useDeleteBibliographyItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.bibliographyItemsDestroy({ id }),
+    onSuccess: (_, id) => {
+      queryClient.setQueriesData<BibliographyItemResponse[]>(
+        { queryKey: bibliographyItemKeys.lists },
+        (list) => list?.filter((item) => item.id !== id),
+      );
+      queryClient.removeQueries({ queryKey: bibliographyItemKeys.detail(id) });
+      queryClient.removeQueries({ queryKey: bibliographyItemKeys.attempts(id) });
+    },
+  });
+}

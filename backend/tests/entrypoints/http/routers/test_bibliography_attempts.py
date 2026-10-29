@@ -250,6 +250,7 @@ def test_unknown_attempt_or_item_is_404(
 ) -> None:
     assert api_client.get(f'{ATTEMPTS}999/').status_code == 404
     assert patch_json(f'{ATTEMPTS}999/', {'started_on': None}).status_code == 404
+    assert api_client.delete(f'{ATTEMPTS}999/').status_code == 404
     assert api_client.get(f'{ATTEMPTS}?item=999').status_code == 404
     response = post_json(ATTEMPTS, {'item': 999, 'outcome': 'in_progress'})
     assert response.status_code == 404
@@ -269,6 +270,7 @@ def test_attempts_are_private_to_their_user(
     assert other.get(f'{ATTEMPTS}{attempt["id"]}/').status_code == 404
     url = f'{ATTEMPTS}{attempt["id"]}/'
     assert other.patch(url, {'started_on': None}).status_code == 404
+    assert other.delete(url).status_code == 404
     response = other.post(ATTEMPTS, {'item': item, 'outcome': 'in_progress'})
     assert response.status_code == 404
 
@@ -366,3 +368,17 @@ def test_the_length_cannot_drop_below_the_open_progress(
     assert response.json() == {'detail': 'Progress cannot be greater than the length (100).'}
     assert patch_json(f'{ITEMS}{item}/', {'length': 120}).status_code == HTTPStatus.OK
     assert patch_json(f'{ITEMS}{item}/', {'length': None}).status_code == HTTPStatus.OK
+
+
+def test_deleting_an_attempt_leaves_the_status_to_the_others(
+    post_json: Any, api_client: ApiClient
+) -> None:
+    item = _item(post_json)
+    _attempt(post_json, item, outcome='finished', ended_on='2026-01-05')
+    open_attempt = _attempt(post_json, item, outcome='in_progress')
+
+    response = api_client.delete(f'{ATTEMPTS}{open_attempt["id"]}/')
+
+    assert response.status_code == HTTPStatus.NO_CONTENT
+    assert _status(api_client, item) == 'finished'
+    assert len(api_client.get(f'{ATTEMPTS}?item={item}').json()) == 1

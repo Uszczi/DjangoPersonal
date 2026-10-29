@@ -108,6 +108,13 @@ function fakeBackend(
       const item = items.find((item) => item.id === Number(itemMatch[1]));
       if (!item)
         return jsonResponse({ detail: "BibliographyItem not found." }, 404);
+      if (method === "DELETE") {
+        items.splice(items.indexOf(item), 1);
+        for (let i = attempts.length - 1; i >= 0; i--) {
+          if (attempts[i].item_id === item.id) attempts.splice(i, 1);
+        }
+        return new Response(null, { status: 204 });
+      }
       if (method === "PATCH") Object.assign(item, body);
       return jsonResponse(withStatus(item));
     }
@@ -132,6 +139,14 @@ function fakeBackend(
       return jsonResponse(attempt, 201);
     }
     const attemptMatch = path.match(/\/bibliography-attempts\/(\d+)\/$/);
+    if (attemptMatch && method === "DELETE") {
+      const index = attempts.findIndex(
+        (item) => item.id === Number(attemptMatch[1]),
+      );
+      if (index < 0) return jsonResponse({ detail: "Not found." }, 404);
+      attempts.splice(index, 1);
+      return new Response(null, { status: 204 });
+    }
     if (attemptMatch && method === "PATCH") {
       const attempt = attempts.find(
         (item) => item.id === Number(attemptMatch[1]),
@@ -509,6 +524,64 @@ describe("Bibliography", () => {
       started_on: "2019-04-01",
       ended_on: "2019-05-01",
     });
+  });
+
+  test("user can delete a BibliographyItem and lands back on the list", async () => {
+    const backend = fakeBackend([lalka, rejs], [attempt({ id: 51 })]);
+    fetchMock.mockImplementation(backend.handler);
+    const user = userEvent.setup();
+
+    renderApp("/bibliography/1");
+    await user.click(
+      await screen.findByRole("button", { name: "Usuń pozycję" }),
+    );
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveTextContent('„Lalka" i wszystkie jej podejścia');
+    await user.click(
+      within(dialog).getByRole("button", { name: "Usuń pozycję" }),
+    );
+
+    const list = await screen.findByRole("list", { name: "Pozycje" });
+    expect(within(list).getByText("Rejs")).toBeInTheDocument();
+    expect(within(list).queryByText("Lalka")).not.toBeInTheDocument();
+    expect(
+      backend.requests.some(
+        (r) =>
+          r.path.includes("/bibliography-items/1/") && r.method === "DELETE",
+      ),
+    ).toBe(true);
+  });
+
+  test("user can delete an Attempt and the status follows the rest", async () => {
+    const backend = fakeBackend(
+      [lalka],
+      [
+        attempt({ id: 51, outcome: "abandoned", ended_on: "2026-03-01" }),
+        attempt({ id: 52, outcome: "finished", ended_on: "2019-05-01" }),
+      ],
+    );
+    fetchMock.mockImplementation(backend.handler);
+    const user = userEvent.setup();
+
+    renderApp("/bibliography/1");
+    const history = await screen.findByRole("list", { name: "Podejścia" });
+    expect(screen.getByLabelText("Status")).toHaveTextContent("Porzucone");
+    const [latest] = within(history).getAllByRole("listitem");
+    await user.click(within(latest).getByRole("button", { name: "Edytuj" }));
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", { name: "Usuń" }),
+    );
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Usuń podejście",
+      }),
+    );
+
+    expect(await screen.findByLabelText("Status")).toHaveTextContent(
+      "Ukończone",
+    );
+    await screen.findByText("01.05.2019");
+    expect(within(history).getAllByRole("listitem")).toHaveLength(1);
   });
 
   test("user can update the progress of a book in progress and sees the percentage", async () => {

@@ -5,6 +5,7 @@ import { AttemptList } from "@/components/bibliography/AttemptList";
 import { AttemptEditorModal } from "@/components/modals/AttemptEditorModal";
 import { AttemptProgressModal } from "@/components/modals/AttemptProgressModal";
 import { BibliographyItemEditorModal } from "@/components/modals/BibliographyItemEditorModal";
+import { DeleteBibliographyItemModal } from "@/components/modals/DeleteBibliographyItemModal";
 import {
   Button,
   ErrorMessage,
@@ -156,6 +157,18 @@ function BibliographyItemPage() {
               </Button>
             </>
           )}
+          <Button
+            variant="ghostDanger"
+            className="ml-auto"
+            onClick={() =>
+              ShowModal(DeleteBibliographyItemModal, {
+                item,
+                onDeleted: () => navigate({ to: "/bibliography" }),
+              })
+            }
+          >
+            Usuń pozycję
+          </Button>
         </div>
       )}
 

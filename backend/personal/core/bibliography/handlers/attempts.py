@@ -149,6 +149,17 @@ class CreateAttempt:
         return _save(self.attempts, attempt)
 
 
+class DeleteAttempt:
+    """Remove one Attempt, e.g. one recorded by mistake; the item's status follows."""
+
+    def __init__(self, attempts: AttemptRepository, user: User):
+        self.attempts = attempts
+        self.user = user
+
+    def execute(self, attempt_id: int) -> None:
+        self.attempts.delete(_get_attempt(self.attempts, attempt_id, user=self.user))
+
+
 class UpdateAttempt:
     """Finish, abandon or re-date an Attempt (PATCH); it stays on its BibliographyItem.
 

@@ -358,6 +358,21 @@ def test_attempt_rule_violations_are_tool_errors(mcp_user: User) -> None:
     assert call('list_attempts', item_id=book['id'])[0]['progress'] is None
 
 
+def test_delete_tools_remove_an_attempt_or_a_whole_item(mcp_user: User) -> None:
+    film = call('create_bibliography_item', kind='film', title='Rejs')
+    first = call('record_attempt', item_id=film['id'], ended_on='2026-01-05')
+    second = call('start_attempt', item_id=film['id'])
+
+    assert call('delete_attempt', attempt_id=second['id']) == 'deleted'
+    assert call('get_bibliography_item', item_id=film['id'])['status'] == 'finished'
+    assert [a['id'] for a in call('list_attempts', item_id=film['id'])] == [first['id']]
+
+    assert call('delete_bibliography_item', item_id=film['id']) == 'deleted'
+    assert call('list_bibliography_items') == []
+    with pytest.raises(ToolError, match='not found'):
+        call('delete_bibliography_item', item_id=film['id'])
+
+
 def test_import_bibliography_adds_items_with_their_attempts(mcp_user: User) -> None:
     result = call(
         'import_bibliography',

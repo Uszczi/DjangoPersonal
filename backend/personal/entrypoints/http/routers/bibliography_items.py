@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Response, status
 
 from personal.core.bibliography import handlers
 from personal.core.bibliography.contracts import (
@@ -64,3 +64,15 @@ def update_bibliography_item(
 ) -> BibliographyItemResponse:
     updated = handlers.UpdateBibliographyItem(items, attempts, user).execute(id, payload)
     return BibliographyItemResponse.from_item(updated.item, updated.status)
+
+
+@router.delete(
+    '/bibliography-items/{id}/',
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+    operation_id='bibliography_items_destroy',
+)
+def delete_bibliography_item(
+    id: int, user: CurrentUser, items: BibliographyItemRepositoryDep
+) -> None:
+    handlers.DeleteBibliographyItem(items, user).execute(id)

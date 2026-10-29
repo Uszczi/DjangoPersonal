@@ -56,6 +56,14 @@
     ]
   },
   {
+    "method": "DELETE",
+    "path": "/api/v1/bibliography-attempts/{id}/",
+    "operation_id": "bibliography_attempts_destroy",
+    "status_codes": [
+      "204"
+    ]
+  },
+  {
     "method": "GET",
     "path": "/api/v1/bibliography-attempts/{id}/",
     "operation_id": "bibliography_attempts_retrieve",
@@ -85,6 +93,14 @@
     "operation_id": "bibliography_items_create",
     "status_codes": [
       "201"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/bibliography-items/{id}/",
+    "operation_id": "bibliography_items_destroy",
+    "status_codes": [
+      "204"
     ]
   },
   {
