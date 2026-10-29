@@ -20,6 +20,7 @@ export type TabDefinition = {
 
 export const tabNames = [
   "index",
+  "projects",
   "time",
   "expenses",
   "counters",
@@ -36,9 +37,10 @@ export type TabName = (typeof tabNames)[number];
 export const pinnedTab: TabName = "account";
 
 export const tabDefinitions: Record<TabName, TabDefinition> = {
-  index: {
-    name: "index",
-    href: "/",
+  index: { name: "index", href: "/", title: "Start", icon: "home-outline" },
+  projects: {
+    name: "projects",
+    href: "/projects",
     title: "Projekty",
     icon: "folder-outline",
   },
@@ -59,7 +61,7 @@ export const tabDefinitions: Record<TabName, TabDefinition> = {
     name: "bibliography",
     href: "/bibliography",
     title: "Bibliografia",
-    // Six tabs leave no room for the full word under the icon.
+    // Seven tabs leave no room for the full word under the icon.
     label: "Biblio",
     icon: "library-outline",
   },
@@ -93,6 +95,25 @@ export function normalizeOrder(saved: unknown): TabName[] {
 export function normalizeHidden(saved: unknown): TabName[] {
   const known = Array.isArray(saved) ? saved.filter(isTabName) : [];
   return [...new Set(known)].filter((name) => name !== pinnedTab);
+}
+
+/**
+ * Saved settings from before Start (version 0) used "index" for Projekty:
+ * rename it to "projects" and put Start first, shown.
+ */
+export function migrateTabBar(persisted: unknown, version: number): unknown {
+  if (version >= 1) return persisted;
+  const saved = (persisted ?? {}) as { order?: unknown; hidden?: unknown };
+  const rename = (names: unknown) =>
+    Array.isArray(names)
+      ? names.map((name) => (name === "index" ? "projects" : name))
+      : names;
+  const order = rename(saved.order);
+  return {
+    ...saved,
+    order: Array.isArray(order) ? ["index", ...order] : order,
+    hidden: rename(saved.hidden),
+  };
 }
 
 /**
@@ -135,6 +156,8 @@ export const useTabBarStore = create<TabBarState>()(
     }),
     {
       name: "tabBar",
+      version: 1,
+      migrate: migrateTabBar,
       storage: createJSONStorage(() => platformStorage),
       partialize: (state) => ({ order: state.order, hidden: state.hidden }),
       merge: (persisted, current) => {
@@ -149,7 +172,7 @@ export const useTabBarStore = create<TabBarState>()(
   ),
 );
 
-/** The first tab the user sees, where the app starts when Projekty is hidden. */
+/** The first tab the user sees, where the app starts when Start is hidden. */
 export function firstVisibleTab(order: TabName[], hidden: TabName[]): TabName {
   return order.find((name) => !hidden.includes(name)) ?? pinnedTab;
 }
