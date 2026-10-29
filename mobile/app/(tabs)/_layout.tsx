@@ -25,8 +25,9 @@ function tabIcon(name: TabDefinition["icon"]) {
 
 export default function TabsLayout() {
   const { colors } = useTheme();
-  // The user's order and visibility (Konto > Pasek kart). A hidden tab stays
-  // a route (`href: null`), so links to it still work.
+  // The user's order and visibility (Konto > Pasek kart). A hidden tab only
+  // loses its button: `href: null` would mark the tab hidden, and expo-router
+  // redirects away from a focused hidden tab, so Więcej could never open it.
   const order = useTabBarStore((state) => state.order);
   const hidden = useTabBarStore((state) => state.hidden);
   // While some tabs are hidden, Konto's place shows Więcej: a popup with the
@@ -71,7 +72,9 @@ export default function TabsLayout() {
                 title: tab.title,
                 tabBarLabel: isMore ? "Więcej" : tab.label,
                 tabBarIcon: tabIcon(isMore ? "ellipsis-horizontal" : tab.icon),
-                href: hidden.includes(name) ? null : undefined,
+                tabBarItemStyle: hidden.includes(name)
+                  ? { display: "none" }
+                  : undefined,
               }}
               listeners={
                 isMore
