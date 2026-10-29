@@ -26,6 +26,7 @@ type Attempt = {
   outcome: Outcome;
   started_on: string | null;
   ended_on: string | null;
+  progress: number | null;
   created_at: string;
 };
 
@@ -112,6 +113,7 @@ function fakeBackend(
         outcome: body.outcome,
         started_on: body.started_on ?? null,
         ended_on: body.ended_on ?? null,
+        progress: body.progress ?? null,
         created_at: "2026-10-29T10:00:00Z",
       };
       attempts.push(attempt);
@@ -124,6 +126,7 @@ function fakeBackend(
       );
       if (!attempt) return jsonResponse({ detail: "Not found." }, 404);
       Object.assign(attempt, body);
+      if (attempt.outcome !== "in_progress") attempt.progress = null;
       return jsonResponse(attempt);
     }
     return jsonResponse({ detail: "Not found" }, 404);
@@ -159,6 +162,7 @@ function attempt(fields: Partial<Attempt>): Attempt {
     outcome: "finished",
     started_on: null,
     ended_on: "2026-03-01",
+    progress: null,
     created_at: "2026-10-01T10:00:00Z",
     ...fields,
   };
@@ -484,5 +488,91 @@ describe("Bibliography", () => {
       started_on: "2019-04-01",
       ended_on: "2019-05-01",
     });
+  });
+
+  test("user can update the progress of a book in progress and sees the percentage", async () => {
+    const backend = fakeBackend(
+      [lalka],
+      [attempt({ outcome: "in_progress", ended_on: null })],
+    );
+    fetchMock.mockImplementation(backend.handler);
+    const user = userEvent.setup();
+
+    renderApp("/bibliography/1");
+    await user.click(await screen.findByRole("button", { name: "Postęp" }));
+    const dialog = screen.getByRole("dialog");
+    await user.type(within(dialog).getByLabelText("Strona"), "170");
+    await user.click(within(dialog).getByRole("button", { name: "Zapisz" }));
+
+    expect(await screen.findByLabelText("Postęp")).toHaveTextContent(
+      "Strona 170 z 680 · 25%",
+    );
+    expect(screen.getByLabelText("Status")).toHaveTextContent("W trakcie");
+    const patch = backend.requests.find(
+      (r) =>
+        r.path.includes("/bibliography-attempts/50/") && r.method === "PATCH",
+    );
+    expect(patch?.body).toEqual({ progress: 170 });
+  });
+
+  test("a film without a length shows the minute without a percentage", async () => {
+    fetchMock.mockImplementation(
+      fakeBackend(
+        [{ ...rejs, length: null }],
+        [
+          attempt({
+            item_id: rejs.id,
+            outcome: "in_progress",
+            ended_on: null,
+            progress: 45,
+          }),
+        ],
+      ).handler,
+    );
+
+    renderApp("/bibliography/2");
+
+    expect(await screen.findByLabelText("Postęp")).toHaveTextContent(
+      /^Minuta 45$/,
+    );
+  });
+
+  test("progress past the length is rejected before saving", async () => {
+    const backend = fakeBackend(
+      [lalka],
+      [attempt({ outcome: "in_progress", ended_on: null, progress: 10 })],
+    );
+    fetchMock.mockImplementation(backend.handler);
+    const user = userEvent.setup();
+
+    renderApp("/bibliography/1");
+    await user.click(await screen.findByRole("button", { name: "Postęp" }));
+    const dialog = screen.getByRole("dialog");
+    const field = within(dialog).getByLabelText("Strona");
+    expect(field).toHaveValue(10);
+    await user.clear(field);
+    await user.type(field, "681");
+    await user.click(within(dialog).getByRole("button", { name: "Zapisz" }));
+
+    expect(
+      within(dialog).getByText("Postęp nie może przekraczać długości (680)."),
+    ).toBeInTheDocument();
+    expect(backend.requests.some((r) => r.method === "PATCH")).toBe(false);
+  });
+
+  test("an ended Attempt shows no progress", async () => {
+    fetchMock.mockImplementation(
+      fakeBackend([lalka], [attempt({ outcome: "finished" })]).handler,
+    );
+
+    renderApp("/bibliography/1");
+
+    expect(
+      await screen.findByRole("list", { name: "Podejścia" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Postęp")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Postęp" }),
+    ).not.toBeInTheDocument();
   });
 });

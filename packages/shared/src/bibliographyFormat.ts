@@ -71,3 +71,29 @@ export function attemptDates({
   if (endedOn) return formatDay(endedOn);
   return "";
 }
+
+/** What an Attempt's progress counts: the page of a book, the minute of a film. */
+export const ITEM_PROGRESS_LABELS: Record<ItemKind, string> = {
+  film: "Minuta",
+  book: "Strona",
+};
+
+/**
+ * An Attempt's progress, e.g. `Strona 170 z 680 · 25%`, or `Minuta 45` when the
+ * length is unknown; empty when no progress is recorded. The percentage is
+ * rounded down, so it shows 100% only once the length is reached.
+ */
+export function attemptProgress({
+  progress,
+  length,
+  kind,
+}: {
+  progress: number | null;
+  length: number | null;
+  kind: ItemKind;
+}) {
+  if (progress === null) return "";
+  const label = `${ITEM_PROGRESS_LABELS[kind]} ${progress}`;
+  if (!length) return label;
+  return `${label} z ${length} · ${Math.floor((progress / length) * 100)}%`;
+}

@@ -6,6 +6,7 @@ import {
   AttemptEditorModal,
   type AttemptAction,
 } from "@/components/modals/AttemptEditorModal";
+import { AttemptProgressModal } from "@/components/modals/AttemptProgressModal";
 import { BibliographyItemEditorModal } from "@/components/modals/BibliographyItemEditorModal";
 import {
   Button,
@@ -14,6 +15,7 @@ import {
   PageHeader,
 } from "@/design-system";
 import {
+  attemptProgress,
   ITEM_KIND_LABELS,
   itemByline,
   itemStatusLabel,
@@ -58,6 +60,13 @@ function BibliographyItemPage() {
   const attempts = attemptsQuery.data ?? null;
   const open = attempts?.find((attempt) => attempt.outcome === "in_progress");
   const byline = itemByline(item);
+  const progress = open
+    ? attemptProgress({
+        progress: open.progress,
+        length: item.length,
+        kind: item.kind,
+      })
+    : "";
 
   function showAttemptEditor(
     action: AttemptAction,
@@ -96,10 +105,28 @@ function BibliographyItemPage() {
         }
       />
 
+      {progress && (
+        <p aria-label="Postęp" className="mb-3 text-[15px] text-ink-soft">
+          {progress}
+        </p>
+      )}
+
       {attempts !== null && (
         <div className="mb-6 flex flex-wrap gap-2">
           {open ? (
             <>
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  ShowModal(AttemptProgressModal, {
+                    attempt: open,
+                    kind: item.kind,
+                    length: item.length,
+                  })
+                }
+              >
+                Postęp
+              </Button>
               <Button
                 variant="primary"
                 onClick={() => showAttemptEditor("finish", open)}
