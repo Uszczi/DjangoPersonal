@@ -314,7 +314,7 @@ export interface BibliographyAttemptsListRequest {
     /**
      *
      */
-    item: number;
+    item?: number | null;
 }
 
 export interface BibliographyAttemptsPartialUpdateRequest {
@@ -1158,13 +1158,6 @@ export class PersonalApi extends runtime.BaseAPI {
      * Creates request options for bibliographyAttemptsList without sending the request
      */
     async bibliographyAttemptsListRequestOpts(requestParameters: BibliographyAttemptsListRequest): Promise<runtime.RequestOpts> {
-        if (requestParameters['item'] == null) {
-            throw new runtime.RequiredError(
-                'item',
-                'Required parameter "item" was null or undefined when calling bibliographyAttemptsList().'
-            );
-        }
-
         const queryParameters: any = {};
 
         if (requestParameters['item'] != null) {
@@ -1193,6 +1186,7 @@ export class PersonalApi extends runtime.BaseAPI {
     }
 
     /**
+     * One BibliographyItem\'s Attempts, or every Attempt of the user without ``item``.
      * List Attempts
      */
     async bibliographyAttemptsListRaw(requestParameters: BibliographyAttemptsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AttemptResponse>>> {
@@ -1203,9 +1197,10 @@ export class PersonalApi extends runtime.BaseAPI {
     }
 
     /**
+     * One BibliographyItem\'s Attempts, or every Attempt of the user without ``item``.
      * List Attempts
      */
-    async bibliographyAttemptsList(requestParameters: BibliographyAttemptsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AttemptResponse>> {
+    async bibliographyAttemptsList(requestParameters: BibliographyAttemptsListRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AttemptResponse>> {
         const response = await this.bibliographyAttemptsListRaw(requestParameters, initOverrides);
         return await response.value();
     }

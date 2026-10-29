@@ -232,6 +232,29 @@ def test_history_lists_the_latest_first(post_json: Any, api_client: ApiClient) -
     assert [p['id'] for p in listed] == [open_['id'], finished['id'], abandoned['id']]
 
 
+def test_without_an_item_every_attempt_of_the_user_is_listed_latest_first(
+    post_json: Any,
+    api_client: ApiClient,
+    make_user: Callable[[str], User],
+    client_for: Callable[[User], ApiClient],
+) -> None:
+    lalka = _item(post_json)
+    rejs = _item(post_json, kind='film', title='Rejs')
+    old = _attempt(post_json, lalka, outcome='finished', ended_on='2025-02-01')
+    recent = _attempt(post_json, rejs, outcome='finished', ended_on='2026-03-01')
+    again = _attempt(post_json, lalka, outcome='in_progress', started_on='2026-10-01')
+    other = client_for(make_user('other'))
+    theirs = other.post(ITEMS, {'kind': 'book', 'title': 'Miś'}).json()['id']
+    other.post(ATTEMPTS, {'item': theirs, 'outcome': 'in_progress'})
+
+    response = api_client.get(ATTEMPTS)
+
+    assert response.status_code == HTTPStatus.OK
+    listed = response.json()
+    assert [p['id'] for p in listed] == [again['id'], recent['id'], old['id']]
+    assert [p['item_id'] for p in listed] == [lalka, rejs, lalka]
+
+
 def test_a_attempt_stays_on_its_item_and_rejects_nulls(
     post_json: Any, patch_json: Any
 ) -> None:

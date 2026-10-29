@@ -14,6 +14,7 @@ import {
 
 import { api } from "../api";
 import type {
+  AttemptResponse,
   BibliographyItemResponse,
   PatchedBibliographyItemRequest,
   BibliographyItemRequest,
@@ -30,7 +31,8 @@ export function bibliographyItemsQuery(filters: BibliographyItemFilters = {}) {
   const { status, kind } = filters;
   return queryOptions({
     queryKey: bibliographyItemKeys.list({ status, kind }),
-    queryFn: ({ signal }) => api.bibliographyItemsList({ status, kind }, { signal }),
+    queryFn: ({ signal }) =>
+      api.bibliographyItemsList({ status, kind }, { signal }),
   });
 }
 
@@ -45,7 +47,8 @@ export function useBibliographyItems(filters: BibliographyItemFilters = {}) {
 export const bibliographyItemQuery = (itemId: number) =>
   queryOptions({
     queryKey: bibliographyItemKeys.detail(itemId),
-    queryFn: ({ signal }) => api.bibliographyItemsRetrieve({ id: itemId }, { signal }),
+    queryFn: ({ signal }) =>
+      api.bibliographyItemsRetrieve({ id: itemId }, { signal }),
   });
 
 /**
@@ -58,7 +61,9 @@ export function useBibliographyItem(itemId: number | null) {
     ...bibliographyItemQuery(itemId ?? 0),
     enabled: itemId !== null,
     placeholderData: () => {
-      for (const [, list] of queryClient.getQueriesData<BibliographyItemResponse[]>({
+      for (const [, list] of queryClient.getQueriesData<
+        BibliographyItemResponse[]
+      >({
         queryKey: bibliographyItemKeys.lists,
       })) {
         const cached = list?.find((item) => item.id === itemId);
@@ -82,7 +87,10 @@ export function useCreateBibliographyItem() {
     mutationFn: (bibliographyItemRequest: BibliographyItemRequest) =>
       api.bibliographyItemsCreate({ bibliographyItemRequest }),
     onSuccess: (created) => {
-      queryClient.setQueryData(bibliographyItemKeys.detail(created.id), created);
+      queryClient.setQueryData(
+        bibliographyItemKeys.detail(created.id),
+        created,
+      );
       const lists = queryClient
         .getQueryCache()
         .findAll({ queryKey: bibliographyItemKeys.lists });
@@ -116,7 +124,10 @@ export function useUpdateBibliographyItem() {
         patchedBibliographyItemRequest: changes,
       }),
     onSuccess: (updated) => {
-      queryClient.setQueryData(bibliographyItemKeys.detail(updated.id), updated);
+      queryClient.setQueryData(
+        bibliographyItemKeys.detail(updated.id),
+        updated,
+      );
       queryClient.setQueriesData<BibliographyItemResponse[]>(
         { queryKey: bibliographyItemKeys.lists },
         (list) =>
@@ -137,7 +148,13 @@ export function useDeleteBibliographyItem() {
         (list) => list?.filter((item) => item.id !== id),
       );
       queryClient.removeQueries({ queryKey: bibliographyItemKeys.detail(id) });
-      queryClient.removeQueries({ queryKey: bibliographyItemKeys.attempts(id) });
+      queryClient.removeQueries({
+        queryKey: bibliographyItemKeys.attempts(id),
+      });
+      queryClient.setQueryData<AttemptResponse[]>(
+        bibliographyItemKeys.allAttempts,
+        (attempts) => attempts?.filter((attempt) => attempt.itemId !== id),
+      );
     },
   });
 }

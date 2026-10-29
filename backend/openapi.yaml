@@ -1565,15 +1565,19 @@ paths:
       tags:
       - personal
       summary: List Attempts
+      description: One BibliographyItem's Attempts, or every Attempt of the user without
+        ``item``.
       operationId: bibliography_attempts_list
       security:
       - JWTAuth: []
       parameters:
       - name: item
         in: query
-        required: true
+        required: false
         schema:
-          type: integer
+          anyOf:
+          - type: integer
+          - type: 'null'
           title: Item
       responses:
         '200':

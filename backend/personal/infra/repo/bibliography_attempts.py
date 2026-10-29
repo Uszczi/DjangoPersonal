@@ -29,6 +29,15 @@ class AttemptRepository:
         )
         return list(self.session.scalars(query))
 
+    def list_all(self, *, user: User) -> list[AttemptModel]:
+        """Every Attempt of the user, on any BibliographyItem."""
+        query = (
+            select(AttemptModel)
+            .where(AttemptModel.user_id == user.id)
+            .order_by(AttemptModel.id)
+        )
+        return list(self.session.scalars(query))
+
     def by_item(
         self, items: Sequence[BibliographyItemModel], *, user: User
     ) -> dict[int, list[AttemptModel]]:

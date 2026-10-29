@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { BibliographyItemFilters } from "@/components/bibliography/BibliographyItemFilters";
 import { BibliographyItemList } from "@/components/bibliography/BibliographyItemList";
+import { BibliographyYearList } from "@/components/bibliography/BibliographyYearList";
 import { BibliographyItemEditorModal } from "@/components/modals/BibliographyItemEditorModal";
 import {
   Button,
@@ -12,6 +13,7 @@ import {
   LoadingStatus,
   PageHeader,
   TextInput,
+  ToggleGroup,
 } from "@/design-system";
 import {
   ITEM_KINDS,
@@ -20,14 +22,30 @@ import {
   type ItemKind,
   type ItemStatus,
 } from "@personal/shared/bibliographyFormat";
+import { groupByYear } from "@personal/shared/bibliographyYears";
 import type { BibliographyItemResponse } from "@personal/shared/generated/api";
 import { fuzzyFilter } from "@personal/shared/fuzzy";
-import { BIBLIOGRAPHY_ITEMS_LOAD_ERROR } from "@personal/shared/loadErrors";
+import {
+  ATTEMPTS_LOAD_ERROR,
+  BIBLIOGRAPHY_ITEMS_LOAD_ERROR,
+} from "@personal/shared/loadErrors";
+import { useAllAttempts } from "@personal/shared/queries/bibliographyAttempts";
 import {
   useBibliographyItems,
   type BibliographyItemFilters as Filters,
 } from "@personal/shared/queries/bibliographyItems";
+import {
+  useBibliographyViewStore,
+  type BibliographyViewMode,
+} from "@personal/shared/stores/bibliographyView";
 import { ShowModal } from "@/stores/modal";
+
+const VIEW_MODES: BibliographyViewMode[] = ["items", "years"];
+
+const VIEW_MODE_LABELS: Record<BibliographyViewMode, string> = {
+  items: "Pozycje",
+  years: "Lata",
+};
 
 /** The list's filters live in the address (`?status=planned&kind=film`), so a narrowed list can be linked to. */
 function validateFilters(search: Record<string, unknown>): Filters {
@@ -52,6 +70,10 @@ function BibliographyPage() {
     isPending,
     isError,
   } = useBibliographyItems(filters);
+  const viewMode = useBibliographyViewStore((state) => state.mode);
+  const setViewMode = useBibliographyViewStore((state) => state.setMode);
+  const isYearView = viewMode === "years";
+  const attempts = useAllAttempts(isYearView);
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
   const isFiltered = Boolean(filters.status || filters.kind);
@@ -86,10 +108,19 @@ function BibliographyPage() {
       <PageHeader
         title="Bibliografia"
         actions={
-          <Button variant="primary" onClick={showCreate}>
-            <span aria-hidden="true">+</span>
-            Nowa pozycja
-          </Button>
+          <>
+            <ToggleGroup
+              label="Widok Bibliografii"
+              options={VIEW_MODES}
+              labels={VIEW_MODE_LABELS}
+              value={viewMode}
+              onChange={setViewMode}
+            />
+            <Button variant="primary" onClick={showCreate}>
+              <span aria-hidden="true">+</span>
+              Nowa pozycja
+            </Button>
+          </>
         }
       />
 
@@ -113,7 +144,11 @@ function BibliographyPage() {
 
       <BibliographyItemFilters filters={filters} onChange={changeFilters} />
 
-      {shownItems.length === 0 ? (
+      {isYearView && attempts.isPending ? (
+        <LoadingStatus>Wczytywanie podejść…</LoadingStatus>
+      ) : isYearView && attempts.isError ? (
+        <ErrorMessage>{ATTEMPTS_LOAD_ERROR}</ErrorMessage>
+      ) : shownItems.length === 0 ? (
         <EmptyState
           eyebrow="BRAK POZYCJI"
           title={
@@ -123,6 +158,11 @@ function BibliographyPage() {
                 ? "Brak pozycji pasujących do filtrów"
                 : "Dodaj pierwszą pozycję"
           }
+        />
+      ) : isYearView ? (
+        <BibliographyYearList
+          groups={groupByYear(shownItems, attempts.data ?? [])}
+          onOpen={openItem}
         />
       ) : (
         <BibliographyItemList items={shownItems} onOpen={openItem} />

@@ -1,10 +1,10 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-  FlatList,
   Pressable,
   RefreshControl,
   ScrollView,
+  SectionList,
   Text,
   TextInput,
   View,
@@ -13,6 +13,7 @@ import {
 import {
   ITEM_KIND_LABELS,
   ITEM_STATUSES,
+  attemptDates,
   itemByline,
   itemSearchText,
   itemStatusFilterLabel,
@@ -20,14 +21,26 @@ import {
   type ItemKind,
   type ItemStatus,
 } from "@personal/shared/bibliographyFormat";
+import {
+  groupByYear,
+  type YearGroup,
+} from "@personal/shared/bibliographyYears";
 import type { BibliographyItemResponse } from "@personal/shared/generated/api";
 import { fuzzyFilter } from "@personal/shared/fuzzy";
-import { BIBLIOGRAPHY_ITEMS_LOAD_ERROR } from "@personal/shared/loadErrors";
+import {
+  ATTEMPTS_LOAD_ERROR,
+  BIBLIOGRAPHY_ITEMS_LOAD_ERROR,
+} from "@personal/shared/loadErrors";
+import { useAllAttempts } from "@personal/shared/queries/bibliographyAttempts";
 import { useBibliographyItems } from "@personal/shared/queries/bibliographyItems";
+import {
+  useBibliographyViewStore,
+  type BibliographyViewMode,
+} from "@personal/shared/stores/bibliographyView";
 
 import { ChipGroup } from "../../src/ChipGroup";
 import { Fab } from "../../src/Fab";
-import { makeStyles, useTheme } from "../../src/theme";
+import { fonts, makeStyles, useTheme } from "../../src/theme";
 import { useRefreshOnFocus } from "../../src/useRefreshOnFocus";
 
 /** A chip value for "no filter": ChipGroup needs a value for every option. */
@@ -37,6 +50,11 @@ const KIND_FILTERS: { value: ItemKind | typeof ALL; label: string }[] = [
   { value: ALL, label: "Wszystkie" },
   { value: "film", label: "Filmy" },
   { value: "book", label: "Książki" },
+];
+
+const VIEW_MODES: { value: BibliographyViewMode; label: string }[] = [
+  { value: "items", label: "Pozycje" },
+  { value: "years", label: "Lata" },
 ];
 
 function openItem(item: BibliographyItemResponse) {
@@ -56,6 +74,10 @@ export default function BibliographyScreen() {
     isError,
     refetch,
   } = useBibliographyItems({ kind, status });
+  const viewMode = useBibliographyViewStore((state) => state.mode);
+  const setViewMode = useBibliographyViewStore((state) => state.setMode);
+  const isYearView = viewMode === "years";
+  const attempts = useAllAttempts(isYearView);
   const [isRefreshing, setIsRefreshing] = useState(false);
   useRefreshOnFocus(refetch);
 
@@ -69,10 +91,26 @@ export default function BibliographyScreen() {
   const isFiltered = kind !== undefined || status !== undefined;
   const isSearching = query.trim() !== "";
   const shownItems = fuzzyFilter(items, query, itemSearchText);
+  // The item view is one section without a header: the list as it always was.
+  const groups: YearGroup[] = isYearView
+    ? attempts.data
+      ? groupByYear(shownItems, attempts.data)
+      : []
+    : [
+        {
+          key: "items",
+          label: "",
+          rows: shownItems.map((item) => ({ item, attempt: null })),
+        },
+      ];
+  const sections = groups
+    .filter((group) => group.rows.length > 0)
+    .map((group) => ({ ...group, data: group.rows }));
+  const isLoading = isPending || (isYearView && attempts.isPending);
 
   async function refresh() {
     setIsRefreshing(true);
-    await refetch();
+    await Promise.all([refetch(), isYearView ? attempts.refetch() : null]);
     setIsRefreshing(false);
   }
 
@@ -81,7 +119,15 @@ export default function BibliographyScreen() {
       {isError && (
         <Text style={common.error}>{BIBLIOGRAPHY_ITEMS_LOAD_ERROR}</Text>
       )}
+      {isYearView && attempts.isError && (
+        <Text style={common.error}>{ATTEMPTS_LOAD_ERROR}</Text>
+      )}
       <View style={styles.filters}>
+        <ChipGroup
+          options={VIEW_MODES}
+          value={viewMode}
+          onChange={setViewMode}
+        />
         <TextInput
           style={form.input}
           value={query}
@@ -119,19 +165,22 @@ export default function BibliographyScreen() {
           />
         </ScrollView>
       </View>
-      <FlatList
-        data={shownItems}
+      <SectionList
+        sections={sections}
         keyboardShouldPersistTaps="handled"
-        keyExtractor={(item) => String(item.id)}
+        keyExtractor={({ item, attempt }) =>
+          attempt ? `a${attempt.id}` : `i${item.id}`
+        }
         contentContainerStyle={styles.listContent}
+        stickySectionHeadersEnabled={false}
         refreshControl={
           <RefreshControl
-            refreshing={isRefreshing || isPending}
+            refreshing={isRefreshing || isLoading}
             onRefresh={() => void refresh()}
           />
         }
         ListEmptyComponent={
-          !isPending && !isError ? (
+          !isLoading && !isError ? (
             <Text style={[common.muted, styles.empty]}>
               {isSearching
                 ? "Brak pozycji pasujących do wyszukiwania"
@@ -141,8 +190,16 @@ export default function BibliographyScreen() {
             </Text>
           ) : undefined
         }
-        renderItem={({ item }) => {
+        renderSectionHeader={({ section }) =>
+          section.label ? (
+            <Text style={styles.sectionTitle} accessibilityRole="header">
+              {section.label}
+            </Text>
+          ) : null
+        }
+        renderItem={({ item: { item, attempt } }) => {
           const byline = itemByline(item);
+          const dates = attempt ? attemptDates(attempt) : "";
           return (
             <Pressable
               style={common.row}
@@ -155,13 +212,13 @@ export default function BibliographyScreen() {
                   {item.title}
                 </Text>
                 <Text style={common.rowSubtitle} numberOfLines={1}>
-                  {[ITEM_KIND_LABELS[item.kind], byline]
+                  {[ITEM_KIND_LABELS[item.kind], byline, dates]
                     .filter(Boolean)
                     .join(" · ")}
                 </Text>
               </View>
               <Text style={styles.status}>
-                {itemStatusLabel(item.status, item.kind)}
+                {itemStatusLabel(attempt?.outcome ?? item.status, item.kind)}
               </Text>
             </Pressable>
           );
@@ -178,6 +235,17 @@ export default function BibliographyScreen() {
 const useStyles = makeStyles((colors) => ({
   filters: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4, gap: 8 },
   listContent: { paddingBottom: 96 },
+  // The expenses' day headers.
+  sectionTitle: {
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 6,
+    fontFamily: fonts.utility,
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.9,
+    color: colors.muted,
+  },
   empty: { padding: 24, textAlign: "center" },
   // The web's status pill.
   status: {

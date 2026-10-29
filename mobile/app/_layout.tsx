@@ -9,6 +9,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { persistOptions } from "@personal/shared/queries/persist";
 import { useAuthStore } from "@personal/shared/stores/auth";
+import { useBibliographyViewStore } from "@personal/shared/stores/bibliographyView";
 import { useNewTaskStatusStore } from "@personal/shared/stores/newTaskStatus";
 import { useThemeStore } from "@personal/shared/stores/theme";
 
@@ -32,6 +33,7 @@ export default function RootLayout() {
       useThemeStore.persist.rehydrate(),
       useCounterViewStore.persist.rehydrate(),
       useNewTaskStatusStore.persist.rehydrate(),
+      useBibliographyViewStore.persist.rehydrate(),
       useTabBarStore.persist.rehydrate(),
     ]).finally(() => setIsHydrated(true));
   }, []);

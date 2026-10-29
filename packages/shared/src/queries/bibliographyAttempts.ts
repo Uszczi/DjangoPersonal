@@ -11,11 +11,7 @@ import {
 } from "@tanstack/react-query";
 
 import { api } from "../api";
-import type {
-  AttemptRequest,
-  AttemptResponse,
-  PatchedAttemptRequest,
-} from "../generated/api";
+import type { AttemptRequest, PatchedAttemptRequest } from "../generated/api";
 import { bibliographyItemKeys } from "./keys";
 
 export const attemptsQuery = (itemId: number) =>
@@ -33,10 +29,24 @@ export function useAttempts(itemId: number | null) {
   });
 }
 
-function afterWrite(queryClient: QueryClient, saved: AttemptResponse) {
+export const allAttemptsQuery = () =>
+  queryOptions({
+    queryKey: bibliographyItemKeys.allAttempts,
+    queryFn: ({ signal }) => api.bibliographyAttemptsList({}, { signal }),
+  });
+
+/** Every Attempt of the user, latest first; loaded only while `enabled`. */
+export function useAllAttempts(enabled = true) {
+  return useQuery({ ...allAttemptsQuery(), enabled });
+}
+
+function afterWrite(queryClient: QueryClient, itemId: number) {
   // The server decides which Attempt is the latest (and so the status).
   void queryClient.invalidateQueries({
-    queryKey: bibliographyItemKeys.attempts(saved.itemId),
+    queryKey: bibliographyItemKeys.attempts(itemId),
+  });
+  void queryClient.invalidateQueries({
+    queryKey: bibliographyItemKeys.allAttempts,
   });
   void queryClient.invalidateQueries({ queryKey: bibliographyItemKeys.all });
 }
@@ -47,7 +57,7 @@ export function useCreateAttempt() {
   return useMutation({
     mutationFn: (attemptRequest: AttemptRequest) =>
       api.bibliographyAttemptsCreate({ attemptRequest }),
-    onSuccess: (created) => afterWrite(queryClient, created),
+    onSuccess: (created) => afterWrite(queryClient, created.itemId),
   });
 }
 
@@ -66,7 +76,7 @@ export function useUpdateAttempt() {
         id,
         patchedAttemptRequest: changes,
       }),
-    onSuccess: (updated) => afterWrite(queryClient, updated),
+    onSuccess: (updated) => afterWrite(queryClient, updated.itemId),
   });
 }
 
@@ -76,11 +86,6 @@ export function useDeleteAttempt() {
   return useMutation({
     mutationFn: ({ id }: { id: number; itemId: number }) =>
       api.bibliographyAttemptsDestroy({ id }),
-    onSuccess: (_, { itemId }) => {
-      void queryClient.invalidateQueries({
-        queryKey: bibliographyItemKeys.attempts(itemId),
-      });
-      void queryClient.invalidateQueries({ queryKey: bibliographyItemKeys.all });
-    },
+    onSuccess: (_, { itemId }) => afterWrite(queryClient, itemId),
   });
 }
