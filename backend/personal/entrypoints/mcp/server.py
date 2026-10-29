@@ -14,7 +14,7 @@ import os
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from datetime import date as date_type
-from typing import Any, TypeAlias
+from typing import Any, Literal, TypeAlias
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import anyio.to_thread
@@ -29,9 +29,11 @@ from personal.core.accounts import handlers as accounts_handlers
 from personal.core.accounts.contracts.auth import LoginRequest, RefreshRequest, RegisterRequest
 from personal.core.bibliography import handlers as bibliography_handlers
 from personal.core.bibliography.contracts import (
+    AttemptRequest,
     BibliographyItemRequest,
     ItemKind,
     ItemStatus,
+    PatchedAttemptRequest,
     PatchedBibliographyItemRequest,
 )
 from personal.core.counters import handlers as counter_handlers
@@ -76,6 +78,8 @@ from .auth import client_address, get_current_user
 from .oauth import login_get, login_post, provider
 from .serialization import (
     account,
+    attempt,
+    attempts,
     bibliography_item,
     bibliography_items,
     categories,
@@ -871,6 +875,126 @@ def update_bibliography_item(
             wiring.bibliography_item_repository(session), wiring.attempt_repository(session), user
         )
         return bibliography_item(handler.execute(item_id, payload))
+
+
+def _attempt_handlers(
+    session: Session, user: User
+) -> tuple[bibliography_handlers.CreateAttempt, bibliography_handlers.UpdateAttempt]:
+    attempts_repo = wiring.attempt_repository(session)
+    items_repo = wiring.bibliography_item_repository(session)
+    return (
+        bibliography_handlers.CreateAttempt(attempts_repo, items_repo, user),
+        bibliography_handlers.UpdateAttempt(attempts_repo, user),
+    )
+
+
+def _today(time_zone: str) -> date_type:
+    return clock.now().astimezone(_zone(time_zone)).date()
+
+
+@_tool
+def list_attempts(ctx: ToolContext, item_id: int) -> list[dict[str, Any]]:
+    """The attempts at watching or reading one item, latest first (the one in progress,
+    then by end date). ``progress`` is a page (book) or minute (film)."""
+    with _unit_of_work(ctx) as (session, user):
+        handler = bibliography_handlers.ListAttempts(
+            wiring.attempt_repository(session), wiring.bibliography_item_repository(session), user
+        )
+        return attempts(handler.execute(item_id))
+
+
+@_tool
+def start_attempt(
+    ctx: ToolContext,
+    item_id: int,
+    started_on: str | None = None,
+    progress: int | None = None,
+) -> dict[str, Any]:
+    """Start watching or reading an item. ``started_on`` (YYYY-MM-DD) may be left
+    out when unknown. An item has at most one attempt in progress."""
+    payload = AttemptRequest.model_validate(
+        {'item': item_id, 'outcome': 'in_progress', 'started_on': started_on, 'progress': progress}
+    )
+    with _unit_of_work(ctx) as (session, user):
+        create, _ = _attempt_handlers(session, user)
+        return attempt(create.execute(payload))
+
+
+@_tool
+def record_attempt(
+    ctx: ToolContext,
+    item_id: int,
+    outcome: Literal['finished', 'abandoned'] = 'finished',
+    ended_on: str | None = None,
+    started_on: str | None = None,
+    time_zone: str = 'UTC',
+) -> dict[str, Any]:
+    """Record an attempt that has already ended, in one step. ``ended_on``
+    (YYYY-MM-DD) defaults to today in ``time_zone`` (IANA, e.g. ``Europe/Warsaw``)."""
+    payload = AttemptRequest.model_validate(
+        {
+            'item': item_id,
+            'outcome': outcome,
+            'started_on': started_on,
+            'ended_on': ended_on if ended_on is not None else _today(time_zone),
+        }
+    )
+    with _unit_of_work(ctx) as (session, user):
+        create, _ = _attempt_handlers(session, user)
+        return attempt(create.execute(payload))
+
+
+def _end_attempt(
+    ctx: ToolContext,
+    attempt_id: int,
+    outcome: Literal['finished', 'abandoned'],
+    ended_on: str | None,
+    time_zone: str,
+) -> dict[str, Any]:
+    payload = PatchedAttemptRequest.model_validate(
+        {'outcome': outcome, 'ended_on': ended_on if ended_on is not None else _today(time_zone)}
+    )
+    with _unit_of_work(ctx) as (session, user):
+        _, update = _attempt_handlers(session, user)
+        return attempt(update.execute(attempt_id, payload))
+
+
+@_tool
+def finish_attempt(
+    ctx: ToolContext, attempt_id: int, ended_on: str | None = None, time_zone: str = 'UTC'
+) -> dict[str, Any]:
+    """Finish the attempt in progress (its progress is dropped). ``ended_on``
+    (YYYY-MM-DD) defaults to today in ``time_zone`` (IANA, e.g. ``Europe/Warsaw``)."""
+    return _end_attempt(ctx, attempt_id, 'finished', ended_on, time_zone)
+
+
+@_tool
+def abandon_attempt(
+    ctx: ToolContext, attempt_id: int, ended_on: str | None = None, time_zone: str = 'UTC'
+) -> dict[str, Any]:
+    """Abandon the attempt in progress; ``ended_on`` as in ``finish_attempt``."""
+    return _end_attempt(ctx, attempt_id, 'abandoned', ended_on, time_zone)
+
+
+@_tool
+def update_attempt(
+    ctx: ToolContext,
+    attempt_id: int,
+    progress: int | None = None,
+    started_on: str | None = None,
+    ended_on: str | None = None,
+    clear_progress: bool = False,
+) -> dict[str, Any]:
+    """Move on or re-date an attempt (partial). ``progress`` is the page (book) or
+    minute (film) reached, only while in progress and never beyond the item's
+    length; ``clear_progress`` removes it."""
+    fields = _provided(progress=progress, started_on=started_on, ended_on=ended_on)
+    if clear_progress:
+        fields['progress'] = None
+    payload = PatchedAttemptRequest.model_validate(fields)
+    with _unit_of_work(ctx) as (session, user):
+        _, update = _attempt_handlers(session, user)
+        return attempt(update.execute(attempt_id, payload))
 
 
 # --- notatnik: folders, whiteboards and Notatki -----------------------------
