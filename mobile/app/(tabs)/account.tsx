@@ -13,6 +13,7 @@ import {
 import { Button } from "../../src/Button";
 import { ChipGroup } from "../../src/ChipGroup";
 import { confirmDestructive } from "../../src/confirm";
+import { TabBarSettings } from "../../src/TabBarSettings";
 import { useTheme } from "../../src/theme";
 
 export default function AccountScreen() {
@@ -62,6 +63,7 @@ export default function AccountScreen() {
         />
         <Text style={form.hint}>Zapisywany na tym urządzeniu.</Text>
       </View>
+      <TabBarSettings />
       <View style={[card.section, { gap: 12 }]}>
         <View style={{ flexDirection: "row" }}>
           <Button

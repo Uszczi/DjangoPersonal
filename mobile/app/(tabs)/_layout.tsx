@@ -1,14 +1,16 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs } from "expo-router";
-import type { ComponentProps } from "react";
 import type { ColorValue } from "react-native";
 
 import { LogoMark } from "../../src/LogoMark";
+import {
+  tabDefinitions,
+  useTabBarStore,
+  type TabDefinition,
+} from "../../src/tabBar";
 import { fonts, useTheme } from "../../src/theme";
 
-type IconName = ComponentProps<typeof Ionicons>["name"];
-
-function tabIcon(name: IconName) {
+function tabIcon(name: TabDefinition["icon"]) {
   return ({ color, size }: { color: ColorValue; size: number }) => (
     <Ionicons
       name={name}
@@ -20,6 +22,10 @@ function tabIcon(name: IconName) {
 
 export default function TabsLayout() {
   const { colors } = useTheme();
+  // The user's order and visibility (Konto > Pasek kart). A hidden tab stays
+  // a route (`href: null`), so links to it still work.
+  const order = useTabBarStore((state) => state.order);
+  const hidden = useTabBarStore((state) => state.hidden);
   return (
     <Tabs
       screenOptions={{
@@ -45,41 +51,21 @@ export default function TabsLayout() {
         },
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{ title: "Projekty", tabBarIcon: tabIcon("folder-outline") }}
-      />
-      <Tabs.Screen
-        name="time"
-        options={{ title: "Czas", tabBarIcon: tabIcon("time-outline") }}
-      />
-      <Tabs.Screen
-        name="expenses"
-        options={{ title: "Wydatki", tabBarIcon: tabIcon("wallet-outline") }}
-      />
-      <Tabs.Screen
-        name="counters"
-        options={{
-          title: "Liczniki",
-          tabBarIcon: tabIcon("stats-chart-outline"),
-        }}
-      />
-      <Tabs.Screen
-        name="bibliography"
-        options={{
-          title: "Bibliografia",
-          // Six tabs leave no room for the full word under the icon.
-          tabBarLabel: "Biblio",
-          tabBarIcon: tabIcon("library-outline"),
-        }}
-      />
-      <Tabs.Screen
-        name="account"
-        options={{
-          title: "Konto",
-          tabBarIcon: tabIcon("person-circle-outline"),
-        }}
-      />
+      {order.map((name) => {
+        const tab = tabDefinitions[name];
+        return (
+          <Tabs.Screen
+            key={name}
+            name={name}
+            options={{
+              title: tab.title,
+              tabBarLabel: tab.label,
+              tabBarIcon: tabIcon(tab.icon),
+              href: hidden.includes(name) ? null : undefined,
+            }}
+          />
+        );
+      })}
     </Tabs>
   );
 }

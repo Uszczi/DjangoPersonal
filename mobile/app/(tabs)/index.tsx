@@ -1,4 +1,4 @@
-import { Link, router } from "expo-router";
+import { Link, Redirect, router } from "expo-router";
 import { useState } from "react";
 import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 
@@ -6,9 +6,32 @@ import { PROJECTS_LOAD_ERROR } from "@personal/shared/loadErrors";
 import { useProjects } from "@personal/shared/queries/projects";
 
 import { Fab } from "../../src/Fab";
+import {
+  firstVisibleTab,
+  tabDefinitions,
+  useTabBarStore,
+} from "../../src/tabBar";
 import { useTheme } from "../../src/theme";
 
-export default function ProjectsScreen() {
+/**
+ * The app opens on this tab ("/"). When the user has hidden Projekty, send
+ * them to their first visible tab instead; `Redirect` acts only while this
+ * screen is focused, so hiding the tab from Konto does not navigate away.
+ */
+export default function ProjectsTab() {
+  const target = useTabBarStore((state) =>
+    state.hidden.includes("index")
+      ? firstVisibleTab(state.order, state.hidden)
+      : null,
+  );
+  return target === null ? (
+    <ProjectsScreen />
+  ) : (
+    <Redirect href={tabDefinitions[target].href} />
+  );
+}
+
+function ProjectsScreen() {
   const { common } = useTheme();
   const { data: projects = [], isPending, isError, refetch } = useProjects();
   const [isRefreshing, setIsRefreshing] = useState(false);
