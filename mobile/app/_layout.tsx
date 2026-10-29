@@ -16,6 +16,7 @@ import { useThemeStore } from "@personal/shared/stores/theme";
 import { useCounterViewStore } from "../src/counterView";
 import { queryClient } from "../src/queryClient";
 import { useTabBarStore } from "../src/tabBar";
+import { useTaskProjectStore } from "../src/taskProject";
 import { AccountThemeSync, useNativeColorScheme, useTheme } from "../src/theme";
 
 export default function RootLayout() {
@@ -25,8 +26,9 @@ export default function RootLayout() {
   useNativeColorScheme();
 
   // The persisted stores were created before setup pointed them at secure
-  // storage, so read the saved session and the theme, view, status and tab
-  // bar choices again from there before showing any screen.
+  // storage, so read the saved session and the theme, view, status, tab
+  // bar and Zadania project choices again from there before showing any
+  // screen.
   useEffect(() => {
     void Promise.allSettled([
       useAuthStore.persist.rehydrate(),
@@ -35,6 +37,7 @@ export default function RootLayout() {
       useNewTaskStatusStore.persist.rehydrate(),
       useBibliographyViewStore.persist.rehydrate(),
       useTabBarStore.persist.rehydrate(),
+      useTaskProjectStore.persist.rehydrate(),
     ]).finally(() => setIsHydrated(true));
   }, []);
 

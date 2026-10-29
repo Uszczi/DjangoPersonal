@@ -21,6 +21,7 @@ export type TabDefinition = {
 export const tabNames = [
   "index",
   "projects",
+  "tasks",
   "time",
   "expenses",
   "counters",
@@ -44,6 +45,12 @@ export const tabDefinitions: Record<TabName, TabDefinition> = {
     title: "Projekty",
     icon: "folder-outline",
   },
+  tasks: {
+    name: "tasks",
+    href: "/tasks",
+    title: "Zadania",
+    icon: "checkbox-outline",
+  },
   time: { name: "time", href: "/time", title: "Czas", icon: "time-outline" },
   expenses: {
     name: "expenses",
@@ -61,7 +68,7 @@ export const tabDefinitions: Record<TabName, TabDefinition> = {
     name: "bibliography",
     href: "/bibliography",
     title: "Bibliografia",
-    // Seven tabs leave no room for the full word under the icon.
+    // So many tabs leave no room for the full word under the icon.
     label: "Biblio",
     icon: "library-outline",
   },
@@ -80,14 +87,16 @@ function isTabName(value: unknown): value is TabName {
 /**
  * Bring a saved order up to date with the tabs this build has: unknown or
  * repeated names are dropped, and tabs missing from it (added since it was
- * saved) are appended in their default place in the list.
+ * saved) go right after the tab that precedes them by default.
  */
 export function normalizeOrder(saved: unknown): TabName[] {
   const known = Array.isArray(saved) ? saved.filter(isTabName) : [];
   const order = [...new Set(known)];
-  for (const name of tabNames) {
-    if (!order.includes(name)) order.push(name);
-  }
+  tabNames.forEach((name, index) => {
+    if (order.includes(name)) return;
+    const previous = index > 0 ? order.indexOf(tabNames[index - 1]) : -1;
+    order.splice(previous + 1, 0, name);
+  });
   return order;
 }
 
