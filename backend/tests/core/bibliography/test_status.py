@@ -51,3 +51,11 @@ def test_resuming_after_an_abandon_and_finishing_means_finished() -> None:
     ]
 
     assert item_status(attempts) == 'finished'
+
+
+def test_on_equal_end_dates_the_attempt_added_last_wins() -> None:
+    same_day = date(2026, 5, 1)
+    abandoned, finished = Attempt('abandoned', same_day), Attempt('finished', same_day)
+
+    assert item_status([abandoned, finished]) == 'finished'
+    assert item_status([finished, abandoned]) == 'abandoned'

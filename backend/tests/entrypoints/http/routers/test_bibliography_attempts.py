@@ -137,18 +137,32 @@ def test_a_second_attempt_in_progress_is_rejected(
     assert listed == [first]
 
 
-def test_reopening_an_ended_attempt_while_another_is_open_is_rejected(
-    post_json: Any, patch_json: Any
+def test_an_ended_attempt_cannot_be_reopened(
+    post_json: Any, patch_json: Any, api_client: ApiClient
 ) -> None:
+    # Resuming a finished or abandoned item means starting a new Attempt.
     item = _item(post_json)
     ended = _attempt(post_json, item, outcome='abandoned', ended_on='2025-01-01')
-    _attempt(post_json, item, outcome='in_progress')
 
     response = patch_json(
         f'{ATTEMPTS}{ended["id"]}/', {'outcome': 'in_progress', 'ended_on': None}
     )
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert 'new Attempt' in response.json()['detail']
+    assert _status(api_client, item) == 'abandoned'
+
+
+def test_an_ended_attempt_can_switch_between_finished_and_abandoned(
+    post_json: Any, patch_json: Any, api_client: ApiClient
+) -> None:
+    item = _item(post_json)
+    ended = _attempt(post_json, item, outcome='abandoned', ended_on='2025-01-01')
+
+    response = patch_json(f'{ATTEMPTS}{ended["id"]}/', {'outcome': 'finished'})
+
+    assert response.status_code == HTTPStatus.OK
+    assert _status(api_client, item) == 'finished'
 
 
 def test_other_items_can_be_in_progress_at_the_same_time(

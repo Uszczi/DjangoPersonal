@@ -12,10 +12,12 @@ from personal.infra.repo import (
 
 from ..contracts import AttemptRequest, PatchedAttemptRequest
 from ..progress import check_progress_within_length
+from ..status import is_in_progress
 from .items import _get_bibliography_item
 
 ALREADY_IN_PROGRESS = 'This bibliography item already has an Attempt in progress.'
 PROGRESS_ONLY_IN_PROGRESS = 'Progress is set only on an Attempt in progress.'
+NO_REOPENING = 'An ended Attempt cannot be put back in progress; start a new Attempt instead.'
 
 
 def _get_attempt(repository: AttemptRepository, attempt_id: int, *, user: User) -> AttemptModel:
@@ -27,7 +29,7 @@ def _get_attempt(repository: AttemptRepository, attempt_id: int, *, user: User) 
 
 def _check_dates(attempt: AttemptModel) -> None:
     """An end date exactly once it has ended, and never before the start."""
-    in_progress = attempt.outcome == AttemptModel.OUTCOME_IN_PROGRESS
+    in_progress = is_in_progress(attempt)
     if in_progress and attempt.ended_on is not None:
         raise DomainError('An Attempt in progress has no end date.')
     if not in_progress and attempt.ended_on is None:
@@ -46,7 +48,7 @@ def _settle_progress(attempt: AttemptModel, *, progress_given: bool) -> None:
     Asking for it on an ended Attempt is an error; ending an Attempt simply drops
     the progress it had. Reaching the length does not end it.
     """
-    if attempt.outcome == AttemptModel.OUTCOME_IN_PROGRESS:
+    if is_in_progress(attempt):
         check_progress_within_length(attempt.progress, attempt.item.length)
         return
     if attempt.progress is None:
@@ -62,11 +64,21 @@ def _check_one_in_progress(attempt: AttemptModel, others: list[AttemptModel]) ->
     ``others`` is loaded before ``attempt`` is changed, so the query's autoflush
     cannot run into the database's own guard first.
     """
-    if attempt.outcome != AttemptModel.OUTCOME_IN_PROGRESS:
+    if not is_in_progress(attempt):
         return
     for other in others:
-        if other is not attempt and other.outcome == AttemptModel.OUTCOME_IN_PROGRESS:
+        if other is not attempt and is_in_progress(other):
             raise DomainError(ALREADY_IN_PROGRESS)
+
+
+def _check_not_reopened(attempt: AttemptModel, *, was_ended: bool) -> None:
+    """Resuming a finished or abandoned item means starting a new Attempt.
+
+    An ended Attempt may still switch between finished and abandoned or be re-dated,
+    but going back in progress would rewrite history the item's status relies on.
+    """
+    if was_ended and is_in_progress(attempt):
+        raise DomainError(NO_REOPENING)
 
 
 def _save(repository: AttemptRepository, attempt: AttemptModel) -> AttemptModel:
@@ -80,8 +92,7 @@ def history_order(attempts: list[AttemptModel]) -> list[AttemptModel]:
     """Latest first: the one in progress, then by end date, newest first."""
 
     def key(attempt: AttemptModel) -> tuple[bool, date, int]:
-        in_progress = attempt.outcome == AttemptModel.OUTCOME_IN_PROGRESS
-        return (in_progress, attempt.ended_on or date.min, attempt.id)
+        return (is_in_progress(attempt), attempt.ended_on or date.min, attempt.id)
 
     return sorted(attempts, key=key, reverse=True)
 
@@ -139,7 +150,10 @@ class CreateAttempt:
 
 
 class UpdateAttempt:
-    """Finish, abandon or re-date an Attempt (PATCH); it stays on its BibliographyItem."""
+    """Finish, abandon or re-date an Attempt (PATCH); it stays on its BibliographyItem.
+
+    An ended Attempt is never reopened: resuming starts a new one.
+    """
 
     def __init__(self, attempts: AttemptRepository, user: User):
         self.attempts = attempts
@@ -148,7 +162,9 @@ class UpdateAttempt:
     def execute(self, attempt_id: int, data: PatchedAttemptRequest) -> AttemptModel:
         attempt = _get_attempt(self.attempts, attempt_id, user=self.user)
         others = self.attempts.list_for_item(attempt.item_id, user=self.user)
+        was_ended = not is_in_progress(attempt)
         apply_provided(data, attempt)
+        _check_not_reopened(attempt, was_ended=was_ended)
         _check_dates(attempt)
         _settle_progress(attempt, progress_given='progress' in data.model_fields_set)
         _check_one_in_progress(attempt, others)

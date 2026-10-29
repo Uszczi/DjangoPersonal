@@ -17,6 +17,14 @@ class AttemptLike(Protocol):
     def ended_on(self) -> date | None: ...
 
 
+IN_PROGRESS: AttemptOutcome = 'in_progress'
+
+
+def is_in_progress(attempt: AttemptLike) -> bool:
+    """Still being watched or read: no end date yet."""
+    return attempt.outcome == IN_PROGRESS
+
+
 def latest_attempt[T: AttemptLike](attempts: Iterable[T]) -> T | None:
     """The Attempt that decides the status.
 
@@ -26,7 +34,7 @@ def latest_attempt[T: AttemptLike](attempts: Iterable[T]) -> T | None:
     """
     latest: T | None = None
     for attempt in attempts:
-        if attempt.outcome == 'in_progress':
+        if is_in_progress(attempt):
             return attempt
         if latest is None or _ended(attempt) >= _ended(latest):
             latest = attempt
