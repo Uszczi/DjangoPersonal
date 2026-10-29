@@ -464,6 +464,60 @@ const solitude: Theme = {
   },
 };
 
+/**
+ * Omarchy's Ristretto (Monokai Pro Ristretto): warm coffee browns with its
+ * orange accent as the brand colour and the Monokai pink-red for danger.
+ */
+const ristretto: Theme = {
+  label: "Ristretto",
+  scheme: "dark",
+  colors: {
+    canvas: "#211c1c",
+    paper: "#2c2525",
+    surface: "#2c2525",
+    input: "#191515",
+    wash: "#352d2d",
+    deepInk: "#191515",
+    ink: "#e6d9db",
+    inkSoft: "#d4c8c9",
+    bodySoft: "#c3b7b8",
+    muted: "#948a8b",
+    hint: "#857b7c",
+    placeholder: "#72696a",
+    line: "#403838",
+    lineSoft: "#352d2d",
+    rowLine: "#352d2d",
+    cardLine: "#3a3232",
+    controlBorder: "#4a4141",
+    controlBorderHover: "#5b5353",
+    icon: "#948a8b",
+    iconWash: "#352d2d",
+    dragHandle: "#5b5353",
+    accent: "#85dacc",
+    done: "#adda78",
+    signal: "#f38d70",
+    signalPale: "#4a3530",
+    signalStrong: "#f8a788",
+    onSignal: "#211c1c",
+    focusRing: "#f8a788",
+    danger: "#fd6883",
+    dangerStrong: "#ff8297",
+    dangerPale: "#45282e",
+    dangerInk: "#ff8297",
+    overlay: "rgb(0 0 0 / 60%)",
+    navText: "#e6d9db",
+    navMuted: "#948a8b",
+    navSelected: "#352d2d",
+    navHover: "#2c2525",
+    navLine: "#403838",
+    navLineStrong: "#5b5353",
+    mdMark: "#f9cc6c",
+    mdCodeBg: "#211c1c",
+    searchMatch: "#5a4a2e",
+    searchCurrent: "#8a6a3a",
+  },
+};
+
 export const themes = {
   light,
   dark,
@@ -473,6 +527,7 @@ export const themes = {
   macchiato,
   mocha,
   solitude,
+  ristretto,
 } satisfies Record<string, Theme>;
 
 export type ThemeName = keyof typeof themes;

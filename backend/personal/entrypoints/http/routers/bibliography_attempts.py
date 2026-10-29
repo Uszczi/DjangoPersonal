@@ -17,12 +17,16 @@ router = APIRouter(tags=['personal'])
 
 @router.get('/bibliography-attempts/', operation_id='bibliography_attempts_list')
 def list_attempts(
-    item: int,
     user: CurrentUser,
     attempts: AttemptRepositoryDep,
     items: BibliographyItemRepositoryDep,
+    item: int | None = None,
 ) -> list[AttemptResponse]:
-    found = handlers.ListAttempts(attempts, items, user).execute(item)
+    """One BibliographyItem's Attempts, or every Attempt of the user without ``item``."""
+    if item is None:
+        found = handlers.ListAllAttempts(attempts, user).execute()
+    else:
+        found = handlers.ListAttempts(attempts, items, user).execute(item)
     return [AttemptResponse.model_validate(attempt) for attempt in found]
 
 

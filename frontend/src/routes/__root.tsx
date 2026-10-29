@@ -1,10 +1,11 @@
-import { QueryClientProvider } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 
 import { ModalHost } from "@/components/modals/ModalHost";
 import { Navbar } from "@/components/Navbar";
 import { authGuard } from "@/guards/auth";
 import { queryClient } from "@/queryClient";
+import { persistOptions } from "@personal/shared/queries/persist";
 import { useAccountThemeSync } from "@personal/shared/queries/settings";
 
 export const Route = createRootRoute({
@@ -20,7 +21,10 @@ function AccountThemeSync() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={persistOptions}
+    >
       <AccountThemeSync />
       <div className="flex min-h-screen flex-col">
         <Navbar />
@@ -31,7 +35,7 @@ function App() {
 
         <ModalHost />
       </div>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 }
 

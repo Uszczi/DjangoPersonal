@@ -119,6 +119,9 @@ function fakeBackend(
       return jsonResponse(withStatus(item));
     }
 
+    if (path.endsWith("/bibliography-attempts/") && method === "GET") {
+      return jsonResponse(latestFirst(attempts));
+    }
     const listMatch = path.match(/\/bibliography-attempts\/\?item=(\d+)$/);
     if (listMatch) {
       return jsonResponse(
@@ -246,6 +249,61 @@ describe("Bibliography", () => {
       within(second).getByText("Bolesław Prus · 1890"),
     ).toBeInTheDocument();
     expect(within(second).getByText("Do przeczytania")).toBeInTheDocument();
+  });
+
+  test("the year view lists every Attempt under its year and is remembered", async () => {
+    fetchMock.mockImplementation(
+      fakeBackend(
+        [rejs, lalka],
+        [
+          attempt({ id: 51, item_id: lalka.id, ended_on: "2025-05-10" }),
+          attempt({ id: 52, item_id: lalka.id, ended_on: "2026-02-01" }),
+        ],
+      ).handler,
+    );
+    const user = userEvent.setup();
+
+    renderApp("/bibliography");
+    await screen.findByRole("list", { name: "Pozycje" });
+    const view = screen.getByRole("group", { name: "Widok Bibliografii" });
+    await user.click(within(view).getByRole("button", { name: "Lata" }));
+
+    const headings = await screen.findAllByRole("heading", { level: 2 });
+    expect(headings.map((heading) => heading.textContent)).toEqual([
+      "Planowane",
+      "2026",
+      "2025",
+    ]);
+    const planned = screen.getByRole("list", { name: "Planowane" });
+    expect(within(planned).getByText("Rejs")).toBeInTheDocument();
+    for (const [year, day] of [
+      ["2026", "01.02.2026"],
+      ["2025", "10.05.2025"],
+    ]) {
+      const list = screen.getByRole("list", { name: year });
+      expect(within(list).getByText("Lalka")).toBeInTheDocument();
+      expect(
+        within(list).getByText(`Bolesław Prus · 1890 · ${day}`),
+      ).toBeInTheDocument();
+      expect(within(list).getByText("Ukończone")).toBeInTheDocument();
+    }
+    expect(
+      JSON.parse(window.localStorage.getItem("bibliographyView") ?? "{}").state,
+    ).toEqual({ mode: "years" });
+
+    await user.type(
+      screen.getByRole("searchbox", { name: "Szukaj w Bibliografii" }),
+      "Rejs",
+    );
+    expect(
+      screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent),
+    ).toEqual(["Planowane"]);
+
+    await user.click(within(view).getByRole("button", { name: "Pozycje" }));
+    expect(
+      await screen.findByRole("list", { name: "Pozycje" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 2 })).not.toBeInTheDocument();
   });
 
   test("the search finds items fuzzily by title or creator", async () => {

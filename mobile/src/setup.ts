@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
 import type { StateStorage } from "zustand/middleware";
@@ -23,4 +24,10 @@ const secureStorage: StateStorage = {
   removeItem: (name) => SecureStore.deleteItemAsync(name),
 };
 
-configurePlatform({ apiBaseUrl: resolveApiBaseUrl(), storage: secureStorage });
+// The saved query cache outgrows secure storage's value size limit and holds
+// no credentials, so it goes to plain app storage.
+configurePlatform({
+  apiBaseUrl: resolveApiBaseUrl(),
+  storage: secureStorage,
+  cacheStorage: AsyncStorage,
+});

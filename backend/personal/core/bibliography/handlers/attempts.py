@@ -112,6 +112,17 @@ class ListAttempts:
         return history_order(self.attempts.list_for_item(item.id, user=self.user))
 
 
+class ListAllAttempts:
+    """Every Attempt of the user, latest first, e.g. for a year-by-year history."""
+
+    def __init__(self, attempts: AttemptRepository, user: User):
+        self.attempts = attempts
+        self.user = user
+
+    def execute(self) -> list[AttemptModel]:
+        return history_order(self.attempts.list_all(user=self.user))
+
+
 class GetAttempt:
     def __init__(self, attempts: AttemptRepository, user: User):
         self.attempts = attempts

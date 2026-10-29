@@ -69,6 +69,8 @@ export const bibliographyItemKeys = {
   detail: (itemId: number) => ["bibliographyItems", "detail", itemId] as const,
   /** One item's Attempts. */
   attempts: (itemId: number) => ["bibliographyAttempts", itemId] as const,
+  /** Every Attempt of the user, on any item (the year view). */
+  allAttempts: ["bibliographyAttempts", "all"] as const,
 };
 
 /** The filters a cached list was loaded with, read back from its `list` key. */

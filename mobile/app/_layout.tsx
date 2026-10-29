@@ -1,13 +1,15 @@
 import "../src/setup";
 
-import { QueryClientProvider } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
+import { persistOptions } from "@personal/shared/queries/persist";
 import { useAuthStore } from "@personal/shared/stores/auth";
+import { useBibliographyViewStore } from "@personal/shared/stores/bibliographyView";
 import { useNewTaskStatusStore } from "@personal/shared/stores/newTaskStatus";
 import { useThemeStore } from "@personal/shared/stores/theme";
 
@@ -31,6 +33,7 @@ export default function RootLayout() {
       useThemeStore.persist.rehydrate(),
       useCounterViewStore.persist.rehydrate(),
       useNewTaskStatusStore.persist.rehydrate(),
+      useBibliographyViewStore.persist.rehydrate(),
       useTabBarStore.persist.rehydrate(),
     ]).finally(() => setIsHydrated(true));
   }, []);
@@ -46,7 +49,10 @@ export default function RootLayout() {
   // The gesture root lets the Project screen drag Tasks to reorder them.
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={persistOptions}
+      >
         <AccountThemeSync />
         <StatusBar style="light" />
         <Stack screenOptions={headerOptions}>
@@ -109,7 +115,7 @@ export default function RootLayout() {
             <Stack.Screen name="register" options={{ headerShown: false }} />
           </Stack.Protected>
         </Stack>
-      </QueryClientProvider>
+      </PersistQueryClientProvider>
     </GestureHandlerRootView>
   );
 }

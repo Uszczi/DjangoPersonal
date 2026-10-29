@@ -31,6 +31,7 @@ def test_lookups_see_only_the_users_attempts(session: Session, user: User) -> No
     hidden = repository.save(Attempt(user=other, item=theirs, outcome='in_progress'))
 
     assert repository.list_for_item(lalka.id, user=user) == [first]
+    assert repository.list_all(user=user) == [first, on_rejs]
     assert repository.by_item([lalka, rejs, theirs], user=user) == {
         lalka.id: [first],
         rejs.id: [on_rejs],

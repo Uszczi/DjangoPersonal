@@ -8,14 +8,22 @@ import type { StateStorage } from "zustand/middleware";
  * so it calls `configurePlatform` at startup with the backend URL and a
  * secure-storage adapter, then rehydrates the persisted stores.
  */
+/** A key-value store, sync (`localStorage`) or async (React Native's AsyncStorage). */
+export type CacheStorage = StateStorage<void | Promise<void>>;
+
 export type PlatformConfig = {
   /** Origin of the backend, e.g. `http://192.168.1.10:8000`; "" means same origin. */
   apiBaseUrl: string;
   /** Where persisted stores (the auth tokens) are kept; may be async. */
   storage: StateStorage;
+  /**
+   * Where the saved server-state cache goes (see `queries/persist.ts`): larger
+   * than the stores and not secret like the tokens, so it may differ from `storage`.
+   */
+  cacheStorage: CacheStorage;
 };
 
-function memoryStorage(): StateStorage {
+function memoryStorage(): CacheStorage {
   const items = new Map<string, string>();
   return {
     getItem: (name) => items.get(name) ?? null,
@@ -29,16 +37,21 @@ function memoryStorage(): StateStorage {
 }
 
 /** `localStorage` when the host has it (browsers, jsdom), in-memory otherwise. */
-function defaultStorage(): StateStorage {
+function defaultStorage(): CacheStorage {
   try {
-    if (typeof globalThis.localStorage !== "undefined") return globalThis.localStorage;
+    if (typeof globalThis.localStorage !== "undefined")
+      return globalThis.localStorage;
   } catch {
     // Storage access can throw (blocked site data); fall back to memory.
   }
   return memoryStorage();
 }
 
-let config: PlatformConfig = { apiBaseUrl: "", storage: defaultStorage() };
+let config: PlatformConfig = {
+  apiBaseUrl: "",
+  storage: defaultStorage(),
+  cacheStorage: defaultStorage(),
+};
 
 export function configurePlatform(overrides: Partial<PlatformConfig>): void {
   config = {
@@ -61,4 +74,11 @@ export const platformStorage: StateStorage = {
   getItem: (name) => config.storage.getItem(name),
   setItem: (name, value) => config.storage.setItem(name, value),
   removeItem: (name) => config.storage.removeItem(name),
+};
+
+/** Like `platformStorage`, for the saved server-state cache. */
+export const platformCacheStorage: CacheStorage = {
+  getItem: (name) => config.cacheStorage.getItem(name),
+  setItem: (name, value) => config.cacheStorage.setItem(name, value),
+  removeItem: (name) => config.cacheStorage.removeItem(name),
 };

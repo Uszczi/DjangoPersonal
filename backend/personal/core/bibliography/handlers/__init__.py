@@ -1,6 +1,13 @@
 from personal.core.shared.errors import DomainError, NotFound
 
-from .attempts import CreateAttempt, DeleteAttempt, GetAttempt, ListAttempts, UpdateAttempt
+from .attempts import (
+    CreateAttempt,
+    DeleteAttempt,
+    GetAttempt,
+    ListAllAttempts,
+    ListAttempts,
+    UpdateAttempt,
+)
 from .imports import ImportBibliography
 from .items import (
     CreateBibliographyItem,
@@ -22,6 +29,7 @@ __all__ = [
     'GetBibliographyItem',
     'ImportBibliography',
     'ItemWithStatus',
+    'ListAllAttempts',
     'ListAttempts',
     'ListBibliographyItems',
     'NotFound',

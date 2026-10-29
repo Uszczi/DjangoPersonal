@@ -15,6 +15,12 @@ backend/staticfiles
 **/node_modules
 frontend/dist
 
+# Tests and stories are not needed at runtime; leaving them out keeps a
+# test-only change from rebuilding the images and restarting the services.
+backend/tests
+frontend/tests
+**/*.stories.*
+
 # Only the mobile app's package.json is needed (for the workspace install).
 mobile
 !mobile/package.json
