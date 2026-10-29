@@ -79,7 +79,7 @@ just deploy-migrate   # run migrations inside the app container
 just deploy-createsuperuser NAME  # staff account on the deployed stack
 just deploy           # full VPS flow: ./deployment/deploy.sh
 just local-up         # whole stack locally behind a throwaway nginx on :80
-just local-down / local-status / local-logs / local-migrate
+just local-down / local-status / local-logs / local-migrate / local-seed
 just local-reset      # wipe local stack INCLUDING volumes (destroys the DB)
 ```
 

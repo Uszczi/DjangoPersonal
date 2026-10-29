@@ -195,7 +195,12 @@ local-logs service="":
 
 # Apply the Alembic migrations against the local stack.
 local-migrate:
-    {{compose-local}} run --rm --no-deps app alembic upgrade head
+    {{compose-local}} run --rm app alembic upgrade head
+
+# Seed the local stack's database with demo data (refuses if it is not empty).
+# The image has no dev dependencies, so the throwaway container installs factory-boy first.
+local-seed:
+    {{compose-local}} run --rm app sh -c "uv pip install --quiet factory-boy==3.3.3 && python -m personal.entrypoints.seed_dev"
 
 # Wipe the local stack including volumes (destroys the database).
 local-reset:

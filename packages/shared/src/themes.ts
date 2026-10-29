@@ -410,6 +410,60 @@ const mocha = catppuccin("Catppuccin Mocha", "dark", {
   crust: "#11111b",
 });
 
+/**
+ * Omarchy's Solitude: near-monochrome greys, with its one warm red kept for
+ * danger. The brand colour is the theme's light-grey active border.
+ */
+const solitude: Theme = {
+  label: "Solitude",
+  scheme: "dark",
+  colors: {
+    canvas: "#0c0e10",
+    paper: "#101315",
+    surface: "#14181a",
+    input: "#080a0b",
+    wash: "#171b1e",
+    deepInk: "#080a0b",
+    ink: "#cacccc",
+    inkSoft: "#b7bcbe",
+    bodySoft: "#a5aeb4",
+    muted: "#8a9195",
+    hint: "#798186",
+    placeholder: "#5d6367",
+    line: "#2a3033",
+    lineSoft: "#1e2326",
+    rowLine: "#1e2326",
+    cardLine: "#22282b",
+    controlBorder: "#343d41",
+    controlBorderHover: "#4b4e55",
+    icon: "#8a9195",
+    iconWash: "#1a1f22",
+    dragHandle: "#4b4e55",
+    accent: "#9fa5a9",
+    done: "#9fa5a9",
+    signal: "#a8adb0",
+    signalPale: "#262b2e",
+    signalStrong: "#d9dbdc",
+    onSignal: "#101315",
+    focusRing: "#cacccc",
+    danger: "#de6145",
+    dangerStrong: "#e8826b",
+    dangerPale: "#2e1b17",
+    dangerInk: "#f0a593",
+    overlay: "rgb(0 0 0 / 65%)",
+    navText: "#cacccc",
+    navMuted: "#798186",
+    navSelected: "#1e2326",
+    navHover: "#14181a",
+    navLine: "#2a3033",
+    navLineStrong: "#5d6367",
+    mdMark: "#c9c2b4",
+    mdCodeBg: "#171b1e",
+    searchMatch: "#4a4639",
+    searchCurrent: "#7a6f55",
+  },
+};
+
 export const themes = {
   light,
   dark,
@@ -418,6 +472,7 @@ export const themes = {
   frappe,
   macchiato,
   mocha,
+  solitude,
 } satisfies Record<string, Theme>;
 
 export type ThemeName = keyof typeof themes;
