@@ -26,11 +26,13 @@ from personal.infra.models import (
     Attempt,
     BibliographyItem,
     Category,
+    CommentAttachment,
     Counter,
     CounterEntry,
     Folder,
     Project,
     Task,
+    TaskComment,
     TimeEntry,
     Transaction,
     User,
@@ -98,6 +100,35 @@ class TaskView(_AppView, model=Task):
     column_searchable_list = [Task.title]
     column_sortable_list = [Task.id, Task.title]
     form_columns = [Task.title, Task.description]
+
+
+class TaskCommentView(_AppView, model=TaskComment):
+    """Comments on Tasks; deleting one takes its Attachments with it."""
+
+    icon = 'fa-solid fa-comment'
+    column_list = [TaskComment.id, TaskComment.user, TaskComment.task, TaskComment.body, TaskComment.created_at]
+    column_searchable_list = [TaskComment.body]
+    column_sortable_list = [TaskComment.id, TaskComment.created_at]
+    form_columns = [TaskComment.body]
+
+
+class CommentAttachmentView(_AppView, model=CommentAttachment):
+    """Read-only file listing: the bytes are never loaded or shown here."""
+
+    icon = 'fa-solid fa-paperclip'
+    can_edit = False
+    column_list = [
+        CommentAttachment.id,
+        CommentAttachment.user,
+        CommentAttachment.comment,
+        CommentAttachment.file_name,
+        CommentAttachment.content_type,
+        CommentAttachment.size,
+        CommentAttachment.created_at,
+    ]
+    column_details_exclude_list = [CommentAttachment.data]
+    column_searchable_list = [CommentAttachment.file_name]
+    column_sortable_list = [CommentAttachment.id, CommentAttachment.size, CommentAttachment.created_at]
 
 
 class TimeEntryView(_AppView, model=TimeEntry):
@@ -295,6 +326,8 @@ VIEWS: list[type[ModelView]] = [
     UserView,
     ProjectView,
     TaskView,
+    TaskCommentView,
+    CommentAttachmentView,
     TimeEntryView,
     WhiteboardView,
     FolderView,

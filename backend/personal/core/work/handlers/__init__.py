@@ -14,6 +14,15 @@ assemble a use case, and shape the result.
 
 from personal.core.shared.errors import DomainError, NotFound
 
+from .comments import (
+    AddCommentAttachment,
+    CreateTaskComment,
+    DeleteCommentAttachment,
+    DeleteTaskComment,
+    GetCommentAttachment,
+    ListTaskComments,
+    UpdateTaskComment,
+)
 from .projects import (
     CreateProject,
     DeleteProject,
@@ -32,6 +41,13 @@ from .time_entries import (
 from .timer import GetRunningEntry, StartTimer, StopTimer
 
 __all__ = [
+    'AddCommentAttachment',
+    'CreateTaskComment',
+    'DeleteCommentAttachment',
+    'DeleteTaskComment',
+    'GetCommentAttachment',
+    'ListTaskComments',
+    'UpdateTaskComment',
     'CreateProject',
     'CreateTask',
     'CreateTimeEntry',

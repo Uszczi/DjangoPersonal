@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { DeleteTaskModal } from "@/components/modals/DeleteTaskModal";
+import { TaskComments } from "@/components/tasks/TaskComments";
 import {
   Button,
   ErrorAlert,
@@ -234,6 +235,7 @@ export function TaskEditorModal({
           </ModalFooter>
         )}
       </form>
+      {task && <TaskComments task={task} />}
     </Modal>
   );
 }

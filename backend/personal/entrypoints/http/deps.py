@@ -27,6 +27,7 @@ from personal.infra.db import Database
 from personal.infra.models import User
 from personal.infra.repo import (
     CategoryRepository,
+    CommentAttachmentRepository,
     CounterEntryRepository,
     CounterRepository,
     FolderRepository,
@@ -34,6 +35,7 @@ from personal.infra.repo import (
     AttemptRepository,
     BibliographyItemRepository,
     ProjectRepository,
+    TaskCommentRepository,
     TaskRepository,
     TimeEntryRepository,
     TransactionRepository,
@@ -91,6 +93,12 @@ def _per_session[T](provider: Callable[[Session], T]) -> Any:
 UserRepositoryDep = Annotated[UserRepository, _per_session(wiring.user_repository)]
 ProjectRepositoryDep = Annotated[ProjectRepository, _per_session(wiring.project_repository)]
 TaskRepositoryDep = Annotated[TaskRepository, _per_session(wiring.task_repository)]
+TaskCommentRepositoryDep = Annotated[
+    TaskCommentRepository, _per_session(wiring.task_comment_repository)
+]
+CommentAttachmentRepositoryDep = Annotated[
+    CommentAttachmentRepository, _per_session(wiring.comment_attachment_repository)
+]
 TimeEntryRepositoryDep = Annotated[TimeEntryRepository, _per_session(wiring.time_entry_repository)]
 WhiteboardRepositoryDep = Annotated[
     WhiteboardRepository, _per_session(wiring.whiteboard_repository)

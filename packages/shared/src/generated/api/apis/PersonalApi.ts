@@ -55,6 +55,11 @@ import {
     CategoryResponseToJSON,
 } from '../models/CategoryResponse';
 import {
+    type CommentAttachmentResponse,
+    CommentAttachmentResponseFromJSON,
+    CommentAttachmentResponseToJSON,
+} from '../models/CommentAttachmentResponse';
+import {
     type CounterEntryRequest,
     CounterEntryRequestFromJSON,
     CounterEntryRequestToJSON,
@@ -135,6 +140,11 @@ import {
     PatchedProjectRequestToJSON,
 } from '../models/PatchedProjectRequest';
 import {
+    type PatchedTaskCommentRequest,
+    PatchedTaskCommentRequestFromJSON,
+    PatchedTaskCommentRequestToJSON,
+} from '../models/PatchedTaskCommentRequest';
+import {
     type PatchedTaskUpdateRequest,
     PatchedTaskUpdateRequestFromJSON,
     PatchedTaskUpdateRequestToJSON,
@@ -189,6 +199,16 @@ import {
     RegisterRequestFromJSON,
     RegisterRequestToJSON,
 } from '../models/RegisterRequest';
+import {
+    type TaskCommentCreateRequest,
+    TaskCommentCreateRequestFromJSON,
+    TaskCommentCreateRequestToJSON,
+} from '../models/TaskCommentCreateRequest';
+import {
+    type TaskCommentResponse,
+    TaskCommentResponseFromJSON,
+    TaskCommentResponseToJSON,
+} from '../models/TaskCommentResponse';
 import {
     type TaskCreateRequest,
     TaskCreateRequestFromJSON,
@@ -421,6 +441,20 @@ export interface CategoriesUpdateRequest {
     categoryRequest: CategoryRequest;
 }
 
+export interface CommentAttachmentsDestroyRequest {
+    /**
+     *
+     */
+    id: number;
+}
+
+export interface CommentAttachmentsRetrieveRequest {
+    /**
+     *
+     */
+    id: number;
+}
+
 export interface CounterEntriesCreateRequest {
     /**
      *
@@ -591,6 +625,49 @@ export interface SettingsPartialUpdateRequest {
      *
      */
     patchedUserSettingsRequest: PatchedUserSettingsRequest;
+}
+
+export interface TaskCommentsAttachmentsCreateRequest {
+    /**
+     *
+     */
+    id: number;
+    /**
+     * The file, stored exactly as sent.
+     */
+    file: Blob;
+}
+
+export interface TaskCommentsCreateRequest {
+    /**
+     *
+     */
+    taskCommentCreateRequest: TaskCommentCreateRequest;
+}
+
+export interface TaskCommentsDestroyRequest {
+    /**
+     *
+     */
+    id: number;
+}
+
+export interface TaskCommentsListRequest {
+    /**
+     *
+     */
+    task: number;
+}
+
+export interface TaskCommentsPartialUpdateRequest {
+    /**
+     *
+     */
+    id: number;
+    /**
+     *
+     */
+    patchedTaskCommentRequest: PatchedTaskCommentRequest;
 }
 
 export interface TasksCreateRequest {
@@ -1929,6 +2006,111 @@ export class PersonalApi extends runtime.BaseAPI {
     }
 
     /**
+     * Creates request options for commentAttachmentsDestroy without sending the request
+     */
+    async commentAttachmentsDestroyRequestOpts(requestParameters: CommentAttachmentsDestroyRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling commentAttachmentsDestroy().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/comment-attachments/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Delete Comment Attachment
+     */
+    async commentAttachmentsDestroyRaw(requestParameters: CommentAttachmentsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.commentAttachmentsDestroyRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Delete Comment Attachment
+     */
+    async commentAttachmentsDestroy(requestParameters: CommentAttachmentsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.commentAttachmentsDestroyRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Creates request options for commentAttachmentsRetrieve without sending the request
+     */
+    async commentAttachmentsRetrieveRequestOpts(requestParameters: CommentAttachmentsRetrieveRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling commentAttachmentsRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/comment-attachments/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Download Comment Attachment
+     */
+    async commentAttachmentsRetrieveRaw(requestParameters: CommentAttachmentsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<runtime.HttpFile>> {
+        const requestOptions = await this.commentAttachmentsRetrieveRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.BlobApiResponse(response);
+    }
+
+    /**
+     * Download Comment Attachment
+     */
+    async commentAttachmentsRetrieve(requestParameters: CommentAttachmentsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.HttpFile> {
+        const response = await this.commentAttachmentsRetrieveRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Creates request options for counterEntriesCreate without sending the request
      */
     async counterEntriesCreateRequestOpts(requestParameters: CounterEntriesCreateRequest): Promise<runtime.RequestOpts> {
@@ -3191,6 +3373,313 @@ export class PersonalApi extends runtime.BaseAPI {
      */
     async settingsRetrieve(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserSettingsResponse> {
         const response = await this.settingsRetrieveRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for taskCommentsAttachmentsCreate without sending the request
+     */
+    async taskCommentsAttachmentsCreateRequestOpts(requestParameters: TaskCommentsAttachmentsCreateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling taskCommentsAttachmentsCreate().'
+            );
+        }
+
+        if (requestParameters['file'] == null) {
+            throw new runtime.RequiredError(
+                'file',
+                'Required parameter "file" was null or undefined when calling taskCommentsAttachmentsCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const consumes: runtime.Consume[] = [
+            { contentType: 'multipart/form-data' },
+        ];
+        // @ts-ignore: canConsumeForm may be unused
+        const canConsumeForm = runtime.canConsumeForm(consumes);
+
+        let formParams: { append(param: string, value: any): any };
+        let useForm = false;
+        // use FormData to transmit files using content-type "multipart/form-data"
+        useForm = canConsumeForm;
+        if (useForm) {
+            formParams = new FormData();
+        } else {
+            formParams = new URLSearchParams();
+        }
+
+        if (requestParameters['file'] != null) {
+            formParams.append('file', requestParameters['file'] as any);
+        }
+
+
+        let urlPath = `/api/v1/task-comments/{id}/attachments/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: formParams,
+        };
+    }
+
+    /**
+     * Add Comment Attachment
+     */
+    async taskCommentsAttachmentsCreateRaw(requestParameters: TaskCommentsAttachmentsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CommentAttachmentResponse>> {
+        const requestOptions = await this.taskCommentsAttachmentsCreateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => CommentAttachmentResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Add Comment Attachment
+     */
+    async taskCommentsAttachmentsCreate(requestParameters: TaskCommentsAttachmentsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CommentAttachmentResponse> {
+        const response = await this.taskCommentsAttachmentsCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for taskCommentsCreate without sending the request
+     */
+    async taskCommentsCreateRequestOpts(requestParameters: TaskCommentsCreateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['taskCommentCreateRequest'] == null) {
+            throw new runtime.RequiredError(
+                'taskCommentCreateRequest',
+                'Required parameter "taskCommentCreateRequest" was null or undefined when calling taskCommentsCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/task-comments/`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: TaskCommentCreateRequestToJSON(requestParameters['taskCommentCreateRequest']),
+        };
+    }
+
+    /**
+     * Create Task Comment
+     */
+    async taskCommentsCreateRaw(requestParameters: TaskCommentsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TaskCommentResponse>> {
+        const requestOptions = await this.taskCommentsCreateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => TaskCommentResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Create Task Comment
+     */
+    async taskCommentsCreate(requestParameters: TaskCommentsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TaskCommentResponse> {
+        const response = await this.taskCommentsCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for taskCommentsDestroy without sending the request
+     */
+    async taskCommentsDestroyRequestOpts(requestParameters: TaskCommentsDestroyRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling taskCommentsDestroy().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/task-comments/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Delete Task Comment
+     */
+    async taskCommentsDestroyRaw(requestParameters: TaskCommentsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.taskCommentsDestroyRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Delete Task Comment
+     */
+    async taskCommentsDestroy(requestParameters: TaskCommentsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.taskCommentsDestroyRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Creates request options for taskCommentsList without sending the request
+     */
+    async taskCommentsListRequestOpts(requestParameters: TaskCommentsListRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['task'] == null) {
+            throw new runtime.RequiredError(
+                'task',
+                'Required parameter "task" was null or undefined when calling taskCommentsList().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['task'] != null) {
+            queryParameters['task'] = requestParameters['task'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/task-comments/`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * List Task Comments
+     */
+    async taskCommentsListRaw(requestParameters: TaskCommentsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<TaskCommentResponse>>> {
+        const requestOptions = await this.taskCommentsListRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(TaskCommentResponseFromJSON));
+    }
+
+    /**
+     * List Task Comments
+     */
+    async taskCommentsList(requestParameters: TaskCommentsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<TaskCommentResponse>> {
+        const response = await this.taskCommentsListRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for taskCommentsPartialUpdate without sending the request
+     */
+    async taskCommentsPartialUpdateRequestOpts(requestParameters: TaskCommentsPartialUpdateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling taskCommentsPartialUpdate().'
+            );
+        }
+
+        if (requestParameters['patchedTaskCommentRequest'] == null) {
+            throw new runtime.RequiredError(
+                'patchedTaskCommentRequest',
+                'Required parameter "patchedTaskCommentRequest" was null or undefined when calling taskCommentsPartialUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/task-comments/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedTaskCommentRequestToJSON(requestParameters['patchedTaskCommentRequest']),
+        };
+    }
+
+    /**
+     * Update Task Comment
+     */
+    async taskCommentsPartialUpdateRaw(requestParameters: TaskCommentsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TaskCommentResponse>> {
+        const requestOptions = await this.taskCommentsPartialUpdateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => TaskCommentResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Update Task Comment
+     */
+    async taskCommentsPartialUpdate(requestParameters: TaskCommentsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TaskCommentResponse> {
+        const response = await this.taskCommentsPartialUpdateRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

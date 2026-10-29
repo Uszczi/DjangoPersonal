@@ -168,6 +168,22 @@
     ]
   },
   {
+    "method": "DELETE",
+    "path": "/api/v1/comment-attachments/{id}/",
+    "operation_id": "comment_attachments_destroy",
+    "status_codes": [
+      "204"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/comment-attachments/{id}/",
+    "operation_id": "comment_attachments_retrieve",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
     "method": "GET",
     "path": "/api/v1/counter-entries/",
     "operation_id": "counter_entries_list",
@@ -349,6 +365,46 @@
     "operation_id": "settings_partial_update",
     "status_codes": [
       "200"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/task-comments/",
+    "operation_id": "task_comments_list",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/task-comments/",
+    "operation_id": "task_comments_create",
+    "status_codes": [
+      "201"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/task-comments/{id}/",
+    "operation_id": "task_comments_destroy",
+    "status_codes": [
+      "204"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/task-comments/{id}/",
+    "operation_id": "task_comments_partial_update",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/task-comments/{id}/attachments/",
+    "operation_id": "task_comments_attachments_create",
+    "status_codes": [
+      "201"
     ]
   },
   {

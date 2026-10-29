@@ -40,35 +40,56 @@ const authMiddleware: Middleware = {
     if (context.response.status !== 401) return;
     if (isAuthEndpoint(context.url)) return;
 
-    const { useAuthStore } = await loadAuthStore();
-    const state = useAuthStore.getState();
-    const refresh = state.refresh;
-    if (!refresh) {
-      state.logout();
-      return;
-    }
+    const access = await refreshAccessToken();
+    if (access === null) return context.response;
+    const headers = new Headers(context.init.headers);
+    headers.set("Authorization", `Bearer ${access}`);
+    return await fetch(context.url, { ...context.init, headers });
+  },
+};
 
-    try {
-      const refreshResponse = await fetch(`${apiBaseUrl()}/api/v1/auth/refresh/`, {
+let pendingRefresh: Promise<string | null> | null = null;
+
+/**
+ * Trade the refresh token for a new access token and store it; `null` (and a
+ * sign-out) when that fails. Concurrent callers share one request. Exported
+ * for requests made outside the generated client, such as an image the
+ * mobile app loads by URL.
+ */
+export function refreshAccessToken(): Promise<string | null> {
+  if (pendingRefresh === null) {
+    pendingRefresh = doRefresh().finally(() => {
+      pendingRefresh = null;
+    });
+  }
+  return pendingRefresh;
+}
+
+async function doRefresh(): Promise<string | null> {
+  const { useAuthStore } = await loadAuthStore();
+  const refresh = useAuthStore.getState().refresh;
+  if (!refresh) {
+    useAuthStore.getState().logout();
+    return null;
+  }
+  try {
+    const refreshResponse = await fetch(
+      `${apiBaseUrl()}/api/v1/auth/refresh/`,
+      {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refresh }),
-      });
-
-      if (!refreshResponse.ok) throw new Error("refresh failed");
-
-      const data = (await refreshResponse.json()) as { access: string };
-      useAuthStore.getState().applyTokens(data.access);
-
-      const headers = new Headers(context.init.headers);
-      headers.set("Authorization", `Bearer ${data.access}`);
-      return await fetch(context.url, { ...context.init, headers });
-    } catch {
-      useAuthStore.getState().logout();
-      return context.response;
-    }
-  },
-};
+      },
+    );
+    if (!refreshResponse.ok) throw new Error("refresh failed");
+    const data = (await refreshResponse.json()) as { access: string };
+    useAuthStore.getState().applyTokens(data.access);
+    return data.access;
+  } catch {
+    useAuthStore.getState().logout();
+    return null;
+  }
+}
 
 export const api = new PersonalApi(
   new Configuration({

@@ -18,6 +18,7 @@ from personal.core.expenses.contracts import (
 from personal.core.expenses.handlers import TransactionPage
 from personal.core.whiteboard.contracts import FolderResponse, WhiteboardResponse
 from personal.core.work.contracts import (
+    TaskCommentResponse,
     ProjectResponse,
     TaskResponse,
     TimeEntryResponse,
@@ -31,6 +32,7 @@ from personal.infra.models import (
     Folder,
     Project,
     Task,
+    TaskComment,
     TimeEntry,
     Transaction,
     User,
@@ -53,6 +55,14 @@ def task(obj: Task) -> dict[str, Any]:
 
 def tasks(objs: Iterable[Task]) -> list[dict[str, Any]]:
     return [task(o) for o in objs]
+
+
+def task_comment(obj: TaskComment) -> dict[str, Any]:
+    return TaskCommentResponse.model_validate(obj).model_dump(mode='json')
+
+
+def task_comments(objs: Iterable[TaskComment]) -> list[dict[str, Any]]:
+    return [task_comment(o) for o in objs]
 
 
 def time_entry(obj: TimeEntry) -> dict[str, Any]:

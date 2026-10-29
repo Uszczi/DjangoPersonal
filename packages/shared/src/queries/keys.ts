@@ -35,6 +35,12 @@ export const taskKeys = {
   everything: ["tasks", "everything"] as const,
 };
 
+export const taskCommentKeys = {
+  all: ["taskComments"] as const,
+  /** One Task's comments, oldest first. */
+  task: (taskId: number) => ["taskComments", taskId] as const,
+};
+
 export const timerKeys = {
   timer: ["timer"] as const,
   entries: ["timeEntries"] as const,
