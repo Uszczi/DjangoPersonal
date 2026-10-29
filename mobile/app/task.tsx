@@ -18,6 +18,10 @@ import {
   useSaveTask,
   type TaskInput,
 } from "@personal/shared/queries/tasks";
+import {
+  initialNewTaskStatus,
+  useNewTaskStatusStore,
+} from "@personal/shared/stores/newTaskStatus";
 
 import { Button } from "../src/Button";
 import { ChipGroup } from "../src/ChipGroup";
@@ -56,12 +60,26 @@ export default function TaskEditorScreen() {
   const deleteTaskMutation = useDeleteTask();
   const [actionError, setActionError] = useState("");
 
-  const [form_, setForm] = useState<TaskInput>(() => ({
-    title: task?.title ?? "",
-    description: task?.description ?? "",
-    project: task?.projectId ?? Number(params.projectId ?? 0),
-    status: task?.status ?? "",
-  }));
+  const lastStatusByProject = useNewTaskStatusStore(
+    (state) => state.lastStatusByProject,
+  );
+  const rememberStatus = useNewTaskStatusStore((state) => state.rememberStatus);
+
+  const [form_, setForm] = useState<TaskInput>(() => {
+    const projectId = task?.projectId ?? Number(params.projectId ?? 0);
+    return {
+      title: task?.title ?? "",
+      description: task?.description ?? "",
+      project: projectId,
+      status:
+        task?.status ??
+        initialNewTaskStatus(
+          lastStatusByProject,
+          projectId,
+          projects.find((item) => item.id === projectId)?.projectStatuses ?? [],
+        ),
+    };
+  });
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -100,6 +118,7 @@ export default function TaskEditorScreen() {
     setFormError("");
     try {
       await saveTask.mutateAsync({ input, task });
+      if (!task && input.status) rememberStatus(input.project, input.status);
       router.back();
     } catch (error) {
       setFormError(await apiErrorMessage(error));

@@ -33,6 +33,10 @@ import {
   useToggleTaskStatus,
 } from "@personal/shared/queries/tasks";
 import { useStartTimer } from "@personal/shared/queries/timer";
+import {
+  initialNewTaskStatus,
+  useNewTaskStatusStore,
+} from "@personal/shared/stores/newTaskStatus";
 
 export const Route = createFileRoute("/tasks")({
   validateSearch: validateProjectSearch,
@@ -90,7 +94,13 @@ function TasksPage() {
   }
 
   function openTaskForm() {
-    const defaultStatus = selectedProject?.projectStatuses[0];
+    const defaultStatus = selectedProject
+      ? initialNewTaskStatus(
+          useNewTaskStatusStore.getState().lastStatusByProject,
+          selectedProject.id,
+          selectedProject.projectStatuses,
+        )
+      : "";
     if (defaultStatus) expandStatus(defaultStatus);
     ShowModal(TaskEditorModal, { projectId: selectedProject?.id });
   }

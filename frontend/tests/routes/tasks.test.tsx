@@ -453,6 +453,57 @@ describe("Projects", () => {
     );
   });
 
+  test("a new task starts with the status the last new task in the project got", async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        jsonResponse([
+          inbox,
+          {
+            id: 2,
+            name: "Planning",
+            description: "",
+            is_inbox: false,
+            project_statuses: DEFAULT_STATUSES,
+            terminal_status: "Zrobione",
+          },
+        ]),
+      )
+      .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(
+        jsonResponse(
+          {
+            id: 4,
+            title: "Already shipped",
+            description: "",
+            project_id: 2,
+            status: "Zrobione",
+          },
+          201,
+        ),
+      );
+    const user = userEvent.setup();
+
+    renderApp("/tasks");
+    await screen.findByText("Nie ma tu jeszcze zadań.");
+    await user.click(screen.getByRole("link", { name: "Planning" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+
+    await user.click(
+      screen.getAllByRole("button", { name: "Nowe zadanie" })[0],
+    );
+    expect(screen.getByLabelText("Status")).toHaveValue("Todo");
+    await user.type(screen.getByLabelText("Tytuł zadania"), "Already shipped");
+    await user.selectOptions(screen.getByLabelText("Status"), "Zrobione");
+    await user.click(screen.getByRole("button", { name: "Utwórz zadanie" }));
+    expect(await screen.findByText("Already shipped")).toBeInTheDocument();
+
+    await user.click(
+      screen.getAllByRole("button", { name: "Nowe zadanie" })[0],
+    );
+    expect(screen.getByLabelText("Status")).toHaveValue("Zrobione");
+  });
+
   test("user can complete and reopen a task", async () => {
     fetchMock
       .mockResolvedValueOnce(

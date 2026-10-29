@@ -9,6 +9,7 @@ import {
 import { queryClient } from "@/queryClient";
 import { routeTree } from "@/routeTree.gen";
 import { useAuthStore } from "@personal/shared/stores/auth";
+import { useNewTaskStatusStore } from "@personal/shared/stores/newTaskStatus";
 import { useThemeStore } from "@personal/shared/stores/theme";
 import { useWalletSelectionStore } from "@personal/shared/stores/walletSelection";
 import { useLayoutStore } from "@/stores/layout";
@@ -27,6 +28,7 @@ export function resetStores(options?: { preserveStorage?: boolean }) {
   useProjectSelectionStore.setState(useProjectSelectionStore.getInitialState());
   useWalletSelectionStore.setState(useWalletSelectionStore.getInitialState());
   useThemeStore.setState(useThemeStore.getInitialState());
+  useNewTaskStatusStore.setState(useNewTaskStatusStore.getInitialState());
   // No retries, so a mocked failure shows at once; the app's other defaults
   // (such as how long data stays fresh) stay as they are.
   queryClient.clear();
