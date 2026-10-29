@@ -6,6 +6,7 @@ import {
   RefreshControl,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from "react-native";
 
@@ -13,12 +14,14 @@ import {
   ITEM_KIND_LABELS,
   ITEM_STATUSES,
   itemByline,
+  itemSearchText,
   itemStatusFilterLabel,
   itemStatusLabel,
   type ItemKind,
   type ItemStatus,
 } from "@personal/shared/bibliographyFormat";
 import type { BibliographyItemResponse } from "@personal/shared/generated/api";
+import { fuzzyFilter } from "@personal/shared/fuzzy";
 import { BIBLIOGRAPHY_ITEMS_LOAD_ERROR } from "@personal/shared/loadErrors";
 import { useBibliographyItems } from "@personal/shared/queries/bibliographyItems";
 
@@ -40,12 +43,13 @@ function openItem(item: BibliographyItemResponse) {
   router.push({ pathname: "/bibliography/[id]", params: { id: item.id } });
 }
 
-/** The Bibliography: films and books with their status, narrowed by kind and status. */
+/** The Bibliography: films and books with their status, narrowed by kind and status and found by a fuzzy search. */
 export default function BibliographyScreen() {
-  const { common } = useTheme();
+  const { colors, common, form } = useTheme();
   const styles = useStyles();
   const [kind, setKind] = useState<ItemKind | undefined>();
   const [status, setStatus] = useState<ItemStatus | undefined>();
+  const [query, setQuery] = useState("");
   const {
     data: items = [],
     isPending,
@@ -63,6 +67,8 @@ export default function BibliographyScreen() {
     })),
   ];
   const isFiltered = kind !== undefined || status !== undefined;
+  const isSearching = query.trim() !== "";
+  const shownItems = fuzzyFilter(items, query, itemSearchText);
 
   async function refresh() {
     setIsRefreshing(true);
@@ -76,6 +82,18 @@ export default function BibliographyScreen() {
         <Text style={common.error}>{BIBLIOGRAPHY_ITEMS_LOAD_ERROR}</Text>
       )}
       <View style={styles.filters}>
+        <TextInput
+          style={form.input}
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Szukaj po tytule, twórcy, roku…"
+          placeholderTextColor={colors.hint}
+          accessibilityLabel="Szukaj w Bibliografii"
+          autoCorrect={false}
+          autoCapitalize="none"
+          clearButtonMode="while-editing"
+          returnKeyType="search"
+        />
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -102,7 +120,8 @@ export default function BibliographyScreen() {
         </ScrollView>
       </View>
       <FlatList
-        data={items}
+        data={shownItems}
+        keyboardShouldPersistTaps="handled"
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.listContent}
         refreshControl={
@@ -114,9 +133,11 @@ export default function BibliographyScreen() {
         ListEmptyComponent={
           !isPending && !isError ? (
             <Text style={[common.muted, styles.empty]}>
-              {isFiltered
-                ? "Brak pozycji pasujących do filtrów"
-                : "Brak pozycji. Dodaj pierwszy film lub książkę przyciskiem +."}
+              {isSearching
+                ? "Brak pozycji pasujących do wyszukiwania"
+                : isFiltered
+                  ? "Brak pozycji pasujących do filtrów"
+                  : "Brak pozycji. Dodaj pierwszy film lub książkę przyciskiem +."}
             </Text>
           ) : undefined
         }
