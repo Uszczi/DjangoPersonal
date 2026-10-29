@@ -1483,6 +1483,100 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BibliographyItemResponse'
+  /api/v1/bibliography-attempts/:
+    get:
+      tags:
+      - personal
+      summary: List Attempts
+      operationId: bibliography_attempts_list
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: item
+        in: query
+        required: true
+        schema:
+          type: integer
+          title: Item
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AttemptResponse'
+                title: Response Bibliography Attempts List
+    post:
+      tags:
+      - personal
+      summary: Create Attempt
+      operationId: bibliography_attempts_create
+      security:
+      - JWTAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttemptRequest'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptResponse'
+  /api/v1/bibliography-attempts/{id}/:
+    get:
+      tags:
+      - personal
+      summary: Get Attempt
+      operationId: bibliography_attempts_retrieve
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptResponse'
+    patch:
+      tags:
+      - personal
+      summary: Update Attempt
+      operationId: bibliography_attempts_partial_update
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAttemptRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptResponse'
 components:
   schemas:
     AskNotesRequest:
@@ -1496,6 +1590,85 @@ components:
       required:
       - question
       title: AskNotesRequest
+    AttemptRequest:
+      properties:
+        item:
+          type: integer
+          title: Item
+        outcome:
+          type: string
+          enum:
+          - in_progress
+          - finished
+          - abandoned
+          title: Outcome
+        started_on:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Started On
+        ended_on:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Ended On
+      type: object
+      required:
+      - item
+      - outcome
+      title: AttemptRequest
+      description: 'Start an Attempt (``in_progress``) or record one that has already
+        ended.
+
+
+        The end date is required once it has ended and must be empty while it is in
+
+        progress; the use case checks that, together with the start date.'
+    AttemptResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+          readOnly: true
+        item_id:
+          type: integer
+          title: Item Id
+          readOnly: true
+        outcome:
+          type: string
+          enum:
+          - in_progress
+          - finished
+          - abandoned
+          title: Outcome
+        started_on:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Started On
+        ended_on:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Ended On
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+          readOnly: true
+      type: object
+      required:
+      - id
+      - item_id
+      - outcome
+      - started_on
+      - ended_on
+      - created_at
+      title: AttemptResponse
     AuthResponse:
       properties:
         access:
@@ -1876,6 +2049,33 @@ components:
       - answer
       - sources
       title: NotesAnswer
+    PatchedAttemptRequest:
+      properties:
+        outcome:
+          anyOf:
+          - type: string
+            enum:
+            - in_progress
+            - finished
+            - abandoned
+          - type: 'null'
+          title: Outcome
+        started_on:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Started On
+        ended_on:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: Ended On
+      additionalProperties: false
+      type: object
+      title: PatchedAttemptRequest
+      description: Finish, abandon or re-date an Attempt; it stays on its BibliographyItem.
     PatchedBibliographyItemRequest:
       properties:
         title:

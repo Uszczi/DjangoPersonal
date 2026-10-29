@@ -23,6 +23,7 @@ from personal.infra.models import (
     Counter,
     CounterEntry,
     Folder,
+    Attempt,
     BibliographyItem,
     Project,
     Task,
@@ -198,3 +199,16 @@ class BibliographyItemFactory(_Factory[BibliographyItem]):
     user = SubFactory(UserFactory)
     kind = BibliographyItem.KIND_BOOK
     title = Sequence(lambda n: f'Item {n}')
+
+
+class AttemptFactory(_Factory[Attempt]):
+    """A finished Attempt by default; pass ``outcome='in_progress', ended_on=None`` to start one."""
+
+    class Meta:
+        model = Attempt
+
+    item = SubFactory(BibliographyItemFactory)
+    user = LazyAttribute(lambda attempt: attempt.item.user)
+    outcome = Attempt.OUTCOME_FINISHED
+    started_on = None
+    ended_on = LazyFunction(date.today)

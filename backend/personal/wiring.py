@@ -31,6 +31,7 @@ from personal.infra.repo import (
     CounterRepository,
     FolderRepository,
     NoteChunkRepository,
+    AttemptRepository,
     BibliographyItemRepository,
     ProjectRepository,
     TaskRepository,
@@ -94,6 +95,10 @@ def counter_entry_repository(session: Session) -> CounterEntryRepository:
 
 def bibliography_item_repository(session: Session) -> BibliographyItemRepository:
     return BibliographyItemRepository(session)
+
+
+def attempt_repository(session: Session) -> AttemptRepository:
+    return AttemptRepository(session)
 
 
 def password_hasher() -> PasswordHasher:

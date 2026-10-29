@@ -2,6 +2,8 @@
 /* tslint:disable */
 /* eslint-disable */
 export * from './AskNotesRequest';
+export * from './AttemptRequest';
+export * from './AttemptResponse';
 export * from './AuthResponse';
 export * from './BibliographyItemRequest';
 export * from './BibliographyItemResponse';
@@ -18,6 +20,7 @@ export * from './LoginResponse';
 export * from './MatchingLine';
 export * from './NoteSource';
 export * from './NotesAnswer';
+export * from './PatchedAttemptRequest';
 export * from './PatchedBibliographyItemRequest';
 export * from './PatchedCategoryRequest';
 export * from './PatchedCounterEntryRequest';

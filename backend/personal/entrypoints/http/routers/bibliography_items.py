@@ -6,18 +6,22 @@ from personal.core.bibliography.contracts import (
     BibliographyItemResponse,
     PatchedBibliographyItemRequest,
 )
-from personal.entrypoints.http.deps import BibliographyItemRepositoryDep, CurrentUser
+from personal.entrypoints.http.deps import (
+    AttemptRepositoryDep,
+    BibliographyItemRepositoryDep,
+    CurrentUser,
+)
 
 router = APIRouter(tags=['personal'])
 
 
 @router.get('/bibliography-items/', operation_id='bibliography_items_list')
 def list_bibliography_items(
-    user: CurrentUser, items: BibliographyItemRepositoryDep
+    user: CurrentUser, items: BibliographyItemRepositoryDep, attempts: AttemptRepositoryDep
 ) -> list[BibliographyItemResponse]:
     return [
         BibliographyItemResponse.model_validate(item)
-        for item in handlers.ListBibliographyItems(items, user).execute()
+        for item in handlers.ListBibliographyItems(items, attempts, user).execute()
     ]
 
 
@@ -35,9 +39,12 @@ def create_bibliography_item(
 
 @router.get('/bibliography-items/{id}/', operation_id='bibliography_items_retrieve')
 def get_bibliography_item(
-    id: int, user: CurrentUser, items: BibliographyItemRepositoryDep
+    id: int,
+    user: CurrentUser,
+    items: BibliographyItemRepositoryDep,
+    attempts: AttemptRepositoryDep,
 ) -> BibliographyItemResponse:
-    item = handlers.GetBibliographyItem(items, user).execute(id)
+    item = handlers.GetBibliographyItem(items, attempts, user).execute(id)
     return BibliographyItemResponse.model_validate(item)
 
 
@@ -47,6 +54,7 @@ def update_bibliography_item(
     payload: PatchedBibliographyItemRequest,
     user: CurrentUser,
     items: BibliographyItemRepositoryDep,
+    attempts: AttemptRepositoryDep,
 ) -> BibliographyItemResponse:
-    item = handlers.UpdateBibliographyItem(items, user).execute(id, payload)
+    item = handlers.UpdateBibliographyItem(items, attempts, user).execute(id, payload)
     return BibliographyItemResponse.model_validate(item)

@@ -9,6 +9,7 @@ from fastapi import APIRouter
 
 from . import (
     auth,
+    bibliography_attempts,
     bibliography_items,
     categories,
     counters,
@@ -39,6 +40,7 @@ for module in (
     transactions,
     counters,
     bibliography_items,
+    bibliography_attempts,
 ):
     router.include_router(module.router)
 

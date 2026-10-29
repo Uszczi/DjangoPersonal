@@ -2,7 +2,9 @@ from personal.infra.rules import day_start
 
 from .categories import CategoryRepository
 from .counters import CounterEntryRepository, CounterRepository
+from .bibliography_attempts import AttemptRepository
 from .errors import (
+    AttemptAlreadyInProgress,
     DuplicateCategoryName,
     DuplicateFolderName,
     DuplicateProjectName,
@@ -39,7 +41,9 @@ __all__ = [
     'DuplicateWhiteboardName',
     'InboxProtected',
     'InvalidFolderName',
+    'AttemptAlreadyInProgress',
     'NoteChunkRepository',
+    'AttemptRepository',
     'BibliographyItemRepository',
     'ProjectHasTimeEntries',
     'ProjectRepository',

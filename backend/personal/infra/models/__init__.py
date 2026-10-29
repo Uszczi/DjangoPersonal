@@ -7,6 +7,7 @@ objects. The schema itself is owned by the Alembic revisions in
 """
 
 from .base import Base
+from .bibliography_attempt import Attempt
 from .category import Category
 from .counter import Counter, CounterEntry
 from .folder import Folder
@@ -27,6 +28,7 @@ __all__ = [
     'CounterEntry',
     'Folder',
     'NoteChunk',
+    'Attempt',
     'BibliographyItem',
     'Project',
     'Task',

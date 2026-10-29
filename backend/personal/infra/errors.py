@@ -34,6 +34,10 @@ class DuplicateCategoryName(RepositoryError):
     """A unique-constraint clash: another category already uses this name."""
 
 
+class AttemptAlreadyInProgress(RepositoryError):
+    """The partial unique index: this BibliographyItem already has an Attempt in progress."""
+
+
 class TaskHasTimeEntries(RepositoryError):
     """A task cannot be deleted while time entries still reference it."""
 

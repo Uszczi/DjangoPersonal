@@ -20,6 +20,16 @@ import {
     AskNotesRequestToJSON,
 } from '../models/AskNotesRequest';
 import {
+    type AttemptRequest,
+    AttemptRequestFromJSON,
+    AttemptRequestToJSON,
+} from '../models/AttemptRequest';
+import {
+    type AttemptResponse,
+    AttemptResponseFromJSON,
+    AttemptResponseToJSON,
+} from '../models/AttemptResponse';
+import {
     type AuthResponse,
     AuthResponseFromJSON,
     AuthResponseToJSON,
@@ -89,6 +99,11 @@ import {
     NotesAnswerFromJSON,
     NotesAnswerToJSON,
 } from '../models/NotesAnswer';
+import {
+    type PatchedAttemptRequest,
+    PatchedAttemptRequestFromJSON,
+    PatchedAttemptRequestToJSON,
+} from '../models/PatchedAttemptRequest';
 import {
     type PatchedBibliographyItemRequest,
     PatchedBibliographyItemRequestFromJSON,
@@ -269,6 +284,38 @@ export interface AuthRegisterRequest {
      *
      */
     registerRequest: RegisterRequest;
+}
+
+export interface BibliographyAttemptsCreateRequest {
+    /**
+     *
+     */
+    attemptRequest: AttemptRequest;
+}
+
+export interface BibliographyAttemptsListRequest {
+    /**
+     *
+     */
+    item: number;
+}
+
+export interface BibliographyAttemptsPartialUpdateRequest {
+    /**
+     *
+     */
+    id: number;
+    /**
+     *
+     */
+    patchedAttemptRequest: PatchedAttemptRequest;
+}
+
+export interface BibliographyAttemptsRetrieveRequest {
+    /**
+     *
+     */
+    id: number;
 }
 
 export interface BibliographyItemsCreateRequest {
@@ -955,6 +1002,233 @@ export class PersonalApi extends runtime.BaseAPI {
      */
     async authRegister(requestParameters: AuthRegisterRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AuthResponse> {
         const response = await this.authRegisterRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for bibliographyAttemptsCreate without sending the request
+     */
+    async bibliographyAttemptsCreateRequestOpts(requestParameters: BibliographyAttemptsCreateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['attemptRequest'] == null) {
+            throw new runtime.RequiredError(
+                'attemptRequest',
+                'Required parameter "attemptRequest" was null or undefined when calling bibliographyAttemptsCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/bibliography-attempts/`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: AttemptRequestToJSON(requestParameters['attemptRequest']),
+        };
+    }
+
+    /**
+     * Create Attempt
+     */
+    async bibliographyAttemptsCreateRaw(requestParameters: BibliographyAttemptsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AttemptResponse>> {
+        const requestOptions = await this.bibliographyAttemptsCreateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => AttemptResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Create Attempt
+     */
+    async bibliographyAttemptsCreate(requestParameters: BibliographyAttemptsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AttemptResponse> {
+        const response = await this.bibliographyAttemptsCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for bibliographyAttemptsList without sending the request
+     */
+    async bibliographyAttemptsListRequestOpts(requestParameters: BibliographyAttemptsListRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['item'] == null) {
+            throw new runtime.RequiredError(
+                'item',
+                'Required parameter "item" was null or undefined when calling bibliographyAttemptsList().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['item'] != null) {
+            queryParameters['item'] = requestParameters['item'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/bibliography-attempts/`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * List Attempts
+     */
+    async bibliographyAttemptsListRaw(requestParameters: BibliographyAttemptsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AttemptResponse>>> {
+        const requestOptions = await this.bibliographyAttemptsListRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(AttemptResponseFromJSON));
+    }
+
+    /**
+     * List Attempts
+     */
+    async bibliographyAttemptsList(requestParameters: BibliographyAttemptsListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AttemptResponse>> {
+        const response = await this.bibliographyAttemptsListRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for bibliographyAttemptsPartialUpdate without sending the request
+     */
+    async bibliographyAttemptsPartialUpdateRequestOpts(requestParameters: BibliographyAttemptsPartialUpdateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling bibliographyAttemptsPartialUpdate().'
+            );
+        }
+
+        if (requestParameters['patchedAttemptRequest'] == null) {
+            throw new runtime.RequiredError(
+                'patchedAttemptRequest',
+                'Required parameter "patchedAttemptRequest" was null or undefined when calling bibliographyAttemptsPartialUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/bibliography-attempts/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedAttemptRequestToJSON(requestParameters['patchedAttemptRequest']),
+        };
+    }
+
+    /**
+     * Update Attempt
+     */
+    async bibliographyAttemptsPartialUpdateRaw(requestParameters: BibliographyAttemptsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AttemptResponse>> {
+        const requestOptions = await this.bibliographyAttemptsPartialUpdateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => AttemptResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Update Attempt
+     */
+    async bibliographyAttemptsPartialUpdate(requestParameters: BibliographyAttemptsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AttemptResponse> {
+        const response = await this.bibliographyAttemptsPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for bibliographyAttemptsRetrieve without sending the request
+     */
+    async bibliographyAttemptsRetrieveRequestOpts(requestParameters: BibliographyAttemptsRetrieveRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling bibliographyAttemptsRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/bibliography-attempts/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Get Attempt
+     */
+    async bibliographyAttemptsRetrieveRaw(requestParameters: BibliographyAttemptsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AttemptResponse>> {
+        const requestOptions = await this.bibliographyAttemptsRetrieveRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => AttemptResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get Attempt
+     */
+    async bibliographyAttemptsRetrieve(requestParameters: BibliographyAttemptsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AttemptResponse> {
+        const response = await this.bibliographyAttemptsRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

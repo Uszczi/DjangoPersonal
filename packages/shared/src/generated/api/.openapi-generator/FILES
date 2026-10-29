@@ -2,6 +2,8 @@ apis/PersonalApi.ts
 apis/index.ts
 index.ts
 models/AskNotesRequest.ts
+models/AttemptRequest.ts
+models/AttemptResponse.ts
 models/AuthResponse.ts
 models/BibliographyItemRequest.ts
 models/BibliographyItemResponse.ts
@@ -18,6 +20,7 @@ models/LoginResponse.ts
 models/MatchingLine.ts
 models/NoteSource.ts
 models/NotesAnswer.ts
+models/PatchedAttemptRequest.ts
 models/PatchedBibliographyItemRequest.ts
 models/PatchedCategoryRequest.ts
 models/PatchedCounterEntryRequest.ts

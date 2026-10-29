@@ -11,6 +11,9 @@ ItemKind = Literal['film', 'book']
 #: ``planned`` is Do obejrzenia / Do przeczytania (no Attempt yet).
 ItemStatus = Literal['planned', 'in_progress', 'finished', 'abandoned']
 
+#: How an Attempt stands: still going, or ended one way or the other.
+AttemptOutcome = Literal['in_progress', 'finished', 'abandoned']
+
 
 class _BibliographyItemPayload(BaseModel):
     """``check_fields=False`` because this base declares no fields itself."""
