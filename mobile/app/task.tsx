@@ -13,7 +13,6 @@ import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { useProjects } from "@personal/shared/queries/projects";
 import {
   useDeleteTask,
-  useMoveTask,
   useProjectTasks,
   useSaveTask,
   type TaskInput,
@@ -31,8 +30,8 @@ import { useTheme } from "../src/theme";
 /**
  * Creates a Task in `?projectId=`, or edits `?taskId=` of that Project, like
  * the web TaskEditorModal. The edited Task comes from the Project's cached
- * task list, which is the list the user tapped it in. Moving up/down stands
- * in for the web's drag and drop.
+ * task list, which is the list the user tapped it in. Reordering is done by
+ * dragging on the Project screen, like the web's drag and drop.
  */
 export default function TaskEditorScreen() {
   const { common, form } = useTheme();
@@ -52,13 +51,8 @@ export default function TaskEditorScreen() {
     taskId === null
       ? null
       : (listTasks.find((item) => item.id === taskId) ?? null);
-  const siblings = task
-    ? listTasks.filter((item) => item.status === task.status)
-    : [];
   const saveTask = useSaveTask();
-  const moveTask = useMoveTask();
   const deleteTaskMutation = useDeleteTask();
-  const [actionError, setActionError] = useState("");
 
   const lastStatusByProject = useNewTaskStatusStore(
     (state) => state.lastStatusByProject,
@@ -145,24 +139,6 @@ export default function TaskEditorScreen() {
     }
   }
 
-  const position = task
-    ? siblings.findIndex((item) => item.id === task.id)
-    : -1;
-
-  async function move(direction: "up" | "down") {
-    if (!task || position < 0) return;
-    const target = direction === "up" ? position - 1 : position + 1;
-    if (target < 0 || target >= siblings.length) return;
-    setIsSaving(true);
-    setActionError("");
-    try {
-      await moveTask.mutateAsync({ task, position: target });
-    } catch (error) {
-      setActionError(await apiErrorMessage(error));
-    }
-    setIsSaving(false);
-  }
-
   return (
     <KeyboardAvoidingView
       style={common.screen}
@@ -238,9 +214,7 @@ export default function TaskEditorScreen() {
           </>
         )}
 
-        {(formError || actionError) !== "" && (
-          <Text style={form.error}>{formError || actionError}</Text>
-        )}
+        {formError !== "" && <Text style={form.error}>{formError}</Text>}
         <View style={form.actions}>
           <Button
             label="Anuluj"
@@ -254,26 +228,6 @@ export default function TaskEditorScreen() {
             onPress={() => void submit()}
           />
         </View>
-
-        {task && siblings.length > 1 && (
-          <>
-            <Text style={form.label}>Kolejność w statusie „{task.status}”</Text>
-            <View style={[form.actions, { marginTop: 0 }]}>
-              <Button
-                label="↑ Wyżej"
-                variant="secondary"
-                disabled={isSaving || position <= 0}
-                onPress={() => void move("up")}
-              />
-              <Button
-                label="↓ Niżej"
-                variant="secondary"
-                disabled={isSaving || position === siblings.length - 1}
-                onPress={() => void move("down")}
-              />
-            </View>
-          </>
-        )}
 
         {task && (
           <View style={form.actions}>
