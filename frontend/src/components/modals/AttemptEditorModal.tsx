@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
+import { attemptDatesError } from "@personal/shared/bibliographyForms";
 import {
   Button,
   ErrorAlert,
@@ -122,14 +123,11 @@ export function AttemptEditorModal({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (showsEnd && !endedOn) {
-      setFormError("Podaj datę zakończenia.");
-      return;
-    }
-    if (showsEnd && startedOn && endedOn < startedOn) {
-      setFormError(
-        "Data zakończenia nie może być wcześniejsza niż data rozpoczęcia.",
-      );
+    const datesError = showsEnd
+      ? attemptDatesError({ startedOn, endedOn })
+      : "";
+    if (datesError) {
+      setFormError(datesError);
       return;
     }
 

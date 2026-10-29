@@ -5,6 +5,7 @@ import {
   ITEM_PROGRESS_LABELS,
   type ItemKind,
 } from "@personal/shared/bibliographyFormat";
+import { parseProgress } from "@personal/shared/bibliographyForms";
 import type { AttemptResponse } from "@personal/shared/generated/api";
 import { useUpdateAttempt } from "@personal/shared/queries/bibliographyAttempts";
 import {
@@ -48,14 +49,9 @@ export function AttemptProgressModal({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const trimmed = progress.trim();
-    if (trimmed && !/^\d+$/.test(trimmed)) {
-      setFormError("Postęp musi być nieujemną liczbą całkowitą.");
-      return;
-    }
-    const value = trimmed ? Number(trimmed) : null;
-    if (value !== null && length !== null && value > length) {
-      setFormError(`Postęp nie może przekraczać długości (${length}).`);
+    const parsed = parseProgress(progress, length);
+    if ("error" in parsed) {
+      setFormError(parsed.error);
       return;
     }
 
@@ -64,7 +60,7 @@ export function AttemptProgressModal({
     try {
       await updateAttempt.mutateAsync({
         id: attempt.id,
-        changes: { progress: value },
+        changes: { progress: parsed.value },
       });
       onClose();
     } catch (error) {

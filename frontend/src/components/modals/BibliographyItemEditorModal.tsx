@@ -17,6 +17,7 @@ import {
   ITEM_LENGTH_LABELS,
   type ItemKind,
 } from "@personal/shared/bibliographyFormat";
+import { parseItemNumber } from "@personal/shared/bibliographyForms";
 import {
   useCreateBibliographyItem,
   useUpdateBibliographyItem,
@@ -34,15 +35,6 @@ const CREATOR_LABELS: Record<ItemKind, string> = {
   film: "Reżyser",
   book: "Autor",
 };
-
-/** `""` → `null`; a positive whole number → that number; anything else → `undefined` (invalid). */
-function optionalPositiveInt(text: string): number | null | undefined {
-  const trimmed = text.trim();
-  if (!trimmed) return null;
-  if (!/^\d+$/.test(trimmed)) return undefined;
-  const value = Number(trimmed);
-  return value > 0 ? value : undefined;
-}
 
 function numberText(value: number | null | undefined) {
   return value === null || value === undefined ? "" : String(value);
@@ -75,8 +67,8 @@ export function BibliographyItemEditorModal({
       setFormError("Podaj tytuł.");
       return;
     }
-    const yearValue = optionalPositiveInt(year);
-    const lengthValue = optionalPositiveInt(length);
+    const yearValue = parseItemNumber(year);
+    const lengthValue = parseItemNumber(length);
     if (yearValue === undefined || lengthValue === undefined) {
       setFormError("Rok i długość muszą być dodatnimi liczbami całkowitymi.");
       return;
