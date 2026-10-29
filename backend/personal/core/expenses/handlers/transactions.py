@@ -46,7 +46,25 @@ def _resolve_category(
     category = repository.find(category_id, user=user)
     if category is None:
         raise DomainError('Invalid category ID.')
+    if category.is_system:
+        # Only the wallet handlers write into System (the opening balance and
+        # corrections); they do not come through here.
+        raise DomainError('Transactions cannot be filed under the System category.')
     return category
+
+
+def _get_editable_transaction(
+    repository: TransactionRepository, transaction_id: int, *, user: User
+) -> TransactionModel:
+    """A transaction the user may edit: anything but a System entry.
+
+    A System entry's signed amount is the balance ledger's; the balance is
+    corrected by adding a new correction, so the entry can only be deleted.
+    """
+    transaction = _get_transaction(repository, transaction_id, user=user)
+    if transaction.category is not None and transaction.category.is_system:
+        raise DomainError('System entries can only be deleted.')
+    return transaction
 
 
 DEFAULT_PAGE_SIZE = 50
@@ -166,7 +184,7 @@ class ReplaceTransaction:
         self.user = user
 
     def execute(self, transaction_id: int, data: TransactionRequest) -> TransactionModel:
-        transaction = _get_transaction(self.transactions, transaction_id, user=self.user)
+        transaction = _get_editable_transaction(self.transactions, transaction_id, user=self.user)
         transaction.wallet = _resolve_wallet(self.wallets, data.wallet, user=self.user)
         transaction.category = _resolve_category(
             self.categories, data.category, user=self.user
@@ -194,7 +212,9 @@ class UpdateTransaction:
     def execute(
         self, transaction_id: int, data: PatchedTransactionRequest
     ) -> TransactionModel:
-        transaction = _get_transaction(self.transactions, transaction_id, user=self.user)
+        transaction = _get_editable_transaction(
+            self.transactions, transaction_id, user=self.user
+        )
         apply_provided(
             data,
             transaction,

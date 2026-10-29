@@ -34,5 +34,16 @@ class Transaction(Base):
     wallet: Mapped[Wallet] = relationship()
     category: Mapped[Category | None] = relationship()
 
+    @property
+    def kind(self) -> str | None:
+        """The direction, from the category: ``income``, ``expense``, or ``None`` for System.
+
+        No category means an Expense. A System entry has no kind: its signed
+        amount tells the direction.
+        """
+        if self.category is None:
+            return Category.KIND_EXPENSE
+        return None if self.category.is_system else self.category.kind
+
     def __repr__(self) -> str:
         return f'<Transaction {self.id} {self.title!r}>'

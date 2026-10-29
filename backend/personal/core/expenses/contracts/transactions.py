@@ -6,6 +6,8 @@ from pydantic import Field, PlainSerializer, WithJsonSchema, field_validator
 
 from personal.core.shared.base import BaseModel
 
+from .categories import CategoryKind
+
 #: Money travels as a string on the wire ("12.50") so nothing ever rounds it
 #: through a float; ``str(Decimal)`` keeps the stored two places verbatim.
 #: Aggregated values (a wallet balance) come back with a variable scale, so the
@@ -84,6 +86,9 @@ class TransactionResponse(BaseModel):
     description: str
     category_id: int | None = Field(..., json_schema_extra={'readOnly': True})
     wallet_id: int = Field(..., json_schema_extra={'readOnly': True})
+    #: The direction, derived from the category (none gives ``expense``);
+    #: ``null`` for a System entry, whose signed amount tells the direction.
+    kind: CategoryKind | None = Field(..., json_schema_extra={'readOnly': True})
 
 
 class TransactionPageResponse(BaseModel):

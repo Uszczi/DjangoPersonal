@@ -121,3 +121,42 @@ def test_deleting_a_wallet_or_category_deletes_its_transactions(
 
     wallets.delete(wallet)
     assert count_rows(session, Transaction) == 0
+
+
+def test_wallet_balance_adds_income_and_subtracts_expenses(session: Session, user: User) -> None:
+    wallets, categories, transactions = (
+        WalletRepository(session),
+        CategoryRepository(session),
+        TransactionRepository(session),
+    )
+    wallet = wallets.save(Wallet(user_id=user.id, name='Main'))
+    system = categories.save(
+        Category(user_id=user.id, name='System', is_system=True, kind='expense')
+    )
+    salary = categories.save(Category(user_id=user.id, name='Salary', kind='income'))
+    food = categories.save(Category(user_id=user.id, name='Food', kind='expense'))
+    for amount, category in (
+        ('100.00', system),
+        ('-30.00', system),
+        ('500.00', salary),
+        ('42.00', food),
+        ('8.00', None),
+    ):
+        transactions.save(
+            Transaction(
+                title='Entry',
+                amount=Decimal(amount),
+                date=date(2026, 10, 30),
+                user_id=user.id,
+                wallet=wallet,
+                category=category,
+            )
+        )
+
+    assert wallets.balance(wallet.id, user=user) == Decimal('520.00')
+
+
+def test_a_new_category_is_an_expense_one(session: Session, user: User) -> None:
+    category = CategoryRepository(session).save(Category(user_id=user.id, name='Food'))
+
+    assert category.kind == 'expense'

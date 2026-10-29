@@ -3,10 +3,18 @@
 from datetime import date
 from decimal import Decimal
 
+from typing import Any
+
+from sqlalchemy import event
 from sqlalchemy.orm import Session
 
-from personal.infra.models import Transaction, User, Wallet
-from personal.infra.repo import TransactionKey, TransactionRepository, WalletRepository
+from personal.infra.models import Category, Transaction, User, Wallet
+from personal.infra.repo import (
+    CategoryRepository,
+    TransactionKey,
+    TransactionRepository,
+    WalletRepository,
+)
 
 
 def _record(
@@ -48,3 +56,38 @@ def test_a_page_holds_only_this_users_wallet(session: Session, user: User) -> No
     _record(transactions, user, other, 'elsewhere', date(2026, 10, 1))
 
     assert transactions.list_for_wallet(wallet.id, user=user, limit=10) == []
+
+
+def test_a_page_reads_every_kind_in_one_query(session: Session, user: User) -> None:
+    transactions, categories = TransactionRepository(session), CategoryRepository(session)
+    wallet = WalletRepository(session).save(Wallet(user_id=user.id, name='Cash'))
+    system = categories.save(Category(user_id=user.id, name='System', is_system=True))
+    salary = categories.save(Category(user_id=user.id, name='Salary', kind='income'))
+    food = categories.save(Category(user_id=user.id, name='Food'))
+    for title, category in [('s', system), ('i', salary), ('e', food), ('u', None)]:
+        transactions.save(
+            Transaction(
+                title=title,
+                amount=Decimal('1.00'),
+                date=date(2026, 10, 1),
+                user_id=user.id,
+                wallet=wallet,
+                category=category,
+            )
+        )
+    session.commit()
+    session.expunge_all()
+    statements: list[str] = []
+
+    def record(*args: Any) -> None:
+        statements.append(args[2])
+
+    event.listen(session.bind, 'before_cursor_execute', record)  # type: ignore[arg-type]
+    try:
+        page = transactions.list_for_wallet(wallet.id, user=user)
+        kinds = {t.title: t.kind for t in page}
+    finally:
+        event.remove(session.bind, 'before_cursor_execute', record)  # type: ignore[arg-type]
+
+    assert kinds == {'s': None, 'i': 'income', 'e': 'expense', 'u': 'expense'}
+    assert len([s for s in statements if s.startswith('SELECT')]) == 1
