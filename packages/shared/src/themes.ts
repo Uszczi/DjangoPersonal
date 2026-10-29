@@ -49,6 +49,10 @@ export type ThemePalette = {
   dangerStrong: string;
   dangerPale: string;
   dangerInk: string;
+  /** An Income amount: the positive direction, green. */
+  income: string;
+  /** An Expense amount: the negative direction, red. */
+  expense: string;
   overlay: string;
   navText: string;
   navMuted: string;
@@ -106,6 +110,8 @@ const light: Theme = {
     dangerStrong: "#872d1e",
     dangerPale: "#fff0eb",
     dangerInk: "#873b2b",
+    income: "#2e7d4f",
+    expense: "#a23a28",
     overlay: "rgb(12 29 33 / 52%)",
     navText: "#f4f7f4",
     navMuted: "#b5c6c6",
@@ -156,6 +162,8 @@ const dark: Theme = {
     dangerStrong: "#ea8470",
     dangerPale: "#36201d",
     dangerInk: "#f1a593",
+    income: "#6fbf8a",
+    expense: "#d7664f",
     overlay: "rgb(0 0 0 / 62%)",
     navText: "#eef4f2",
     navMuted: "#a2b5b5",
@@ -206,6 +214,8 @@ const sepia: Theme = {
     dangerStrong: "#872d1e",
     dangerPale: "#fbe9df",
     dangerInk: "#873b2b",
+    income: "#4d7a3a",
+    expense: "#a23a28",
     overlay: "rgb(40 28 18 / 50%)",
     navText: "#f7efe3",
     navMuted: "#cdbba3",
@@ -303,6 +313,8 @@ function catppuccin(
       dangerStrong: c.maroon,
       dangerPale: mix(c.red, c.base, 0.14),
       dangerInk: c.red,
+      income: c.green,
+      expense: c.red,
       overlay: isLight ? `${c.text}73` : `${c.crust}a6`,
       navText: isLight ? c.base : c.text,
       navMuted: isLight ? c.surface1 : c.subtext0,
@@ -450,6 +462,8 @@ const solitude: Theme = {
     dangerStrong: "#e8826b",
     dangerPale: "#2e1b17",
     dangerInk: "#f0a593",
+    income: "#7da882",
+    expense: "#de6145",
     overlay: "rgb(0 0 0 / 65%)",
     navText: "#cacccc",
     navMuted: "#798186",
@@ -504,6 +518,8 @@ const ristretto: Theme = {
     dangerStrong: "#ff8297",
     dangerPale: "#45282e",
     dangerInk: "#ff8297",
+    income: "#adda78",
+    expense: "#fd6883",
     overlay: "rgb(0 0 0 / 60%)",
     navText: "#e6d9db",
     navMuted: "#948a8b",

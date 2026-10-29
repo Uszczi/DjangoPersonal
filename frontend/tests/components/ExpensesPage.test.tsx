@@ -259,6 +259,7 @@ describe("Wallets", () => {
       description: "",
       category_id: null,
       wallet_id: 1,
+      kind: "expense",
     };
     let ledger: unknown[] = [];
     fetchMock.mockImplementation(

@@ -79,6 +79,35 @@ export function TransactionEditorModal({
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(!transaction);
 
+  // A System entry (kind null) is read-only: its signed amount is the ledger.
+  const isSystemEntry = transaction?.kind === null;
+  // The direction the chosen category carries (no category is an Expense).
+  const selectedKind = selectedCategory?.kind ?? "expense";
+  const pickable = categories.filter((category) => !category.isSystem);
+  const expenseCategories = pickable.filter(
+    (category) => category.kind === "expense",
+  );
+  const incomeCategories = pickable.filter(
+    (category) => category.kind === "income",
+  );
+
+  const kicker = isSystemEntry
+    ? "WPIS SYSTEMOWY"
+    : transaction
+      ? "ZMIANA SZCZEGÓŁÓW"
+      : selectedKind === "income"
+        ? "NOWY PRZYCHÓD"
+        : "NOWY WYDATEK";
+  const title = isSystemEntry
+    ? (transaction?.title ?? "")
+    : transaction
+      ? selectedKind === "income"
+        ? "Edytuj przychód"
+        : "Edytuj wydatek"
+      : selectedKind === "income"
+        ? "Nowy przychód"
+        : "Nowy wydatek";
+
   function close() {
     if (!isSaving) onClose();
   }
@@ -124,17 +153,24 @@ export function TransactionEditorModal({
 
   return (
     <Modal
-      kicker={transaction ? "ZMIANA SZCZEGÓŁÓW" : "NOWY WYDATEK"}
-      title={transaction ? "Edytuj transakcję" : "Nowa transakcja"}
+      kicker={kicker}
+      title={title}
       titleId="transaction-dialog-title"
       onClose={close}
-      onEdit={isEditing ? undefined : () => setIsEditing(true)}
+      onEdit={isEditing || isSystemEntry ? undefined : () => setIsEditing(true)}
       size="lg"
     >
       {/* noValidate: the JS checks below own validation, so the browser never
           blocks submit (e.g. a decimal amount is not a multiple of step). */}
       <form onSubmit={handleSubmit} noValidate>
-        <fieldset disabled={!isEditing} className="contents">
+        {isSystemEntry && (
+          <p className="mb-4 rounded bg-wash px-3 py-2 text-[13px] text-ink-soft">
+            Ten wpis zapisał system (stan początkowy lub korekta stanu). Nie
+            można go edytować, tylko usunąć. Saldo poprawisz w ustawieniach
+            portfela.
+          </p>
+        )}
+        <fieldset disabled={!isEditing || isSystemEntry} className="contents">
           <Field label="Tytuł">
             <TextInput
               maxLength={200}
@@ -202,18 +238,27 @@ export function TransactionEditorModal({
                   }))
                 }
               >
-                <option value="">Bez kategorii</option>
-                {categories
-                  .filter(
-                    (category) =>
-                      !category.isSystem ||
-                      category.id === transaction?.categoryId,
-                  )
-                  .map((category) => (
-                    <option key={category.id} value={String(category.id)}>
-                      {category.name}
-                    </option>
-                  ))}
+                {isSystemEntry ? (
+                  <option value={form.category}>System</option>
+                ) : (
+                  <>
+                    <option value="">Bez kategorii (wydatek)</option>
+                    <optgroup label="Wydatki">
+                      {expenseCategories.map((category) => (
+                        <option key={category.id} value={String(category.id)}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Przychody">
+                      {incomeCategories.map((category) => (
+                        <option key={category.id} value={String(category.id)}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  </>
+                )}
               </Select>
             </div>
           </Field>
@@ -236,7 +281,23 @@ export function TransactionEditorModal({
           </Field>
         </fieldset>
         {formError && <ErrorAlert>{formError}</ErrorAlert>}
-        {isEditing && (
+        {isSystemEntry && transaction ? (
+          <ModalFooter>
+            <Button
+              variant="ghostDanger"
+              className="mr-auto"
+              onClick={() => {
+                onClose();
+                ShowModal(DeleteTransactionModal, { transaction });
+              }}
+            >
+              Usuń
+            </Button>
+            <Button variant="secondary" onClick={close}>
+              Zamknij
+            </Button>
+          </ModalFooter>
+        ) : isEditing ? (
           <ModalFooter>
             {transaction && (
               <Button
@@ -259,10 +320,12 @@ export function TransactionEditorModal({
                 ? "Zapisywanie…"
                 : transaction
                   ? "Zapisz zmiany"
-                  : "Dodaj transakcję"}
+                  : selectedKind === "income"
+                    ? "Dodaj przychód"
+                    : "Dodaj wydatek"}
             </Button>
           </ModalFooter>
-        )}
+        ) : null}
       </form>
     </Modal>
   );

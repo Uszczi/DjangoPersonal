@@ -12,14 +12,29 @@ const catJedzenie = {
   name: "Jedzenie",
   icon: "utensils",
   is_system: false,
+  kind: "expense",
 };
 const catTransport = {
   id: 2,
   name: "Transport",
   icon: "car",
   is_system: false,
+  kind: "expense",
 };
-const catSystem = { id: 3, name: "System", icon: "settings", is_system: true };
+const catWynagrodzenie = {
+  id: 4,
+  name: "Wynagrodzenie",
+  icon: "banknote",
+  is_system: false,
+  kind: "income",
+};
+const catSystem = {
+  id: 3,
+  name: "System",
+  icon: "settings",
+  is_system: true,
+  kind: null,
+};
 
 function jsonResponse(data: unknown, status = 200) {
   return new Response(status === 204 ? null : JSON.stringify(data), {
@@ -60,7 +75,7 @@ describe("Categories", () => {
 
     renderApp("/expenses");
 
-    const list = await screen.findByRole("list", { name: "Lista kategorii" });
+    const list = await screen.findByRole("list", { name: "Kategorie wydatków" });
     expect(within(list).getByText("Jedzenie")).toBeInTheDocument();
     expect(within(list).getByText("Transport")).toBeInTheDocument();
   });
@@ -77,7 +92,7 @@ describe("Categories", () => {
       "Edukacja",
       "Podróże",
       "Inne",
-    ].map((name, index) => ({ id: index + 1, name }));
+    ].map((name, index) => ({ id: index + 1, name, kind: "expense" }));
     const initial = mockInitial(seeded);
     fetchMock
       .mockResolvedValueOnce(initial.wallets)
@@ -85,7 +100,7 @@ describe("Categories", () => {
 
     renderApp("/expenses");
 
-    const list = await screen.findByRole("list", { name: "Lista kategorii" });
+    const list = await screen.findByRole("list", { name: "Kategorie wydatków" });
     expect(within(list).getAllByRole("listitem")).toHaveLength(10);
     expect(within(list).getByText("Jedzenie")).toBeInTheDocument();
     expect(within(list).getByText("Inne")).toBeInTheDocument();
@@ -99,7 +114,7 @@ describe("Categories", () => {
 
     renderApp("/expenses");
 
-    const list = await screen.findByRole("list", { name: "Lista kategorii" });
+    const list = await screen.findByRole("list", { name: "Kategorie wydatków" });
     expect(within(list).getByText("Jedzenie")).toBeInTheDocument();
     expect(within(list).queryByText("System")).not.toBeInTheDocument();
     expect(within(list).getAllByRole("listitem")).toHaveLength(1);
@@ -111,12 +126,12 @@ describe("Categories", () => {
       .mockResolvedValueOnce(initial.wallets)
       .mockResolvedValueOnce(initial.categories)
       .mockResolvedValueOnce(
-        jsonResponse({ id: 9, name: "Rachunki", icon: "tag" }, 201),
+        jsonResponse({ id: 9, name: "Rachunki", icon: "tag", kind: "expense" }, 201),
       );
     const user = userEvent.setup();
 
     renderApp("/expenses");
-    const list = await screen.findByRole("list", { name: "Lista kategorii" });
+    const list = await screen.findByRole("list", { name: "Kategorie wydatków" });
 
     await user.type(screen.getByLabelText("Nowa kategoria"), "  Rachunki  ");
     await user.click(screen.getByRole("button", { name: "Dodaj" }));
@@ -127,7 +142,41 @@ describe("Categories", () => {
       "/api/v1/categories/",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ name: "Rachunki", icon: "tag" }),
+        body: JSON.stringify({ name: "Rachunki", icon: "tag", kind: "expense" }),
+      }),
+    );
+  });
+
+  test("user can create an Income category in its own section", async () => {
+    const initial = mockInitial([catJedzenie, catWynagrodzenie]);
+    fetchMock
+      .mockResolvedValueOnce(initial.wallets)
+      .mockResolvedValueOnce(initial.categories)
+      .mockResolvedValueOnce(
+        jsonResponse({ id: 5, name: "Prezenty", icon: "tag", kind: "income" }, 201),
+      );
+    const user = userEvent.setup();
+
+    renderApp("/expenses");
+    await screen.findByRole("list", { name: "Kategorie przychodów" });
+
+    await user.type(
+      screen.getByLabelText("Nowa kategoria przychodu"),
+      "Prezenty",
+    );
+    await user.click(screen.getByRole("button", { name: "Dodaj przychód" }));
+
+    expect(
+      await within(
+        screen.getByRole("list", { name: "Kategorie przychodów" }),
+      ).findByText("Prezenty"),
+    ).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "/api/v1/categories/",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ name: "Prezenty", icon: "tag", kind: "income" }),
       }),
     );
   });
@@ -146,7 +195,7 @@ describe("Categories", () => {
     const user = userEvent.setup();
 
     renderApp("/expenses");
-    await screen.findByRole("list", { name: "Lista kategorii" });
+    await screen.findByRole("list", { name: "Kategorie wydatków" });
 
     await user.type(screen.getByLabelText("Nowa kategoria"), "jedzenie");
     await user.click(screen.getByRole("button", { name: "Dodaj" }));
@@ -162,12 +211,12 @@ describe("Categories", () => {
       .mockResolvedValueOnce(initial.wallets)
       .mockResolvedValueOnce(initial.categories)
       .mockResolvedValueOnce(
-        jsonResponse({ id: 1, name: "Żywność", icon: "utensils" }),
+        jsonResponse({ id: 1, name: "Żywność", icon: "utensils", kind: "expense" }),
       );
     const user = userEvent.setup();
 
     renderApp("/expenses");
-    const list = await screen.findByRole("list", { name: "Lista kategorii" });
+    const list = await screen.findByRole("list", { name: "Kategorie wydatków" });
 
     await user.click(
       await screen.findByRole("button", {
@@ -201,7 +250,7 @@ describe("Categories", () => {
     const user = userEvent.setup();
 
     renderApp("/expenses");
-    await screen.findByRole("list", { name: "Lista kategorii" });
+    await screen.findByRole("list", { name: "Kategorie wydatków" });
 
     await user.click(
       screen.getByRole("button", { name: "Zmień nazwę kategorii: Jedzenie" }),
@@ -214,7 +263,7 @@ describe("Categories", () => {
     ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Usuń kategorię" }));
 
-    expect(await screen.findByText("Brak kategorii.")).toBeInTheDocument();
+    expect(await screen.findAllByText("Brak kategorii.")).toHaveLength(2);
     await waitFor(() =>
       expect(fetchMock).toHaveBeenNthCalledWith(
         3,
@@ -230,12 +279,12 @@ describe("Categories", () => {
       .mockResolvedValueOnce(initial.wallets)
       .mockResolvedValueOnce(initial.categories)
       .mockResolvedValueOnce(
-        jsonResponse({ id: 9, name: "Kawa", icon: "coffee" }, 201),
+        jsonResponse({ id: 9, name: "Kawa", icon: "coffee", kind: "expense" }, 201),
       );
     const user = userEvent.setup();
 
     renderApp("/expenses");
-    await screen.findByRole("list", { name: "Lista kategorii" });
+    await screen.findByRole("list", { name: "Kategorie wydatków" });
 
     const trigger = screen.getByRole("button", {
       name: "Ikona kategorii: Etykieta",
@@ -267,7 +316,7 @@ describe("Categories", () => {
       "/api/v1/categories/",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ name: "Kawa", icon: "coffee" }),
+        body: JSON.stringify({ name: "Kawa", icon: "coffee", kind: "expense" }),
       }),
     );
   });
@@ -280,7 +329,7 @@ describe("Categories", () => {
     const user = userEvent.setup();
 
     renderApp("/expenses");
-    await screen.findByRole("list", { name: "Lista kategorii" });
+    await screen.findByRole("list", { name: "Kategorie wydatków" });
     await user.click(
       screen.getByRole("button", { name: "Ikona kategorii: Etykieta" }),
     );
@@ -316,7 +365,7 @@ describe("Categories", () => {
     const user = userEvent.setup();
 
     renderApp("/expenses");
-    await screen.findByRole("list", { name: "Lista kategorii" });
+    await screen.findByRole("list", { name: "Kategorie wydatków" });
     await user.type(screen.getByLabelText("Nowa kategoria"), "Rakiety");
     await user.click(
       screen.getByRole("button", { name: "Ikona kategorii: Etykieta" }),

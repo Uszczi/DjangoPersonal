@@ -50,6 +50,20 @@ function groupByDay(
   return [...groups.entries()];
 }
 
+/** How an amount reads on the list: an Income `+x` in green, an Expense `−x` in
+ * red, and a System entry its own sign, muted. */
+function amountDisplay(kind: TransactionResponse["kind"], amount: string) {
+  if (kind === "income") return { text: `+${amount}`, className: "text-income" };
+  if (kind === "expense")
+    return { text: `−${amount}`, className: "text-expense" };
+  // A System entry (null): the stored sign is the direction.
+  const negative = amount.startsWith("-");
+  return {
+    text: `${negative ? "−" : "+"}${amount.replace(/^-/, "")}`,
+    className: "text-muted",
+  };
+}
+
 /**
  * Calls `onReach` whenever the returned element scrolls into view, for
  * infinite scrolling. A change of `loaded` (the rows shown) observes it afresh,
@@ -156,6 +170,10 @@ export function WalletView({ wallet }: { wallet: WalletResponse }) {
                       (item) => item.id === transaction.categoryId,
                     )
                   : undefined;
+                const amount = amountDisplay(
+                  transaction.kind,
+                  transaction.amount,
+                );
                 return (
                   <ListRow key={transaction.id}>
                     <ListRowButton
@@ -174,7 +192,9 @@ export function WalletView({ wallet }: { wallet: WalletResponse }) {
                             {transaction.description}
                           </ListRowSubtitle>
                         )}
-                        {category && (
+                        {transaction.kind === null ? (
+                          <ListRowSubtitle>Wpis systemowy</ListRowSubtitle>
+                        ) : category ? (
                           <ListRowSubtitle>
                             <span className="inline-flex items-center gap-1">
                               <CategoryIcon
@@ -184,11 +204,13 @@ export function WalletView({ wallet }: { wallet: WalletResponse }) {
                               {category.name}
                             </span>
                           </ListRowSubtitle>
-                        )}
+                        ) : null}
                       </div>
                     </ListRowButton>
-                    <span className="font-utility text-[13px] font-semibold text-ink">
-                      {transaction.amount}
+                    <span
+                      className={`font-utility text-[13px] font-semibold ${amount.className}`}
+                    >
+                      {amount.text}
                     </span>
                   </ListRow>
                 );

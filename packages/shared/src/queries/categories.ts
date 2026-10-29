@@ -14,8 +14,12 @@ import { api } from "../api";
 import type { CategoryResponse } from "../generated/api";
 import { categoryKeys, transactionKeys, walletKeys } from "./keys";
 
-/** What the panel's create and edit forms collect. */
-export type CategoryInput = { name: string; icon: string };
+/** The direction of every transaction filed under a category. */
+export type CategoryKind = "expense" | "income";
+
+/** What the panel's create and edit forms collect. `kind` is set at creation
+ * and never changes, so the edit form leaves it off. */
+export type CategoryInput = { name: string; icon: string; kind?: CategoryKind };
 
 /** Close enough to the server's `normalized_name` sort; a refetch reconciles edge cases. */
 function compareByName(a: CategoryResponse, b: CategoryResponse): number {

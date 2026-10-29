@@ -15,7 +15,9 @@ const personalWalletApi = {
   balance: "-53.99",
 };
 
-const categoriesApi = [{ id: 5, name: "Jedzenie", icon: "utensils" }];
+const categoriesApi = [
+  { id: 5, name: "Jedzenie", icon: "utensils", kind: "expense" },
+];
 
 const coffeeTransactionApi = {
   id: 10,
@@ -25,6 +27,7 @@ const coffeeTransactionApi = {
   description: "Na rynku",
   category_id: 5,
   wallet_id: 1,
+  kind: "expense",
 };
 
 const lunchTransactionApi = {
@@ -35,6 +38,7 @@ const lunchTransactionApi = {
   description: "",
   category_id: null,
   wallet_id: 1,
+  kind: "expense",
 };
 
 function jsonResponse(data: unknown, status = 200) {
@@ -131,7 +135,7 @@ describe("Transactions", () => {
       name: "Transakcje z dnia 16 października 2026",
     });
     expect(within(firstDay).getByText("Kawa")).toBeInTheDocument();
-    expect(within(firstDay).getByText("8.00")).toBeInTheDocument();
+    expect(within(firstDay).getByText("−8.00")).toBeInTheDocument();
     expect(within(firstDay).getByText("Na rynku")).toBeInTheDocument();
     expect(within(firstDay).getByText("Jedzenie")).toBeInTheDocument();
     // The category's icon is decorative (and loads lazily), so it is found by lucide's class name.
@@ -143,7 +147,54 @@ describe("Transactions", () => {
       name: "Transakcje z dnia 18 października 2026",
     });
     expect(within(secondDay).getByText("Obiad")).toBeInTheDocument();
-    expect(within(secondDay).getByText("45.99")).toBeInTheDocument();
+    expect(within(secondDay).getByText("−45.99")).toBeInTheDocument();
+  });
+
+  test("amounts carry the sign and colour of their kind", async () => {
+    const expenseApi = {
+      ...coffeeTransactionApi,
+      date: "2026-10-17",
+    };
+    const incomeApi = {
+      id: 20,
+      title: "Wynagrodzenie",
+      amount: "500.00",
+      date: "2026-10-17",
+      description: "",
+      category_id: 6,
+      wallet_id: 1,
+      kind: "income",
+    };
+    const systemApi = {
+      id: 21,
+      title: "Stan początkowy",
+      amount: "100.00",
+      date: "2026-10-17",
+      description: "",
+      category_id: 9,
+      wallet_id: 1,
+      kind: null,
+    };
+    fetchMock.mockImplementation(
+      routeByUrl({
+        transactions: [incomeApi, expenseApi, systemApi],
+        categories: [
+          ...categoriesApi,
+          { id: 6, name: "Wynagrodzenie", icon: "banknote", kind: "income" },
+          { id: 9, name: "System", is_system: true, kind: null },
+        ],
+      }),
+    );
+
+    renderApp("/expenses/1");
+    const day = await screen.findByRole("list", {
+      name: "Transakcje z dnia 17 października 2026",
+    });
+
+    expect(within(day).getByText("+500.00")).toHaveClass("text-income");
+    expect(within(day).getByText("−8.00")).toHaveClass("text-expense");
+    expect(within(day).getByText("+100.00")).toHaveClass("text-muted");
+    expect(within(day).getByText("Wpis systemowy")).toBeInTheDocument();
   });
 
   test("user can add a transaction via a modal", async () => {
@@ -155,6 +206,7 @@ describe("Transactions", () => {
       description: "Księgarnia",
       category_id: 5,
       wallet_id: 1,
+      kind: "expense",
     };
     fetchMock.mockImplementation(
       routeByUrl({
@@ -176,13 +228,13 @@ describe("Transactions", () => {
     await user.type(screen.getByLabelText("Data"), "2026-10-18");
     await user.type(screen.getByLabelText("Opis"), "Księgarnia");
     await user.selectOptions(screen.getByLabelText("Kategoria"), "5");
-    await user.click(screen.getByRole("button", { name: "Dodaj transakcję" }));
+    await user.click(screen.getByRole("button", { name: "Dodaj wydatek" }));
 
     const secondDay = await screen.findByRole("list", {
       name: "Transakcje z dnia 18 października 2026",
     });
     expect(within(secondDay).getByText("Książka")).toBeInTheDocument();
-    expect(within(secondDay).getByText("34.90")).toBeInTheDocument();
+    expect(within(secondDay).getByText("−34.90")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/v1/transactions/",
       expect.objectContaining({
@@ -208,6 +260,7 @@ describe("Transactions", () => {
       description: "",
       category_id: null,
       wallet_id: 1,
+      kind: "expense",
     };
     fetchMock.mockImplementation(
       routeByUrl({
@@ -228,7 +281,7 @@ describe("Transactions", () => {
     await user.type(screen.getByLabelText("Kwota"), "34.90");
     await user.clear(screen.getByLabelText("Data"));
     await user.type(screen.getByLabelText("Data"), "2026-10-18");
-    await user.click(screen.getByRole("button", { name: "Dodaj transakcję" }));
+    await user.click(screen.getByRole("button", { name: "Dodaj wydatek" }));
 
     await screen.findByText("Książka");
     const titles = screen
@@ -254,14 +307,14 @@ describe("Transactions", () => {
 
     await user.type(await screen.findByLabelText("Tytuł"), "Zła kwota");
     await user.type(screen.getByLabelText("Kwota"), "12.345");
-    await user.click(screen.getByRole("button", { name: "Dodaj transakcję" }));
+    await user.click(screen.getByRole("button", { name: "Dodaj wydatek" }));
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Kwota może mieć maksymalnie 2 miejsca dziesiętne.",
     );
 
     await user.clear(screen.getByLabelText("Kwota"));
     await user.type(screen.getByLabelText("Kwota"), "0");
-    await user.click(screen.getByRole("button", { name: "Dodaj transakcję" }));
+    await user.click(screen.getByRole("button", { name: "Dodaj wydatek" }));
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Kwota musi być większa od zera.",
     );
@@ -408,7 +461,7 @@ describe("Transactions", () => {
       routeByUrl({
         categories: [
           ...categoriesApi,
-          { id: 9, name: "System", is_system: true },
+          { id: 9, name: "System", is_system: true, kind: null },
         ],
       }),
     );
@@ -430,7 +483,7 @@ describe("Transactions", () => {
     ).toBeInTheDocument();
   });
 
-  test("editing a System-categorised transaction keeps its category", async () => {
+  test("a System entry opens read-only with only Usuń and Zamknij", async () => {
     const correction = {
       id: 12,
       title: "Korekta stanu",
@@ -439,13 +492,14 @@ describe("Transactions", () => {
       description: "",
       category_id: 9,
       wallet_id: 1,
+      kind: null,
     };
     fetchMock.mockImplementation(
       routeByUrl({
         transactions: [correction],
         categories: [
           ...categoriesApi,
-          { id: 9, name: "System", is_system: true },
+          { id: 9, name: "System", is_system: true, kind: null },
         ],
       }),
     );
@@ -459,12 +513,20 @@ describe("Transactions", () => {
     await user.click(
       screen.getByRole("button", { name: "Edytuj transakcję: Korekta stanu" }),
     );
-    const select = await screen.findByLabelText("Kategoria");
 
     expect(
-      within(select).getByRole("option", { name: "System" }),
+      await screen.findByText(/Ten wpis zapisał system/),
     ).toBeInTheDocument();
-    expect(select).toHaveValue("9");
+    expect(screen.getByLabelText("Tytuł")).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Edytuj" })).not.toBeInTheDocument();
+    const dialog = screen.getByRole("dialog");
+    expect(
+      within(dialog).getByRole("button", { name: "Usuń" }),
+    ).toBeInTheDocument();
+    // The footer's Zamknij joins the modal's own close (×) button.
+    expect(
+      within(dialog).getAllByRole("button", { name: "Zamknij" }),
+    ).toHaveLength(2);
   });
 
   test("user can delete a transaction after confirming", async () => {
@@ -522,7 +584,7 @@ describe("Transactions", () => {
     await user.type(screen.getByLabelText("Kwota"), "8.00");
     // The server's balance moves once it has stored the transaction.
     balance = "-53.99";
-    await user.click(screen.getByRole("button", { name: "Dodaj transakcję" }));
+    await user.click(screen.getByRole("button", { name: "Dodaj wydatek" }));
 
     await waitFor(() => expect(header).toHaveTextContent("-53.99"));
     expect(fetchMock).toHaveBeenCalledWith(
@@ -696,7 +758,7 @@ describe("Transactions", () => {
     await user.click(screen.getByRole("button", { name: "Nowa transakcja" }));
     await user.type(await screen.findByLabelText("Tytuł"), "Stary paragon");
     await user.type(screen.getByLabelText("Kwota"), "8.00");
-    await user.click(screen.getByRole("button", { name: "Dodaj transakcję" }));
+    await user.click(screen.getByRole("button", { name: "Dodaj wydatek" }));
 
     await waitFor(() =>
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
