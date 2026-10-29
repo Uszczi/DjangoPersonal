@@ -1,9 +1,12 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs } from "expo-router";
+import { useState } from "react";
 import type { ColorValue } from "react-native";
 
 import { LogoMark } from "../../src/LogoMark";
+import { MoreTabsMenu } from "../../src/MoreTabsMenu";
 import {
+  pinnedTab,
   tabDefinitions,
   useTabBarStore,
   type TabDefinition,
@@ -26,46 +29,70 @@ export default function TabsLayout() {
   // a route (`href: null`), so links to it still work.
   const order = useTabBarStore((state) => state.order);
   const hidden = useTabBarStore((state) => state.hidden);
+  // While some tabs are hidden, Konto's place shows Więcej: a popup with the
+  // hidden tabs and Konto itself.
+  const hiddenInOrder = order.filter((name) => hidden.includes(name));
+  const hasMore = hiddenInOrder.length > 0;
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
   return (
-    <Tabs
-      screenOptions={{
-        // The web Navbar: a deep-ink bar with small monospace labels.
-        headerStyle: { backgroundColor: colors.deepInk },
-        headerTintColor: colors.navText,
-        headerTitleStyle: { fontWeight: "700", fontSize: 16 },
-        headerShadowVisible: false,
-        headerLeft: () => <LogoMark />,
-        sceneStyle: { backgroundColor: colors.canvas },
-        tabBarStyle: {
-          backgroundColor: colors.deepInk,
-          borderTopColor: colors.deepInk,
-        },
-        tabBarActiveTintColor: colors.onSignal,
-        tabBarInactiveTintColor: colors.navMuted,
-        tabBarActiveBackgroundColor: colors.navSelected,
-        tabBarLabelStyle: {
-          fontFamily: fonts.utility,
-          fontSize: 10,
-          fontWeight: "600",
-          letterSpacing: 0.6,
-        },
-      }}
-    >
-      {order.map((name) => {
-        const tab = tabDefinitions[name];
-        return (
-          <Tabs.Screen
-            key={name}
-            name={name}
-            options={{
-              title: tab.title,
-              tabBarLabel: tab.label,
-              tabBarIcon: tabIcon(tab.icon),
-              href: hidden.includes(name) ? null : undefined,
-            }}
-          />
-        );
-      })}
-    </Tabs>
+    <>
+      <Tabs
+        screenOptions={{
+          // The web Navbar: a deep-ink bar with small monospace labels.
+          headerStyle: { backgroundColor: colors.deepInk },
+          headerTintColor: colors.navText,
+          headerTitleStyle: { fontWeight: "700", fontSize: 16 },
+          headerShadowVisible: false,
+          headerLeft: () => <LogoMark />,
+          sceneStyle: { backgroundColor: colors.canvas },
+          tabBarStyle: {
+            backgroundColor: colors.deepInk,
+            borderTopColor: colors.deepInk,
+          },
+          tabBarActiveTintColor: colors.onSignal,
+          tabBarInactiveTintColor: colors.navMuted,
+          tabBarActiveBackgroundColor: colors.navSelected,
+          tabBarLabelStyle: {
+            fontFamily: fonts.utility,
+            fontSize: 10,
+            fontWeight: "600",
+            letterSpacing: 0.6,
+          },
+        }}
+      >
+        {order.map((name) => {
+          const tab = tabDefinitions[name];
+          const isMore = hasMore && name === pinnedTab;
+          return (
+            <Tabs.Screen
+              key={name}
+              name={name}
+              options={{
+                title: tab.title,
+                tabBarLabel: isMore ? "Więcej" : tab.label,
+                tabBarIcon: tabIcon(isMore ? "ellipsis-horizontal" : tab.icon),
+                href: hidden.includes(name) ? null : undefined,
+              }}
+              listeners={
+                isMore
+                  ? {
+                      tabPress: (event) => {
+                        event.preventDefault();
+                        setIsMoreOpen(true);
+                      },
+                    }
+                  : undefined
+              }
+            />
+          );
+        })}
+      </Tabs>
+      {isMoreOpen && (
+        <MoreTabsMenu
+          hidden={hiddenInOrder}
+          onClose={() => setIsMoreOpen(false)}
+        />
+      )}
+    </>
   );
 }

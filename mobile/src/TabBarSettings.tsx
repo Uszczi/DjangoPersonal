@@ -32,7 +32,9 @@ export function TabBarSettings() {
         ))}
       </View>
       <Text style={form.hint}>
-        Zapisywany na tym urządzeniu. Karty Konto nie można ukryć.
+        Zapisywany na tym urządzeniu. Karty Konto nie można ukryć; gdy któraś
+        karta jest ukryta, w jej miejscu jest Więcej z ukrytymi kartami i
+        Kontem.
       </Text>
       <View style={{ flexDirection: "row", marginTop: 4 }}>
         <Button label="Przywróć domyślne" variant="secondary" onPress={reset} />
