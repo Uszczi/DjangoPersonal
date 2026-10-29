@@ -48,7 +48,22 @@ export interface TransactionResponse {
      *
      */
     readonly walletId: number;
+    /**
+     *
+     */
+    readonly kind: TransactionResponseKindEnum | null;
 }
+
+
+/**
+ * @export
+ */
+export const TransactionResponseKindEnum = {
+    Expense: 'expense',
+    Income: 'income',
+} as const;
+export type TransactionResponseKindEnum = typeof TransactionResponseKindEnum[keyof typeof TransactionResponseKindEnum];
+
 
 /**
  * Check if a given object implements the TransactionResponse interface.
@@ -61,6 +76,7 @@ export function instanceOfTransactionResponse(value: object): value is Transacti
     if (!('description' in value) || value['description'] === undefined) return false;
     if ((!('categoryId' in (value as Record<string, any>)) && !('category_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['categoryId'] === undefined && (value as Record<string, any>)['category_id'] === undefined)) return false;
     if ((!('walletId' in (value as Record<string, any>)) && !('wallet_id' in (value as Record<string, any>))) || ((value as Record<string, any>)['walletId'] === undefined && (value as Record<string, any>)['wallet_id'] === undefined)) return false;
+    if (!('kind' in value) || value['kind'] === undefined) return false;
     return true;
 }
 
@@ -81,6 +97,7 @@ export function TransactionResponseFromJSONTyped(json: any, ignoreDiscriminator:
         'description': json['description'],
         'categoryId': json['category_id'],
         'walletId': json['wallet_id'],
+        'kind': json['kind'],
     };
 }
 
@@ -88,7 +105,7 @@ export function TransactionResponseToJSON(json: any): TransactionResponse {
     return TransactionResponseToJSONTyped(json, false);
 }
 
-export function TransactionResponseToJSONTyped(value?: Omit<TransactionResponse, 'id'|'categoryId'|'walletId'> | null, ignoreDiscriminator: boolean = false): any {
+export function TransactionResponseToJSONTyped(value?: Omit<TransactionResponse, 'id'|'categoryId'|'walletId'|'kind'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

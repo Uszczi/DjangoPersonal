@@ -28,7 +28,22 @@ export interface CategoryRequest {
      *
      */
     icon?: string;
+    /**
+     *
+     */
+    kind?: CategoryRequestKindEnum;
 }
+
+
+/**
+ * @export
+ */
+export const CategoryRequestKindEnum = {
+    Expense: 'expense',
+    Income: 'income',
+} as const;
+export type CategoryRequestKindEnum = typeof CategoryRequestKindEnum[keyof typeof CategoryRequestKindEnum];
+
 
 /**
  * Check if a given object implements the CategoryRequest interface.
@@ -50,6 +65,7 @@ export function CategoryRequestFromJSONTyped(json: any, ignoreDiscriminator: boo
 
         'name': json['name'],
         'icon': json['icon'] == null ? undefined : json['icon'],
+        'kind': json['kind'] == null ? undefined : json['kind'],
     };
 }
 
@@ -66,6 +82,7 @@ export function CategoryRequestToJSONTyped(value?: CategoryRequest | null, ignor
 
         'name': value['name'],
         'icon': value['icon'],
+        'kind': value['kind'],
     };
 }
 

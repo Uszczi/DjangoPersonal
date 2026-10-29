@@ -36,7 +36,22 @@ export interface CategoryResponse {
      *
      */
     readonly isSystem?: boolean;
+    /**
+     *
+     */
+    kind: CategoryResponseKindEnum | null;
 }
+
+
+/**
+ * @export
+ */
+export const CategoryResponseKindEnum = {
+    Expense: 'expense',
+    Income: 'income',
+} as const;
+export type CategoryResponseKindEnum = typeof CategoryResponseKindEnum[keyof typeof CategoryResponseKindEnum];
+
 
 /**
  * Check if a given object implements the CategoryResponse interface.
@@ -45,6 +60,7 @@ export function instanceOfCategoryResponse(value: object): value is CategoryResp
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
     if (!('icon' in value) || value['icon'] === undefined) return false;
+    if (!('kind' in value) || value['kind'] === undefined) return false;
     return true;
 }
 
@@ -62,6 +78,7 @@ export function CategoryResponseFromJSONTyped(json: any, ignoreDiscriminator: bo
         'name': json['name'],
         'icon': json['icon'],
         'isSystem': json['is_system'] == null ? undefined : json['is_system'],
+        'kind': json['kind'],
     };
 }
 
@@ -78,6 +95,7 @@ export function CategoryResponseToJSONTyped(value?: Omit<CategoryResponse, 'id'|
 
         'name': value['name'],
         'icon': value['icon'],
+        'kind': value['kind'],
     };
 }
 

@@ -2073,6 +2073,13 @@ components:
           pattern: ^[a-z0-9]+(-[a-z0-9]+)*$
           title: Icon
           default: tag
+        kind:
+          type: string
+          enum:
+          - expense
+          - income
+          title: Kind
+          default: expense
       type: object
       required:
       - name
@@ -2094,11 +2101,20 @@ components:
           title: Is System
           default: false
           readOnly: true
+        kind:
+          anyOf:
+          - type: string
+            enum:
+            - expense
+            - income
+          - type: 'null'
+          title: Kind
       type: object
       required:
       - id
       - name
       - icon
+      - kind
       title: CategoryResponse
     CommentAttachmentResponse:
       properties:
@@ -2464,6 +2480,14 @@ components:
             pattern: ^[a-z0-9]+(-[a-z0-9]+)*$
           - type: 'null'
           title: Icon
+        kind:
+          anyOf:
+          - type: string
+            enum:
+            - expense
+            - income
+          - type: 'null'
+          title: Kind
       type: object
       title: PatchedCategoryRequest
     PatchedCounterEntryRequest:
@@ -3128,6 +3152,15 @@ components:
           type: integer
           title: Wallet Id
           readOnly: true
+        kind:
+          anyOf:
+          - type: string
+            enum:
+            - expense
+            - income
+          - type: 'null'
+          title: Kind
+          readOnly: true
       type: object
       required:
       - id
@@ -3137,6 +3170,7 @@ components:
       - description
       - category_id
       - wallet_id
+      - kind
       title: TransactionResponse
     UserResponse:
       properties:

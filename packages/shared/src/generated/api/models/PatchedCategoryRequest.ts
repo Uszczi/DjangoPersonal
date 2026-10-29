@@ -28,7 +28,22 @@ export interface PatchedCategoryRequest {
      *
      */
     icon?: string | null;
+    /**
+     *
+     */
+    kind?: PatchedCategoryRequestKindEnum | null;
 }
+
+
+/**
+ * @export
+ */
+export const PatchedCategoryRequestKindEnum = {
+    Expense: 'expense',
+    Income: 'income',
+} as const;
+export type PatchedCategoryRequestKindEnum = typeof PatchedCategoryRequestKindEnum[keyof typeof PatchedCategoryRequestKindEnum];
+
 
 /**
  * Check if a given object implements the PatchedCategoryRequest interface.
@@ -49,6 +64,7 @@ export function PatchedCategoryRequestFromJSONTyped(json: any, ignoreDiscriminat
 
         'name': json['name'] === undefined ? undefined : json['name'] === null ? null : json['name'],
         'icon': json['icon'] === undefined ? undefined : json['icon'] === null ? null : json['icon'],
+        'kind': json['kind'] === undefined ? undefined : json['kind'] === null ? null : json['kind'],
     };
 }
 
@@ -65,6 +81,7 @@ export function PatchedCategoryRequestToJSONTyped(value?: PatchedCategoryRequest
 
         'name': value['name'],
         'icon': value['icon'],
+        'kind': value['kind'],
     };
 }
 
