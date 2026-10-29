@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any
 
 from personal.core.accounts.contracts.auth import UserResponse
+from personal.core.bibliography.contracts import AttemptResponse, BibliographyItemResponse
 from personal.core.counters.contracts import CounterEntryResponse, CounterResponse
 from personal.core.expenses.contracts import (
     CategoryResponse,
@@ -22,6 +23,8 @@ from personal.core.work.contracts import (
     TimerResponse,
 )
 from personal.infra.models import (
+    Attempt,
+    BibliographyItem,
     Category,
     Counter,
     CounterEntry,
@@ -114,6 +117,22 @@ def counter_entry(obj: CounterEntry) -> dict[str, Any]:
 
 def counter_entries(objs: Iterable[CounterEntry]) -> list[dict[str, Any]]:
     return [counter_entry(o) for o in objs]
+
+
+def bibliography_item(obj: BibliographyItem) -> dict[str, Any]:
+    return BibliographyItemResponse.model_validate(obj).model_dump(mode='json')
+
+
+def bibliography_items(objs: Iterable[BibliographyItem]) -> list[dict[str, Any]]:
+    return [bibliography_item(o) for o in objs]
+
+
+def attempt(obj: Attempt) -> dict[str, Any]:
+    return AttemptResponse.model_validate(obj).model_dump(mode='json')
+
+
+def attempts(objs: Iterable[Attempt]) -> list[dict[str, Any]]:
+    return [attempt(o) for o in objs]
 
 
 def folder(obj: Folder) -> dict[str, Any]:

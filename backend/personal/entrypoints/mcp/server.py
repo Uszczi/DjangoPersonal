@@ -27,6 +27,13 @@ from sqlalchemy.orm import Session
 from personal import wiring
 from personal.core.accounts import handlers as accounts_handlers
 from personal.core.accounts.contracts.auth import LoginRequest, RefreshRequest, RegisterRequest
+from personal.core.bibliography import handlers as bibliography_handlers
+from personal.core.bibliography.contracts import (
+    BibliographyItemRequest,
+    ItemKind,
+    ItemStatus,
+    PatchedBibliographyItemRequest,
+)
 from personal.core.counters import handlers as counter_handlers
 from personal.core.counters.contracts import (
     CounterEntryRequest,
@@ -69,6 +76,8 @@ from .auth import client_address, get_current_user
 from .oauth import login_get, login_post, provider
 from .serialization import (
     account,
+    bibliography_item,
+    bibliography_items,
     categories,
     category,
     counter,
@@ -782,6 +791,86 @@ def delete_counter_entry(ctx: ToolContext, entry_id: int) -> str:
         )
         handler.execute(entry_id)
         return 'deleted'
+
+
+# --- bibliography: items (Pozycje) and their attempts (Podejścia) -----------
+
+
+@_tool
+def list_bibliography_items(
+    ctx: ToolContext, status: ItemStatus | None = None, kind: ItemKind | None = None
+) -> list[dict[str, Any]]:
+    """List the Bibliography's films and books, the most recently added first.
+
+    ``status`` (derived from the item's attempts: ``planned`` = nothing started yet)
+    and ``kind`` narrow the list."""
+    with _unit_of_work(ctx) as (session, user):
+        handler = bibliography_handlers.ListBibliographyItems(
+            wiring.bibliography_item_repository(session), wiring.attempt_repository(session), user
+        )
+        return bibliography_items(handler.execute(status=status, kind=kind))
+
+
+@_tool
+def get_bibliography_item(ctx: ToolContext, item_id: int) -> dict[str, Any]:
+    """Fetch one film or book with its status (``list_attempts`` gives its history)."""
+    with _unit_of_work(ctx) as (session, user):
+        handler = bibliography_handlers.GetBibliographyItem(
+            wiring.bibliography_item_repository(session), wiring.attempt_repository(session), user
+        )
+        return bibliography_item(handler.execute(item_id))
+
+
+@_tool
+def create_bibliography_item(
+    ctx: ToolContext,
+    kind: ItemKind,
+    title: str,
+    creator: str = '',
+    year: int | None = None,
+    length: int | None = None,
+    note: str = '',
+) -> dict[str, Any]:
+    """Add a film or book to the Bibliography. ``creator`` is the director or author;
+    ``length`` is minutes for a film, pages for a book. The kind cannot change later."""
+    payload = BibliographyItemRequest.model_validate(
+        {
+            'kind': kind,
+            'title': title,
+            'creator': creator,
+            'year': year,
+            'length': length,
+            'note': note,
+        }
+    )
+    with _unit_of_work(ctx) as (session, user):
+        handler = bibliography_handlers.CreateBibliographyItem(
+            wiring.bibliography_item_repository(session), user
+        )
+        return bibliography_item(handler.execute(payload))
+
+
+@_tool
+def update_bibliography_item(
+    ctx: ToolContext,
+    item_id: int,
+    title: str | None = None,
+    creator: str | None = None,
+    year: int | None = None,
+    length: int | None = None,
+    note: str | None = None,
+    kind: ItemKind | None = None,
+) -> dict[str, Any]:
+    """Update a film or book (partial). The kind is fixed at creation: passing
+    ``kind`` is refused, so a wrong kind means adding the item again."""
+    payload = PatchedBibliographyItemRequest.model_validate(
+        _provided(title=title, creator=creator, year=year, length=length, note=note, kind=kind)
+    )
+    with _unit_of_work(ctx) as (session, user):
+        handler = bibliography_handlers.UpdateBibliographyItem(
+            wiring.bibliography_item_repository(session), wiring.attempt_repository(session), user
+        )
+        return bibliography_item(handler.execute(item_id, payload))
 
 
 # --- notatnik: folders, whiteboards and Notatki -----------------------------

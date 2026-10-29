@@ -1,6 +1,7 @@
 """The MCP tools: they run the use cases on the test database, per call."""
 
 import asyncio
+from collections.abc import Callable
 from typing import Any
 
 import pytest
@@ -9,6 +10,7 @@ from mcp.server.fastmcp.exceptions import ToolError
 from personal.core.accounts.ports import TokenService
 from personal.entrypoints.mcp import runtime
 from personal.entrypoints.mcp.server import mcp
+from personal.infra import factories
 from personal.infra.llm import UnconfiguredGenerator
 from personal.infra.models import User
 from tests.conftest import DEFAULT_PASSWORD
@@ -249,3 +251,42 @@ def test_ask_notes_without_an_answer_model_is_a_tool_error(
 
     with pytest.raises(ToolError, match='LLM_MODEL'):
         call('ask_notes', question='Kiedy kończy się ubezpieczenie OC?')
+
+
+def test_bibliography_item_tools(mcp_user: User) -> None:
+    book = call('create_bibliography_item', kind='book', title='Lalka', creator='Prus', length=680)
+    film = call('create_bibliography_item', kind='film', title='Rejs', year=1970)
+    assert book['status'] == 'planned'
+
+    assert [i['title'] for i in call('list_bibliography_items')] == ['Rejs', 'Lalka']
+    assert [i['title'] for i in call('list_bibliography_items', kind='film')] == ['Rejs']
+    assert call('list_bibliography_items', status='finished') == []
+    assert call('get_bibliography_item', item_id=film['id'])['year'] == 1970
+
+    renamed = call('update_bibliography_item', item_id=book['id'], title='Lalka (wyd. 2)')
+    assert (renamed['title'], renamed['creator'], renamed['length']) == (
+        'Lalka (wyd. 2)',
+        'Prus',
+        680,
+    )
+
+
+def test_the_kind_of_a_bibliography_item_cannot_change(mcp_user: User) -> None:
+    book = call('create_bibliography_item', kind='book', title='Lalka')
+
+    with pytest.raises(ToolError, match='kind'):
+        call('update_bibliography_item', item_id=book['id'], kind='film')
+
+    assert call('get_bibliography_item', item_id=book['id'])['kind'] == 'book'
+
+
+def test_bibliography_tools_see_only_the_callers_items(
+    mcp_user: User, make_user: Callable[..., User]
+) -> None:
+    other = factories.BibliographyItemFactory(user=make_user('someone-else'), title='Cudze')
+
+    assert call('list_bibliography_items') == []
+    with pytest.raises(ToolError, match='Bibliography item not found.'):
+        call('get_bibliography_item', item_id=other.id)
+    with pytest.raises(ToolError, match='Bibliography item not found.'):
+        call('update_bibliography_item', item_id=other.id, title='Moje')
