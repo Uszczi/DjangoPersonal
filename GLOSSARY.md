@@ -51,16 +51,24 @@ The section of the app that holds a user's Whiteboards, Notatki and Folders.
 _Avoid_: Notatki (for the section — Notatki are the Markdown documents in it)
 
 **Wallet**:
-A named purse a user creates to separate money by purpose. Has a required name (trimmed, unique case-insensitively per user) and owns its Transactions. There is no default wallet — the user creates the first one. A Wallet's balance is the sum of its ledger: the opening balance it was created with, plus later corrections, minus its spending. The balance is never stored; it is computed from the Transactions.
+A named purse a user creates to separate money by purpose. Has a required name (trimmed, unique case-insensitively per user) and owns its Transactions. There is no default wallet — the user creates the first one. A Wallet's balance is the sum of its ledger: the opening balance it was created with, plus later corrections and its Incomes, minus its Expenses. The balance is never stored; it is computed from the Transactions.
 
 **Transaction**:
-A record of money spent. Has a required title, a required positive Decimal amount (at most two decimal places), a required date, an optional description, an optional Category, and a required Wallet. Deleting a Wallet cascades to its Transactions. Transactions the system writes against the System category — the opening balance and later balance corrections — may carry a negative amount, since they add to the balance rather than spend from it.
+A record of money moving through a Wallet: an Expense or an Income, as the kind of its Category decides; one without a Category is an Expense. Has a required title, a required positive Decimal amount (at most two decimal places), a required date, an optional description, an optional Category, and a required Wallet. Deleting a Wallet cascades to its Transactions. Transactions the system writes against the System category — the opening balance and later balance corrections — may carry a negative amount, since they add to the balance rather than spend from it.
 
 **Category**:
-A per-user label for classifying Transactions. Has a required name (trimmed, unique case-insensitively per user). The system seeds ten base categories plus the System category when the user registers. Deleting a Category cascades to its Transactions.
+A per-user label for classifying Transactions. Has a required name (trimmed, unique case-insensitively per user) and a kind, Expense or Income, which decides the direction of every Transaction filed under it. The kind is chosen when the Category is created (Expense unless stated) and never changes. The system seeds ten base Expense categories, four base Income categories and the System category when the user registers. Deleting a Category cascades to its Transactions.
+
+**Expense** (Wydatek):
+A Transaction filed under an Expense Category: money that leaves its Wallet and lowers the balance.
+_Avoid_: Cost, Koszt
+
+**Income** (Przychód):
+A Transaction filed under an Income Category: money that comes into its Wallet and raises the balance.
+_Avoid_: Revenue, Wpływ, Deposit
 
 **System category**:
-The reserved Category (`is_system`) that holds a Wallet's balance ledger — the opening balance on creation and the difference recorded whenever the current balance is set. It is seeded with the base categories, cannot be renamed or deleted, and the interface keeps it out of the category list.
+The reserved Category (`is_system`) that holds a Wallet's balance ledger — the opening balance on creation and the difference recorded whenever the current balance is set. It has no kind: its entries carry their own sign. Only the system files Transactions under it; the user can delete such an entry but not edit it, nor file their own Transactions there. It is seeded with the base categories, cannot be renamed or deleted, and the interface keeps it out of the category list.
 
 
 **Counter** (Licznik):
