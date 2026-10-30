@@ -224,6 +224,18 @@ export default function ExpensesScreen() {
           const category = item.categoryId
             ? categories.find((candidate) => candidate.id === item.categoryId)
             : undefined;
+          const isSystem = item.kind === null;
+          const income = item.kind === "income";
+          const amountText = isSystem
+            ? `${item.amount.startsWith("-") ? "−" : "+"}${item.amount.replace(/^-/, "")}`
+            : income
+              ? `+${item.amount}`
+              : `−${item.amount}`;
+          const amountColor = isSystem
+            ? colors.muted
+            : income
+              ? colors.income
+              : colors.expense;
           return (
             <Pressable
               style={common.row}
@@ -243,7 +255,9 @@ export default function ExpensesScreen() {
                     {item.description}
                   </Text>
                 )}
-                {category && (
+                {isSystem ? (
+                  <Text style={common.muted}>Wpis systemowy</Text>
+                ) : category ? (
                   <View style={styles.category}>
                     <NamedIcon
                       name={category.icon}
@@ -253,9 +267,11 @@ export default function ExpensesScreen() {
                     />
                     <Text style={common.muted}>{category.name}</Text>
                   </View>
-                )}
+                ) : null}
               </View>
-              <Text style={styles.amount}>{item.amount}</Text>
+              <Text style={[styles.amount, { color: amountColor }]}>
+                {amountText}
+              </Text>
             </Pressable>
           );
         }}

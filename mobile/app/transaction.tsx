@@ -24,7 +24,7 @@ import { Button } from "../src/Button";
 import { ChipGroup } from "../src/ChipGroup";
 import { confirmDestructive } from "../src/confirm";
 import { DateTimeField } from "../src/DateTimeField";
-import { useTheme } from "../src/theme";
+import { makeStyles, useTheme } from "../src/theme";
 
 /** `0` stands for "no category" in the chip group, which needs a non-null value. */
 const NO_CATEGORY = 0;
@@ -46,6 +46,7 @@ function validateAmount(raw: string): string {
  */
 export default function TransactionEditorScreen() {
   const { common, form } = useTheme();
+  const styles = useStyles();
   const params = useLocalSearchParams<{
     walletId: string;
     transactionId?: string;
@@ -92,13 +93,34 @@ export default function TransactionEditorScreen() {
     );
   }
 
+  // A System entry (kind null) is read-only: its signed amount is the ledger.
+  const isSystemEntry = transaction?.kind === null;
+  // The direction the chosen category carries (no category is an Expense).
+  const selectedCategory = categories.find((item) => item.id === category);
+  const kind = selectedCategory?.kind ?? "expense";
+
+  const screenTitle = isSystemEntry
+    ? "Wpis systemowy"
+    : transaction
+      ? kind === "income"
+        ? "Edytuj przychód"
+        : "Edytuj wydatek"
+      : kind === "income"
+        ? "Nowy przychód"
+        : "Nowy wydatek";
+  const saveLabel = transaction
+    ? "Zapisz zmiany"
+    : kind === "income"
+      ? "Dodaj przychód"
+      : "Dodaj wydatek";
+
   // The System category (balance corrections) is never offered for a new pick.
-  const categoryOptions = [
-    { value: NO_CATEGORY, label: "Bez kategorii" },
-    ...categories
-      .filter((item) => !item.isSystem || item.id === transaction?.categoryId)
-      .map((item) => ({ value: item.id, label: item.name })),
-  ];
+  const expenseCategories = categories.filter(
+    (item) => !item.isSystem && item.kind === "expense",
+  );
+  const incomeCategories = categories.filter(
+    (item) => !item.isSystem && item.kind === "income",
+  );
 
   async function submit() {
     const input: TransactionInput = {
@@ -150,20 +172,26 @@ export default function TransactionEditorScreen() {
     }
   }
 
+  const fieldsDisabled = isSaving || isSystemEntry;
+
   return (
     <KeyboardAvoidingView
       style={common.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Stack.Screen
-        options={{
-          title: transaction ? "Edytuj transakcję" : "Nowa transakcja",
-        }}
-      />
+      <Stack.Screen options={{ title: screenTitle }} />
       <ScrollView
         contentContainerStyle={form.content}
         keyboardShouldPersistTaps="handled"
       >
+        {isSystemEntry && (
+          <Text style={styles.systemNote}>
+            Ten wpis zapisał system (stan początkowy lub korekta stanu). Nie
+            można go edytować, tylko usunąć. Saldo poprawisz w ustawieniach
+            portfela.
+          </Text>
+        )}
+
         <Text style={form.label}>Tytuł</Text>
         <TextInput
           style={form.input}
@@ -171,7 +199,7 @@ export default function TransactionEditorScreen() {
           onChangeText={setTitle}
           maxLength={200}
           autoFocus={!transaction}
-          editable={!isSaving}
+          editable={!fieldsDisabled}
         />
 
         <Text style={form.label}>Kwota</Text>
@@ -181,7 +209,7 @@ export default function TransactionEditorScreen() {
           onChangeText={setAmount}
           keyboardType="decimal-pad"
           placeholder="0.00"
-          editable={!isSaving}
+          editable={!fieldsDisabled}
         />
 
         <Text style={form.label}>Data</Text>
@@ -189,7 +217,7 @@ export default function TransactionEditorScreen() {
           mode="date"
           value={dateFromKey(date)}
           onChange={(value) => setDate(dateKey(value))}
-          disabled={isSaving}
+          disabled={fieldsDisabled}
         />
 
         <Text style={form.label}>Opis</Text>
@@ -198,16 +226,44 @@ export default function TransactionEditorScreen() {
           value={description}
           onChangeText={setDescription}
           multiline
-          editable={!isSaving}
+          editable={!fieldsDisabled}
         />
 
         <Text style={form.label}>Kategoria</Text>
-        <ChipGroup
-          options={categoryOptions}
-          value={category}
-          onChange={setCategory}
-          disabled={isSaving}
-        />
+        {isSystemEntry ? (
+          <ChipGroup
+            options={[{ value: category, label: "System" }]}
+            value={category}
+            onChange={setCategory}
+            disabled
+          />
+        ) : (
+          <>
+            <Text style={styles.groupHeader}>Wydatki</Text>
+            <ChipGroup
+              options={[
+                { value: NO_CATEGORY, label: "Bez kategorii" },
+                ...expenseCategories.map((item) => ({
+                  value: item.id,
+                  label: item.name,
+                })),
+              ]}
+              value={category}
+              onChange={setCategory}
+              disabled={isSaving}
+            />
+            <Text style={styles.groupHeader}>Przychody</Text>
+            <ChipGroup
+              options={incomeCategories.map((item) => ({
+                value: item.id,
+                label: item.name,
+              }))}
+              value={category}
+              onChange={setCategory}
+              disabled={isSaving}
+            />
+          </>
+        )}
 
         {wallets.length > 1 && (
           <>
@@ -219,26 +275,37 @@ export default function TransactionEditorScreen() {
               }))}
               value={wallet}
               onChange={setWallet}
-              disabled={isSaving}
+              disabled={fieldsDisabled}
             />
           </>
         )}
 
         {formError !== "" && <Text style={form.error}>{formError}</Text>}
-        <View style={form.actions}>
-          <Button
-            label="Anuluj"
-            variant="secondary"
-            disabled={isSaving}
-            onPress={() => router.back()}
-          />
-          <Button
-            label={transaction ? "Zapisz zmiany" : "Dodaj transakcję"}
-            isBusy={isSaving}
-            onPress={() => void submit()}
-          />
-        </View>
-        {transaction && (
+        {isSystemEntry ? (
+          <View style={form.actions}>
+            <Button
+              label="Usuń transakcję"
+              variant="danger"
+              disabled={isSaving}
+              onPress={() => void remove()}
+            />
+          </View>
+        ) : (
+          <View style={form.actions}>
+            <Button
+              label="Anuluj"
+              variant="secondary"
+              disabled={isSaving}
+              onPress={() => router.back()}
+            />
+            <Button
+              label={saveLabel}
+              isBusy={isSaving}
+              onPress={() => void submit()}
+            />
+          </View>
+        )}
+        {transaction && !isSystemEntry && (
           <View style={form.actions}>
             <Button
               label="Usuń transakcję"
@@ -252,3 +319,24 @@ export default function TransactionEditorScreen() {
     </KeyboardAvoidingView>
   );
 }
+
+const useStyles = makeStyles((colors) => ({
+  groupHeader: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: 12,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+  },
+  systemNote: {
+    color: colors.inkSoft,
+    fontSize: 13,
+    lineHeight: 18,
+    backgroundColor: colors.wash,
+    borderRadius: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 4,
+  },
+}));

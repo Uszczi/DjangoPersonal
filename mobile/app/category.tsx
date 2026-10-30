@@ -19,18 +19,24 @@ import {
   useCreateCategory,
   useDeleteCategory,
   useUpdateCategory,
+  type CategoryInput,
+  type CategoryKind,
 } from "@personal/shared/queries/categories";
 
 import { Button } from "../src/Button";
 import { confirmDestructive } from "../src/confirm";
 import { IconPicker } from "../src/IconPicker";
-import { useTheme } from "../src/theme";
+import { makeStyles, useTheme } from "../src/theme";
 
-/** Creates a Category, or edits one (`?categoryId=`): its name and icon. */
+/** Creates a Category, or edits one (`?categoryId=`). A new category's kind
+ * comes from `?kind=` (its section); an edited one keeps its own kind. */
 export default function CategoryEditorScreen() {
   const { common, form } = useTheme();
-  const params = useLocalSearchParams<{ categoryId?: string }>();
+  const styles = useStyles();
+  const params = useLocalSearchParams<{ categoryId?: string; kind?: string }>();
   const categoryId = params.categoryId ? Number(params.categoryId) : null;
+  const requestedKind: CategoryKind =
+    params.kind === "income" ? "income" : "expense";
   const { data: categories = [] } = useCategories();
   const category =
     categoryId === null
@@ -53,8 +59,20 @@ export default function CategoryEditorScreen() {
     );
   }
 
+  // The kind is fixed at creation, so the editor shows it without changing it.
+  const kind: CategoryKind =
+    category === null
+      ? requestedKind
+      : category.kind === "income"
+        ? "income"
+        : "expense";
+  const kindLabel = kind === "income" ? "Przychód" : "Wydatek";
+
   async function submit() {
-    const input = { name: name.trim(), icon };
+    const input: CategoryInput =
+      category === null
+        ? { name: name.trim(), icon, kind }
+        : { name: name.trim(), icon };
     if (!input.name) {
       setFormError("Podaj nazwę kategorii.");
       return;
@@ -105,6 +123,9 @@ export default function CategoryEditorScreen() {
         contentContainerStyle={form.content}
         keyboardShouldPersistTaps="handled"
       >
+        <Text style={form.label}>Rodzaj</Text>
+        <Text style={styles.kindValue}>{kindLabel}</Text>
+
         <Text style={form.label}>Nazwa kategorii</Text>
         <TextInput
           style={form.input}
@@ -150,3 +171,11 @@ export default function CategoryEditorScreen() {
     </KeyboardAvoidingView>
   );
 }
+
+const useStyles = makeStyles((colors) => ({
+  kindValue: {
+    color: colors.ink,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+}));
