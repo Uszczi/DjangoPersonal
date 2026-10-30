@@ -1,6 +1,6 @@
 # Web: Incomes on the list, form and category panel
 
-Status: ready-for-agent
+Status: resolved
 Blocked by: 07
 
 Spec: [../spec.md](../spec.md), section "UI". Reference: branch `prototype/income-ui`, commit `c2dfaac` (variant A). Rewrite it properly; do not copy the prototype scaffolding (`fakeKind`, variant switcher).
@@ -17,3 +17,7 @@ Spec: [../spec.md](../spec.md), section "UI". Reference: branch `prototype/incom
 - [ ] Tests in `frontend/tests/components/WalletView.test.tsx`, `CategoryPanel.test.tsx` and the transaction editor's tests cover: the sign and colour per kind, the grouped picker, the read-only System entry, and creating an Income category.
 - [ ] `tests/theme.test.ts` passes with the new tokens.
 - [ ] `just check` passes.
+
+## Answer
+
+Done (2026-10-30) on `feat/income` (commit `c3a28d2`, review fixes in `07496d6`). New `income`/`expense` tokens in every palette and the `@theme` block; `WalletView` shows `+x` green / `−x` red with System entries muted ("Wpis systemowy"); the transaction form groups the picker by Wydatki/Przychody with "Bez kategorii (wydatek)" first and follows the kind in kicker/title/submit, opening System entries read-only (Usuń/Zamknij); `CategoryPanel` has two sections with their own create forms sending `kind`. Tests cover the sign/colour, the grouped picker, the read-only System entry, and creating an Income category. `just check` passes.

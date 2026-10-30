@@ -1,6 +1,6 @@
 # Backend: Category kind, balance rule and System guards
 
-Status: ready-for-agent
+Status: resolved
 Blocked by:
 
 Spec: [../spec.md](../spec.md), sections "Domain rules" and "Contract".
@@ -23,3 +23,7 @@ Spec: [../spec.md](../spec.md), sections "Domain rules" and "Contract".
 - [ ] Filing a Transaction under System (create or move) is a 400. Editing a System entry is a 400. Deleting it works.
 - [ ] `TransactionResponse.kind` is correct for Income, Expense, uncategorized and System.
 - [ ] Tests in `tests/core/expenses/`, `tests/infra/repo/` and `tests/entrypoints/http/routers/` cover the above. `just check` passes.
+
+## Answer
+
+Done (2026-10-30) on `feat/income` (commit `978abf8`). `Category.kind` (`expense`/`income`, non-null, server default `expense`) with the `0019` migration and a check constraint; the four Income base categories seeded at registration; the balance rule (`System` signed, Income `+`, else `−`); create takes `kind` and PUT/PATCH reject a change; transaction handlers refuse writes into `System` and edits of System entries (delete stays); `kind` on both responses (derived on `Transaction.kind`, `joinedload` on the paged list and on `find`). `just generate-api` + `CACHE_VERSION` 2 + the contract snapshot green. `just check` passes.
