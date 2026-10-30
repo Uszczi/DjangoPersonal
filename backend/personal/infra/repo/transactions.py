@@ -55,8 +55,14 @@ class TransactionRepository:
         return list(self.session.scalars(query))
 
     def find(self, transaction_id: int, *, user: User) -> TransactionModel | None:
-        query = select(TransactionModel).where(
-            TransactionModel.id == transaction_id, TransactionModel.user_id == user.id
+        # The category rides along: reading `kind` (or a System guard) off a
+        # single row should not add a query per request.
+        query = (
+            select(TransactionModel)
+            .options(joinedload(TransactionModel.category))
+            .where(
+                TransactionModel.id == transaction_id, TransactionModel.user_id == user.id
+            )
         )
         return self.session.scalars(query).first()
 

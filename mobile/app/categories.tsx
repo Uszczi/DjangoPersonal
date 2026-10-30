@@ -25,7 +25,6 @@ export default function CategoriesScreen() {
   const styles = useStyles();
   const {
     data: categories = [],
-    isPending: isLoading,
     isError,
   } = useCategories();
 
@@ -51,13 +50,6 @@ export default function CategoriesScreen() {
         keyExtractor={(category) => String(category.id)}
         contentContainerStyle={{ paddingBottom: 96 }}
         stickySectionHeadersEnabled={false}
-        ListEmptyComponent={
-          !isLoading ? (
-            <Text style={[common.muted, { padding: 24, textAlign: "center" }]}>
-              Brak kategorii.
-            </Text>
-          ) : undefined
-        }
         renderSectionHeader={({ section }) => (
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{section.title}</Text>

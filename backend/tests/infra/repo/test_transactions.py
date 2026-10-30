@@ -2,7 +2,6 @@
 
 from datetime import date
 from decimal import Decimal
-
 from typing import Any
 
 from sqlalchemy import event
@@ -90,4 +89,36 @@ def test_a_page_reads_every_kind_in_one_query(session: Session, user: User) -> N
         event.remove(session.bind, 'before_cursor_execute', record)
 
     assert kinds == {'s': None, 'i': 'income', 'e': 'expense', 'u': 'expense'}
+    assert len([s for s in statements if s.startswith('SELECT')]) == 1
+
+
+def test_find_reads_its_kind_in_one_query(session: Session, user: User) -> None:
+    transactions, categories = TransactionRepository(session), CategoryRepository(session)
+    wallet = WalletRepository(session).save(Wallet(user_id=user.id, name='Cash'))
+    food = categories.save(Category(user_id=user.id, name='Food'))
+    transaction = transactions.save(
+        Transaction(
+            title='Dinner',
+            amount=Decimal('1.00'),
+            date=date(2026, 10, 1),
+            user_id=user.id,
+            wallet=wallet,
+            category=food,
+        )
+    )
+    session.commit()
+    session.expunge_all()
+    statements: list[str] = []
+
+    def record(*args: Any) -> None:
+        statements.append(args[2])
+
+    event.listen(session.bind, 'before_cursor_execute', record)
+    try:
+        found = transactions.find(transaction.id, user=user)
+        assert found is not None
+        assert found.kind == 'expense'
+    finally:
+        event.remove(session.bind, 'before_cursor_execute', record)
+
     assert len([s for s in statements if s.startswith('SELECT')]) == 1

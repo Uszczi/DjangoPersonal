@@ -483,6 +483,52 @@ describe("Transactions", () => {
     ).toBeInTheDocument();
   });
 
+  test("the picker groups Wydatki and Przychody and the labels follow the kind", async () => {
+    const incomeCategory = {
+      id: 6,
+      name: "Wynagrodzenie",
+      icon: "banknote",
+      kind: "income",
+    };
+    fetchMock.mockImplementation(
+      routeByUrl({
+        transactions: [lunchTransactionApi],
+        categories: [...categoriesApi, incomeCategory],
+      }),
+    );
+    const user = userEvent.setup();
+
+    renderApp("/expenses/1");
+    await screen.findByRole("list", {
+      name: "Transakcje z dnia 18 października 2026",
+    });
+
+    await user.click(screen.getByRole("button", { name: "Nowa transakcja" }));
+
+    const wydatki = await screen.findByRole("group", { name: "Wydatki" });
+    expect(
+      within(wydatki).getByRole("option", { name: "Jedzenie" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("group", { name: "Przychody" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Bez kategorii (wydatek)" }),
+    ).toBeInTheDocument();
+
+    // Choosing an Income category flips the kicker, title and submit button.
+    await user.selectOptions(screen.getByLabelText("Kategoria"), "6");
+    expect(screen.getByText("NOWY PRZYCHÓD")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Nowy przychód" }),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Dodaj przychód",
+      }),
+    ).toBeInTheDocument();
+  });
+
   test("a System entry opens read-only with only Usuń and Zamknij", async () => {
     const correction = {
       id: 12,
