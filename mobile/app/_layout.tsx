@@ -41,6 +41,8 @@ const modalScreens = [
   ["bibliography-item", "Pozycja"],
   ["attempt", "Podejście"],
   ["attempt-progress", "Postęp"],
+  ["notatnik-name", "Nazwa"],
+  ["move-to-folder", "Przenieś do folderu"],
 ] as const;
 
 export default function RootLayout() {
@@ -94,6 +96,15 @@ export default function RootLayout() {
             <Stack.Screen
               name="bibliography/[id]"
               options={{ title: "Pozycja" }}
+            />
+            <Stack.Screen name="notes/[id]" options={{ title: "Notatka" }} />
+            <Stack.Screen
+              name="notes/folder/[id]"
+              options={{ title: "Folder" }}
+            />
+            <Stack.Screen
+              name="notes/ask"
+              options={{ title: "Zapytaj Notatki" }}
             />
             <Stack.Screen name="categories" options={{ title: "Kategorie" }} />
             {modalScreens.map(([name, title]) => (

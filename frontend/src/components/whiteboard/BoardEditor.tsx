@@ -2,12 +2,18 @@ import { useCallback, useEffect, useState } from "react";
 
 import { api } from "@personal/shared/api";
 import { Button, ErrorAlert, PageHeader, TextInput } from "@/design-system";
-import { useAutosave, type SavePayload } from "@/whiteboard/useAutosave";
+import { useAutosave } from "@personal/shared/useAutosave";
+import type { BoardDocument } from "@/whiteboard/boardDocument";
 import { useBoardName } from "@/whiteboard/useBoardName";
 import type { LoadedBoard } from "@/whiteboard/useLoadedBoard";
 
 import { MarkdownNoteEditor } from "./MarkdownNoteEditor";
 import { WhiteboardEditor } from "./WhiteboardEditor";
+
+/** What can be saved; the wire format stays in `save` below. */
+type SavePayload =
+  | { kind: "whiteboard"; doc: BoardDocument }
+  | { kind: "markdown"; markdown: string };
 
 const SAVE_LABELS = {
   saving: "Zapisywanie…",

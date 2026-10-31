@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, Search, X } from "lucide-react";
 
 import { IconButton, TextInput } from "@/design-system";
-import { findMatches, type TextMatch } from "@/whiteboard/textSearch";
+import { findMatches, type TextMatch } from "@personal/shared/textSearch";
 
 import type { ChangeEvent, KeyboardEvent } from "react";
 

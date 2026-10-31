@@ -21,8 +21,10 @@ export const ATTEMPTS_LOAD_ERROR =
   "Nie udało się wczytać podejść. Spróbuj ponownie.";
 export const BIBLIOGRAPHY_ITEMS_LOAD_ERROR =
   "Nie udało się wczytać Bibliografii. Odśwież stronę, aby spróbować ponownie.";
-/** The Notatnik's (web only). */
+/** The Notatnik's. */
 export const WHITEBOARDS_LOAD_ERROR =
   "Nie udało się wczytać tablic. Odśwież stronę, aby spróbować ponownie.";
+export const NOTE_LOAD_ERROR =
+  "Nie udało się wczytać notatki. Spróbuj ponownie.";
 export const FOLDERS_LOAD_ERROR =
   "Nie udało się wczytać folderów. Odśwież stronę, aby spróbować ponownie.";

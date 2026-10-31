@@ -6,9 +6,9 @@ import type {
   FolderResponse,
   WhiteboardResponse,
 } from "@personal/shared/generated/api";
-import { useFolders, useMoveFolder } from "@/queries/folders";
-import { useMoveWhiteboard } from "@/queries/whiteboards";
-import { flattenTree, subtreeIds } from "@/whiteboard/folderTree";
+import { useFolders, useMoveFolder } from "@personal/shared/queries/folders";
+import { useMoveWhiteboard } from "@personal/shared/queries/whiteboards";
+import { flattenTree, subtreeIds } from "@personal/shared/folderTree";
 
 type MoveTargetsModalProps = {
   /** The name of what is being moved. */

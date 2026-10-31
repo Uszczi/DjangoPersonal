@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
-import { api } from "@personal/shared/api";
-import type { WhiteboardSearchResult } from "@personal/shared/generated/api";
+import { api } from "./api";
+import type { WhiteboardSearchResult } from "./generated/api";
 
 /** How long typing must pause before the search goes to the server. */
 const DEBOUNCE_MS = 200;

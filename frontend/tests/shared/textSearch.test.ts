@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { findMatches } from "@/whiteboard/textSearch";
+import { findMatches } from "@personal/shared/textSearch";
 
 const found = (text: string, query: string) =>
   findMatches(text, query).map(({ start, end }) => text.slice(start, end));

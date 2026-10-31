@@ -1,7 +1,7 @@
 /**
  * The Notatnik's items (Tablice and Notatki) as server state, newest first.
  * One item's content is loaded and autosaved by the editor itself
- * (`useLoadedBoard`, `useAutosave`), not through this list.
+ * (`useAutosave`), not through this list.
  */
 import {
   queryOptions,
@@ -11,9 +11,8 @@ import {
   type QueryClient,
 } from "@tanstack/react-query";
 
-import { api } from "@personal/shared/api";
-import type { WhiteboardResponse } from "@personal/shared/generated/api";
-
+import { api } from "../api";
+import { ResponseError, type WhiteboardResponse } from "../generated/api";
 import { whiteboardKeys } from "./keys";
 
 /** A Tablica (`whiteboard`) or a Notatka (`markdown`). */
@@ -90,15 +89,68 @@ export function useMoveWhiteboard() {
         patchedWhiteboardRequest: { folderId },
       }),
     // A move counts as a change, so the item goes to the top of its new place.
-    onSuccess: (updated) => {
-      queryClient.setQueryData(
-        whiteboardsQuery.queryKey,
-        (list) =>
-          list &&
-          newestFirst(
-            list.map((item) => (item.id === updated.id ? updated : item)),
-          ),
-      );
-    },
+    onSuccess: (updated) => placeSaved(queryClient, updated),
   });
+}
+
+/**
+ * One item with its content, for an editor that reads it once and then keeps
+ * its own copy. Dropped as soon as the editor closes (`gcTime: 0`), so the
+ * next opening always loads what was last saved.
+ */
+export function useWhiteboard(id: number) {
+  return useQuery({
+    queryKey: whiteboardKeys.detail(id),
+    queryFn: ({ signal }) => api.whiteboardsRetrieve({ id }, { signal }),
+    staleTime: 0,
+    gcTime: 0,
+    // A deleted item stays deleted; asking again only delays saying so.
+    retry: (failureCount, error) =>
+      !(error instanceof ResponseError && error.response.status === 404) &&
+      failureCount < 3,
+  });
+}
+
+/** Put a saved item into the list at its new place (a save makes it newest). */
+function placeSaved(queryClient: QueryClient, updated: WhiteboardResponse) {
+  queryClient.setQueryData(
+    whiteboardsQuery.queryKey,
+    (list) =>
+      list &&
+      newestFirst(
+        list.map((item) => (item.id === updated.id ? updated : item)),
+      ),
+  );
+}
+
+/**
+ * Rename an item. A taken name comes back as the server's error, for the
+ * caller to show.
+ */
+export function useRenameWhiteboard() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, name }: { id: number; name: string }) =>
+      api.whiteboardsPartialUpdate({ id, patchedWhiteboardRequest: { name } }),
+    onSuccess: (updated) => placeSaved(queryClient, updated),
+  });
+}
+
+/** Save a Notatka's Markdown (its whole content). */
+export function useSaveNoteMarkdown() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, markdown }: { id: number; markdown: string }) =>
+      api.whiteboardsPartialUpdate({
+        id,
+        patchedWhiteboardRequest: { content: { markdown } },
+      }),
+    onSuccess: (updated) => placeSaved(queryClient, updated),
+  });
+}
+
+/** The Markdown of a Notatka's content; empty for anything else. */
+export function noteMarkdown(item: WhiteboardResponse): string {
+  const markdown = (item.content as { markdown?: unknown } | null)?.markdown;
+  return typeof markdown === "string" ? markdown : "";
 }

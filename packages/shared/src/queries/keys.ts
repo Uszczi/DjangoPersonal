@@ -55,6 +55,19 @@ export const transactionKeys = {
   wallet: (walletId: number) => ["transactions", "wallet", walletId] as const,
 };
 
+/** The Notatnik's Folders, listed flat. */
+export const folderKeys = {
+  all: ["folders"] as const,
+};
+
+/** The Notatnik's items (Tablice and Notatki). */
+export const whiteboardKeys = {
+  /** The list, without its items' content. */
+  all: ["whiteboards"] as const,
+  /** One item with its content, as the retrieve endpoint returns it. */
+  detail: (id: number) => ["whiteboards", "detail", id] as const,
+};
+
 export const counterKeys = {
   all: ["counters"] as const,
   entries: (counterId: number) => ["counterEntries", counterId] as const,

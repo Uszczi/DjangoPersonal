@@ -1,4 +1,4 @@
-import type { FolderResponse } from "@personal/shared/generated/api";
+import type { FolderResponse } from "./generated/api";
 
 /** The API lists Folders flat, each with its parent; these helpers read that as a tree. */
 

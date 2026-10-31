@@ -1,19 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { BoardDocument } from "@/whiteboard/boardDocument";
-
-/** What can be saved; the wire format stays in the route. */
-export type SavePayload =
-  | { kind: "whiteboard"; doc: BoardDocument }
-  | { kind: "markdown"; markdown: string };
-
 export type SaveState = "saved" | "saving" | "failed";
 
 const DEFAULT_DELAY_MS = 500;
 
 /**
- * One autosave mechanism for Whiteboards and Notes: 500 ms debounce, `flush`
- * (Ctrl+S / "Zapisz" / unmount), `saveNow` for immediate writes, and
+ * One autosave mechanism for Whiteboards and Notatki on both clients: 500 ms
+ * debounce, `flush` (Ctrl+S / "Zapisz" / leaving the app / unmount), `saveNow` for immediate writes, and
  * a saved/saving/failed indicator. The wire format stays in the route.
  */
 export function useAutosave<T>(

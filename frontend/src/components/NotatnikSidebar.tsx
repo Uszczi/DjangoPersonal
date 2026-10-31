@@ -34,7 +34,7 @@ import {
   FOLDERS_LOAD_ERROR,
   WHITEBOARDS_LOAD_ERROR,
 } from "@personal/shared/loadErrors";
-import { useFolders } from "@/queries/folders";
+import { useFolders } from "@personal/shared/queries/folders";
 import { useLayoutStore } from "@/stores/layout";
 import { ShowModal } from "@/stores/modal";
 import {
@@ -42,15 +42,15 @@ import {
   useDeleteWhiteboard,
   useWhiteboards,
   type ItemKind,
-} from "@/queries/whiteboards";
+} from "@personal/shared/queries/whiteboards";
 import { useExpandedFolders } from "@/whiteboard/expandedFolders";
 import {
   childFolders,
   folderPath,
   matchesQuery,
   subtreeIds,
-} from "@/whiteboard/folderTree";
-import { useNotatnikSearch } from "@/whiteboard/useNotatnikSearch";
+} from "@personal/shared/folderTree";
+import { useNotatnikSearch } from "@personal/shared/useNotatnikSearch";
 
 /** How many matching lines a search result shows before "i N więcej". */
 const SHOWN_LINES = 3;

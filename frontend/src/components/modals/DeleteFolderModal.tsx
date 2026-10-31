@@ -3,7 +3,7 @@ import { useState } from "react";
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { Button, ErrorAlert, Modal, ModalFooter } from "@/design-system";
 import type { FolderResponse } from "@personal/shared/generated/api";
-import { useDeleteFolder } from "@/queries/folders";
+import { useDeleteFolder } from "@personal/shared/queries/folders";
 
 type DeleteFolderModalProps = {
   folder: FolderResponse;

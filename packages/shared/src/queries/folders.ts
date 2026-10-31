@@ -10,14 +10,9 @@ import {
   type QueryClient,
 } from "@tanstack/react-query";
 
-import { api } from "@personal/shared/api";
-import type {
-  FolderResponse,
-  WhiteboardResponse,
-} from "@personal/shared/generated/api";
-
-import { subtreeIds } from "@/whiteboard/folderTree";
-
+import { api } from "../api";
+import { subtreeIds } from "../folderTree";
+import type { FolderResponse, WhiteboardResponse } from "../generated/api";
 import { folderKeys, whiteboardKeys } from "./keys";
 
 /** The server's order: by name, character by character, so case matters. */

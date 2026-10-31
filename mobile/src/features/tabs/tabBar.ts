@@ -26,6 +26,7 @@ export const tabNames = [
   "expenses",
   "counters",
   "bibliography",
+  "notes",
   "account",
 ] as const;
 
@@ -71,6 +72,12 @@ export const tabDefinitions: Record<TabName, TabDefinition> = {
     // So many tabs leave no room for the full word under the icon.
     label: "Biblio",
     icon: "library-outline",
+  },
+  notes: {
+    name: "notes",
+    href: "/notes",
+    title: "Notatnik",
+    icon: "document-text-outline",
   },
   account: {
     name: "account",

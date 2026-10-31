@@ -10,7 +10,7 @@ import {
   TextInput,
 } from "@/design-system";
 import type { FolderResponse } from "@personal/shared/generated/api";
-import { useCreateFolder, useRenameFolder } from "@/queries/folders";
+import { useCreateFolder, useRenameFolder } from "@personal/shared/queries/folders";
 
 type FolderEditorModalProps = {
   /** Omit to create a new folder; pass one to rename it. */

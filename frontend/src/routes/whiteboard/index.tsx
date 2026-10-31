@@ -2,13 +2,13 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { Button, EmptyState, PageHeader } from "@/design-system";
 import { FolderEditorModal } from "@/components/modals/FolderEditorModal";
-import { useFolders } from "@/queries/folders";
+import { useFolders } from "@personal/shared/queries/folders";
 import { ShowModal } from "@/stores/modal";
 import {
   useCreateItem,
   useWhiteboards,
   type ItemKind,
-} from "@/queries/whiteboards";
+} from "@personal/shared/queries/whiteboards";
 
 export const Route = createFileRoute("/whiteboard/")({
   component: WhiteboardsPage,

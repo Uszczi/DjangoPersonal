@@ -4,7 +4,7 @@ import { api } from "@personal/shared/api";
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { replaceWhiteboard } from "@/queries/whiteboards";
+import { replaceWhiteboard } from "@personal/shared/queries/whiteboards";
 
 /**
  * In-place renaming of a Notatnik item. The name is saved directly, not through autosave:
