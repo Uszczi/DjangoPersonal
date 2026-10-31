@@ -146,15 +146,46 @@ services:
       timeout: 5s
       retries: 5
 
+  # Daily pg_dump at BACKUP_TIME (UTC): kept on the host in BACKUP_DIR (outside
+  # the repo checkout, which the deploy rsync --delete would wipe) and, when
+  # RESTIC_REPOSITORY is set, encrypted to an S3 bucket. See backup/backup.sh.
+  # No env_file: it gets only the database and restic credentials.
+  backup:
+    build:
+      context: ./backup
+    container_name: djangopersonal-backup
+    restart: unless-stopped
+    init: true
+    environment:
+      PGHOST: db
+      PGPORT: "5432"
+      PGDATABASE: ${POSTGRES_DB:-djangopersonal_db}
+      PGUSER: ${POSTGRES_USER:-app_user}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-supersecret}
+      BACKUP_TIME: ${BACKUP_TIME:-03:00}
+      RESTIC_REPOSITORY: ${RESTIC_REPOSITORY:-}
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:-}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+    volumes:
+      - ${BACKUP_DIR:-/var/backups/djangopersonal}:/backups
+      - backup-metrics:/metrics
+    depends_on:
+      db:
+        condition: service_healthy
+
   node-exporter:
     image: prom/node-exporter:latest
     container_name: djangopersonal-node-exporter
     restart: unless-stopped
     command:
       - --path.rootfs=/host
+      # The backup service's djangopersonal_backup_* metrics.
+      - --collector.textfile.directory=/textfile
     pid: host
     volumes:
       - /:/host:ro,rslave
+      - backup-metrics:/textfile:ro
 
   prometheus:
     image: prom/prometheus:latest
@@ -237,6 +268,7 @@ services:
 volumes:
   redis-data:
   pgdata:
+  backup-metrics:
   grafana-storage:
   loki-data:
   tempo-data:
