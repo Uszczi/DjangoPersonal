@@ -38,8 +38,9 @@ type StatusSection = {
 };
 
 /**
- * One section per status, in the Project's order, like the web task list. A
- * collapsed section keeps its header but renders no rows.
+ * One section per status, in the Project's order, like the web task list,
+ * including statuses with no Tasks yet. A collapsed section keeps its header
+ * but renders no rows.
  */
 function sectionsByStatus(
   tasks: TaskResponse[],
@@ -48,18 +49,16 @@ function sectionsByStatus(
 ): StatusSection[] {
   const order = [...statuses, ...tasks.map((task) => task.status)];
   const titles = [...new Set(order)];
-  return titles
-    .map((title) => {
-      const statusTasks = tasks.filter((task) => task.status === title);
-      const isCollapsed = collapsed.has(title);
-      return {
-        title,
-        count: statusTasks.length,
-        isCollapsed,
-        data: isCollapsed ? [] : statusTasks,
-      };
-    })
-    .filter((section) => section.count > 0);
+  return titles.map((title) => {
+    const statusTasks = tasks.filter((task) => task.status === title);
+    const isCollapsed = collapsed.has(title);
+    return {
+      title,
+      count: statusTasks.length,
+      isCollapsed,
+      data: isCollapsed ? [] : statusTasks,
+    };
+  });
 }
 
 /**
@@ -202,6 +201,11 @@ export function ProjectTasks({
                 {section.title.toUpperCase()} · {section.count}
               </Text>
             </Pressable>
+            {!section.isCollapsed && section.count === 0 && (
+              <Text style={[common.muted, styles.sectionEmpty]}>
+                Brak w tym statusie.
+              </Text>
+            )}
             {!section.isCollapsed && (
               <NestedReorderableList
                 data={section.data}
@@ -323,6 +327,7 @@ const useStyles = makeStyles((colors) => ({
   header: { padding: 16, gap: 12 },
   error: { color: colors.danger },
   empty: { padding: 24, textAlign: "center" },
+  sectionEmpty: { paddingHorizontal: 16, paddingVertical: 12, fontSize: 13 },
   listContent: { paddingBottom: 96 },
   sectionHeader: {
     flexDirection: "row",
