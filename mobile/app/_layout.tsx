@@ -13,7 +13,7 @@ import { useBibliographyViewStore } from "@personal/shared/stores/bibliographyVi
 import { useNewTaskStatusStore } from "@personal/shared/stores/newTaskStatus";
 import { useThemeStore } from "@personal/shared/stores/theme";
 
-import { useCounterViewStore } from "../src/counterView";
+import { useCounterViewStore } from "@personal/shared/stores/counterView";
 import { queryClient } from "../src/queryClient";
 import { useTabBarStore } from "../src/tabBar";
 import { useTaskProjectStore } from "../src/taskProject";

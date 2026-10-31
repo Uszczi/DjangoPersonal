@@ -4,29 +4,38 @@ import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import {
-  counterRecencyLabel,
+  COUNTER_TILE_VALUE_LABELS,
+  COUNTER_VIEW_MODE_LABELS,
+  counterTileContent,
   entryCountLabel,
 } from "@personal/shared/counterFormat";
 import type { CounterResponse } from "@personal/shared/generated/api";
+import type { CounterTileContent } from "@personal/shared/counterFormat";
 import { COUNTERS_LOAD_ERROR } from "@personal/shared/loadErrors";
 import {
   useCounters,
   useSaveCounterEntry,
 } from "@personal/shared/queries/counters";
+import {
+  COUNTER_TILE_VALUES,
+  COUNTER_VIEW_MODES,
+  useCounterViewStore,
+} from "@personal/shared/stores/counterView";
 
 import { ChipGroup } from "../../src/ChipGroup";
-import {
-  type CounterViewMode,
-  useCounterViewStore,
-} from "../../src/counterView";
 import { Fab } from "../../src/Fab";
 import { plusOneEntry } from "../../src/plusOne";
 import { makeStyles, fonts, useTheme } from "../../src/theme";
 
-const VIEW_MODES: { value: CounterViewMode; label: string }[] = [
-  { value: "rows", label: "Wiersze" },
-  { value: "tiles", label: "Kafelki" },
-];
+const VIEW_MODES = COUNTER_VIEW_MODES.map((value) => ({
+  value,
+  label: COUNTER_VIEW_MODE_LABELS[value],
+}));
+
+const TILE_VALUES = COUNTER_TILE_VALUES.map((value) => ({
+  value,
+  label: COUNTER_TILE_VALUE_LABELS[value],
+}));
 
 function openCounter(counter: CounterResponse) {
   router.push({ pathname: "/counters/[id]", params: { id: counter.id } });
@@ -41,6 +50,8 @@ export default function CountersScreen() {
   const [actionError, setActionError] = useState("");
   const viewMode = useCounterViewStore((state) => state.mode);
   const setViewMode = useCounterViewStore((state) => state.setMode);
+  const tileValue = useCounterViewStore((state) => state.tileValue);
+  const setTileValue = useCounterViewStore((state) => state.setTileValue);
   const isTiles = viewMode === "tiles";
   const pageError = isError ? COUNTERS_LOAD_ERROR : "";
 
@@ -73,6 +84,16 @@ export default function CountersScreen() {
           value={viewMode}
           onChange={setViewMode}
         />
+        {isTiles && (
+          <View style={styles.tileValues}>
+            <Text style={common.muted}>Na środku kafelka</Text>
+            <ChipGroup
+              options={TILE_VALUES}
+              value={tileValue}
+              onChange={setTileValue}
+            />
+          </View>
+        )}
       </View>
       <FlatList
         // FlatList cannot change numColumns in place; remount on switch.
@@ -100,36 +121,11 @@ export default function CountersScreen() {
         }
         renderItem={({ item }) =>
           isTiles ? (
-            <View style={styles.tile}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Otwórz licznik: ${item.name}`}
-                onPress={() => openCounter(item)}
-                style={({ pressed }) => [
-                  styles.tileBody,
-                  pressed && styles.tilePressed,
-                ]}
-              >
-                <Text style={[styles.name, styles.tileText]} numberOfLines={1}>
-                  {item.name}
-                </Text>
-                <Text
-                  style={[styles.tileTotal, styles.tileText]}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  accessibilityLabel={`Suma: ${item.total}`}
-                >
-                  {item.total}
-                </Text>
-                <Text style={common.muted}>
-                  {entryCountLabel(item.entryCount)}
-                </Text>
-                <RecencyLine counter={item} />
-              </Pressable>
-              <View style={styles.tileFooter}>
-                <PlusOneButton counter={item} onPress={addOne} />
-              </View>
-            </View>
+            <CounterTile
+              counter={item}
+              content={counterTileContent(item, tileValue)}
+              onAddOne={addOne}
+            />
           ) : (
             <Pressable
               style={common.row}
@@ -162,16 +158,54 @@ export default function CountersScreen() {
   );
 }
 
-/** The tile's streak, or the days since its last entry; nothing before the first. */
-function RecencyLine({ counter }: { counter: CounterResponse }) {
+/** Name, the chosen value large, what it counts, the streak; +1 in a footer. */
+function CounterTile({
+  counter,
+  content,
+  onAddOne,
+}: {
+  counter: CounterResponse;
+  content: CounterTileContent;
+  onAddOne: (counter: CounterResponse) => Promise<void>;
+}) {
   const { common } = useTheme();
   const styles = useStyles();
-  const label = counterRecencyLabel(counter);
-  if (label === null) return null;
   return (
-    <Text style={[common.muted, counter.streakDays > 0 && styles.streak]}>
-      {label}
-    </Text>
+    <View style={styles.tile}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Otwórz licznik: ${counter.name}`}
+        onPress={() => openCounter(counter)}
+        style={({ pressed }) => [
+          styles.tileBody,
+          pressed && styles.tilePressed,
+        ]}
+      >
+        <Text style={[styles.name, styles.tileText]} numberOfLines={1}>
+          {counter.name}
+        </Text>
+        <Text
+          style={[styles.tileTotal, styles.tileText]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          accessibilityLabel={content.valueLabel}
+        >
+          {content.value}
+        </Text>
+        {content.unit !== null && (
+          <Text style={common.muted}>{content.unit}</Text>
+        )}
+        <Text style={common.muted}>{content.caption}</Text>
+        {content.recency !== null && (
+          <Text style={[common.muted, counter.streakDays > 0 && styles.streak]}>
+            {content.recency}
+          </Text>
+        )}
+      </Pressable>
+      <View style={styles.tileFooter}>
+        <PlusOneButton counter={counter} onPress={onAddOne} />
+      </View>
+    </View>
   );
 }
 
@@ -198,6 +232,7 @@ function PlusOneButton({
 
 const useStyles = makeStyles((colors) => ({
   toolbar: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 },
+  tileValues: { marginTop: 10, gap: 6 },
   listContent: { paddingBottom: 96 },
   tileListContent: { paddingHorizontal: 16, paddingTop: 8, gap: 12 },
   tileRow: { gap: 12 },
