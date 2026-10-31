@@ -126,14 +126,17 @@ export function migrateTabBar(persisted: unknown, version: number): unknown {
 }
 
 /**
- * Which bottom tabs are shown, and in what order, remembered on this device.
+ * Which bottom tabs are shown, and in what order. `order` is remembered on
+ * this device; `hidden` is this device's copy of the account's mobile
+ * settings, whose source of truth is the server (see `queries/mobileSettings`).
  * Rehydrated in `app/_layout.tsx` once setup has pointed `platformStorage`
  * at secure storage.
  */
 type TabBarState = {
   order: TabName[];
   hidden: TabName[];
-  setVisible: (name: TabName, isVisible: boolean) => void;
+  /** Replace the hidden tabs, dropping unknown ids and the pinned one. */
+  setHidden: (hidden: unknown) => void;
   /** Swap a tab with its neighbour; `offset` is -1 (earlier) or 1 (later). */
   move: (name: TabName, offset: -1 | 1) => void;
   reset: () => void;
@@ -144,11 +147,16 @@ export const useTabBarStore = create<TabBarState>()(
     (set) => ({
       order: [...tabNames],
       hidden: [],
-      setVisible: (name, isVisible) =>
+      setHidden: (hidden) =>
         set((state) => {
-          if (name === pinnedTab) return state;
-          const others = state.hidden.filter((hidden) => hidden !== name);
-          return { hidden: isVisible ? others : [...others, name] };
+          const next = normalizeHidden(hidden);
+          if (
+            next.length === state.hidden.length &&
+            next.every((tab, index) => tab === state.hidden[index])
+          ) {
+            return state;
+          }
+          return { hidden: next };
         }),
       move: (name, offset) =>
         set((state) => {

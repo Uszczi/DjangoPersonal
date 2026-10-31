@@ -33,6 +33,7 @@ from personal.infra.repo import (
     CounterEntryRepository,
     CounterRepository,
     FolderRepository,
+    MobileSettingsRepository,
     NoteChunkRepository,
     ProjectRepository,
     TaskCommentRepository,
@@ -54,6 +55,10 @@ def user_repository(session: Session) -> UserRepository:
 
 def user_settings_repository(session: Session) -> UserSettingsRepository:
     return UserSettingsRepository(session)
+
+
+def mobile_settings_repository(session: Session) -> MobileSettingsRepository:
+    return MobileSettingsRepository(session)
 
 
 def project_repository(session: Session) -> ProjectRepository:

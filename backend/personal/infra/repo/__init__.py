@@ -19,6 +19,7 @@ from .errors import (
     TaskHasTimeEntries,
 )
 from .folders import FolderRepository
+from .mobile_settings import MobileSettingsRepository
 from .note_chunks import NoteChunkRepository, ScoredChunk
 from .projects import ProjectRepository
 from .task_comments import CommentAttachmentRepository, TaskCommentRepository
@@ -47,6 +48,7 @@ __all__ = [
     'FolderRepository',
     'InboxProtected',
     'InvalidFolderName',
+    'MobileSettingsRepository',
     'NoteChunkRepository',
     'ProjectHasTimeEntries',
     'ProjectRepository',

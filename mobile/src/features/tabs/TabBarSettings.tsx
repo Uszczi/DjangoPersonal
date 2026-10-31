@@ -8,16 +8,33 @@ import {
   useTabBarStore,
   type TabName,
 } from "@/features/tabs/tabBar";
+import { useUpdateHiddenTabs } from "@/queries/mobileSettings";
 import { useTheme } from "@/theme";
 import { card, form } from "@/ui/classes";
 
 /**
  * The Konto section that picks which bottom tabs show and in what order:
  * a switch per tab and arrows to move it. Konto itself cannot be hidden.
+ * Visibility is saved to the account; the order stays on this device.
  */
 export function TabBarSettings() {
   const order = useTabBarStore((state) => state.order);
   const reset = useTabBarStore((state) => state.reset);
+  const { mutate } = useUpdateHiddenTabs();
+
+  const toggleVisibility = (name: TabName, isVisible: boolean) => {
+    const hidden = useTabBarStore.getState().hidden;
+    const next = isVisible
+      ? hidden.filter((item) => item !== name)
+      : [...hidden, name];
+    mutate(next);
+  };
+
+  const restoreDefaults = () => {
+    reset();
+    mutate([]);
+  };
+
   return (
     <View className={card.section}>
       <Text className={card.kicker}>PASEK KART</Text>
@@ -28,16 +45,21 @@ export function TabBarSettings() {
             name={name}
             isFirst={index === 0}
             isLast={index === order.length - 1}
+            onToggle={toggleVisibility}
           />
         ))}
       </View>
       <Text className={form.hint}>
-        Zapisywany na tym urządzeniu. Karty Konto nie można ukryć; gdy któraś
-        karta jest ukryta, w jej miejscu jest Więcej z ukrytymi kartami i
-        Kontem.
+        Widoczność kart zapisuje się na koncie; ich kolejność — na tym
+        urządzeniu. Karty Konto nie można ukryć; gdy któraś karta jest ukryta,
+        w jej miejscu jest Więcej z ukrytymi kartami i Kontem.
       </Text>
       <View className="mt-1 flex-row">
-        <Button label="Przywróć domyślne" variant="secondary" onPress={reset} />
+        <Button
+          label="Przywróć domyślne"
+          variant="secondary"
+          onPress={restoreDefaults}
+        />
       </View>
     </View>
   );
@@ -47,14 +69,15 @@ function TabRow({
   name,
   isFirst,
   isLast,
+  onToggle,
 }: {
   name: TabName;
   isFirst: boolean;
   isLast: boolean;
+  onToggle: (name: TabName, isVisible: boolean) => void;
 }) {
   const { colors } = useTheme();
   const isVisible = useTabBarStore((state) => !state.hidden.includes(name));
-  const setVisible = useTabBarStore((state) => state.setVisible);
   const move = useTabBarStore((state) => state.move);
   const tab = tabDefinitions[name];
   const isPinned = name === pinnedTab;
@@ -90,7 +113,7 @@ function TabRow({
         accessibilityLabel={`Pokazuj kartę ${tab.title}`}
         value={isVisible}
         disabled={isPinned}
-        onValueChange={(value) => setVisible(name, value)}
+        onValueChange={(value) => onToggle(name, value)}
         trackColor={{ true: colors.signal, false: colors.controlBorder }}
       />
     </View>

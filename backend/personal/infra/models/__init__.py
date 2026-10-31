@@ -12,6 +12,7 @@ from .bibliography_item import BibliographyItem
 from .category import Category
 from .counter import Counter, CounterEntry
 from .folder import Folder
+from .mobile_settings import MobileSettings
 from .note_chunk import NoteChunk
 from .project import Project
 from .task import Task
@@ -32,6 +33,7 @@ __all__ = [
     'Counter',
     'CounterEntry',
     'Folder',
+    'MobileSettings',
     'NoteChunk',
     'Project',
     'INLINE_IMAGE_TYPES',

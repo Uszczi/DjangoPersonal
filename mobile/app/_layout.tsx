@@ -16,6 +16,7 @@ import { useThemeStore } from "@personal/shared/stores/theme";
 
 import { useCounterViewStore } from "@personal/shared/stores/counterView";
 import { queryClient } from "@/queryClient";
+import { TabBarSync } from "@/features/tabs/TabBarSync";
 import { useTabBarStore } from "@/features/tabs/tabBar";
 import { useTaskListSettingsStore } from "@/features/tasks/taskListSettings";
 import { useTaskProjectStore } from "@/features/tasks/taskProject";
@@ -78,6 +79,7 @@ export default function RootLayout() {
         persistOptions={persistOptions}
       >
         <AccountThemeSync />
+        <TabBarSync />
         <StatusBar style="light" />
         <Stack
           screenOptions={{

@@ -100,6 +100,11 @@ import {
     LoginResponseToJSON,
 } from '../models/LoginResponse';
 import {
+    type MobileSettingsResponse,
+    MobileSettingsResponseFromJSON,
+    MobileSettingsResponseToJSON,
+} from '../models/MobileSettingsResponse';
+import {
     type NotesAnswer,
     NotesAnswerFromJSON,
     NotesAnswerToJSON,
@@ -134,6 +139,11 @@ import {
     PatchedFolderRequestFromJSON,
     PatchedFolderRequestToJSON,
 } from '../models/PatchedFolderRequest';
+import {
+    type PatchedMobileSettingsRequest,
+    PatchedMobileSettingsRequestFromJSON,
+    PatchedMobileSettingsRequestToJSON,
+} from '../models/PatchedMobileSettingsRequest';
 import {
     type PatchedProjectRequest,
     PatchedProjectRequestFromJSON,
@@ -568,6 +578,13 @@ export interface FoldersPartialUpdateRequest {
      *
      */
     patchedFolderRequest: PatchedFolderRequest;
+}
+
+export interface MobileSettingsPartialUpdateRequest {
+    /**
+     *
+     */
+    patchedMobileSettingsRequest: PatchedMobileSettingsRequest;
 }
 
 export interface NotesAskRequest {
@@ -2885,6 +2902,106 @@ export class PersonalApi extends runtime.BaseAPI {
      */
     async foldersPartialUpdate(requestParameters: FoldersPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<FolderResponse> {
         const response = await this.foldersPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for mobileSettingsPartialUpdate without sending the request
+     */
+    async mobileSettingsPartialUpdateRequestOpts(requestParameters: MobileSettingsPartialUpdateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['patchedMobileSettingsRequest'] == null) {
+            throw new runtime.RequiredError(
+                'patchedMobileSettingsRequest',
+                'Required parameter "patchedMobileSettingsRequest" was null or undefined when calling mobileSettingsPartialUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/mobile-settings/`;
+
+        return {
+            path: urlPath,
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedMobileSettingsRequestToJSON(requestParameters['patchedMobileSettingsRequest']),
+        };
+    }
+
+    /**
+     * Update Mobile Settings
+     */
+    async mobileSettingsPartialUpdateRaw(requestParameters: MobileSettingsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MobileSettingsResponse>> {
+        const requestOptions = await this.mobileSettingsPartialUpdateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => MobileSettingsResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Update Mobile Settings
+     */
+    async mobileSettingsPartialUpdate(requestParameters: MobileSettingsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MobileSettingsResponse> {
+        const response = await this.mobileSettingsPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for mobileSettingsRetrieve without sending the request
+     */
+    async mobileSettingsRetrieveRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/mobile-settings/`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Get Mobile Settings
+     */
+    async mobileSettingsRetrieveRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<MobileSettingsResponse>> {
+        const requestOptions = await this.mobileSettingsRetrieveRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => MobileSettingsResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get Mobile Settings
+     */
+    async mobileSettingsRetrieve(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MobileSettingsResponse> {
+        const response = await this.mobileSettingsRetrieveRaw(initOverrides);
         return await response.value();
     }
 

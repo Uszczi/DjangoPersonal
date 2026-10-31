@@ -14,6 +14,7 @@ from . import (
     categories,
     counters,
     folders,
+    mobile_settings,
     notes,
     projects,
     settings,
@@ -31,6 +32,7 @@ router = APIRouter()
 for module in (
     auth,
     settings,
+    mobile_settings,
     projects,
     tasks,
     task_comments,

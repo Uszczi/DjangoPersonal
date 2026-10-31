@@ -31,6 +31,7 @@ from personal.infra.repo import (
     CounterEntryRepository,
     CounterRepository,
     FolderRepository,
+    MobileSettingsRepository,
     NoteChunkRepository,
     AttemptRepository,
     BibliographyItemRepository,
@@ -122,6 +123,9 @@ BibliographyItemRepositoryDep = Annotated[
 AttemptRepositoryDep = Annotated[AttemptRepository, _per_session(wiring.attempt_repository)]
 UserSettingsRepositoryDep = Annotated[
     UserSettingsRepository, _per_session(wiring.user_settings_repository)
+]
+MobileSettingsRepositoryDep = Annotated[
+    MobileSettingsRepository, _per_session(wiring.mobile_settings_repository)
 ]
 PasswordHasherDep = Annotated[PasswordHasher, Depends(wiring.password_hasher)]
 PasswordPolicyDep = Annotated[PasswordPolicy, Depends(wiring.password_policy)]

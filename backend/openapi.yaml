@@ -121,6 +121,41 @@ paths:
                 $ref: '#/components/schemas/UserSettingsResponse'
       security:
       - JWTAuth: []
+  /api/v1/mobile-settings/:
+    get:
+      tags:
+      - personal
+      summary: Get Mobile Settings
+      operationId: mobile_settings_retrieve
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MobileSettingsResponse'
+      security:
+      - JWTAuth: []
+    patch:
+      tags:
+      - personal
+      summary: Update Mobile Settings
+      operationId: mobile_settings_partial_update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMobileSettingsRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MobileSettingsResponse'
+      security:
+      - JWTAuth: []
   /api/v1/projects/:
     get:
       tags:
@@ -2353,6 +2388,19 @@ components:
       - text
       title: MatchingLine
       description: One line of a Notatka that matched a search, numbered from 1.
+    MobileSettingsResponse:
+      properties:
+        hidden_tabs:
+          items:
+            type: string
+            maxLength: 32
+            pattern: ^[a-z][a-z0-9-]*$
+          type: array
+          title: Hidden Tabs
+      type: object
+      required:
+      - hidden_tabs
+      title: MobileSettingsResponse
     NoteSource:
       properties:
         number:
@@ -2555,6 +2603,20 @@ components:
           title: Parent Id
       type: object
       title: PatchedFolderRequest
+    PatchedMobileSettingsRequest:
+      properties:
+        hidden_tabs:
+          anyOf:
+          - items:
+              type: string
+              maxLength: 32
+              pattern: ^[a-z][a-z0-9-]*$
+            type: array
+            maxItems: 50
+          - type: 'null'
+          title: Hidden Tabs
+      type: object
+      title: PatchedMobileSettingsRequest
     PatchedProjectRequest:
       properties:
         name:

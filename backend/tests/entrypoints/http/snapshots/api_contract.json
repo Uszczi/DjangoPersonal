@@ -296,6 +296,22 @@
     ]
   },
   {
+    "method": "GET",
+    "path": "/api/v1/mobile-settings/",
+    "operation_id": "mobile_settings_retrieve",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/mobile-settings/",
+    "operation_id": "mobile_settings_partial_update",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
     "method": "POST",
     "path": "/api/v1/notes/ask/",
     "operation_id": "notes_ask",

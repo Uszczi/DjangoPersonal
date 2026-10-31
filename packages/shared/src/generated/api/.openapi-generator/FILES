@@ -19,6 +19,7 @@ models/FolderResponse.ts
 models/LoginRequest.ts
 models/LoginResponse.ts
 models/MatchingLine.ts
+models/MobileSettingsResponse.ts
 models/NoteSource.ts
 models/NotesAnswer.ts
 models/PatchedAttemptRequest.ts
@@ -27,6 +28,7 @@ models/PatchedCategoryRequest.ts
 models/PatchedCounterEntryRequest.ts
 models/PatchedCounterRequest.ts
 models/PatchedFolderRequest.ts
+models/PatchedMobileSettingsRequest.ts
 models/PatchedProjectRequest.ts
 models/PatchedTaskCommentRequest.ts
 models/PatchedTaskUpdateRequest.ts
