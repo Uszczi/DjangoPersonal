@@ -4,6 +4,7 @@ import { useCallback, useState, type ReactNode } from "react";
 import { Platform, Pressable, RefreshControl, Text, View } from "react-native";
 import {
   NestedReorderableList,
+  reorderItems,
   ScrollViewContainer,
   useReorderableDrag,
   type ReorderableListReorderEvent,
@@ -38,8 +39,9 @@ type StatusSection = {
 };
 
 /**
- * One section per status, in the Project's order, like the web task list. A
- * collapsed section keeps its header but renders no rows.
+ * One section per status, in the Project's order, like the web task list,
+ * including statuses with no Tasks yet. A collapsed section keeps its header
+ * but renders no rows.
  */
 function sectionsByStatus(
   tasks: TaskResponse[],
@@ -48,26 +50,68 @@ function sectionsByStatus(
 ): StatusSection[] {
   const order = [...statuses, ...tasks.map((task) => task.status)];
   const titles = [...new Set(order)];
-  return titles
-    .map((title) => {
-      const statusTasks = tasks.filter((task) => task.status === title);
-      const isCollapsed = collapsed.has(title);
-      return {
-        title,
-        count: statusTasks.length,
-        isCollapsed,
-        data: isCollapsed ? [] : statusTasks,
-      };
-    })
-    .filter((section) => section.count > 0);
+  return titles.map((title) => {
+    const statusTasks = tasks.filter((task) => task.status === title);
+    const isCollapsed = collapsed.has(title);
+    return {
+      title,
+      count: statusTasks.length,
+      isCollapsed,
+      data: isCollapsed ? [] : statusTasks,
+    };
+  });
+}
+
+/** One row of the task list: a status heading, an empty status's note, or a Task. */
+type Row =
+  | { kind: "header"; section: StatusSection }
+  | { kind: "empty"; status: string }
+  | { kind: "task"; task: TaskResponse };
+
+/** The sections as one flat list, so a Task can be dragged past a heading into another status. */
+function rowsOf(sections: StatusSection[]): Row[] {
+  return sections.flatMap((section): Row[] => [
+    { kind: "header", section },
+    ...(!section.isCollapsed && section.count === 0
+      ? [{ kind: "empty" as const, status: section.title }]
+      : []),
+    ...section.data.map((task) => ({ kind: "task" as const, task })),
+  ]);
+}
+
+function rowKey(row: Row): string {
+  if (row.kind === "header") return `header:${row.section.title}`;
+  if (row.kind === "empty") return `empty:${row.status}`;
+  return `task:${row.task.id}`;
 }
 
 /**
- * The Tasks of one Project, one collapsible section per status. Each section
- * is its own reorderable list, so a long press drags a Task only within its
- * status, the same constraint as the web, where Tasks are ordered within
- * their status. Shared by the Zadania tab and the Project screen; `header`
- * goes above the list, inside its scroll view.
+ * Where a dropped Task lands: the status of the nearest heading above it (the
+ * first status when dropped above every heading) and its index among that
+ * status's Tasks shown above it.
+ */
+function dropTarget(
+  rows: Row[],
+  index: number,
+): { status: string; position: number } | null {
+  let position = 0;
+  for (let i = index - 1; i >= 0; i--) {
+    const row = rows[i];
+    if (row.kind === "header") return { status: row.section.title, position };
+    if (row.kind === "task") position++;
+  }
+  const first = rows.find((row) => row.kind === "header");
+  return first?.kind === "header"
+    ? { status: first.section.title, position: 0 }
+    : null;
+}
+
+/**
+ * The Tasks of one Project, one collapsible section per status. All sections
+ * are one reorderable list, so a long press drags a Task within its status or
+ * past a heading into another one (an empty or collapsed status too), like
+ * the web. Shared by the Zadania tab and the Project screen; `header` goes
+ * above the list, inside its scroll view.
  */
 export function ProjectTasks({
   project,
@@ -126,13 +170,25 @@ export function ProjectTasks({
     router.navigate("/time");
   }
 
-  async function reorder(section: StatusSection, from: number, to: number) {
-    const task = section.data[from];
-    if (!task || from === to) return;
+  async function reorder(rows: Row[], from: number, to: number) {
+    const dragged = rows[from];
+    if (dragged?.kind !== "task" || from === to) return;
+    const task = dragged.task;
+    const target = dropTarget(reorderItems(rows, from, to), to);
+    if (!target) return;
+    const isSameStatus = target.status === task.status;
+    if (isSameStatus) {
+      const before = dropTarget(rows, from);
+      if (before?.position === target.position) return;
+    }
     setActionError("");
     try {
       // The cached list moves at once; a refused move snaps back on reload.
-      await moveTask.mutateAsync({ task, position: to });
+      await moveTask.mutateAsync({
+        task,
+        position: target.position,
+        status: isSameStatus ? undefined : target.status,
+      });
     } catch (error) {
       setActionError(await apiErrorMessage(error));
     }
@@ -157,6 +213,7 @@ export function ProjectTasks({
     project?.projectStatuses ?? [],
     collapsedStatuses,
   );
+  const rows = rowsOf(sections);
 
   return (
     <View style={common.screen}>
@@ -184,51 +241,62 @@ export function ProjectTasks({
             Brak zadań w tym projekcie.
           </Text>
         )}
-        {sections.map((section) => (
-          <View key={section.title}>
-            <Pressable
-              style={styles.sectionHeader}
-              accessibilityRole="button"
-              accessibilityState={{ expanded: !section.isCollapsed }}
-              accessibilityLabel={`${section.isCollapsed ? "Rozwiń" : "Zwiń"} status ${section.title}`}
-              onPress={() => toggleSection(section.title)}
-            >
-              <Ionicons
-                name={section.isCollapsed ? "chevron-forward" : "chevron-down"}
-                size={14}
-                color={colors.muted}
-              />
-              <Text style={styles.sectionTitle}>
-                {section.title.toUpperCase()} · {section.count}
-              </Text>
-            </Pressable>
-            {!section.isCollapsed && (
-              <NestedReorderableList
-                data={section.data}
-                keyExtractor={(task) => String(task.id)}
-                onReorder={({ from, to }: ReorderableListReorderEvent) =>
-                  void reorder(section, from, to)
-                }
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-                renderItem={({ item }) => (
-                  <TaskRow
-                    task={item}
-                    isDone={item.status === terminalStatus}
-                    onOpen={() =>
-                      router.push({
-                        pathname: "/task",
-                        params: { taskId: item.id, projectId },
-                      })
+        <NestedReorderableList
+          data={rows}
+          keyExtractor={rowKey}
+          onReorder={({ from, to }: ReorderableListReorderEvent) =>
+            void reorder(rows, from, to)
+          }
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          renderItem={({ item }) => {
+            if (item.kind === "header") {
+              const section = item.section;
+              return (
+                <Pressable
+                  style={[styles.sectionHeader, styles.rowFill]}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: !section.isCollapsed }}
+                  accessibilityLabel={`${section.isCollapsed ? "Rozwiń" : "Zwiń"} status ${section.title}`}
+                  onPress={() => toggleSection(section.title)}
+                >
+                  <Ionicons
+                    name={
+                      section.isCollapsed ? "chevron-forward" : "chevron-down"
                     }
-                    onToggle={() => void toggleTask(item)}
-                    onStartTimer={() => void startTimer(item)}
+                    size={14}
+                    color={colors.muted}
                   />
-                )}
+                  <Text style={styles.sectionTitle}>
+                    {section.title.toUpperCase()} · {section.count}
+                  </Text>
+                </Pressable>
+              );
+            }
+            if (item.kind === "empty") {
+              return (
+                <Text style={[common.muted, styles.sectionEmpty]}>
+                  Brak w tym statusie.
+                </Text>
+              );
+            }
+            const task = item.task;
+            return (
+              <TaskRow
+                task={task}
+                isDone={task.status === terminalStatus}
+                onOpen={() =>
+                  router.push({
+                    pathname: "/task",
+                    params: { taskId: task.id, projectId },
+                  })
+                }
+                onToggle={() => void toggleTask(task)}
+                onStartTimer={() => void startTimer(task)}
               />
-            )}
-          </View>
-        ))}
+            );
+          }}
+        />
       </ScrollViewContainer>
       {project && (
         <Fab
@@ -266,10 +334,10 @@ function TaskRow({
 
   return (
     <Pressable
-      style={[common.row, styles.row]}
+      style={[common.row, styles.rowFill]}
       accessibilityRole="button"
       accessibilityLabel={`Edytuj zadanie: ${task.title}`}
-      accessibilityHint="Przytrzymaj, aby zmienić kolejność"
+      accessibilityHint="Przytrzymaj, aby zmienić kolejność lub status"
       onPress={onOpen}
       onLongPress={drag}
     >
@@ -307,7 +375,7 @@ function TaskRow({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Przenieś zadanie: ${task.title}`}
-        accessibilityHint="Przytrzymaj i przeciągnij, aby zmienić kolejność"
+        accessibilityHint="Przytrzymaj i przeciągnij, aby zmienić kolejność lub status"
         hitSlop={8}
         delayLongPress={150}
         onLongPress={drag}
@@ -323,6 +391,7 @@ const useStyles = makeStyles((colors) => ({
   header: { padding: 16, gap: 12 },
   error: { color: colors.danger },
   empty: { padding: 24, textAlign: "center" },
+  sectionEmpty: { paddingHorizontal: 16, paddingVertical: 12, fontSize: 13 },
   listContent: { paddingBottom: 96 },
   sectionHeader: {
     flexDirection: "row",
@@ -340,7 +409,7 @@ const useStyles = makeStyles((colors) => ({
     color: colors.muted,
   },
   // A dragged row floats over its neighbours, so it needs its own fill.
-  row: { backgroundColor: colors.canvas },
+  rowFill: { backgroundColor: colors.canvas },
   checkbox: {
     width: 22,
     height: 22,
