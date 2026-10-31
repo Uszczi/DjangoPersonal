@@ -132,7 +132,7 @@ export default function CounterEntryEditorScreen() {
             accessibilityLabel="Zmień znak"
             disabled={isSaving}
             onPress={toggleSign}
-            style={{ flex: 0, minWidth: 56 }}
+            className="min-w-14 flex-none"
           />
           <TextInput
             style={[form.input, { flex: 1 }]}

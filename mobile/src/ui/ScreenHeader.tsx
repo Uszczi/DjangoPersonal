@@ -4,7 +4,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { makeStyles, useTheme } from "../theme";
+import { useTheme } from "../theme";
 
 export type HeaderAction = {
   icon: ComponentProps<typeof Ionicons>["name"];
@@ -35,14 +35,14 @@ export function ScreenHeader({
   onTitlePress?: () => void;
   titleAccessibilityLabel?: string;
 }) {
-  const { headerOptions } = useTheme();
-  const styles = useStyles();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const tint = headerOptions.headerTintColor;
+  const tint = colors.navText;
 
   return (
-    <View style={[headerOptions.headerStyle, { paddingTop: insets.top }]}>
-      <View style={styles.row}>
+    // Matches the native header (`headerOptions` in theme.ts).
+    <View className="bg-deep-ink" style={{ paddingTop: insets.top }}>
+      <View className="flex-row items-center gap-1 px-2 ios:h-11 android:h-14">
         {left ??
           (router.canGoBack() && (
             <Pressable
@@ -50,7 +50,7 @@ export function ScreenHeader({
               accessibilityLabel="Wstecz"
               hitSlop={12}
               onPress={() => router.back()}
-              style={styles.button}
+              className="size-10 items-center justify-center"
             >
               <Ionicons
                 name={Platform.OS === "ios" ? "chevron-back" : "arrow-back"}
@@ -65,19 +65,11 @@ export function ScreenHeader({
             accessibilityLabel={titleAccessibilityLabel ?? title}
             hitSlop={8}
             onPress={onTitlePress}
-            style={({ pressed }) => [
-              styles.title,
-              styles.titleButton,
-              pressed && styles.pressed,
-            ]}
+            className="mx-2 min-h-10 flex-1 flex-row items-center gap-1.5 active:opacity-60"
           >
             <Text
               numberOfLines={1}
-              style={[
-                styles.titleText,
-                headerOptions.headerTitleStyle,
-                { color: tint },
-              ]}
+              className="shrink text-[16px] font-bold text-nav-text"
             >
               {title}
             </Text>
@@ -87,11 +79,7 @@ export function ScreenHeader({
           <Text
             accessibilityRole="header"
             numberOfLines={1}
-            style={[
-              styles.title,
-              headerOptions.headerTitleStyle,
-              { color: tint },
-            ]}
+            className="mx-2 flex-1 text-[16px] font-bold text-nav-text"
           >
             {title}
           </Text>
@@ -103,7 +91,7 @@ export function ScreenHeader({
             accessibilityLabel={action.accessibilityLabel}
             hitSlop={16}
             onPress={action.onPress}
-            style={styles.button}
+            className="size-10 items-center justify-center"
           >
             <Ionicons name={action.icon} size={22} color={tint} />
           </Pressable>
@@ -112,28 +100,3 @@ export function ScreenHeader({
     </View>
   );
 }
-
-const useStyles = makeStyles(() => ({
-  row: {
-    height: Platform.OS === "ios" ? 44 : 56,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 8,
-    gap: 4,
-  },
-  button: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  title: { flex: 1, marginHorizontal: 8 },
-  titleButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    minHeight: 40,
-  },
-  titleText: { flexShrink: 1 },
-  pressed: { opacity: 0.6 },
-}));

@@ -276,7 +276,7 @@ function CommentItem({ comment }: { comment: TaskCommentResponse }) {
               variant="secondary"
               disabled={updateComment.isPending}
               onPress={() => setDraft(null)}
-              style={styles.submit}
+              className="ml-auto flex-1"
             />
             <Button
               label="Zapisz"
@@ -406,7 +406,7 @@ function NewCommentForm({ task }: { task: TaskResponse }) {
           accessibilityLabel="Dodaj komentarz"
           isBusy={isSending}
           onPress={() => void submit()}
-          style={styles.submit}
+          className="ml-auto flex-1"
         />
       </View>
     </View>

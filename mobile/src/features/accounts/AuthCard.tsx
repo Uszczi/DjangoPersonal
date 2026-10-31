@@ -57,7 +57,7 @@ export function AuthCard({
               disabled={!canSubmit}
               isBusy={isSubmitting}
               onPress={onSubmit}
-              style={styles.submit}
+              className="flex-none"
             />
           </View>
           <Text style={styles.footer}>

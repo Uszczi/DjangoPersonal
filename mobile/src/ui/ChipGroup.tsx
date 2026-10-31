@@ -1,7 +1,5 @@
 import { Pressable, Text, View } from "react-native";
 
-import { makeStyles } from "../theme";
-
 type ChipOption<T> = { value: T; label: string };
 
 type ChipGroupProps<T> = {
@@ -21,10 +19,11 @@ export function ChipGroup<T extends string | number>({
   disabled = false,
   nowrap = false,
 }: ChipGroupProps<T>) {
-  const styles = useStyles();
   return (
     <View
-      style={[styles.group, nowrap && styles.nowrap]}
+      className={
+        nowrap ? "flex-row flex-nowrap gap-2" : "flex-row flex-wrap gap-2"
+      }
       accessibilityRole="radiogroup"
     >
       {options.map((option) => {
@@ -36,9 +35,20 @@ export function ChipGroup<T extends string | number>({
             accessibilityState={{ checked: isSelected, disabled }}
             disabled={disabled}
             onPress={() => onChange(option.value)}
-            style={[styles.chip, isSelected && styles.chipSelected]}
+            // The web ToggleGroup: secondary buttons, the chosen one primary.
+            className={
+              isSelected
+                ? "rounded-[5px] border border-signal bg-signal px-[13px] py-[9px]"
+                : "rounded-[5px] border border-control-border bg-transparent px-[13px] py-[9px]"
+            }
           >
-            <Text style={[styles.label, isSelected && styles.labelSelected]}>
+            <Text
+              className={
+                isSelected
+                  ? "text-[13px] font-semibold text-on-signal"
+                  : "text-[13px] font-semibold text-ink-soft"
+              }
+            >
               {option.label}
             </Text>
           </Pressable>
@@ -47,23 +57,3 @@ export function ChipGroup<T extends string | number>({
     </View>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  group: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  nowrap: { flexWrap: "nowrap" },
-  // The web ToggleGroup: secondary buttons, the chosen one primary.
-  chip: {
-    borderWidth: 1,
-    borderColor: colors.controlBorder,
-    borderRadius: 5,
-    paddingHorizontal: 13,
-    paddingVertical: 9,
-    backgroundColor: "transparent",
-  },
-  chipSelected: {
-    backgroundColor: colors.signal,
-    borderColor: colors.signal,
-  },
-  label: { color: colors.inkSoft, fontSize: 13, fontWeight: "600" },
-  labelSelected: { color: colors.onSignal },
-}));
