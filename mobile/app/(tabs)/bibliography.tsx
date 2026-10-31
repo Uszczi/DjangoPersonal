@@ -21,10 +21,7 @@ import {
   type ItemKind,
   type ItemStatus,
 } from "@personal/shared/bibliographyFormat";
-import {
-  groupByYear,
-  type YearGroup,
-} from "@personal/shared/bibliographyYears";
+import { groupByYear, type YearRow } from "@personal/shared/bibliographyYears";
 import type { BibliographyItemResponse } from "@personal/shared/generated/api";
 import { fuzzyFilter } from "@personal/shared/fuzzy";
 import {
@@ -76,6 +73,9 @@ export default function BibliographyScreen() {
   } = useBibliographyItems({ kind, status });
   const viewMode = useBibliographyViewStore((state) => state.mode);
   const setViewMode = useBibliographyViewStore((state) => state.setMode);
+  const dividers = useBibliographyViewStore((state) => state.dividers);
+  const setDividers = useBibliographyViewStore((state) => state.setDividers);
+  const [folded, setFolded] = useState<ReadonlySet<string>>(new Set());
   const isYearView = viewMode === "years";
   const attempts = useAllAttempts(isYearView);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -91,22 +91,51 @@ export default function BibliographyScreen() {
   const isFiltered = kind !== undefined || status !== undefined;
   const isSearching = query.trim() !== "";
   const shownItems = fuzzyFilter(items, query, itemSearchText);
-  // The item view is one section without a header: the list as it always was.
-  const groups: YearGroup[] = isYearView
-    ? attempts.data
-      ? groupByYear(shownItems, attempts.data)
-      : []
-    : [
+  const groups =
+    isYearView && attempts.data ? groupByYear(shownItems, attempts.data) : [];
+  const years = groups.filter((group) => group.key !== "planned");
+  const sections: Section[] = !isYearView
+    ? // The item view is one section without a header: the list as it always was.
+      [
         {
           key: "items",
-          label: "",
-          rows: shownItems.map((item) => ({ item, attempt: null })),
+          data: shownItems.map((item) => ({ item, attempt: null })),
         },
-      ];
-  const sections = groups
-    .filter((group) => group.rows.length > 0)
-    .map((group) => ({ ...group, data: group.rows }));
+      ]
+    : groups.flatMap((group): Section[] => {
+        if (group.key === "planned") {
+          return [{ key: group.key, title: group.label, data: group.rows }];
+        }
+        if (!dividers) {
+          return [{ key: group.key, data: group.rows }];
+        }
+        // With dividers, a section per month; the first carries the year bar.
+        // A folded year is its bar alone.
+        const year = {
+          key: group.key,
+          label: group.label,
+          count: group.rows.length,
+        };
+        if (folded.has(group.key)) {
+          return [{ key: group.key, year, data: [] }];
+        }
+        return group.months.map((month, index) => ({
+          key: month.key,
+          year: index === 0 ? year : undefined,
+          month: month.label,
+          data: month.rows,
+        }));
+      });
   const isLoading = isPending || (isYearView && attempts.isPending);
+
+  function toggleYear(key: string) {
+    setFolded((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
 
   async function refresh() {
     setIsRefreshing(true);
@@ -128,6 +157,28 @@ export default function BibliographyScreen() {
           value={viewMode}
           onChange={setViewMode}
         />
+        {isYearView && (
+          <View style={styles.yearActions}>
+            {dividers && years.length > 0 && (
+              <>
+                <TextButton
+                  label="Zwiń wszystko"
+                  onPress={() =>
+                    setFolded(new Set(years.map((year) => year.key)))
+                  }
+                />
+                <TextButton
+                  label="Rozwiń wszystko"
+                  onPress={() => setFolded(new Set())}
+                />
+              </>
+            )}
+            <TextButton
+              label={dividers ? "Ukryj podziały" : "Pokaż podziały"}
+              onPress={() => setDividers(!dividers)}
+            />
+          </View>
+        )}
         <TextInput
           style={form.input}
           value={query}
@@ -190,13 +241,24 @@ export default function BibliographyScreen() {
             </Text>
           ) : undefined
         }
-        renderSectionHeader={({ section }) =>
-          section.label ? (
-            <Text style={styles.sectionTitle} accessibilityRole="header">
-              {section.label}
-            </Text>
-          ) : null
-        }
+        renderSectionHeader={({ section }) => (
+          <>
+            {section.title && (
+              <Text style={styles.sectionTitle} accessibilityRole="header">
+                {section.title}
+              </Text>
+            )}
+            {section.year && (
+              <YearBar
+                label={section.year.label}
+                count={section.year.count}
+                isOpen={!folded.has(section.year.key)}
+                onPress={() => toggleYear(section.year!.key)}
+              />
+            )}
+            {section.month && <MonthRule label={section.month} />}
+          </>
+        )}
         renderItem={({ item: { item, attempt } }) => {
           const byline = itemByline(item);
           const dates = attempt ? attemptDates(attempt) : "";
@@ -232,8 +294,119 @@ export default function BibliographyScreen() {
   );
 }
 
+/**
+ * One section of the list: the planned items under a plain title, or a run of
+ * Attempts under a month rule (and, for a year's first month, its folding
+ * bar); without dividers, a year's Attempts with no header at all.
+ */
+type Section = {
+  key: string;
+  title?: string;
+  year?: { key: string; label: string; count: number };
+  month?: string;
+  data: YearRow[];
+};
+
+function TextButton({
+  label,
+  onPress,
+}: {
+  label: string;
+  onPress: () => void;
+}) {
+  const styles = useStyles();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      hitSlop={6}
+      style={({ pressed }) => pressed && styles.pressed}
+    >
+      <Text style={styles.textButton}>{label}</Text>
+    </Pressable>
+  );
+}
+
+/** A year's header: tapping it folds the year's Attempts away or back. */
+function YearBar({
+  label,
+  count,
+  isOpen,
+  onPress,
+}: {
+  label: string;
+  count: number;
+  isOpen: boolean;
+  onPress: () => void;
+}) {
+  const styles = useStyles();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Rok ${label}, ${count}`}
+      accessibilityState={{ expanded: isOpen }}
+      onPress={onPress}
+      style={({ pressed }) => [styles.yearBar, pressed && styles.pressed]}
+    >
+      <Text style={styles.yearChevron}>{isOpen ? "▾" : "▸"}</Text>
+      <Text style={styles.yearLabel}>{label}</Text>
+      <Text style={styles.yearCount}>{count}</Text>
+    </Pressable>
+  );
+}
+
+/** A month inside a year: a thin rule with the month's name in the middle. */
+function MonthRule({ label }: { label: string }) {
+  const styles = useStyles();
+  return (
+    <View style={styles.monthRule} accessibilityRole="header">
+      <View style={styles.monthLine} />
+      <Text style={styles.monthLabel}>{label.toUpperCase()}</Text>
+      <View style={styles.monthLine} />
+    </View>
+  );
+}
+
 const useStyles = makeStyles((colors) => ({
   filters: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4, gap: 8 },
+  yearActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    flexWrap: "wrap",
+    gap: 16,
+  },
+  textButton: { fontSize: 13, color: colors.muted },
+  pressed: { opacity: 0.6 },
+  yearBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginHorizontal: 12,
+    marginTop: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 5,
+    backgroundColor: colors.wash,
+  },
+  yearChevron: { width: 12, fontSize: 14, color: colors.ink },
+  yearLabel: { fontSize: 16, fontWeight: "600", color: colors.ink },
+  yearCount: { marginLeft: "auto", fontSize: 12, color: colors.muted },
+  monthRule: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 4,
+  },
+  monthLine: { flex: 1, height: 1, backgroundColor: colors.line },
+  monthLabel: {
+    fontFamily: fonts.utility,
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 1,
+    color: colors.muted,
+  },
   listContent: { paddingBottom: 96 },
   // The expenses' day headers.
   sectionTitle: {

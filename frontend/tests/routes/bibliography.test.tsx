@@ -268,17 +268,17 @@ describe("Bibliography", () => {
     const view = screen.getByRole("group", { name: "Widok Bibliografii" });
     await user.click(within(view).getByRole("button", { name: "Lata" }));
 
-    const headings = await screen.findAllByRole("heading", { level: 2 });
-    expect(headings.map((heading) => heading.textContent)).toEqual([
-      "Planowane",
-      "2026",
-      "2025",
-    ]);
+    await screen.findByRole("list", { name: "Planowane" });
+    expect(
+      screen
+        .getAllByRole("heading", { level: 2 })
+        .map((heading) => heading.textContent),
+    ).toEqual(["Planowane", "20261", "20251"]);
     const planned = screen.getByRole("list", { name: "Planowane" });
     expect(within(planned).getByText("Rejs")).toBeInTheDocument();
     for (const [year, day] of [
-      ["2026", "01.02.2026"],
-      ["2025", "10.05.2025"],
+      ["luty 2026", "01.02.2026"],
+      ["maj 2025", "10.05.2025"],
     ]) {
       const list = screen.getByRole("list", { name: year });
       expect(within(list).getByText("Lalka")).toBeInTheDocument();
@@ -289,7 +289,7 @@ describe("Bibliography", () => {
     }
     expect(
       JSON.parse(window.localStorage.getItem("bibliographyView") ?? "{}").state,
-    ).toEqual({ mode: "years" });
+    ).toEqual({ mode: "years", dividers: true });
 
     await user.type(
       screen.getByRole("searchbox", { name: "Szukaj w Bibliografii" }),
@@ -304,6 +304,62 @@ describe("Bibliography", () => {
       await screen.findByRole("list", { name: "Pozycje" }),
     ).toBeInTheDocument();
     expect(screen.queryByRole("heading", { level: 2 })).not.toBeInTheDocument();
+  });
+
+  test("the year view folds a year and can hide the year and month dividers", async () => {
+    fetchMock.mockImplementation(
+      fakeBackend(
+        [lalka],
+        [
+          attempt({ id: 51, item_id: lalka.id, ended_on: "2025-05-10" }),
+          attempt({ id: 52, item_id: lalka.id, ended_on: "2026-02-01" }),
+          attempt({ id: 53, item_id: lalka.id, ended_on: "2026-03-15" }),
+        ],
+      ).handler,
+    );
+    const user = userEvent.setup();
+
+    renderApp("/bibliography");
+    await user.click(await screen.findByRole("button", { name: "Lata" }));
+    expect(
+      (await screen.findAllByRole("heading", { level: 3 })).map(
+        (heading) => heading.textContent,
+      ),
+    ).toEqual(["marzec", "luty", "maj"]);
+
+    const year2026 = screen.getByRole("button", { name: /^2026/ });
+    expect(year2026).toHaveAttribute("aria-expanded", "true");
+    await user.click(year2026);
+    expect(year2026).toHaveAttribute("aria-expanded", "false");
+    expect(
+      screen.queryByRole("list", { name: "luty 2026" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "maj 2025" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Zwiń wszystko" }));
+    expect(screen.queryByRole("heading", { level: 3 })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Rozwiń wszystko" }));
+    expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(3);
+
+    await user.click(screen.getByRole("button", { name: "Ukryj podziały" }));
+    expect(screen.queryByRole("heading", { level: 2 })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 3 })).not.toBeInTheDocument();
+    const all = screen.getByRole("list", { name: "Podejścia" });
+    expect(
+      within(all)
+        .getAllByRole("listitem")
+        .map((row) => within(row).getByText(/·/).textContent),
+    ).toEqual([
+      "Bolesław Prus · 1890 · 15.03.2026",
+      "Bolesław Prus · 1890 · 01.02.2026",
+      "Bolesław Prus · 1890 · 10.05.2025",
+    ]);
+    expect(
+      JSON.parse(window.localStorage.getItem("bibliographyView") ?? "{}").state,
+    ).toEqual({ mode: "years", dividers: false });
+
+    await user.click(screen.getByRole("button", { name: "Pokaż podziały" }));
+    expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(3);
   });
 
   test("the search finds items fuzzily by title or creator", async () => {

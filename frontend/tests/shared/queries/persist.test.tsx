@@ -2,6 +2,10 @@
 import { cleanup, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
+import {
+  deserializeCache,
+  serializeCache,
+} from "@personal/shared/queries/persist";
 import { useAuthStore } from "@personal/shared/stores/auth";
 
 import { renderApp } from "../../renderApp";
@@ -79,4 +83,19 @@ test("signing out empties the saved cache", async () => {
       ),
     { timeout: 3000 },
   );
+});
+
+test("dates in the saved cache come back as dates, and date-like text stays text", () => {
+  const saved = {
+    endedOn: new Date("2026-02-01T00:00:00Z"),
+    title: "2026-02-01",
+    nested: [{ at: new Date("2025-05-10T12:30:00Z") }],
+  };
+
+  const restored = deserializeCache<typeof saved>(serializeCache(saved));
+
+  expect(restored.endedOn).toBeInstanceOf(Date);
+  expect(restored.endedOn.toISOString()).toBe("2026-02-01T00:00:00.000Z");
+  expect(restored.nested[0].at).toBeInstanceOf(Date);
+  expect(restored.title).toBe("2026-02-01");
 });

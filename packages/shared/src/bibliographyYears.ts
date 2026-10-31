@@ -1,7 +1,7 @@
 /**
- * The Bibliografia's year view: every Attempt is one row under the year it
- * happened, so an item read in 2025 and again in 2026 shows under both years.
- * Items without any Attempt go in one group at the top.
+ * The Bibliografia's year view: every Attempt is one row under the year and
+ * month it happened, so an item read in 2025 and again in 2026 shows under
+ * both years. Items without any Attempt go in one group at the top.
  */
 import type {
   AttemptResponse,
@@ -14,12 +14,38 @@ export type YearRow = {
   attempt: AttemptResponse | null;
 };
 
+/** One month of a year, e.g. `luty`; its rows are a slice of the year's. */
+export type MonthGroup = {
+  /** e.g. `2026-02`; unique within the view. */
+  key: string;
+  label: string;
+  rows: YearRow[];
+};
+
 export type YearGroup = {
   /** `planned` or the year, e.g. `2026`; unique within the view. */
   key: string;
   label: string;
   rows: YearRow[];
+  /** The year's months, newest first; empty for the planned group. */
+  months: MonthGroup[];
 };
+
+/** Month names as they head a list (nominative), January first. */
+export const MONTH_NAMES = [
+  "styczeń",
+  "luty",
+  "marzec",
+  "kwiecień",
+  "maj",
+  "czerwiec",
+  "lipiec",
+  "sierpień",
+  "wrzesień",
+  "październik",
+  "listopad",
+  "grudzień",
+] as const;
 
 export const PLANNED_GROUP_LABEL = "Planowane";
 
@@ -29,11 +55,30 @@ function attemptDay(attempt: AttemptResponse): Date {
 }
 
 /**
- * The year an Attempt belongs to. Date-only fields are parsed as UTC midnight,
- * so the UTC year is the calendar year that was entered.
+ * The year an Attempt belongs to. The client parses date-only fields as local
+ * midnight (`parseDate` in the generated runtime), so the local calendar is
+ * the one that was entered; the UTC one is a day early east of Greenwich.
  */
 export function attemptYear(attempt: AttemptResponse): number {
-  return attemptDay(attempt).getUTCFullYear();
+  return attemptDay(attempt).getFullYear();
+}
+
+/** The month (0 = January) an Attempt belongs to, by the same day as its year. */
+export function attemptMonth(attempt: AttemptResponse): number {
+  return attemptDay(attempt).getMonth();
+}
+
+/** Split a year's rows (newest first) into runs of the same month. */
+function byMonth(year: number, rows: YearRow[]): MonthGroup[] {
+  const months: MonthGroup[] = [];
+  for (const row of rows) {
+    const month = attemptMonth(row.attempt!);
+    const key = `${year}-${String(month + 1).padStart(2, "0")}`;
+    const last = months.at(-1);
+    if (last?.key === key) last.rows.push(row);
+    else months.push({ key, label: MONTH_NAMES[month], rows: [row] });
+  }
+  return months;
 }
 
 /** Newest first: by its day, an Attempt in progress before ended ones on the same day. */
@@ -73,13 +118,16 @@ export function groupByYear(
       key: "planned",
       label: PLANNED_GROUP_LABEL,
       rows: planned.map((item) => ({ item, attempt: null })),
+      months: [],
     });
   }
   for (const year of [...years.keys()].sort((a, b) => b - a)) {
+    const rows = years.get(year) ?? [];
     groups.push({
       key: String(year),
       label: String(year),
-      rows: years.get(year) ?? [],
+      rows,
+      months: byMonth(year, rows),
     });
   }
   return groups;

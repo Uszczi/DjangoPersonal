@@ -37,7 +37,11 @@ function attempt(
   };
 }
 
-const day = (value: string) => new Date(value);
+/** A date-only field as the client parses it: local midnight of that day. */
+function day(value: string) {
+  const [year, month, date] = value.split("-").map(Number);
+  return new Date(year, month - 1, date);
+}
 
 describe("attemptYear", () => {
   it("is the end date's year, else the start's, else when it was recorded", () => {
@@ -88,6 +92,44 @@ describe("groupByYear", () => {
         ],
       ],
       ["2025", [["Rejs", 10]]],
+    ]);
+  });
+
+  it("places a date-only day by the local calendar", () => {
+    const groups = groupByYear(
+      [rejs],
+      [attempt(10, rejs.id, { endedOn: day("2026-01-01") })],
+    );
+
+    expect(groups.map((group) => group.key)).toEqual(["2026"]);
+    expect(groups[0].months[0].label).toBe("styczeń");
+  });
+
+  it("splits a year into its months, newest first", () => {
+    const groups = groupByYear(
+      [rejs, mis],
+      [
+        attempt(10, rejs.id, { endedOn: day("2026-01-31") }),
+        attempt(11, mis.id, { endedOn: day("2026-03-01") }),
+        attempt(12, rejs.id, { endedOn: day("2026-03-20") }),
+        attempt(13, mis.id, { endedOn: day("2025-12-24") }),
+      ],
+    );
+
+    expect(
+      groups.map((group) =>
+        group.months.map((month) => [
+          month.key,
+          month.label,
+          month.rows.map((row) => row.attempt?.id),
+        ]),
+      ),
+    ).toEqual([
+      [
+        ["2026-03", "marzec", [12, 11]],
+        ["2026-01", "styczeń", [10]],
+      ],
+      [["2025-12", "grudzień", [13]]],
     ]);
   });
 
