@@ -1,6 +1,6 @@
 # Mobile: move all styling to Uniwind
 
-Status: ready-for-agent
+Status: done (awaiting a check on a phone)
 
 Rewrite every mobile screen and component from `StyleSheet`/`makeStyles` to Uniwind `className` (Tailwind 4 for React Native), then delete `makeStyles` and the `common`/`card`/`form` style sheets. Nothing should look or behave differently.
 
@@ -80,3 +80,12 @@ One commit per step. Run `npx tsc --noEmit` in `mobile/` after each.
 - On a phone (`just backend-lan` + `just mobile`), look at every tab and editor in at least light, dark, one custom theme (e.g. Sepia or Mocha) and "Systemowy". Check that a theme switch repaints at once, pressed states work, and the fonts are right on Android and iOS.
 
 ## Comments
+
+- 2026-10-31, agent: done on `feat/uniwind`, one commit per step. Notes:
+  - `align-top` compiles to `verticalAlign: top`, React Native's Android equivalent of `textAlignVertical`; `form.multiline` is a full input string with it.
+  - The card's `shadow-[0_8px_18px_rgba(29,55,57,0.06)]` compiles; still to check on Android.
+  - A theme colour with opacity (`shadow-deep-ink/25`) does not resolve the variable, so the Fab keeps its shadow in `style` with `colors.deepInk`.
+  - `Button` takes a `className` (default `flex-1`) instead of `style`; `flex-none` replaces the old `flex: 0`.
+  - The tab bar's react-navigation options moved into `src/theme.ts` as `tabOptions`, next to `headerOptions`, so `fonts` stays private there. `useTheme()` returns `{ name, scheme, colors, headerOptions, tabOptions }`.
+  - Every class used in `app/` and `src/` was found in the exported Android bundle.
+
