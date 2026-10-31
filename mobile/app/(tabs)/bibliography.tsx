@@ -1,9 +1,9 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
   Pressable,
   RefreshControl,
-  ScrollView,
   SectionList,
   Text,
   TextInput,
@@ -12,7 +12,6 @@ import {
 
 import {
   ITEM_KIND_LABELS,
-  ITEM_STATUSES,
   attemptDates,
   itemByline,
   itemSearchText,
@@ -30,29 +29,15 @@ import {
 } from "@personal/shared/loadErrors";
 import { useAllAttempts } from "@personal/shared/queries/bibliographyAttempts";
 import { useBibliographyItems } from "@personal/shared/queries/bibliographyItems";
-import {
-  useBibliographyViewStore,
-  type BibliographyViewMode,
-} from "@personal/shared/stores/bibliographyView";
+import { useBibliographyViewStore } from "@personal/shared/stores/bibliographyView";
 
-import { ChipGroup } from "../../src/ChipGroup";
+import {
+  BibliographyFiltersSheet,
+  KIND_FILTER_LABELS,
+} from "../../src/BibliographyFiltersSheet";
 import { Fab } from "../../src/Fab";
 import { fonts, makeStyles, useTheme } from "../../src/theme";
 import { useRefreshOnFocus } from "../../src/useRefreshOnFocus";
-
-/** A chip value for "no filter": ChipGroup needs a value for every option. */
-const ALL = "all";
-
-const KIND_FILTERS: { value: ItemKind | typeof ALL; label: string }[] = [
-  { value: ALL, label: "Wszystkie" },
-  { value: "film", label: "Filmy" },
-  { value: "book", label: "Książki" },
-];
-
-const VIEW_MODES: { value: BibliographyViewMode; label: string }[] = [
-  { value: "items", label: "Pozycje" },
-  { value: "years", label: "Lata" },
-];
 
 function openItem(item: BibliographyItemResponse) {
   router.push({ pathname: "/bibliography/[id]", params: { id: item.id } });
@@ -65,6 +50,7 @@ export default function BibliographyScreen() {
   const [kind, setKind] = useState<ItemKind | undefined>();
   const [status, setStatus] = useState<ItemStatus | undefined>();
   const [query, setQuery] = useState("");
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const {
     data: items = [],
     isPending,
@@ -72,23 +58,15 @@ export default function BibliographyScreen() {
     refetch,
   } = useBibliographyItems({ kind, status });
   const viewMode = useBibliographyViewStore((state) => state.mode);
-  const setViewMode = useBibliographyViewStore((state) => state.setMode);
   const dividers = useBibliographyViewStore((state) => state.dividers);
-  const setDividers = useBibliographyViewStore((state) => state.setDividers);
   const [folded, setFolded] = useState<ReadonlySet<string>>(new Set());
   const isYearView = viewMode === "years";
   const attempts = useAllAttempts(isYearView);
   const [isRefreshing, setIsRefreshing] = useState(false);
   useRefreshOnFocus(refetch);
 
-  const statusFilters: { value: ItemStatus | typeof ALL; label: string }[] = [
-    { value: ALL, label: "Wszystkie" },
-    ...ITEM_STATUSES.map((value) => ({
-      value,
-      label: itemStatusFilterLabel(value, kind),
-    })),
-  ];
-  const isFiltered = kind !== undefined || status !== undefined;
+  const filterCount = (kind ? 1 : 0) + (status ? 1 : 0);
+  const isFiltered = filterCount > 0;
   const isSearching = query.trim() !== "";
   const shownItems = fuzzyFilter(items, query, itemSearchText);
   const groups =
@@ -152,69 +130,59 @@ export default function BibliographyScreen() {
         <Text style={common.error}>{ATTEMPTS_LOAD_ERROR}</Text>
       )}
       <View style={styles.filters}>
-        <ChipGroup
-          options={VIEW_MODES}
-          value={viewMode}
-          onChange={setViewMode}
-        />
-        {isYearView && (
-          <View style={styles.yearActions}>
-            {dividers && years.length > 0 && (
-              <>
-                <TextButton
-                  label="Zwiń wszystko"
-                  onPress={() =>
-                    setFolded(new Set(years.map((year) => year.key)))
-                  }
-                />
-                <TextButton
-                  label="Rozwiń wszystko"
-                  onPress={() => setFolded(new Set())}
-                />
-              </>
-            )}
-            <TextButton
-              label={dividers ? "Ukryj podziały" : "Pokaż podziały"}
-              onPress={() => setDividers(!dividers)}
+        <View style={styles.searchRow}>
+          <TextInput
+            style={[form.input, styles.search]}
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Szukaj po tytule, twórcy, roku…"
+            placeholderTextColor={colors.hint}
+            accessibilityLabel="Szukaj w Bibliografii"
+            autoCorrect={false}
+            autoCapitalize="none"
+            clearButtonMode="while-editing"
+            returnKeyType="search"
+          />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={
+              filterCount > 0 ? `Filtry, aktywne: ${filterCount}` : "Filtry"
+            }
+            onPress={() => setIsFiltersOpen(true)}
+            style={({ pressed }) => [
+              styles.filtersButton,
+              filterCount > 0 && styles.filtersButtonActive,
+              pressed && styles.pressed,
+            ]}
+          >
+            <Ionicons
+              name="options-outline"
+              size={20}
+              color={filterCount > 0 ? colors.onSignal : colors.ink}
             />
+            {filterCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{filterCount}</Text>
+              </View>
+            )}
+          </Pressable>
+        </View>
+        {isFiltered && (
+          <View style={styles.pills}>
+            {kind && (
+              <FilterPill
+                label={KIND_FILTER_LABELS[kind]}
+                onRemove={() => setKind(undefined)}
+              />
+            )}
+            {status && (
+              <FilterPill
+                label={itemStatusFilterLabel(status, kind)}
+                onRemove={() => setStatus(undefined)}
+              />
+            )}
           </View>
         )}
-        <TextInput
-          style={form.input}
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Szukaj po tytule, twórcy, roku…"
-          placeholderTextColor={colors.hint}
-          accessibilityLabel="Szukaj w Bibliografii"
-          autoCorrect={false}
-          autoCapitalize="none"
-          clearButtonMode="while-editing"
-          returnKeyType="search"
-        />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          accessibilityLabel="Filtr rodzaju"
-        >
-          <ChipGroup
-            nowrap
-            options={KIND_FILTERS}
-            value={kind ?? ALL}
-            onChange={(value) => setKind(value === ALL ? undefined : value)}
-          />
-        </ScrollView>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          accessibilityLabel="Filtr statusu"
-        >
-          <ChipGroup
-            nowrap
-            options={statusFilters}
-            value={status ?? ALL}
-            onChange={(value) => setStatus(value === ALL ? undefined : value)}
-          />
-        </ScrollView>
       </View>
       <SectionList
         sections={sections}
@@ -290,6 +258,18 @@ export default function BibliographyScreen() {
         accessibilityLabel="Nowa pozycja"
         onPress={() => router.push("/bibliography-item")}
       />
+      {isFiltersOpen && (
+        <BibliographyFiltersSheet
+          kind={kind}
+          onKindChange={setKind}
+          status={status}
+          onStatusChange={setStatus}
+          hasYears={years.length > 0}
+          onFoldAll={() => setFolded(new Set(years.map((year) => year.key)))}
+          onUnfoldAll={() => setFolded(new Set())}
+          onClose={() => setIsFiltersOpen(false)}
+        />
+      )}
     </View>
   );
 }
@@ -307,22 +287,26 @@ type Section = {
   data: YearRow[];
 };
 
-function TextButton({
+/** A filter in force under the search box; tapping it removes the filter. */
+function FilterPill({
   label,
-  onPress,
+  onRemove,
 }: {
   label: string;
-  onPress: () => void;
+  onRemove: () => void;
 }) {
+  const { colors } = useTheme();
   const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="button"
-      onPress={onPress}
-      hitSlop={6}
-      style={({ pressed }) => pressed && styles.pressed}
+      accessibilityLabel={`Usuń filtr: ${label}`}
+      onPress={onRemove}
+      hitSlop={4}
+      style={({ pressed }) => [styles.pill, pressed && styles.pressed]}
     >
-      <Text style={styles.textButton}>{label}</Text>
+      <Text style={styles.pillText}>{label}</Text>
+      <Ionicons name="close" size={13} color={colors.inkSoft} />
     </Pressable>
   );
 }
@@ -369,13 +353,44 @@ function MonthRule({ label }: { label: string }) {
 
 const useStyles = makeStyles((colors) => ({
   filters: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4, gap: 8 },
-  yearActions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    flexWrap: "wrap",
-    gap: 16,
+  searchRow: { flexDirection: "row", gap: 8 },
+  search: { flex: 1 },
+  filtersButton: {
+    width: 46,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.controlBorder,
+    borderRadius: 5,
   },
-  textButton: { fontSize: 13, color: colors.muted },
+  filtersButtonActive: {
+    backgroundColor: colors.signal,
+    borderColor: colors.signal,
+  },
+  badge: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.deepInk,
+  },
+  badgeText: { fontSize: 10, fontWeight: "700", color: colors.navText },
+  pills: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  pill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: colors.wash,
+  },
+  pillText: { fontSize: 12, color: colors.inkSoft },
   pressed: { opacity: 0.6 },
   yearBar: {
     flexDirection: "row",
