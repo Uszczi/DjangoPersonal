@@ -81,8 +81,20 @@ export default function BibliographyScreen() {
         },
       ]
     : groups.flatMap((group): Section[] => {
+        // The planned items fold under a bar like a year's, dividers or not.
         if (group.key === "planned") {
-          return [{ key: group.key, title: group.label, data: group.rows }];
+          const planned = {
+            key: group.key,
+            label: group.label,
+            count: group.rows.length,
+          };
+          return [
+            {
+              key: group.key,
+              year: planned,
+              data: folded.has(group.key) ? [] : group.rows,
+            },
+          ];
         }
         if (!dividers) {
           return [{ key: group.key, data: group.rows }];
@@ -211,11 +223,6 @@ export default function BibliographyScreen() {
         }
         renderSectionHeader={({ section }) => (
           <>
-            {section.title && (
-              <Text style={styles.sectionTitle} accessibilityRole="header">
-                {section.title}
-              </Text>
-            )}
             {section.year && (
               <YearBar
                 label={section.year.label}
@@ -265,7 +272,7 @@ export default function BibliographyScreen() {
           status={status}
           onStatusChange={setStatus}
           hasYears={years.length > 0}
-          onFoldAll={() => setFolded(new Set(years.map((year) => year.key)))}
+          onFoldAll={() => setFolded(new Set(groups.map((group) => group.key)))}
           onUnfoldAll={() => setFolded(new Set())}
           onClose={() => setIsFiltersOpen(false)}
         />
@@ -275,13 +282,12 @@ export default function BibliographyScreen() {
 }
 
 /**
- * One section of the list: the planned items under a plain title, or a run of
- * Attempts under a month rule (and, for a year's first month, its folding
- * bar); without dividers, a year's Attempts with no header at all.
+ * One section of the list: the planned items under their folding bar, or a
+ * run of Attempts under a month rule (and, for a year's first month, its
+ * folding bar); without dividers, a year's Attempts with no header at all.
  */
 type Section = {
   key: string;
-  title?: string;
   year?: { key: string; label: string; count: number };
   month?: string;
   data: YearRow[];
@@ -311,7 +317,7 @@ function FilterPill({
   );
 }
 
-/** A year's header: tapping it folds the year's Attempts away or back. */
+/** A year's (or the planned items') header: tapping it folds its rows away or back. */
 function YearBar({
   label,
   count,
@@ -327,7 +333,7 @@ function YearBar({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Rok ${label}, ${count}`}
+      accessibilityLabel={`${/^\d+$/.test(label) ? `Rok ${label}` : label}, ${count}`}
       accessibilityState={{ expanded: isOpen }}
       onPress={onPress}
       style={({ pressed }) => [styles.yearBar, pressed && styles.pressed]}
@@ -423,17 +429,6 @@ const useStyles = makeStyles((colors) => ({
     color: colors.muted,
   },
   listContent: { paddingBottom: 96 },
-  // The expenses' day headers.
-  sectionTitle: {
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 6,
-    fontFamily: fonts.utility,
-    fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 0.9,
-    color: colors.muted,
-  },
   empty: { padding: 24, textAlign: "center" },
   // The web's status pill.
   status: {
