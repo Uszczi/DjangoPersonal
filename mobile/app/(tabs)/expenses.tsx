@@ -13,15 +13,13 @@ import { groupByDay } from "../../src/features/expenses/groupByDay";
 import { TransactionRow } from "../../src/features/expenses/TransactionRow";
 import { WalletCard } from "../../src/features/expenses/WalletCard";
 import { WalletTabs } from "../../src/features/expenses/WalletTabs";
-import { fonts, makeStyles, useTheme } from "../../src/theme";
+import { common } from "../../src/ui/classes";
 import { Button } from "../../src/ui/Button";
 import { Fab } from "../../src/ui/Fab";
 import { useRefreshOnFocus } from "../../src/useRefreshOnFocus";
 
 /** The web Wydatki page: one wallet at a time, its transactions by day. */
 export default function ExpensesScreen() {
-  const { common } = useTheme();
-  const styles = useStyles();
   const {
     data: wallets = [],
     isPending: isLoading,
@@ -73,11 +71,11 @@ export default function ExpensesScreen() {
   );
 
   return (
-    <View style={common.screen}>
+    <View className={common.screen}>
       <SectionList
         sections={sections}
         keyExtractor={(transaction) => String(transaction.id)}
-        contentContainerStyle={{ paddingBottom: 96 }}
+        contentContainerClassName="pb-24"
         stickySectionHeadersEnabled={false}
         refreshControl={
           <RefreshControl
@@ -87,7 +85,9 @@ export default function ExpensesScreen() {
         }
         ListHeaderComponent={
           <View>
-            {pageError !== "" && <Text style={common.error}>{pageError}</Text>}
+            {pageError !== "" && (
+              <Text className={common.error}>{pageError}</Text>
+            )}
             {wallets.length > 0 && (
               <WalletTabs
                 wallets={wallets}
@@ -100,31 +100,33 @@ export default function ExpensesScreen() {
             ) : (
               !isLoading &&
               pageError === "" && (
-                <Text style={[common.muted, styles.empty]}>
+                <Text className="p-6 text-center text-xs text-muted">
                   Brak portfeli. Utwórz pierwszy portfel.
                 </Text>
               )
             )}
-            <View style={styles.actions}>
+            <View className="mx-4 mt-3 flex-row gap-3">
               <Button
                 label="+ Nowy portfel"
                 variant="secondary"
                 onPress={() => router.push("/wallet")}
               />
             </View>
-            {loadError !== "" && <Text style={common.error}>{loadError}</Text>}
+            {loadError !== "" && (
+              <Text className={common.error}>{loadError}</Text>
+            )}
           </View>
         }
         ListEmptyComponent={
           wallet && transactions !== null ? (
-            <Text style={[common.muted, styles.empty]}>
+            <Text className="p-6 text-center text-xs text-muted">
               Brak transakcji. Dodaj pierwszą transakcję.
             </Text>
           ) : undefined
         }
         ListFooterComponent={
           hasMore ? (
-            <View style={styles.actions}>
+            <View className="mx-4 mt-3 flex-row gap-3">
               <Button
                 label={isLoadingMore ? "Wczytywanie…" : "Pokaż więcej"}
                 variant="secondary"
@@ -135,7 +137,9 @@ export default function ExpensesScreen() {
           ) : undefined
         }
         renderSectionHeader={({ section }) => (
-          <Text style={styles.dayTitle}>{section.title}</Text>
+          <Text className="px-4 pt-5 pb-1.5 font-utility text-[11px] font-semibold tracking-[0.9px] text-muted">
+            {section.title}
+          </Text>
         )}
         renderItem={({ item }) => (
           <TransactionRow
@@ -160,23 +164,3 @@ export default function ExpensesScreen() {
     </View>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  actions: {
-    flexDirection: "row",
-    gap: 12,
-    marginHorizontal: 16,
-    marginTop: 12,
-  },
-  empty: { padding: 24, textAlign: "center" },
-  dayTitle: {
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 6,
-    fontFamily: fonts.utility,
-    fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 0.9,
-    color: colors.muted,
-  },
-}));

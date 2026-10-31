@@ -187,6 +187,12 @@
       "skillPath": "skills/engineering/triage/SKILL.md",
       "computedHash": "a683e69163e23630f39c05a50fb9d83a3795a6a6fbd317357669e082cd43a158"
     },
+    "uniwind": {
+      "source": "uni-stack/uniwind",
+      "sourceType": "github",
+      "skillPath": "skills/uniwind/SKILL.md",
+      "computedHash": "a7a64eafd6f61bfdcde777df888db180ff6e1f6955ed615a1673084e9e1de066"
+    },
     "unslop": {
       "source": "poteto/noodle",
       "sourceType": "github",

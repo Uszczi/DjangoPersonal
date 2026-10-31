@@ -2,8 +2,6 @@ import { Pressable, View } from "react-native";
 
 import { COLORS } from "@personal/shared/colors";
 
-import { makeStyles } from "../theme";
-
 type ColorPickerProps = {
   value: string;
   onChange: (color: string) => void;
@@ -16,9 +14,8 @@ export function ColorPicker({
   onChange,
   disabled = false,
 }: ColorPickerProps) {
-  const styles = useStyles();
   return (
-    <View style={styles.row} accessibilityRole="radiogroup">
+    <View className="flex-row flex-wrap gap-2" accessibilityRole="radiogroup">
       {COLORS.map((color) => {
         const isSelected = color.value === value;
         return (
@@ -29,24 +26,19 @@ export function ColorPicker({
             accessibilityState={{ checked: isSelected, disabled }}
             disabled={disabled}
             onPress={() => onChange(color.value)}
-            style={[styles.ring, isSelected && styles.ringSelected]}
+            className={
+              isSelected
+                ? "rounded-[22px] border-2 border-ink p-[3px]"
+                : "rounded-[22px] border-2 border-transparent p-[3px]"
+            }
           >
-            <View style={[styles.swatch, { backgroundColor: color.value }]} />
+            <View
+              className="size-8 rounded-2xl"
+              style={{ backgroundColor: color.value }}
+            />
           </Pressable>
         );
       })}
     </View>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  row: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  ring: {
-    padding: 3,
-    borderRadius: 22,
-    borderWidth: 2,
-    borderColor: "transparent",
-  },
-  ringSelected: { borderColor: colors.ink },
-  swatch: { width: 32, height: 32, borderRadius: 16 },
-}));

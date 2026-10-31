@@ -19,7 +19,7 @@ import {
 
 import { Button } from "../src/ui/Button";
 import { DateTimeField } from "../src/ui/DateTimeField";
-import { useTheme } from "../src/theme";
+import { common, form } from "../src/ui/classes";
 
 function validateValue(raw: string): string {
   if (!raw) return "Podaj wartość.";
@@ -30,7 +30,6 @@ function validateValue(raw: string): string {
 
 /** Adds a Counter entry (`?counterId=`) or edits one (`&entryId=`). */
 export default function CounterEntryEditorScreen() {
-  const { common, form } = useTheme();
   const params = useLocalSearchParams<{
     counterId: string;
     entryId?: string;
@@ -58,8 +57,8 @@ export default function CounterEntryEditorScreen() {
 
   if (entryId !== null && !entry) {
     return (
-      <View style={common.center}>
-        <Text style={common.muted}>Nie znaleziono wpisu.</Text>
+      <View className={common.center}>
+        <Text className={common.muted}>Nie znaleziono wpisu.</Text>
       </View>
     );
   }
@@ -116,26 +115,26 @@ export default function CounterEntryEditorScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={common.screen}
+      className={common.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Stack.Screen options={{ title: entry ? "Edytuj wpis" : "Nowy wpis" }} />
       <ScrollView
-        contentContainerStyle={form.content}
+        contentContainerClassName={form.content}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={form.label}>Wartość</Text>
-        <View style={{ flexDirection: "row", gap: 12 }}>
+        <Text className={form.label}>Wartość</Text>
+        <View className="flex-row gap-3">
           <Button
             label="±"
             variant="secondary"
             accessibilityLabel="Zmień znak"
             disabled={isSaving}
             onPress={toggleSign}
-            style={{ flex: 0, minWidth: 56 }}
+            className="min-w-14 flex-none"
           />
           <TextInput
-            style={[form.input, { flex: 1 }]}
+            className={`${form.input} flex-1`}
             value={value}
             onChangeText={setValue}
             keyboardType="number-pad"
@@ -143,20 +142,20 @@ export default function CounterEntryEditorScreen() {
             selectTextOnFocus
           />
         </View>
-        <Text style={form.hint}>
+        <Text className={form.hint}>
           Liczba całkowita; ujemna odejmuje od sumy.
         </Text>
 
-        <Text style={form.label}>Kiedy</Text>
+        <Text className={form.label}>Kiedy</Text>
         <DateTimeField
           value={occurredAt}
           onChange={setOccurredAt}
           disabled={isSaving}
         />
 
-        <Text style={form.label}>Notatka</Text>
+        <Text className={form.label}>Notatka</Text>
         <TextInput
-          style={[form.input, form.multiline]}
+          className={form.multiline}
           value={note}
           onChangeText={setNote}
           maxLength={1000}
@@ -164,8 +163,8 @@ export default function CounterEntryEditorScreen() {
           editable={!isSaving}
         />
 
-        {formError !== "" && <Text style={form.error}>{formError}</Text>}
-        <View style={form.actions}>
+        {formError !== "" && <Text className={form.error}>{formError}</Text>}
+        <View className={form.actions}>
           <Button
             label="Anuluj"
             variant="secondary"
@@ -179,7 +178,7 @@ export default function CounterEntryEditorScreen() {
           />
         </View>
         {entry && (
-          <View style={form.actions}>
+          <View className={form.actions}>
             <Button
               label="Usuń wpis"
               variant="danger"

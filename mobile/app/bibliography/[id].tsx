@@ -30,13 +30,11 @@ import {
 } from "@personal/shared/queries/bibliographyItems";
 
 import { Button } from "../../src/ui/Button";
-import { makeStyles, fonts, useTheme } from "../../src/theme";
+import { common } from "../../src/ui/classes";
 import { useRefreshOnFocus } from "../../src/useRefreshOnFocus";
 
 /** One film or book: its derived status, the actions its Attempts allow, and their history. */
 export default function BibliographyItemScreen() {
-  const { common } = useTheme();
-  const styles = useStyles();
   const { id: rawId } = useLocalSearchParams<{ id: string }>();
   const id = Number(rawId);
 
@@ -59,8 +57,8 @@ export default function BibliographyItemScreen() {
       !Number.isInteger(id) ||
       (itemQuery.isError && isNotFound(itemQuery.error));
     return (
-      <View style={common.center}>
-        <Text style={common.muted}>
+      <View className={common.center}>
+        <Text className={common.muted}>
           {isMissing
             ? "Nie znaleziono pozycji."
             : itemQuery.isError
@@ -119,12 +117,12 @@ export default function BibliographyItemScreen() {
   }
 
   return (
-    <View style={common.screen}>
+    <View className={common.screen}>
       <Stack.Screen options={{ title: ITEM_KIND_LABELS[item.kind] }} />
       <FlatList
         data={attempts ?? []}
         keyExtractor={(attempt) => String(attempt.id)}
-        contentContainerStyle={styles.listContent}
+        contentContainerClassName="pb-8"
         refreshControl={
           <RefreshControl
             refreshing={
@@ -134,25 +132,34 @@ export default function BibliographyItemScreen() {
           />
         }
         ListHeaderComponent={
-          <View style={styles.header}>
-            <Text style={common.pageTitle}>{item.title}</Text>
-            {byline !== "" && <Text style={common.muted}>{byline}</Text>}
-            <View style={styles.meta}>
-              <Text style={common.eyebrow}>
+          <View className="gap-1.5 p-4">
+            <Text className={common.pageTitle}>{item.title}</Text>
+            {byline !== "" && <Text className={common.muted}>{byline}</Text>}
+            <View className="mt-1 flex-row items-center gap-2.5">
+              <Text className={common.eyebrow}>
                 {ITEM_KIND_LABELS[item.kind].toUpperCase()}
               </Text>
-              <Text style={styles.status} accessibilityLabel="Status">
+              {/* The web's status pill. */}
+              <Text
+                className="rounded-full border border-row-line px-3 py-1 text-[13px] text-ink-soft"
+                accessibilityLabel="Status"
+              >
                 {itemStatusLabel(item.status, item.kind)}
               </Text>
             </View>
-            {item.note !== "" && <Text style={styles.note}>{item.note}</Text>}
+            {item.note !== "" && (
+              <Text className="mt-1 text-sm text-ink-soft">{item.note}</Text>
+            )}
             {progress !== "" && (
-              <Text style={styles.progress} accessibilityLabel="Postęp">
+              <Text
+                className="mt-1.5 font-utility text-[15px] text-ink-soft"
+                accessibilityLabel="Postęp"
+              >
                 {progress}
               </Text>
             )}
             {attempts !== null && (
-              <View style={styles.actions}>
+              <View className="mt-2.5 flex-row gap-2.5">
                 {open ? (
                   <>
                     <Button
@@ -190,7 +197,7 @@ export default function BibliographyItemScreen() {
                 )}
               </View>
             )}
-            <View style={styles.actions}>
+            <View className="mt-2.5 flex-row gap-2.5">
               <Button
                 label="Edytuj pozycję"
                 variant="secondary"
@@ -208,10 +215,10 @@ export default function BibliographyItemScreen() {
               />
             </View>
             {errorMessage !== "" && (
-              <Text style={styles.error}>{errorMessage}</Text>
+              <Text className="mt-2 text-danger">{errorMessage}</Text>
             )}
             {attempts !== null && attempts.length > 0 && (
-              <Text style={[common.eyebrow, styles.sectionTitle]}>
+              <Text className="mt-5 font-utility text-[11px] font-semibold tracking-[0.9px] text-muted">
                 PODEJŚCIA
               </Text>
             )}
@@ -219,7 +226,9 @@ export default function BibliographyItemScreen() {
         }
         ListEmptyComponent={
           attempts !== null ? (
-            <Text style={[common.muted, styles.empty]}>Brak podejść</Text>
+            <Text className="p-6 text-center text-xs text-muted">
+              Brak podejść
+            </Text>
           ) : undefined
         }
         renderItem={({ item: attempt }) => {
@@ -227,18 +236,20 @@ export default function BibliographyItemScreen() {
           const outcome = itemStatusLabel(attempt.outcome, item.kind);
           return (
             <Pressable
-              style={common.row}
+              className={common.row}
               accessibilityRole="button"
               accessibilityLabel={`Edytuj podejście: ${outcome}${dates ? `, ${dates}` : ""}`}
               onPress={() => showAttempt("edit", attempt)}
             >
-              <View style={{ flex: 1 }}>
-                <Text style={common.rowTitle}>{outcome}</Text>
+              <View className="flex-1">
+                <Text className={common.rowTitle}>{outcome}</Text>
                 {dates !== "" && (
-                  <Text style={common.rowSubtitle}>{dates}</Text>
+                  <Text className={common.rowSubtitle}>{dates}</Text>
                 )}
               </View>
-              <Text style={styles.edit}>Edytuj</Text>
+              <Text className="text-[13px] font-semibold text-ink-soft">
+                Edytuj
+              </Text>
             </Pressable>
           );
         }}
@@ -246,31 +257,3 @@ export default function BibliographyItemScreen() {
     </View>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  listContent: { paddingBottom: 32 },
-  header: { padding: 16, gap: 6 },
-  meta: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 4 },
-  // The web's status pill.
-  status: {
-    borderWidth: 1,
-    borderColor: colors.rowLine,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    fontSize: 13,
-    color: colors.inkSoft,
-  },
-  note: { fontSize: 14, color: colors.inkSoft, marginTop: 4 },
-  progress: {
-    fontFamily: fonts.utility,
-    fontSize: 15,
-    color: colors.inkSoft,
-    marginTop: 6,
-  },
-  actions: { flexDirection: "row", gap: 10, marginTop: 10 },
-  error: { color: colors.danger, marginTop: 8 },
-  sectionTitle: { marginTop: 20 },
-  empty: { padding: 24, textAlign: "center" },
-  edit: { color: colors.inkSoft, fontSize: 13, fontWeight: "600" },
-}));

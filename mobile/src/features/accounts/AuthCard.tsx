@@ -11,7 +11,7 @@ import {
 } from "react-native";
 
 import { Button } from "../../ui/Button";
-import { makeStyles, useTheme } from "../../theme";
+import { common, form } from "../../ui/classes";
 
 /** The centred card the public account screens are drawn in (web `AuthCard`). */
 export function AuthCard({
@@ -35,35 +35,37 @@ export function AuthCard({
   /** The form's fields (`AuthField`s). */
   children: ReactNode;
 }) {
-  const { common, card } = useTheme();
-  const styles = useStyles();
   return (
     <KeyboardAvoidingView
-      style={common.screen}
+      className={common.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
-        contentContainerStyle={styles.container}
+        contentContainerClassName="grow justify-center py-6"
         keyboardShouldPersistTaps="handled"
       >
-        <View style={[card.section, styles.card]}>
-          <Text style={common.eyebrow}>KONTO</Text>
-          <Text style={[common.pageTitle, styles.title]}>{title}</Text>
+        <View className="mx-4 mt-4 rounded-lg border border-card-line bg-paper p-[29px] shadow-[0_8px_18px_rgba(29,55,57,0.06)]">
+          <Text className={common.eyebrow}>KONTO</Text>
+          <Text className="mt-1 mb-6 font-display text-[28px] font-bold tracking-[-0.5px] text-ink">
+            {title}
+          </Text>
           {children}
-          {error !== "" && <Text style={styles.error}>{error}</Text>}
-          <View style={styles.actions}>
+          {error !== "" && (
+            <Text className="mb-4 text-[13px] text-danger">{error}</Text>
+          )}
+          <View className="flex-row">
             <Button
               label={submitLabel}
               disabled={!canSubmit}
               isBusy={isSubmitting}
               onPress={onSubmit}
-              style={styles.submit}
+              className="flex-none"
             />
           </View>
-          <Text style={styles.footer}>
+          <Text className="mt-5 text-[13px] text-muted">
             {footer.text}{" "}
-            <Link href={footer.href} replace style={styles.link}>
-              {footer.label}
+            <Link href={footer.href} replace asChild>
+              <Text className="font-semibold text-accent">{footer.label}</Text>
             </Link>
           </Text>
         </View>
@@ -77,29 +79,14 @@ export function AuthField({
   label,
   ...inputProps
 }: { label: string } & TextInputProps) {
-  const { colors, form } = useTheme();
-  const styles = useStyles();
   return (
-    <View style={styles.field}>
-      <Text style={[form.label, styles.label]}>{label}</Text>
+    <View className="mb-4 gap-1">
+      <Text className="text-xs font-semibold text-ink-soft">{label}</Text>
       <TextInput
-        style={form.input}
-        placeholderTextColor={colors.hint}
+        className={form.input}
+        placeholderTextColorClassName="accent-hint"
         {...inputProps}
       />
     </View>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  container: { flexGrow: 1, justifyContent: "center", paddingVertical: 24 },
-  card: { padding: 29, gap: 0 },
-  title: { marginTop: 4, marginBottom: 24 },
-  field: { marginBottom: 16, gap: 4 },
-  label: { marginTop: 0 },
-  error: { marginBottom: 16, color: colors.danger, fontSize: 13 },
-  actions: { flexDirection: "row" },
-  submit: { flex: 0 },
-  footer: { marginTop: 20, color: colors.muted, fontSize: 13 },
-  link: { color: colors.accent, fontWeight: "600" },
-}));

@@ -2,7 +2,6 @@ import { Pressable, ScrollView, Text } from "react-native";
 
 import type { WalletResponse } from "@personal/shared/generated/api";
 
-import { makeStyles } from "../../theme";
 import { WalletMark } from "./WalletMark";
 
 type WalletTabsProps = {
@@ -13,12 +12,11 @@ type WalletTabsProps = {
 
 /** A horizontal row of wallet tabs; the shown wallet is filled in. */
 export function WalletTabs({ wallets, selectedId, onSelect }: WalletTabsProps) {
-  const styles = useStyles();
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.walletTabs}
+      contentContainerClassName="gap-2 px-4 pt-4"
     >
       {wallets.map((wallet) => {
         const isActive = wallet.id === selectedId;
@@ -28,14 +26,19 @@ export function WalletTabs({ wallets, selectedId, onSelect }: WalletTabsProps) {
             accessibilityRole="tab"
             accessibilityState={{ selected: isActive }}
             onPress={() => onSelect(wallet.id)}
-            style={[styles.walletTab, isActive && styles.walletTabActive]}
+            className={
+              isActive
+                ? "flex-row items-center gap-1.5 rounded-[5px] border border-deep-ink bg-deep-ink px-3.5 py-2"
+                : "flex-row items-center gap-1.5 rounded-[5px] border border-control-border px-3.5 py-2"
+            }
           >
             <WalletMark wallet={wallet} size={16} />
             <Text
-              style={[
-                styles.walletTabLabel,
-                isActive && styles.walletTabLabelActive,
-              ]}
+              className={
+                isActive
+                  ? "text-[13px] font-semibold text-on-signal"
+                  : "text-[13px] font-semibold text-ink-soft"
+              }
             >
               {wallet.name}
             </Text>
@@ -45,23 +48,3 @@ export function WalletTabs({ wallets, selectedId, onSelect }: WalletTabsProps) {
     </ScrollView>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  walletTabs: { gap: 8, paddingHorizontal: 16, paddingTop: 16 },
-  walletTab: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: colors.controlBorder,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  walletTabActive: {
-    borderColor: colors.deepInk,
-    backgroundColor: colors.deepInk,
-  },
-  walletTabLabel: { color: colors.inkSoft, fontSize: 13, fontWeight: "600" },
-  walletTabLabelActive: { color: colors.onSignal },
-}));

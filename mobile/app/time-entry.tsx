@@ -30,7 +30,7 @@ import { ChipGroup } from "../src/ui/ChipGroup";
 import { confirmDestructive } from "../src/ui/confirm";
 import { DateTimeField } from "../src/ui/DateTimeField";
 import { TitleSuggestions } from "../src/features/tasks/TitleSuggestions";
-import { useTheme } from "../src/theme";
+import { common, form } from "../src/ui/classes";
 
 function validate(date: string, title: string, minutes: number) {
   if (!date) return "Podaj datę wpisu.";
@@ -43,7 +43,6 @@ function validate(date: string, title: string, minutes: number) {
 
 /** Adds a time entry by hand, or edits one (`?entryId=`), like the web Timer page's forms. */
 export default function TimeEntryEditorScreen() {
-  const { common, form } = useTheme();
   const params = useLocalSearchParams<{ entryId?: string }>();
   const entryId = params.entryId ? Number(params.entryId) : null;
 
@@ -77,8 +76,8 @@ export default function TimeEntryEditorScreen() {
 
   if (entryId !== null && !entry) {
     return (
-      <View style={common.center}>
-        <Text style={common.muted}>Nie znaleziono wpisu.</Text>
+      <View className={common.center}>
+        <Text className={common.muted}>Nie znaleziono wpisu.</Text>
       </View>
     );
   }
@@ -131,17 +130,17 @@ export default function TimeEntryEditorScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={common.screen}
+      className={common.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Stack.Screen
         options={{ title: entry ? "Edytuj wpis" : "Dodaj wpis ręcznie" }}
       />
       <ScrollView
-        contentContainerStyle={form.content}
+        contentContainerClassName={form.content}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={form.label}>Data</Text>
+        <Text className={form.label}>Data</Text>
         <DateTimeField
           mode="date"
           value={dateFromKey(date)}
@@ -151,7 +150,7 @@ export default function TimeEntryEditorScreen() {
 
         {!entry && (
           <>
-            <Text style={form.label}>Projekt</Text>
+            <Text className={form.label}>Projekt</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <ChipGroup
                 options={projects.map((project) => ({
@@ -170,9 +169,9 @@ export default function TimeEntryEditorScreen() {
           </>
         )}
 
-        <Text style={form.label}>Zadanie</Text>
+        <Text className={form.label}>Zadanie</Text>
         <TextInput
-          style={form.input}
+          className={form.input}
           value={title}
           onChangeText={setTitle}
           placeholder="Tytuł zadania"
@@ -185,9 +184,9 @@ export default function TimeEntryEditorScreen() {
           disabled={isSaving}
         />
 
-        <Text style={form.label}>Czas (minuty)</Text>
+        <Text className={form.label}>Czas (minuty)</Text>
         <TextInput
-          style={form.input}
+          className={form.input}
           value={minutes}
           onChangeText={setMinutes}
           keyboardType="number-pad"
@@ -195,8 +194,8 @@ export default function TimeEntryEditorScreen() {
           editable={!isSaving}
         />
 
-        {formError !== "" && <Text style={form.error}>{formError}</Text>}
-        <View style={form.actions}>
+        {formError !== "" && <Text className={form.error}>{formError}</Text>}
+        <View className={form.actions}>
           <Button
             label="Anuluj"
             variant="secondary"
@@ -210,7 +209,7 @@ export default function TimeEntryEditorScreen() {
           />
         </View>
         {entry && (
-          <View style={form.actions}>
+          <View className={form.actions}>
             <Button
               label="Usuń wpis"
               variant="danger"

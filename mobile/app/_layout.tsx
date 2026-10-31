@@ -1,4 +1,5 @@
 import "../src/setup";
+import "../global.css";
 
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { Stack } from "expo-router";
@@ -18,13 +19,20 @@ import { queryClient } from "../src/queryClient";
 import { useTabBarStore } from "../src/features/tabs/tabBar";
 import { useTaskListSettingsStore } from "../src/features/tasks/taskListSettings";
 import { useTaskProjectStore } from "../src/features/tasks/taskProject";
-import { AccountThemeSync, useNativeColorScheme, useTheme } from "../src/theme";
+import {
+  AccountThemeSync,
+  useNativeColorScheme,
+  useTheme,
+  useUniwindTheme,
+} from "../src/theme";
+import { common } from "../src/ui/classes";
 
 export default function RootLayout() {
-  const { common, headerOptions } = useTheme();
+  const { headerOptions } = useTheme();
   const [isHydrated, setIsHydrated] = useState(false);
   const isSignedIn = useAuthStore((state) => state.user !== null);
   useNativeColorScheme();
+  useUniwindTheme();
 
   // The persisted stores were created before setup pointed them at secure
   // storage, so read the saved session and the theme, view, status, tab
@@ -45,7 +53,7 @@ export default function RootLayout() {
 
   if (!isHydrated) {
     return (
-      <View style={common.center}>
+      <View className={common.center}>
         <ActivityIndicator />
       </View>
     );

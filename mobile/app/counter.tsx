@@ -19,11 +19,10 @@ import {
 
 import { Button } from "../src/ui/Button";
 import { ColorPicker } from "../src/ui/ColorPicker";
-import { useTheme } from "../src/theme";
+import { common, form } from "../src/ui/classes";
 
 /** Creates a Counter, or edits one (`?counterId=`): its name and colour. */
 export default function CounterEditorScreen() {
-  const { common, form } = useTheme();
   const params = useLocalSearchParams<{ counterId?: string }>();
   const counterId = params.counterId ? Number(params.counterId) : null;
   const { data: counters = [] } = useCounters();
@@ -76,19 +75,19 @@ export default function CounterEditorScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={common.screen}
+      className={common.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Stack.Screen
         options={{ title: counter ? "Edytuj licznik" : "Nowy licznik" }}
       />
       <ScrollView
-        contentContainerStyle={form.content}
+        contentContainerClassName={form.content}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={form.label}>Nazwa licznika</Text>
+        <Text className={form.label}>Nazwa licznika</Text>
         <TextInput
-          style={form.input}
+          className={form.input}
           value={name}
           onChangeText={setName}
           autoFocus
@@ -98,10 +97,10 @@ export default function CounterEditorScreen() {
           editable={!isSaving}
         />
 
-        <Text style={form.label}>Kolor</Text>
+        <Text className={form.label}>Kolor</Text>
         <ColorPicker value={color} onChange={setColor} disabled={isSaving} />
-        {formError !== "" && <Text style={form.error}>{formError}</Text>}
-        <View style={form.actions}>
+        {formError !== "" && <Text className={form.error}>{formError}</Text>}
+        <View className={form.actions}>
           <Button
             label="Anuluj"
             variant="secondary"

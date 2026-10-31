@@ -16,7 +16,7 @@ import {
   selectedTaskProject,
   useTaskProjectStore,
 } from "../../src/features/tasks/taskProject";
-import { makeStyles, useTheme } from "../../src/theme";
+import { common } from "../../src/ui/classes";
 
 /**
  * The Zadania tab, like the web's Tasks page: the Tasks of one Project. The
@@ -25,8 +25,6 @@ import { makeStyles, useTheme } from "../../src/theme";
  * chosen.
  */
 export default function TasksScreen() {
-  const { common } = useTheme();
-  const styles = useStyles();
   const { data: projects = [], isPending, isError } = useProjects();
   const projectId = useTaskProjectStore((state) => state.projectId);
   const setProjectId = useTaskProjectStore((state) => state.setProjectId);
@@ -54,18 +52,18 @@ export default function TasksScreen() {
 
   if (isError && projects.length === 0) {
     return (
-      <View style={common.screen}>
+      <View className={common.screen}>
         {header}
-        <Text style={styles.error}>{PROJECTS_LOAD_ERROR}</Text>
+        <Text className="p-4 text-danger">{PROJECTS_LOAD_ERROR}</Text>
       </View>
     );
   }
 
   if (!isPending && project === null) {
     return (
-      <View style={[common.screen, styles.empty]}>
+      <View className="flex-1 items-center justify-center gap-4 bg-canvas">
         {header}
-        <Text style={common.muted}>Utwórz pierwszy projekt.</Text>
+        <Text className={common.muted}>Utwórz pierwszy projekt.</Text>
         <Button label="Nowy projekt" onPress={() => router.push("/project")} />
       </View>
     );
@@ -101,8 +99,3 @@ export default function TasksScreen() {
     </>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  error: { color: colors.danger, padding: 16 },
-  empty: { alignItems: "center", justifyContent: "center", gap: 16 },
-}));

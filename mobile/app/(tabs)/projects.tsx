@@ -6,11 +6,10 @@ import { PROJECTS_LOAD_ERROR } from "@personal/shared/loadErrors";
 import { useProjects } from "@personal/shared/queries/projects";
 
 import { Fab } from "../../src/ui/Fab";
-import { useTheme } from "../../src/theme";
+import { common } from "../../src/ui/classes";
 
 /** The Projekty tab: the user's Projects, each opening its Tasks. */
 export default function ProjectsScreen() {
-  const { common } = useTheme();
   const { data: projects = [], isPending, isError, refetch } = useProjects();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -21,11 +20,11 @@ export default function ProjectsScreen() {
   }
 
   return (
-    <View style={common.screen}>
-      {isError && <Text style={common.error}>{PROJECTS_LOAD_ERROR}</Text>}
+    <View className={common.screen}>
+      {isError && <Text className={common.error}>{PROJECTS_LOAD_ERROR}</Text>}
       <FlatList
         data={projects}
-        contentContainerStyle={{ paddingBottom: 96 }}
+        contentContainerClassName="pb-24"
         keyExtractor={(project) => String(project.id)}
         refreshControl={
           <RefreshControl
@@ -38,16 +37,16 @@ export default function ProjectsScreen() {
             href={{ pathname: "/projects/[id]", params: { id: item.id } }}
             asChild
           >
-            <Pressable style={common.row}>
-              <View style={{ flex: 1 }}>
-                <Text style={common.rowTitle}>{item.name}</Text>
+            <Pressable className={common.row}>
+              <View className="flex-1">
+                <Text className={common.rowTitle}>{item.name}</Text>
                 {item.description !== "" && (
-                  <Text style={common.rowSubtitle} numberOfLines={1}>
+                  <Text className={common.rowSubtitle} numberOfLines={1}>
                     {item.description}
                   </Text>
                 )}
               </View>
-              <Text style={common.muted}>›</Text>
+              <Text className={common.muted}>›</Text>
             </Pressable>
           </Link>
         )}

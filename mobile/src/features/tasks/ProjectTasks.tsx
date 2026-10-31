@@ -26,7 +26,8 @@ import { useStartTimer } from "@personal/shared/queries/timer";
 
 import { Fab } from "../../ui/Fab";
 import { useTaskListSettingsStore } from "./taskListSettings";
-import { makeStyles, fonts, useTheme } from "../../theme";
+import { useTheme } from "../../theme";
+import { common } from "../../ui/classes";
 
 // A plain boolean, so the drag worklets capture it instead of `Platform`.
 const isAndroid = Platform.OS === "android";
@@ -114,8 +115,7 @@ function dropTarget(
  * the web. Shared by the Zadania tab and the Project screen.
  */
 export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
-  const { colors, common } = useTheme();
-  const styles = useStyles();
+  const { colors } = useTheme();
   const projectId = project?.id;
 
   const tasksQuery = useProjectTasks(project);
@@ -213,9 +213,10 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
   const rows = rowsOf(sections);
 
   return (
-    <View style={common.screen}>
+    <View className={common.screen}>
       <ScrollViewContainer
-        contentContainerStyle={styles.listContent}
+        // A third-party list: no className props, so a plain style.
+        contentContainerStyle={{ paddingBottom: 96 }}
         refreshControl={
           <RefreshControl
             enabled={!isDragging || isRefreshing}
@@ -224,16 +225,16 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
           />
         }
       >
-        <View style={styles.header}>
+        <View className="gap-3 p-4">
           {project?.description ? (
-            <Text style={common.muted}>{project.description}</Text>
+            <Text className={common.muted}>{project.description}</Text>
           ) : null}
           {errorMessage !== "" && (
-            <Text style={styles.error}>{errorMessage}</Text>
+            <Text className="text-danger">{errorMessage}</Text>
           )}
         </View>
         {tasks !== null && sections.length === 0 && (
-          <Text style={[common.muted, styles.empty]}>
+          <Text className="p-6 text-center text-xs text-muted">
             Brak zadań w tym projekcie.
           </Text>
         )}
@@ -250,7 +251,8 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
               const section = item.section;
               return (
                 <Pressable
-                  style={[styles.sectionHeader, styles.rowFill]}
+                  // A dragged row floats over its neighbours, so it needs its own fill.
+                  className="flex-row items-center gap-1.5 bg-canvas px-4 pt-4 pb-1.5"
                   accessibilityRole="button"
                   accessibilityState={{ expanded: !section.isCollapsed }}
                   accessibilityLabel={`${section.isCollapsed ? "Rozwiń" : "Zwiń"} status ${section.title}`}
@@ -263,7 +265,7 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
                     size={14}
                     color={colors.muted}
                   />
-                  <Text style={styles.sectionTitle}>
+                  <Text className="font-utility text-[11px] font-semibold tracking-[0.9px] text-muted">
                     {section.title.toUpperCase()} · {section.count}
                   </Text>
                 </Pressable>
@@ -271,7 +273,7 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
             }
             if (item.kind === "empty") {
               return (
-                <Text style={[common.muted, styles.sectionEmpty]}>
+                <Text className="px-4 py-3 text-[13px] text-muted">
                   Brak w tym statusie.
                 </Text>
               );
@@ -327,13 +329,12 @@ function TaskRow({
   /** Absent when the timer button is switched off in the settings. */
   onStartTimer?: () => void;
 }) {
-  const { colors, common } = useTheme();
-  const styles = useStyles();
+  const { colors } = useTheme();
   const drag = useReorderableDrag();
 
   return (
     <Pressable
-      style={[common.row, styles.rowFill]}
+      className="mx-4 min-h-[62px] flex-row items-center gap-[13px] border-b border-row-line bg-canvas px-[3px] py-2.5"
       accessibilityRole="button"
       accessibilityLabel={`Edytuj zadanie: ${task.title}`}
       accessibilityHint="Przytrzymaj, aby zmienić kolejność lub status"
@@ -346,16 +347,26 @@ function TaskRow({
         accessibilityLabel={`${isDone ? "Otwórz zadanie" : "Oznacz jako ukończone"}: ${task.title}`}
         hitSlop={12}
         onPress={onToggle}
-        style={[styles.checkbox, isDone && styles.checkboxChecked]}
+        className={
+          isDone
+            ? "size-[22px] items-center justify-center rounded border-[1.5px] border-accent bg-accent"
+            : "size-[22px] items-center justify-center rounded border-[1.5px] border-control-border-hover"
+        }
       >
-        {isDone && <Text style={styles.checkmark}>✓</Text>}
+        {isDone && <Text className="text-sm font-bold text-on-signal">✓</Text>}
       </Pressable>
-      <View style={{ flex: 1 }}>
-        <Text style={[styles.title, isDone && styles.titleDone]}>
+      <View className="flex-1">
+        <Text
+          className={
+            isDone
+              ? "text-sm font-medium text-muted line-through"
+              : "text-sm font-medium text-ink"
+          }
+        >
           {task.title}
         </Text>
         {task.description !== "" && (
-          <Text style={common.rowSubtitle} numberOfLines={1}>
+          <Text className={common.rowSubtitle} numberOfLines={1}>
             {task.description}
           </Text>
         )}
@@ -366,7 +377,7 @@ function TaskRow({
           accessibilityLabel={`Uruchom timer: ${task.title}`}
           hitSlop={10}
           onPress={onStartTimer}
-          style={styles.play}
+          className="size-[34px] items-center justify-center rounded-md border border-transparent bg-icon-wash"
         >
           <Ionicons name="play" size={16} color={colors.signal} />
         </Pressable>
@@ -378,67 +389,10 @@ function TaskRow({
         hitSlop={8}
         delayLongPress={150}
         onLongPress={drag}
-        style={styles.grip}
+        className="h-[34px] w-7 items-center justify-center"
       >
         <Ionicons name="reorder-three" size={22} color={colors.muted} />
       </Pressable>
     </Pressable>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  header: { padding: 16, gap: 12 },
-  error: { color: colors.danger },
-  empty: { padding: 24, textAlign: "center" },
-  sectionEmpty: { paddingHorizontal: 16, paddingVertical: 12, fontSize: 13 },
-  listContent: { paddingBottom: 96 },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 6,
-  },
-  sectionTitle: {
-    fontFamily: fonts.utility,
-    fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 0.9,
-    color: colors.muted,
-  },
-  // A dragged row floats over its neighbours, so it needs its own fill.
-  rowFill: { backgroundColor: colors.canvas },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: colors.controlBorderHover,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkboxChecked: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
-  },
-  checkmark: { color: colors.onSignal, fontSize: 14, fontWeight: "700" },
-  title: { fontSize: 14, fontWeight: "500", color: colors.ink },
-  titleDone: { color: colors.muted, textDecorationLine: "line-through" },
-  play: {
-    width: 34,
-    height: 34,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "transparent",
-    backgroundColor: colors.iconWash,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  grip: {
-    width: 28,
-    height: 34,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-}));

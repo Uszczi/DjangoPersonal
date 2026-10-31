@@ -8,7 +8,8 @@ import {
   tabDefinitions,
   useTabBarStore,
 } from "../../src/features/tabs/tabBar";
-import { fonts, makeStyles, useTheme } from "../../src/theme";
+import { useTheme } from "../../src/theme";
+import { common } from "../../src/ui/classes";
 
 /**
  * The app opens on this tab ("/"). When the user has hidden Start, send
@@ -33,24 +34,28 @@ export default function StartTab() {
  * the tab bar's order and include hidden tabs, so those stay one tap away.
  */
 function StartScreen() {
-  const { colors, common } = useTheme();
-  const styles = useStyles();
+  const { colors } = useTheme();
   const order = useTabBarStore((state) => state.order);
   const tiles = order.filter((name) => name !== "index" && name !== pinnedTab);
   return (
-    <ScrollView style={common.screen} contentContainerStyle={styles.grid}>
+    <ScrollView
+      className={common.screen}
+      contentContainerClassName="flex-row flex-wrap gap-3 p-4"
+    >
       {tiles.map((name) => {
         const tab = tabDefinitions[name];
         return (
           <Link key={name} href={tab.href} asChild>
             <Pressable
               accessibilityRole="link"
-              style={({ pressed }) => [styles.tile, pressed && styles.pressed]}
+              className="grow basis-[47%] gap-3.5 rounded-lg border border-card-line bg-paper p-[18px] shadow-[0_8px_18px_rgba(29,55,57,0.05)] active:opacity-70"
             >
-              <View style={styles.iconBox}>
+              <View className="size-12 items-center justify-center rounded-lg bg-signal">
                 <Ionicons name={tab.icon} size={24} color={colors.onSignal} />
               </View>
-              <Text style={styles.label}>{tab.title}</Text>
+              <Text className="font-display text-[17px] font-semibold text-ink">
+                {tab.title}
+              </Text>
             </Pressable>
           </Link>
         );
@@ -58,42 +63,3 @@ function StartScreen() {
     </ScrollView>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-    padding: 16,
-  },
-  tile: {
-    flexBasis: "47%",
-    flexGrow: 1,
-    gap: 14,
-    padding: 18,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.cardLine,
-    backgroundColor: colors.paper,
-    shadowColor: "#1d3739",
-    shadowOpacity: 0.05,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 1,
-  },
-  pressed: { opacity: 0.7 },
-  iconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.signal,
-  },
-  label: {
-    fontFamily: fonts.display,
-    fontSize: 17,
-    fontWeight: "600",
-    color: colors.ink,
-  },
-}));

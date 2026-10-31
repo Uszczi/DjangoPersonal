@@ -3,7 +3,10 @@ import type { ComponentProps, ReactNode } from "react";
 import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { fonts, makeStyles, useTheme } from "../theme";
+import { useTheme } from "../theme";
+
+const ROW =
+  "min-h-[52px] flex-row items-center gap-3.5 border-b border-row-line px-1";
 
 /**
  * A popup sliding from the bottom of the screen over a dimmed backdrop, with
@@ -19,22 +22,24 @@ export function Sheet({
   onClose: () => void;
   children: ReactNode;
 }) {
-  const styles = useStyles();
   const insets = useSafeAreaInsets();
 
   return (
     <Modal transparent animationType="fade" onRequestClose={onClose}>
       <Pressable
         accessibilityLabel="Zamknij menu"
-        style={styles.backdrop}
+        className="flex-1 justify-end bg-overlay"
         onPress={onClose}
       >
         <Pressable
-          style={[styles.sheet, { paddingBottom: 12 + insets.bottom }]}
+          className="max-h-[80%] rounded-t-xl bg-paper px-4 pt-4"
+          style={{ paddingBottom: 12 + insets.bottom }}
           // Taps inside the sheet must not reach the backdrop.
           onPress={() => {}}
         >
-          <Text style={styles.kicker}>{title.toUpperCase()}</Text>
+          <Text className="mb-1 font-utility text-[11px] font-semibold tracking-[0.9px] text-muted">
+            {title.toUpperCase()}
+          </Text>
           <ScrollView bounces={false}>{children}</ScrollView>
         </Pressable>
       </Pressable>
@@ -55,18 +60,21 @@ export function SheetItem({
   onPress: () => void;
 }) {
   const { colors } = useTheme();
-  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ selected: isSelected }}
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      className={`${ROW} active:opacity-60`}
     >
       {icon && <Ionicons name={icon} size={22} color={colors.ink} />}
       <Text
         numberOfLines={1}
-        style={[styles.title, isSelected && styles.titleSelected]}
+        className={
+          isSelected
+            ? "flex-1 text-[15px] font-bold text-ink"
+            : "flex-1 text-[15px] font-medium text-ink"
+        }
       >
         {label}
       </Text>
@@ -79,42 +87,5 @@ export function SheetItem({
 
 /** A Sheet row holding a control of its own, such as a switch. */
 export function SheetRow({ children }: { children: ReactNode }) {
-  const styles = useStyles();
-  return <View style={styles.row}>{children}</View>;
+  return <View className={ROW}>{children}</View>;
 }
-
-const useStyles = makeStyles((colors) => ({
-  backdrop: {
-    flex: 1,
-    justifyContent: "flex-end",
-    backgroundColor: colors.overlay,
-  },
-  sheet: {
-    maxHeight: "80%",
-    paddingTop: 16,
-    paddingHorizontal: 16,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    backgroundColor: colors.paper,
-  },
-  kicker: {
-    fontFamily: fonts.utility,
-    fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 0.9,
-    color: colors.muted,
-    marginBottom: 4,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    minHeight: 52,
-    paddingHorizontal: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.rowLine,
-  },
-  pressed: { opacity: 0.6 },
-  title: { flex: 1, fontSize: 15, fontWeight: "500", color: colors.ink },
-  titleSelected: { fontWeight: "700" },
-}));

@@ -6,6 +6,16 @@
 #   docker compose -f deployment/docker-compose.yml \
 #                  -f deployment/docker-compose.local.yml up --detach
 services:
+  # The mobile app (`just mobile`) points at the Expo dev host on port 8000 by
+  # default. The base file publishes the API on 127.0.0.1 only, so a phone on
+  # the LAN cannot reach it; republish on all interfaces and accept any host.
+  # Local-only: the base file's loopback binding stays in effect on the VPS.
+  app:
+    ports: !override
+      - "8000:8000"
+    environment:
+      ALLOWED_HOSTS: "*"
+
   nginx:
     image: nginx:1.27-alpine
     container_name: deployment-nginx

@@ -21,7 +21,7 @@ import {
 import { Button } from "../src/ui/Button";
 import { ChipGroup } from "../src/ui/ChipGroup";
 import { confirmDestructive } from "../src/ui/confirm";
-import { makeStyles, useTheme } from "../src/theme";
+import { common, form } from "../src/ui/classes";
 
 /** A status being edited; `id` stays stable while statuses are renamed and reordered. */
 type StatusDraft = { id: number; name: string };
@@ -37,8 +37,6 @@ function newStatus(name: string): StatusDraft {
  * drag and drop.
  */
 export default function ProjectEditorScreen() {
-  const { common, form } = useTheme();
-  const styles = useStyles();
   const params = useLocalSearchParams<{ projectId?: string }>();
   const projectId = params.projectId ? Number(params.projectId) : null;
   const { data: projects = [] } = useProjects();
@@ -62,8 +60,8 @@ export default function ProjectEditorScreen() {
 
   if (projectId !== null && !project) {
     return (
-      <View style={common.center}>
-        <Text style={common.muted}>Nie znaleziono projektu.</Text>
+      <View className={common.center}>
+        <Text className={common.muted}>Nie znaleziono projektu.</Text>
       </View>
     );
   }
@@ -159,19 +157,23 @@ export default function ProjectEditorScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={common.screen}
+      className={common.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Stack.Screen
         options={{ title: project ? "Edytuj projekt" : "Nowy projekt" }}
       />
       <ScrollView
-        contentContainerStyle={form.content}
+        contentContainerClassName={form.content}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={form.label}>Nazwa projektu</Text>
+        <Text className={form.label}>Nazwa projektu</Text>
         <TextInput
-          style={[form.input, project?.isInbox && styles.readOnly]}
+          className={
+            project?.isInbox
+              ? "rounded border border-control-border bg-input px-[11px] py-2.5 text-[14px] text-muted"
+              : form.input
+          }
           value={name}
           onChangeText={setName}
           maxLength={100}
@@ -179,23 +181,23 @@ export default function ProjectEditorScreen() {
           editable={!isSaving && !project?.isInbox}
         />
         {project?.isInbox && (
-          <Text style={form.hint}>Nazwa Inbox jest stała.</Text>
+          <Text className={form.hint}>Nazwa Inbox jest stała.</Text>
         )}
 
-        <Text style={form.label}>Opis (opcjonalnie)</Text>
+        <Text className={form.label}>Opis (opcjonalnie)</Text>
         <TextInput
-          style={[form.input, form.multiline]}
+          className={form.multiline}
           value={description}
           onChangeText={setDescription}
           multiline
           editable={!isSaving}
         />
 
-        <Text style={form.label}>Statusy (w kolejności wyświetlania)</Text>
+        <Text className={form.label}>Statusy (w kolejności wyświetlania)</Text>
         {statuses.map((status, index) => (
-          <View key={status.id} style={styles.statusRow}>
+          <View key={status.id} className="flex-row items-center gap-1.5">
             <TextInput
-              style={[form.input, { flex: 1 }]}
+              className={`${form.input} flex-1`}
               value={status.name}
               onChangeText={(value) => updateStatus(status.id, value)}
               accessibilityLabel={`Status ${index + 1}`}
@@ -221,7 +223,7 @@ export default function ProjectEditorScreen() {
             />
           </View>
         ))}
-        <View style={{ flexDirection: "row" }}>
+        <View className="flex-row">
           <Button
             label="+ Dodaj status"
             variant="secondary"
@@ -234,7 +236,7 @@ export default function ProjectEditorScreen() {
 
         {statusNames.length > 0 && (
           <>
-            <Text style={form.label}>Status końcowy („zrobione”)</Text>
+            <Text className={form.label}>Status końcowy („zrobione”)</Text>
             <ChipGroup
               options={statusNames.map((status) => ({
                 value: status,
@@ -251,8 +253,8 @@ export default function ProjectEditorScreen() {
           </>
         )}
 
-        {formError !== "" && <Text style={form.error}>{formError}</Text>}
-        <View style={form.actions}>
+        {formError !== "" && <Text className={form.error}>{formError}</Text>}
+        <View className={form.actions}>
           <Button
             label="Anuluj"
             variant="secondary"
@@ -266,7 +268,7 @@ export default function ProjectEditorScreen() {
           />
         </View>
         {project && !project.isInbox && (
-          <View style={form.actions}>
+          <View className={form.actions}>
             <Button
               label="Usuń projekt"
               variant="danger"
@@ -291,7 +293,6 @@ function IconButton({
   disabled: boolean;
   onPress: () => void;
 }) {
-  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="button"
@@ -299,26 +300,9 @@ function IconButton({
       disabled={disabled}
       onPress={onPress}
       hitSlop={4}
-      style={[styles.iconButton, disabled && styles.iconButtonDisabled]}
+      className={`h-10 w-9 items-center justify-center rounded-[5px] border border-control-border bg-transparent ${disabled ? "opacity-35" : ""}`}
     >
-      <Text style={styles.iconButtonLabel}>{label}</Text>
+      <Text className="text-[18px] text-icon">{label}</Text>
     </Pressable>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  readOnly: { color: colors.muted },
-  statusRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  iconButton: {
-    width: 36,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: colors.controlBorder,
-    backgroundColor: "transparent",
-  },
-  iconButtonDisabled: { opacity: 0.35 },
-  iconButtonLabel: { fontSize: 18, color: colors.icon },
-}));

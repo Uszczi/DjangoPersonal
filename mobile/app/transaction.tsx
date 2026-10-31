@@ -24,7 +24,7 @@ import { Button } from "../src/ui/Button";
 import { ChipGroup } from "../src/ui/ChipGroup";
 import { confirmDestructive } from "../src/ui/confirm";
 import { DateTimeField } from "../src/ui/DateTimeField";
-import { makeStyles, useTheme } from "../src/theme";
+import { common, form } from "../src/ui/classes";
 
 /** `0` stands for "no category" in the chip group, which needs a non-null value. */
 const NO_CATEGORY = 0;
@@ -45,8 +45,6 @@ function validateAmount(raw: string): string {
  * that Wallet's loaded pages, like the web TransactionEditorModal.
  */
 export default function TransactionEditorScreen() {
-  const { common, form } = useTheme();
-  const styles = useStyles();
   const params = useLocalSearchParams<{
     walletId: string;
     transactionId?: string;
@@ -87,8 +85,8 @@ export default function TransactionEditorScreen() {
 
   if (transactionId !== null && !transaction) {
     return (
-      <View style={common.center}>
-        <Text style={common.muted}>Nie znaleziono transakcji.</Text>
+      <View className={common.center}>
+        <Text className={common.muted}>Nie znaleziono transakcji.</Text>
       </View>
     );
   }
@@ -176,25 +174,25 @@ export default function TransactionEditorScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={common.screen}
+      className={common.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Stack.Screen options={{ title: screenTitle }} />
       <ScrollView
-        contentContainerStyle={form.content}
+        contentContainerClassName={form.content}
         keyboardShouldPersistTaps="handled"
       >
         {isSystemEntry && (
-          <Text style={styles.systemNote}>
+          <Text className="mt-1 rounded bg-wash px-3 py-2.5 text-[13px] leading-[18px] text-ink-soft">
             Ten wpis zapisał system (stan początkowy lub korekta stanu). Nie
             można go edytować, tylko usunąć. Saldo poprawisz w ustawieniach
             portfela.
           </Text>
         )}
 
-        <Text style={form.label}>Tytuł</Text>
+        <Text className={form.label}>Tytuł</Text>
         <TextInput
-          style={form.input}
+          className={form.input}
           value={title}
           onChangeText={setTitle}
           maxLength={200}
@@ -202,9 +200,9 @@ export default function TransactionEditorScreen() {
           editable={!fieldsDisabled}
         />
 
-        <Text style={form.label}>Kwota</Text>
+        <Text className={form.label}>Kwota</Text>
         <TextInput
-          style={form.input}
+          className={form.input}
           value={amount}
           onChangeText={setAmount}
           keyboardType="decimal-pad"
@@ -212,7 +210,7 @@ export default function TransactionEditorScreen() {
           editable={!fieldsDisabled}
         />
 
-        <Text style={form.label}>Data</Text>
+        <Text className={form.label}>Data</Text>
         <DateTimeField
           mode="date"
           value={dateFromKey(date)}
@@ -220,16 +218,16 @@ export default function TransactionEditorScreen() {
           disabled={fieldsDisabled}
         />
 
-        <Text style={form.label}>Opis</Text>
+        <Text className={form.label}>Opis</Text>
         <TextInput
-          style={[form.input, form.multiline]}
+          className={form.multiline}
           value={description}
           onChangeText={setDescription}
           multiline
           editable={!fieldsDisabled}
         />
 
-        <Text style={form.label}>Kategoria</Text>
+        <Text className={form.label}>Kategoria</Text>
         {isSystemEntry ? (
           <ChipGroup
             options={[{ value: category, label: "System" }]}
@@ -239,7 +237,9 @@ export default function TransactionEditorScreen() {
           />
         ) : (
           <>
-            <Text style={styles.groupHeader}>Wydatki</Text>
+            <Text className="mt-3 text-xs font-semibold tracking-[0.6px] text-muted uppercase">
+              Wydatki
+            </Text>
             <ChipGroup
               options={[
                 { value: NO_CATEGORY, label: "Bez kategorii" },
@@ -252,7 +252,9 @@ export default function TransactionEditorScreen() {
               onChange={setCategory}
               disabled={isSaving}
             />
-            <Text style={styles.groupHeader}>Przychody</Text>
+            <Text className="mt-3 text-xs font-semibold tracking-[0.6px] text-muted uppercase">
+              Przychody
+            </Text>
             <ChipGroup
               options={incomeCategories.map((item) => ({
                 value: item.id,
@@ -267,7 +269,7 @@ export default function TransactionEditorScreen() {
 
         {wallets.length > 1 && (
           <>
-            <Text style={form.label}>Portfel</Text>
+            <Text className={form.label}>Portfel</Text>
             <ChipGroup
               options={wallets.map((item) => ({
                 value: item.id,
@@ -280,9 +282,9 @@ export default function TransactionEditorScreen() {
           </>
         )}
 
-        {formError !== "" && <Text style={form.error}>{formError}</Text>}
+        {formError !== "" && <Text className={form.error}>{formError}</Text>}
         {isSystemEntry ? (
-          <View style={form.actions}>
+          <View className={form.actions}>
             <Button
               label="Usuń transakcję"
               variant="danger"
@@ -291,7 +293,7 @@ export default function TransactionEditorScreen() {
             />
           </View>
         ) : (
-          <View style={form.actions}>
+          <View className={form.actions}>
             <Button
               label="Anuluj"
               variant="secondary"
@@ -306,7 +308,7 @@ export default function TransactionEditorScreen() {
           </View>
         )}
         {transaction && !isSystemEntry && (
-          <View style={form.actions}>
+          <View className={form.actions}>
             <Button
               label="Usuń transakcję"
               variant="danger"
@@ -319,24 +321,3 @@ export default function TransactionEditorScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  groupHeader: {
-    color: colors.muted,
-    fontSize: 12,
-    fontWeight: "600",
-    marginTop: 12,
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-  },
-  systemNote: {
-    color: colors.inkSoft,
-    fontSize: 13,
-    lineHeight: 18,
-    backgroundColor: colors.wash,
-    borderRadius: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginTop: 4,
-  },
-}));

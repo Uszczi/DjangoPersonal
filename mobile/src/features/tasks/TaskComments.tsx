@@ -26,7 +26,13 @@ import { useAuthStore } from "@personal/shared/stores/auth";
 
 import { Button } from "../../ui/Button";
 import { confirmDestructive } from "../../ui/confirm";
-import { makeStyles, useTheme } from "../../theme";
+import { common, form } from "../../ui/classes";
+
+const THUMBNAIL = "size-[88px] rounded-md bg-wash";
+const COMMENT_INPUT =
+  "min-h-[72px] rounded border border-control-border bg-input px-[11px] py-2.5 text-[14px] text-ink align-top";
+const FORM_ACTIONS = "mt-2.5 flex-row gap-2";
+const THUMBNAILS = "mt-1 flex-row flex-wrap gap-2";
 
 /** A picked photo waiting to be sent: React Native uploads it from its file URI. */
 type PendingPhoto = { uri: string; name: string; type: string };
@@ -119,7 +125,6 @@ function AttachmentImage({
   attachment: CommentAttachmentResponse;
   onOpen: () => void;
 }) {
-  const styles = useStyles();
   const { source, onError } = useAttachmentSource(attachment);
   return (
     <Pressable
@@ -127,7 +132,7 @@ function AttachmentImage({
       accessibilityLabel={`Powiększ zdjęcie: ${attachment.fileName}`}
       onPress={onOpen}
     >
-      <Image source={source} onError={onError} style={styles.thumbnail} />
+      <Image source={source} onError={onError} className={THUMBNAIL} />
     </Pressable>
   );
 }
@@ -139,19 +144,18 @@ function FullScreenImage({
   attachment: CommentAttachmentResponse;
   onClose: () => void;
 }) {
-  const styles = useStyles();
   const { source, onError } = useAttachmentSource(attachment);
   return (
     <Modal visible animationType="fade" onRequestClose={onClose}>
       <Pressable
-        style={styles.viewer}
+        className="flex-1 items-center justify-center bg-black"
         onPress={onClose}
         accessibilityLabel="Zamknij zdjęcie"
       >
         <Image
           source={source}
           onError={onError}
-          style={styles.viewerImage}
+          className="size-full"
           resizeMode="contain"
         />
       </Pressable>
@@ -160,8 +164,6 @@ function FullScreenImage({
 }
 
 function CommentItem({ comment }: { comment: TaskCommentResponse }) {
-  const { common, form, colors } = useTheme();
-  const styles = useStyles();
   const updateComment = useUpdateTaskComment();
   const deleteComment = useDeleteTaskComment();
   const addAttachments = useAddCommentAttachments(comment.taskId);
@@ -214,10 +216,12 @@ function CommentItem({ comment }: { comment: TaskCommentResponse }) {
     deleteComment.isPending ||
     addAttachments.isPending;
   return (
-    <View style={styles.comment}>
-      <View style={styles.commentHeader}>
-        <Text style={common.muted}>{formatCommentTime(comment.createdAt)}</Text>
-        <View style={styles.commentActions}>
+    <View className="gap-1.5 border-b border-row-line py-2.5">
+      <View className="flex-row items-center justify-between">
+        <Text className={common.muted}>
+          {formatCommentTime(comment.createdAt)}
+        </Text>
+        <View className="flex-row gap-4">
           {draft === null && (
             <Pressable
               accessibilityRole="button"
@@ -226,7 +230,7 @@ function CommentItem({ comment }: { comment: TaskCommentResponse }) {
               disabled={isBusy}
               hitSlop={8}
             >
-              <Text style={styles.actionLink}>Edytuj</Text>
+              <Text className="text-xs font-semibold text-accent">Edytuj</Text>
             </Pressable>
           )}
           <Pressable
@@ -236,25 +240,27 @@ function CommentItem({ comment }: { comment: TaskCommentResponse }) {
             disabled={isBusy}
             hitSlop={8}
           >
-            <Text style={styles.deleteLink}>Usuń</Text>
+            <Text className="text-xs font-semibold text-danger">Usuń</Text>
           </Pressable>
         </View>
       </View>
       {draft === null ? (
-        comment.body !== "" && <Text style={styles.body}>{comment.body}</Text>
+        comment.body !== "" && (
+          <Text className="text-sm text-ink">{comment.body}</Text>
+        )
       ) : (
         <View>
           <TextInput
-            style={[form.input, styles.newComment]}
+            className={COMMENT_INPUT}
             value={draft}
             onChangeText={setDraft}
             multiline
             autoFocus
             editable={!updateComment.isPending}
-            placeholderTextColor={colors.placeholder}
+            placeholderTextColorClassName="accent-placeholder"
             accessibilityLabel="Treść komentarza"
           />
-          <View style={styles.formActions}>
+          <View className={FORM_ACTIONS}>
             <Button
               label="Galeria"
               variant="secondary"
@@ -270,13 +276,13 @@ function CommentItem({ comment }: { comment: TaskCommentResponse }) {
               onPress={() => void attach(takePhoto)}
             />
           </View>
-          <View style={styles.formActions}>
+          <View className={FORM_ACTIONS}>
             <Button
               label="Anuluj"
               variant="secondary"
               disabled={updateComment.isPending}
               onPress={() => setDraft(null)}
-              style={styles.submit}
+              className="ml-auto flex-1"
             />
             <Button
               label="Zapisz"
@@ -287,7 +293,7 @@ function CommentItem({ comment }: { comment: TaskCommentResponse }) {
         </View>
       )}
       {images.length > 0 && (
-        <View style={styles.thumbnails}>
+        <View className={THUMBNAILS}>
           {images.map((attachment) => (
             <AttachmentImage
               key={attachment.id}
@@ -298,14 +304,14 @@ function CommentItem({ comment }: { comment: TaskCommentResponse }) {
         </View>
       )}
       {files.map((attachment) => (
-        <Text key={attachment.id} style={common.muted}>
+        <Text key={attachment.id} className={common.muted}>
           📎 {attachment.fileName} · {formatFileSize(attachment.size)}
         </Text>
       ))}
       {addAttachments.isPending && (
-        <Text style={common.muted}>Wysyłanie zdjęć…</Text>
+        <Text className={common.muted}>Wysyłanie zdjęć…</Text>
       )}
-      {error !== "" && <Text style={common.alert}>{error}</Text>}
+      {error !== "" && <Text className={common.alert}>{error}</Text>}
       {opened && (
         <FullScreenImage attachment={opened} onClose={() => setOpened(null)} />
       )}
@@ -314,8 +320,6 @@ function CommentItem({ comment }: { comment: TaskCommentResponse }) {
 }
 
 function NewCommentForm({ task }: { task: TaskResponse }) {
-  const { form, colors } = useTheme();
-  const styles = useStyles();
   const addComment = useAddTaskComment(task.id);
   const [body, setBody] = useState("");
   const [photos, setPhotos] = useState<PendingPhoto[]>([]);
@@ -357,23 +361,23 @@ function NewCommentForm({ task }: { task: TaskResponse }) {
   const isSending = addComment.isPending;
   return (
     <View>
-      <Text style={form.label}>Nowy komentarz</Text>
+      <Text className={form.label}>Nowy komentarz</Text>
       <TextInput
-        style={[form.input, styles.newComment]}
+        className={COMMENT_INPUT}
         value={body}
         onChangeText={setBody}
         multiline
         editable={!isSending}
-        placeholderTextColor={colors.placeholder}
+        placeholderTextColorClassName="accent-placeholder"
         accessibilityLabel="Nowy komentarz"
       />
       {photos.length > 0 && (
-        <View style={styles.thumbnails}>
+        <View className={THUMBNAILS}>
           {photos.map((photo, index) => (
             <View key={photo.uri}>
-              <Image source={{ uri: photo.uri }} style={styles.thumbnail} />
+              <Image source={{ uri: photo.uri }} className={THUMBNAIL} />
               <Pressable
-                style={styles.removePhoto}
+                className="absolute top-1 right-1 size-[22px] items-center justify-center rounded-full bg-overlay"
                 accessibilityRole="button"
                 accessibilityLabel={`Nie dołączaj: ${photo.name}`}
                 onPress={() =>
@@ -381,14 +385,14 @@ function NewCommentForm({ task }: { task: TaskResponse }) {
                 }
                 hitSlop={6}
               >
-                <Text style={styles.removePhotoLabel}>✕</Text>
+                <Text className="text-xs font-bold text-on-signal">✕</Text>
               </Pressable>
             </View>
           ))}
         </View>
       )}
-      {error !== "" && <Text style={form.error}>{error}</Text>}
-      <View style={styles.formActions}>
+      {error !== "" && <Text className={form.error}>{error}</Text>}
+      <View className={FORM_ACTIONS}>
         <Button
           label="Galeria"
           variant="secondary"
@@ -406,7 +410,7 @@ function NewCommentForm({ task }: { task: TaskResponse }) {
           accessibilityLabel="Dodaj komentarz"
           isBusy={isSending}
           onPress={() => void submit()}
-          style={styles.submit}
+          className="ml-auto flex-1"
         />
       </View>
     </View>
@@ -415,18 +419,18 @@ function NewCommentForm({ task }: { task: TaskResponse }) {
 
 /** A Task's comments, oldest first, and the form to add one with photos. */
 export function TaskComments({ task }: { task: TaskResponse }) {
-  const { common, form } = useTheme();
-  const styles = useStyles();
   const { data: comments, isPending, isError } = useTaskComments(task.id);
   return (
-    <View style={styles.section}>
-      <Text style={[form.label, styles.heading]}>Komentarze</Text>
+    <View className="mt-[26px] gap-1.5 border-t border-line pt-2.5">
+      <Text className="mt-2.5 text-[13px] font-semibold text-ink-soft">
+        Komentarze
+      </Text>
       {isPending ? (
-        <Text style={common.muted}>Wczytywanie komentarzy…</Text>
+        <Text className={common.muted}>Wczytywanie komentarzy…</Text>
       ) : isError ? (
-        <Text style={common.alert}>Nie udało się wczytać komentarzy.</Text>
+        <Text className={common.alert}>Nie udało się wczytać komentarzy.</Text>
       ) : comments.length === 0 ? (
-        <Text style={common.muted}>Brak komentarzy.</Text>
+        <Text className={common.muted}>Brak komentarzy.</Text>
       ) : (
         comments.map((comment) => (
           <CommentItem key={comment.id} comment={comment} />
@@ -436,58 +440,3 @@ export function TaskComments({ task }: { task: TaskResponse }) {
     </View>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  section: {
-    marginTop: 26,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: colors.line,
-    gap: 6,
-  },
-  heading: { fontSize: 13 },
-  comment: {
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.rowLine,
-    gap: 6,
-  },
-  commentHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  commentActions: { flexDirection: "row", gap: 16 },
-  actionLink: { color: colors.accent, fontSize: 12, fontWeight: "600" },
-  deleteLink: { color: colors.danger, fontSize: 12, fontWeight: "600" },
-  body: { color: colors.ink, fontSize: 14, lineHeight: 20 },
-  thumbnails: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4 },
-  thumbnail: {
-    width: 88,
-    height: 88,
-    borderRadius: 6,
-    backgroundColor: colors.wash,
-  },
-  removePhoto: {
-    position: "absolute",
-    top: 4,
-    right: 4,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.overlay,
-  },
-  removePhotoLabel: { color: colors.onSignal, fontSize: 12, fontWeight: "700" },
-  newComment: { minHeight: 72, textAlignVertical: "top" },
-  formActions: { flexDirection: "row", gap: 8, marginTop: 10 },
-  submit: { marginLeft: "auto" },
-  viewer: {
-    flex: 1,
-    backgroundColor: "black",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  viewerImage: { width: "100%", height: "100%" },
-}));

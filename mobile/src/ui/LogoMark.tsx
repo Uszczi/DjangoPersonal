@@ -1,35 +1,15 @@
 import { Text, View } from "react-native";
 
-import { makeStyles, fonts } from "../theme";
-
 /** The tilted orange "D" of the web Navbar, shown at the left of the tab headers. */
 export function LogoMark() {
-  const styles = useStyles();
   return (
-    <View style={styles.mark} accessible={false}>
-      <Text style={styles.letter}>D</Text>
+    <View
+      className="ml-4 size-[29px] -rotate-3 items-center justify-center rounded-t-[5px] rounded-br-[5px] rounded-bl-[1px] bg-signal"
+      accessible={false}
+    >
+      <Text className="font-utility text-[13px] font-bold text-on-signal">
+        D
+      </Text>
     </View>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  mark: {
-    width: 29,
-    height: 29,
-    marginLeft: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.signal,
-    borderTopLeftRadius: 5,
-    borderTopRightRadius: 5,
-    borderBottomRightRadius: 5,
-    borderBottomLeftRadius: 1,
-    transform: [{ rotate: "-3deg" }],
-  },
-  letter: {
-    fontFamily: fonts.utility,
-    fontSize: 13,
-    fontWeight: "700",
-    color: colors.onSignal,
-  },
-}));

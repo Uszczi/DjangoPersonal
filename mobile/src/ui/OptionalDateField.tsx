@@ -23,7 +23,7 @@ export function OptionalDateField({
 }: OptionalDateFieldProps) {
   if (value === null) {
     return (
-      <View style={{ flexDirection: "row" }}>
+      <View className="flex-row">
         <Button
           label="Ustaw datę"
           variant="secondary"
@@ -34,8 +34,8 @@ export function OptionalDateField({
     );
   }
   return (
-    <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
-      <View style={{ flex: 1 }}>
+    <View className="flex-row items-center gap-3">
+      <View className="flex-1">
         <DateTimeField
           mode="date"
           value={value}
@@ -48,7 +48,7 @@ export function OptionalDateField({
         variant="secondary"
         disabled={disabled}
         onPress={() => onChange(null)}
-        style={{ flex: 0 }}
+        className="flex-none"
       />
     </View>
   );

@@ -1,21 +1,35 @@
-import {
-  ActivityIndicator,
-  Pressable,
-  Text,
-  type StyleProp,
-  type ViewStyle,
-} from "react-native";
+import { ActivityIndicator, Pressable, Text } from "react-native";
 
-import { makeStyles, useTheme } from "../theme";
+type Variant = "primary" | "secondary" | "danger";
 
 type ButtonProps = {
   label: string;
   onPress: () => void;
-  variant?: "primary" | "secondary" | "danger";
+  variant?: Variant;
   disabled?: boolean;
   isBusy?: boolean;
-  style?: StyleProp<ViewStyle>;
+  /**
+   * How the button sits in its row; by default it shares the row with its
+   * neighbours (`flex-1`). Give `flex-none` for a button sized to its label.
+   */
+  className?: string;
   accessibilityLabel?: string;
+};
+
+// The web Button: 5px corners, a 1px border and a small semibold label.
+const BASE =
+  "min-h-11 items-center justify-center rounded-[5px] border px-[15px] py-2.5";
+
+const VARIANTS: Record<Variant, string> = {
+  primary: "border-transparent bg-signal",
+  secondary: "border-control-border bg-transparent",
+  danger: "border-transparent bg-danger",
+};
+
+const LABELS: Record<Variant, string> = {
+  primary: "text-[13px] font-semibold text-on-signal",
+  secondary: "text-[13px] font-semibold text-ink-soft",
+  danger: "text-[13px] font-semibold text-on-signal",
 };
 
 export function Button({
@@ -24,12 +38,9 @@ export function Button({
   variant = "primary",
   disabled = false,
   isBusy = false,
-  style,
+  className = "flex-1",
   accessibilityLabel,
 }: ButtonProps) {
-  const { colors } = useTheme();
-  const styles = useStyles();
-  const labelStyles = useLabelStyles();
   const isDisabled = disabled || isBusy;
   return (
     <Pressable
@@ -38,49 +49,17 @@ export function Button({
       accessibilityState={{ disabled: isDisabled, busy: isBusy }}
       disabled={isDisabled}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.base,
-        styles[variant],
-        (pressed || isDisabled) && styles.dimmed,
-        style,
-      ]}
+      className={`${BASE} ${VARIANTS[variant]} ${isDisabled ? "opacity-70" : "active:opacity-70"} ${className}`}
     >
       {isBusy ? (
         <ActivityIndicator
-          color={variant === "secondary" ? colors.inkSoft : colors.onSignal}
+          colorClassName={
+            variant === "secondary" ? "accent-ink-soft" : "accent-on-signal"
+          }
         />
       ) : (
-        <Text style={[styles.label, labelStyles[variant]]}>{label}</Text>
+        <Text className={LABELS[variant]}>{label}</Text>
       )}
     </Pressable>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  // The web Button: 5px corners, a 1px border and a small semibold label.
-  base: {
-    flex: 1,
-    minHeight: 44,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: "transparent",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  primary: { backgroundColor: colors.signal },
-  secondary: {
-    borderColor: colors.controlBorder,
-    backgroundColor: "transparent",
-  },
-  danger: { backgroundColor: colors.danger },
-  dimmed: { opacity: 0.7 },
-  label: { fontSize: 13, fontWeight: "600" },
-}));
-
-const useLabelStyles = makeStyles((colors) => ({
-  primary: { color: colors.onSignal },
-  secondary: { color: colors.inkSoft },
-  danger: { color: colors.onSignal },
-}));

@@ -26,13 +26,11 @@ import {
 import { Button } from "../src/ui/Button";
 import { confirmDestructive } from "../src/ui/confirm";
 import { IconPicker } from "../src/ui/IconPicker";
-import { makeStyles, useTheme } from "../src/theme";
+import { common, form } from "../src/ui/classes";
 
 /** Creates a Category, or edits one (`?categoryId=`). A new category's kind
  * comes from `?kind=` (its section); an edited one keeps its own kind. */
 export default function CategoryEditorScreen() {
-  const { common, form } = useTheme();
-  const styles = useStyles();
   const params = useLocalSearchParams<{ categoryId?: string; kind?: string }>();
   const categoryId = params.categoryId ? Number(params.categoryId) : null;
   const requestedKind: CategoryKind =
@@ -53,8 +51,8 @@ export default function CategoryEditorScreen() {
 
   if (categoryId !== null && !category) {
     return (
-      <View style={common.center}>
-        <Text style={common.muted}>Nie znaleziono kategorii.</Text>
+      <View className={common.center}>
+        <Text className={common.muted}>Nie znaleziono kategorii.</Text>
       </View>
     );
   }
@@ -113,29 +111,29 @@ export default function CategoryEditorScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={common.screen}
+      className={common.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Stack.Screen
         options={{ title: category ? "Edytuj kategorię" : "Nowa kategoria" }}
       />
       <ScrollView
-        contentContainerStyle={form.content}
+        contentContainerClassName={form.content}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={form.label}>Rodzaj</Text>
-        <Text style={styles.kindValue}>{kindLabel}</Text>
+        <Text className={form.label}>Rodzaj</Text>
+        <Text className="text-sm font-semibold text-ink">{kindLabel}</Text>
 
-        <Text style={form.label}>Nazwa kategorii</Text>
+        <Text className={form.label}>Nazwa kategorii</Text>
         <TextInput
-          style={form.input}
+          className={form.input}
           value={name}
           onChangeText={setName}
           maxLength={100}
           autoFocus={!category}
           editable={!isSaving}
         />
-        <Text style={form.label}>Ikona</Text>
+        <Text className={form.label}>Ikona</Text>
         <IconPicker
           value={icon}
           onChange={(value) => setIcon(value ?? DEFAULT_CATEGORY_ICON)}
@@ -143,8 +141,8 @@ export default function CategoryEditorScreen() {
           fallback={DEFAULT_CATEGORY_ICON}
           disabled={isSaving}
         />
-        {formError !== "" && <Text style={form.error}>{formError}</Text>}
-        <View style={form.actions}>
+        {formError !== "" && <Text className={form.error}>{formError}</Text>}
+        <View className={form.actions}>
           <Button
             label="Anuluj"
             variant="secondary"
@@ -158,7 +156,7 @@ export default function CategoryEditorScreen() {
           />
         </View>
         {category && (
-          <View style={form.actions}>
+          <View className={form.actions}>
             <Button
               label="Usuń kategorię"
               variant="danger"
@@ -171,11 +169,3 @@ export default function CategoryEditorScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  kindValue: {
-    color: colors.ink,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-}));

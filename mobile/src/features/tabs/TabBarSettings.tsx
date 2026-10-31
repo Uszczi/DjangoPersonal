@@ -8,19 +8,19 @@ import {
   useTabBarStore,
   type TabName,
 } from "./tabBar";
-import { makeStyles, useTheme } from "../../theme";
+import { useTheme } from "../../theme";
+import { card, form } from "../../ui/classes";
 
 /**
  * The Konto section that picks which bottom tabs show and in what order:
  * a switch per tab and arrows to move it. Konto itself cannot be hidden.
  */
 export function TabBarSettings() {
-  const { card, form } = useTheme();
   const order = useTabBarStore((state) => state.order);
   const reset = useTabBarStore((state) => state.reset);
   return (
-    <View style={card.section}>
-      <Text style={card.kicker}>PASEK KART</Text>
+    <View className={card.section}>
+      <Text className={card.kicker}>PASEK KART</Text>
       <View>
         {order.map((name, index) => (
           <TabRow
@@ -31,12 +31,12 @@ export function TabBarSettings() {
           />
         ))}
       </View>
-      <Text style={form.hint}>
+      <Text className={form.hint}>
         Zapisywany na tym urządzeniu. Karty Konto nie można ukryć; gdy któraś
         karta jest ukryta, w jej miejscu jest Więcej z ukrytymi kartami i
         Kontem.
       </Text>
-      <View style={{ flexDirection: "row", marginTop: 4 }}>
+      <View className="mt-1 flex-row">
         <Button label="Przywróć domyślne" variant="secondary" onPress={reset} />
       </View>
     </View>
@@ -53,20 +53,25 @@ function TabRow({
   isLast: boolean;
 }) {
   const { colors } = useTheme();
-  const styles = useStyles();
   const isVisible = useTabBarStore((state) => !state.hidden.includes(name));
   const setVisible = useTabBarStore((state) => state.setVisible);
   const move = useTabBarStore((state) => state.move);
   const tab = tabDefinitions[name];
   const isPinned = name === pinnedTab;
   return (
-    <View style={styles.row}>
+    <View className="flex-row items-center gap-2.5 border-b border-row-line py-2">
       <Ionicons
         name={tab.icon}
         size={20}
         color={isVisible ? colors.ink : colors.muted}
       />
-      <Text style={[styles.title, !isVisible && styles.hidden]}>
+      <Text
+        className={
+          isVisible
+            ? "flex-1 text-sm font-medium text-ink"
+            : "flex-1 text-sm font-medium text-muted"
+        }
+      >
         {tab.title}
       </Text>
       <MoveButton
@@ -104,7 +109,6 @@ function MoveButton({
   onPress: () => void;
 }) {
   const { colors } = useTheme();
-  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="button"
@@ -113,35 +117,9 @@ function MoveButton({
       disabled={disabled}
       hitSlop={6}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.move,
-        (pressed || disabled) && styles.dimmed,
-      ]}
+      className={`size-[34px] items-center justify-center rounded-[5px] border border-control-border ${disabled ? "opacity-35" : "active:opacity-35"}`}
     >
       <Ionicons name={icon} size={18} color={colors.inkSoft} />
     </Pressable>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.rowLine,
-  },
-  title: { flex: 1, fontSize: 14, fontWeight: "500", color: colors.ink },
-  hidden: { color: colors.muted },
-  move: {
-    width: 34,
-    height: 34,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: colors.controlBorder,
-  },
-  dimmed: { opacity: 0.35 },
-}));

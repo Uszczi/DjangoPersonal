@@ -19,7 +19,7 @@ import {
 import { useBibliographyItem } from "@personal/shared/queries/bibliographyItems";
 
 import { Button } from "../src/ui/Button";
-import { useTheme } from "../src/theme";
+import { common, form } from "../src/ui/classes";
 
 /**
  * Move on the Attempt in progress (`?itemId=&attemptId=`): the page reached in
@@ -27,7 +27,6 @@ import { useTheme } from "../src/theme";
  * does not finish it.
  */
 export default function AttemptProgressScreen() {
-  const { common, form } = useTheme();
   const params = useLocalSearchParams<{ itemId: string; attemptId: string }>();
   const itemId = Number(params.itemId);
   const attemptId = Number(params.attemptId);
@@ -44,8 +43,8 @@ export default function AttemptProgressScreen() {
 
   if (!item || !attempt) {
     return (
-      <View style={common.center}>
-        <Text style={common.muted}>Nie znaleziono podejścia.</Text>
+      <View className={common.center}>
+        <Text className={common.muted}>Nie znaleziono podejścia.</Text>
       </View>
     );
   }
@@ -74,16 +73,16 @@ export default function AttemptProgressScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={common.screen}
+      className={common.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
-        contentContainerStyle={form.content}
+        contentContainerClassName={form.content}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={form.label}>{ITEM_PROGRESS_LABELS[item.kind]}</Text>
+        <Text className={form.label}>{ITEM_PROGRESS_LABELS[item.kind]}</Text>
         <TextInput
-          style={form.input}
+          className={form.input}
           value={progress}
           onChangeText={setProgress}
           keyboardType="number-pad"
@@ -93,9 +92,9 @@ export default function AttemptProgressScreen() {
           onSubmitEditing={() => void submit()}
           editable={!isSaving}
         />
-        {length !== null && <Text style={form.hint}>z {length}</Text>}
-        {formError !== "" && <Text style={form.error}>{formError}</Text>}
-        <View style={form.actions}>
+        {length !== null && <Text className={form.hint}>z {length}</Text>}
+        {formError !== "" && <Text className={form.error}>{formError}</Text>}
+        <View className={form.actions}>
           <Button
             label="Anuluj"
             variant="secondary"
