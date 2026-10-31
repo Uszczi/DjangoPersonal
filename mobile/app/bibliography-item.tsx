@@ -23,8 +23,8 @@ import {
   useUpdateBibliographyItem,
 } from "@personal/shared/queries/bibliographyItems";
 
-import { Button } from "../src/Button";
-import { ChipGroup } from "../src/ChipGroup";
+import { Button } from "../src/ui/Button";
+import { ChipGroup } from "../src/ui/ChipGroup";
 import { useTheme } from "../src/theme";
 
 const KIND_OPTIONS = ITEM_KINDS.map((value) => ({

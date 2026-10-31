@@ -22,10 +22,10 @@ import {
   useCounterViewStore,
 } from "@personal/shared/stores/counterView";
 
-import { ChipGroup } from "../../src/ChipGroup";
-import { ColorDot } from "../../src/ColorDot";
-import { Fab } from "../../src/Fab";
-import { plusOneEntry } from "../../src/plusOne";
+import { ChipGroup } from "../../src/ui/ChipGroup";
+import { ColorDot } from "../../src/ui/ColorDot";
+import { Fab } from "../../src/ui/Fab";
+import { plusOneEntry } from "../../src/features/counters/plusOne";
 import { makeStyles, fonts, useTheme } from "../../src/theme";
 
 const VIEW_MODES = COUNTER_VIEW_MODES.map((value) => ({

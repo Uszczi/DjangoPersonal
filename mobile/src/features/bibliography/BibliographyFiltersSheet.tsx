@@ -12,9 +12,9 @@ import {
   type BibliographyViewMode,
 } from "@personal/shared/stores/bibliographyView";
 
-import { ChipGroup } from "./ChipGroup";
-import { Sheet } from "./Sheet";
-import { fonts, makeStyles } from "./theme";
+import { ChipGroup } from "../../ui/ChipGroup";
+import { Sheet } from "../../ui/Sheet";
+import { fonts, makeStyles } from "../../theme";
 
 /** A chip value for "no filter": ChipGroup needs a value for every option. */
 const ALL = "all";

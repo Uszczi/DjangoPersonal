@@ -19,10 +19,10 @@ import { useWalletSelectionStore } from "@personal/shared/stores/walletSelection
 import { TRANSACTIONS_LOAD_ERROR } from "@personal/shared/transactionList";
 import { dateKey } from "@personal/shared/timeFormat";
 
-import { Button } from "../../src/Button";
-import { Fab } from "../../src/Fab";
-import { NamedIcon } from "../../src/NamedIcon";
-import { WalletMark } from "../../src/WalletMark";
+import { Button } from "../../src/ui/Button";
+import { Fab } from "../../src/ui/Fab";
+import { NamedIcon } from "../../src/ui/NamedIcon";
+import { WalletMark } from "../../src/features/expenses/WalletMark";
 import { makeStyles, fonts, useTheme } from "../../src/theme";
 import { useRefreshOnFocus } from "../../src/useRefreshOnFocus";
 

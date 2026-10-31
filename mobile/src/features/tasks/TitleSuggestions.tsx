@@ -2,7 +2,7 @@ import { ScrollView } from "react-native";
 
 import type { TaskResponse } from "@personal/shared/generated/api";
 
-import { ChipGroup } from "./ChipGroup";
+import { ChipGroup } from "../../ui/ChipGroup";
 
 type TitleSuggestionsProps = {
   tasks: TaskResponse[];

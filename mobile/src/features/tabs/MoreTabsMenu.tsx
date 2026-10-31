@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 
-import { Sheet, SheetItem } from "./Sheet";
+import { Sheet, SheetItem } from "../../ui/Sheet";
 import { pinnedTab, tabDefinitions, type TabName } from "./tabBar";
 
 /**

@@ -34,8 +34,8 @@ import { useBibliographyViewStore } from "@personal/shared/stores/bibliographyVi
 import {
   BibliographyFiltersSheet,
   KIND_FILTER_LABELS,
-} from "../../src/BibliographyFiltersSheet";
-import { Fab } from "../../src/Fab";
+} from "../../src/features/bibliography/BibliographyFiltersSheet";
+import { Fab } from "../../src/ui/Fab";
 import { fonts, makeStyles, useTheme } from "../../src/theme";
 import { useRefreshOnFocus } from "../../src/useRefreshOnFocus";
 

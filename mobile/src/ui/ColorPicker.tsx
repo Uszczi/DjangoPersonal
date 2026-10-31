@@ -2,7 +2,7 @@ import { Pressable, View } from "react-native";
 
 import { COLORS } from "@personal/shared/colors";
 
-import { makeStyles } from "./theme";
+import { makeStyles } from "../theme";
 
 type ColorPickerProps = {
   value: string;

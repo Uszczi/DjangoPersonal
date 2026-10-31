@@ -7,7 +7,7 @@ import {
   pinnedTab,
   tabDefinitions,
   useTabBarStore,
-} from "../../src/tabBar";
+} from "../../src/features/tabs/tabBar";
 import { fonts, makeStyles, useTheme } from "../../src/theme";
 
 /**

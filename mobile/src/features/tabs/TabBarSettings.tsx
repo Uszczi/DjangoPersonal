@@ -1,14 +1,14 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Pressable, Switch, Text, View } from "react-native";
 
-import { Button } from "./Button";
+import { Button } from "../../ui/Button";
 import {
   pinnedTab,
   tabDefinitions,
   useTabBarStore,
   type TabName,
 } from "./tabBar";
-import { makeStyles, useTheme } from "./theme";
+import { makeStyles, useTheme } from "../../theme";
 
 /**
  * The Konto section that picks which bottom tabs show and in what order:

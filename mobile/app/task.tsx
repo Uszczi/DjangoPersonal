@@ -22,10 +22,10 @@ import {
   useNewTaskStatusStore,
 } from "@personal/shared/stores/newTaskStatus";
 
-import { Button } from "../src/Button";
-import { ChipGroup } from "../src/ChipGroup";
-import { TaskComments } from "../src/TaskComments";
-import { confirmDestructive } from "../src/confirm";
+import { Button } from "../src/ui/Button";
+import { ChipGroup } from "../src/ui/ChipGroup";
+import { TaskComments } from "../src/features/tasks/TaskComments";
+import { confirmDestructive } from "../src/ui/confirm";
 import { useTheme } from "../src/theme";
 
 /**

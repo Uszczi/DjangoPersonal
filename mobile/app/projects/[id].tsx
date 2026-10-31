@@ -3,10 +3,10 @@ import { useState } from "react";
 
 import { useProjects } from "@personal/shared/queries/projects";
 
-import { ProjectTasks } from "../../src/ProjectTasks";
-import { ScreenHeader } from "../../src/ScreenHeader";
-import { TaskListSettingsSheet } from "../../src/TaskListSettingsSheet";
-import { taskListSettingsAction } from "../../src/taskListSettings";
+import { ProjectTasks } from "../../src/features/tasks/ProjectTasks";
+import { ScreenHeader } from "../../src/ui/ScreenHeader";
+import { TaskListSettingsSheet } from "../../src/features/tasks/TaskListSettingsSheet";
+import { taskListSettingsAction } from "../../src/features/tasks/taskListSettings";
 
 /**
  * One Project opened from the Projekty tab: its Tasks, a way to edit it and

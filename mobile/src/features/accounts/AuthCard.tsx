@@ -10,8 +10,8 @@ import {
   type TextInputProps,
 } from "react-native";
 
-import { Button } from "./Button";
-import { makeStyles, useTheme } from "./theme";
+import { Button } from "../../ui/Button";
+import { makeStyles, useTheme } from "../../theme";
 
 /** The centred card the public account screens are drawn in (web `AuthCard`). */
 export function AuthCard({

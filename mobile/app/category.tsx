@@ -23,9 +23,9 @@ import {
   type CategoryKind,
 } from "@personal/shared/queries/categories";
 
-import { Button } from "../src/Button";
-import { confirmDestructive } from "../src/confirm";
-import { IconPicker } from "../src/IconPicker";
+import { Button } from "../src/ui/Button";
+import { confirmDestructive } from "../src/ui/confirm";
+import { IconPicker } from "../src/ui/IconPicker";
 import { makeStyles, useTheme } from "../src/theme";
 
 /** Creates a Category, or edits one (`?categoryId=`). A new category's kind

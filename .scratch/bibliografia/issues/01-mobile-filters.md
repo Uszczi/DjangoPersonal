@@ -19,4 +19,4 @@ commit `c13dc57`, `?variant=A|B|C|D`):
 
 Verdict (2026-10-31): **C**. One row by default, and what is filtered stays
 visible as pills. Folded into `mobile/app/(tabs)/bibliography.tsx` and
-`mobile/src/BibliographyFiltersSheet.tsx`; the prototype branch keeps all four.
+`mobile/src/features/bibliography/BibliographyFiltersSheet.tsx`; the prototype branch keeps all four.

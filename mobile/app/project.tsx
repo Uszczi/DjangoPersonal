@@ -18,9 +18,9 @@ import {
   type ProjectInput,
 } from "@personal/shared/queries/projects";
 
-import { Button } from "../src/Button";
-import { ChipGroup } from "../src/ChipGroup";
-import { confirmDestructive } from "../src/confirm";
+import { Button } from "../src/ui/Button";
+import { ChipGroup } from "../src/ui/ChipGroup";
+import { confirmDestructive } from "../src/ui/confirm";
 import { makeStyles, useTheme } from "../src/theme";
 
 /** A status being edited; `id` stays stable while statuses are renamed and reordered. */

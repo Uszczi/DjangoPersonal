@@ -6,7 +6,7 @@ import {
   type ViewStyle,
 } from "react-native";
 
-import { makeStyles, useTheme } from "./theme";
+import { makeStyles, useTheme } from "../theme";
 
 type ButtonProps = {
   label: string;

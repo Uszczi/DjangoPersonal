@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 
-import { makeStyles } from "./theme";
+import { makeStyles } from "../theme";
 
 type ChipOption<T> = { value: T; label: string };
 

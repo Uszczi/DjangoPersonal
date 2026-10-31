@@ -6,7 +6,7 @@ import { Platform, Pressable, Text, View } from "react-native";
 
 import { formatEntryTime } from "@personal/shared/counterFormat";
 
-import { useTheme } from "./theme";
+import { useTheme } from "../theme";
 
 const dayFormatter = new Intl.DateTimeFormat("pl-PL", {
   day: "numeric",

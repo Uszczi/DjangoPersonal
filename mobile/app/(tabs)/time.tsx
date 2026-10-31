@@ -31,9 +31,9 @@ import {
 } from "@personal/shared/timeFormat";
 import { timerLimitOptions, timerRemaining } from "@personal/shared/timerLimit";
 
-import { Button } from "../../src/Button";
-import { ChipGroup } from "../../src/ChipGroup";
-import { TitleSuggestions } from "../../src/TitleSuggestions";
+import { Button } from "../../src/ui/Button";
+import { ChipGroup } from "../../src/ui/ChipGroup";
+import { TitleSuggestions } from "../../src/features/tasks/TitleSuggestions";
 import { makeStyles, fonts, useTheme } from "../../src/theme";
 import { useRefreshOnFocus } from "../../src/useRefreshOnFocus";
 

@@ -11,10 +11,10 @@ import {
   themePreferences,
 } from "@personal/shared/themes";
 
-import { Button } from "../../src/Button";
-import { ChipGroup } from "../../src/ChipGroup";
-import { confirmDestructive } from "../../src/confirm";
-import { TabBarSettings } from "../../src/TabBarSettings";
+import { Button } from "../../src/ui/Button";
+import { ChipGroup } from "../../src/ui/ChipGroup";
+import { confirmDestructive } from "../../src/ui/confirm";
+import { TabBarSettings } from "../../src/features/tabs/TabBarSettings";
 import { useTheme } from "../../src/theme";
 
 export default function AccountScreen() {

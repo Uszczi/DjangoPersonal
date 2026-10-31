@@ -25,11 +25,11 @@ import {
   todayKey,
 } from "@personal/shared/timeFormat";
 
-import { Button } from "../src/Button";
-import { ChipGroup } from "../src/ChipGroup";
-import { confirmDestructive } from "../src/confirm";
-import { DateTimeField } from "../src/DateTimeField";
-import { TitleSuggestions } from "../src/TitleSuggestions";
+import { Button } from "../src/ui/Button";
+import { ChipGroup } from "../src/ui/ChipGroup";
+import { confirmDestructive } from "../src/ui/confirm";
+import { DateTimeField } from "../src/ui/DateTimeField";
+import { TitleSuggestions } from "../src/features/tasks/TitleSuggestions";
 import { useTheme } from "../src/theme";
 
 function validate(date: string, title: string, minutes: number) {

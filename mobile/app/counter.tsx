@@ -17,8 +17,8 @@ import {
   useUpdateCounter,
 } from "@personal/shared/queries/counters";
 
-import { Button } from "../src/Button";
-import { ColorPicker } from "../src/ColorPicker";
+import { Button } from "../src/ui/Button";
+import { ColorPicker } from "../src/ui/ColorPicker";
 import { useTheme } from "../src/theme";
 
 /** Creates a Counter, or edits one (`?counterId=`): its name and colour. */
