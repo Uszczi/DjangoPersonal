@@ -23,10 +23,10 @@ import {
   type CategoryKind,
 } from "@personal/shared/queries/categories";
 
-import { Button } from "../src/ui/Button";
-import { confirmDestructive } from "../src/ui/confirm";
-import { IconPicker } from "../src/ui/IconPicker";
-import { common, form } from "../src/ui/classes";
+import { Button } from "../../src/ui/Button";
+import { confirmDestructive } from "../../src/ui/confirm";
+import { IconPicker } from "../../src/ui/IconPicker";
+import { common, form } from "../../src/ui/classes";
 
 /** Creates a Category, or edits one (`?categoryId=`). A new category's kind
  * comes from `?kind=` (its section); an edited one keeps its own kind. */

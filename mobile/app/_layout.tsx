@@ -27,6 +27,22 @@ import {
 } from "../src/theme";
 import { common } from "../src/ui/classes";
 
+// The editors in app/(modals)/, opened over the current screen. The group
+// is not part of the URL, so they are still pushed as "/task", "/wallet"...
+const modalScreens = [
+  ["project", "Projekt"],
+  ["task", "Zadanie"],
+  ["time-entry", "Wpis czasu"],
+  ["wallet", "Portfel"],
+  ["transaction", "Transakcja"],
+  ["category", "Kategoria"],
+  ["counter", "Licznik"],
+  ["counter-entry", "Wpis"],
+  ["bibliography-item", "Pozycja"],
+  ["attempt", "Podejście"],
+  ["attempt-progress", "Postęp"],
+] as const;
+
 export default function RootLayout() {
   const { headerOptions } = useTheme();
   const [isHydrated, setIsHydrated] = useState(false);
@@ -72,56 +88,19 @@ export default function RootLayout() {
           <Stack.Protected guard={isSignedIn}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="projects/[id]" options={{ title: "Zadania" }} />
-            <Stack.Screen
-              name="task"
-              options={{ presentation: "modal", title: "Zadanie" }}
-            />
             <Stack.Screen name="counters/[id]" options={{ title: "Licznik" }} />
-            <Stack.Screen
-              name="counter"
-              options={{ presentation: "modal", title: "Licznik" }}
-            />
-            <Stack.Screen
-              name="counter-entry"
-              options={{ presentation: "modal", title: "Wpis" }}
-            />
-            <Stack.Screen
-              name="project"
-              options={{ presentation: "modal", title: "Projekt" }}
-            />
-            <Stack.Screen
-              name="time-entry"
-              options={{ presentation: "modal", title: "Wpis czasu" }}
-            />
-            <Stack.Screen
-              name="wallet"
-              options={{ presentation: "modal", title: "Portfel" }}
-            />
-            <Stack.Screen
-              name="transaction"
-              options={{ presentation: "modal", title: "Transakcja" }}
-            />
             <Stack.Screen
               name="bibliography/[id]"
               options={{ title: "Pozycja" }}
             />
-            <Stack.Screen
-              name="bibliography-item"
-              options={{ presentation: "modal", title: "Pozycja" }}
-            />
-            <Stack.Screen
-              name="attempt"
-              options={{ presentation: "modal", title: "Podejście" }}
-            />
-            <Stack.Screen
-              name="attempt-progress"
-              options={{ presentation: "modal", title: "Postęp" }}
-            />
             <Stack.Screen name="categories" options={{ title: "Kategorie" }} />
-            <Stack.Screen
-              name="category"
-              options={{ presentation: "modal", title: "Kategoria" }}
-            />
+            {modalScreens.map(([name, title]) => (
+              <Stack.Screen
+                key={name}
+                name={`(modals)/${name}`}
+                options={{ presentation: "modal", title }}
+              />
+            ))}
           </Stack.Protected>
           <Stack.Protected guard={!isSignedIn}>
             <Stack.Screen name="login" options={{ headerShown: false }} />

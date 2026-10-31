@@ -25,12 +25,12 @@ import {
   todayKey,
 } from "@personal/shared/timeFormat";
 
-import { Button } from "../src/ui/Button";
-import { ChipGroup } from "../src/ui/ChipGroup";
-import { confirmDestructive } from "../src/ui/confirm";
-import { DateTimeField } from "../src/ui/DateTimeField";
-import { TitleSuggestions } from "../src/features/tasks/TitleSuggestions";
-import { common, form } from "../src/ui/classes";
+import { Button } from "../../src/ui/Button";
+import { ChipGroup } from "../../src/ui/ChipGroup";
+import { confirmDestructive } from "../../src/ui/confirm";
+import { DateTimeField } from "../../src/ui/DateTimeField";
+import { TitleSuggestions } from "../../src/features/tasks/TitleSuggestions";
+import { common, form } from "../../src/ui/classes";
 
 function validate(date: string, title: string, minutes: number) {
   if (!date) return "Podaj datę wpisu.";

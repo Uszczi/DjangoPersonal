@@ -17,9 +17,9 @@ import {
   useUpdateCounter,
 } from "@personal/shared/queries/counters";
 
-import { Button } from "../src/ui/Button";
-import { ColorPicker } from "../src/ui/ColorPicker";
-import { common, form } from "../src/ui/classes";
+import { Button } from "../../src/ui/Button";
+import { ColorPicker } from "../../src/ui/ColorPicker";
+import { common, form } from "../../src/ui/classes";
 
 /** Creates a Counter, or edits one (`?counterId=`): its name and colour. */
 export default function CounterEditorScreen() {
