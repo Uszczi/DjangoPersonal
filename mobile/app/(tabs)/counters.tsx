@@ -1,11 +1,9 @@
-import { router } from "expo-router";
+import { Tabs, router } from "expo-router";
 import { useState } from "react";
 import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import {
-  COUNTER_TILE_VALUE_LABELS,
-  COUNTER_VIEW_MODE_LABELS,
   counterTileContent,
   entryCountLabel,
 } from "@personal/shared/counterFormat";
@@ -16,26 +14,14 @@ import {
   useCounters,
   useSaveCounterEntry,
 } from "@personal/shared/queries/counters";
-import {
-  COUNTER_TILE_VALUES,
-  COUNTER_VIEW_MODES,
-  useCounterViewStore,
-} from "@personal/shared/stores/counterView";
+import { useCounterViewStore } from "@personal/shared/stores/counterView";
 
-import { ChipGroup } from "@/ui/ChipGroup";
 import { ColorDot } from "@/ui/ColorDot";
 import { Fab } from "@/ui/Fab";
+import { LogoMark } from "@/ui/LogoMark";
+import { ScreenHeader } from "@/ui/ScreenHeader";
+import { CounterSettingsSheet } from "@/features/counters/CounterSettingsSheet";
 import { plusOneEntry } from "@/features/counters/plusOne";
-
-const VIEW_MODES = COUNTER_VIEW_MODES.map((value) => ({
-  value,
-  label: COUNTER_VIEW_MODE_LABELS[value],
-}));
-
-const TILE_VALUES = COUNTER_TILE_VALUES.map((value) => ({
-  value,
-  label: COUNTER_TILE_VALUE_LABELS[value],
-}));
 
 function openCounter(counter: CounterResponse) {
   router.push({ pathname: "/counters/[id]", params: { id: counter.id } });
@@ -48,10 +34,9 @@ export default function CountersScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [actionError, setActionError] = useState("");
   const viewMode = useCounterViewStore((state) => state.mode);
-  const setViewMode = useCounterViewStore((state) => state.setMode);
   const tileValue = useCounterViewStore((state) => state.tileValue);
-  const setTileValue = useCounterViewStore((state) => state.setTileValue);
   const isTiles = viewMode === "tiles";
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const pageError = isError ? COUNTERS_LOAD_ERROR : "";
 
   async function refresh() {
@@ -73,89 +58,96 @@ export default function CountersScreen() {
   }
 
   return (
-    <View className="flex-1 bg-canvas">
-      {(pageError || actionError) !== "" && (
-        <Text className="p-4 text-[13px] text-danger">
-          {pageError || actionError}
-        </Text>
-      )}
-      <View className="px-4 pt-3 pb-1">
-        <ChipGroup
-          options={VIEW_MODES}
-          value={viewMode}
-          onChange={setViewMode}
-        />
-        {isTiles && (
-          <View className="mt-2.5 gap-1.5">
-            <Text className="text-xs text-muted">Na środku kafelka</Text>
-            <ChipGroup
-              options={TILE_VALUES}
-              value={tileValue}
-              onChange={setTileValue}
+    <>
+      <Tabs.Screen
+        options={{
+          header: () => (
+            <ScreenHeader
+              left={<LogoMark />}
+              title="Liczniki"
+              actions={[
+                {
+                  icon: "settings-outline",
+                  accessibilityLabel: "Ustawienia liczników",
+                  onPress: () => setIsSettingsOpen(true),
+                },
+              ]}
             />
-          </View>
+          ),
+        }}
+      />
+      <View className="flex-1 bg-canvas">
+        {(pageError || actionError) !== "" && (
+          <Text className="p-4 text-[13px] text-danger">
+            {pageError || actionError}
+          </Text>
         )}
-      </View>
-      <FlatList
-        // FlatList cannot change numColumns in place; remount on switch.
-        key={viewMode}
-        data={counters}
-        numColumns={isTiles ? 2 : 1}
-        columnWrapperClassName={isTiles ? "gap-3" : undefined}
-        keyExtractor={(counter) => String(counter.id)}
-        contentContainerClassName={isTiles ? "px-4 pt-2 pb-24 gap-3" : "pb-24"}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing || isPending}
-            onRefresh={() => void refresh()}
-          />
-        }
-        ListEmptyComponent={
-          !isPending && pageError === "" ? (
-            <Text className="p-6 text-center text-xs text-muted">
-              Brak liczników. Utwórz pierwszy przyciskiem +.
-            </Text>
-          ) : undefined
-        }
-        renderItem={({ item }) =>
-          isTiles ? (
-            <CounterTile
-              counter={item}
-              content={counterTileContent(item, tileValue)}
-              onAddOne={addOne}
+        <FlatList
+          // FlatList cannot change numColumns in place; remount on switch.
+          key={viewMode}
+          data={counters}
+          numColumns={isTiles ? 2 : 1}
+          columnWrapperClassName={isTiles ? "gap-3" : undefined}
+          keyExtractor={(counter) => String(counter.id)}
+          contentContainerClassName={
+            isTiles ? "px-4 pt-2 pb-24 gap-3" : "pb-24"
+          }
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing || isPending}
+              onRefresh={() => void refresh()}
             />
-          ) : (
-            <Pressable
-              className="mx-4 min-h-[62px] flex-row items-center gap-[13px] border-b border-row-line px-[3px] py-2.5"
-              accessibilityRole="button"
-              accessibilityLabel={`Otwórz licznik: ${item.name}`}
-              onPress={() => openCounter(item)}
-            >
-              <ColorDot color={item.color} />
-              <View className="flex-1">
-                <Text className="text-sm font-medium text-ink">
-                  {item.name}
-                </Text>
-                <Text className="mt-0.5 text-xs text-muted">
-                  {entryCountLabel(item.entryCount)}
-                </Text>
-              </View>
-              <Text
-                className="mr-1 font-utility text-[18px] font-semibold text-ink tabular-nums"
-                accessibilityLabel={`Suma: ${item.total}`}
-              >
-                {item.total}
+          }
+          ListEmptyComponent={
+            !isPending && pageError === "" ? (
+              <Text className="p-6 text-center text-xs text-muted">
+                Brak liczników. Utwórz pierwszy przyciskiem +.
               </Text>
-              <PlusOneButton counter={item} onPress={addOne} />
-            </Pressable>
-          )
-        }
-      />
-      <Fab
-        accessibilityLabel="Nowy licznik"
-        onPress={() => router.push("/counter")}
-      />
-    </View>
+            ) : undefined
+          }
+          renderItem={({ item }) =>
+            isTiles ? (
+              <CounterTile
+                counter={item}
+                content={counterTileContent(item, tileValue)}
+                onAddOne={addOne}
+              />
+            ) : (
+              <Pressable
+                className="mx-4 min-h-[62px] flex-row items-center gap-[13px] border-b border-row-line px-[3px] py-2.5"
+                accessibilityRole="button"
+                accessibilityLabel={`Otwórz licznik: ${item.name}`}
+                onPress={() => openCounter(item)}
+              >
+                <ColorDot color={item.color} />
+                <View className="flex-1">
+                  <Text className="text-sm font-medium text-ink">
+                    {item.name}
+                  </Text>
+                  <Text className="mt-0.5 text-xs text-muted">
+                    {entryCountLabel(item.entryCount)}
+                  </Text>
+                </View>
+                <Text
+                  className="mr-1 font-utility text-[18px] font-semibold text-ink tabular-nums"
+                  accessibilityLabel={`Suma: ${item.total}`}
+                >
+                  {item.total}
+                </Text>
+                <PlusOneButton counter={item} onPress={addOne} />
+              </Pressable>
+            )
+          }
+        />
+        <Fab
+          accessibilityLabel="Nowy licznik"
+          onPress={() => router.push("/counter")}
+        />
+      </View>
+      {isSettingsOpen && (
+        <CounterSettingsSheet onClose={() => setIsSettingsOpen(false)} />
+      )}
+    </>
   );
 }
 
