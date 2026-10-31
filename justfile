@@ -170,6 +170,21 @@ deploy-createsuperuser username:
 deploy-migrate:
     {{compose}} run --rm app alembic upgrade head
 
+# Back up the database now (the daily kind: local rotation + offsite copy).
+deploy-backup:
+    {{compose}} run --rm backup backup.sh daily
+
+# List the database dumps on the VPS and the offsite snapshots.
+deploy-backups:
+    {{compose}} run --rm backup sh -c 'ls -lh /backups/*/; [ -z "$RESTIC_REPOSITORY" ] || restic snapshots'
+
+# Replace the database with a dump: latest, <dir>/<file>.dump or offsite[:<id>].
+# Stops app, mcp and admin for the restore; dumps the current database first.
+deploy-restore source:
+    {{compose}} stop app mcp admin
+    {{compose}} run --rm backup restore.sh {{source}} --yes
+    {{compose}} up --detach app mcp admin
+
 # Run the full VPS deploy flow (build, migrate, nginx, up).
 deploy:
     ./deployment/deploy.sh

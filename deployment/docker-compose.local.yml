@@ -17,3 +17,11 @@ services:
     depends_on:
       - app
       - frontend
+
+  # Keep the local stack's dumps in a volume instead of /var/backups.
+  backup:
+    volumes:
+      - backups-local:/backups
+
+volumes:
+  backups-local:

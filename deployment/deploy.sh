@@ -23,6 +23,9 @@ echo "Running build."
 echo "Starting the database."
 "${COMPOSE[@]}" up --detach --wait db
 
+echo "Backing up the database before migrating."
+"${COMPOSE[@]}" run --rm --no-deps backup backup.sh predeploy
+
 echo "Applying migrations."
 "${COMPOSE[@]}" run --rm --no-deps app alembic upgrade head
 
