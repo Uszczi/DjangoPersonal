@@ -15,10 +15,9 @@ import { Button } from "../../src/ui/Button";
 import { ChipGroup } from "../../src/ui/ChipGroup";
 import { confirmDestructive } from "../../src/ui/confirm";
 import { TabBarSettings } from "../../src/features/tabs/TabBarSettings";
-import { useTheme } from "../../src/theme";
+import { card, common, form } from "../../src/ui/classes";
 
 export default function AccountScreen() {
-  const { common, card, form } = useTheme();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const [deleteError, setDeleteError] = useState("");
@@ -47,13 +46,13 @@ export default function AccountScreen() {
   }
 
   return (
-    <ScrollView style={common.screen}>
-      <View style={card.section}>
-        <Text style={common.eyebrow}>KONTO</Text>
-        <Text style={common.pageTitle}>{user?.username}</Text>
+    <ScrollView className={common.screen}>
+      <View className={card.section}>
+        <Text className={common.eyebrow}>KONTO</Text>
+        <Text className={common.pageTitle}>{user?.username}</Text>
       </View>
-      <View style={card.section}>
-        <Text style={card.kicker}>MOTYW</Text>
+      <View className={card.section}>
+        <Text className={card.kicker}>MOTYW</Text>
         <ChipGroup
           options={themePreferences.map((value) => ({
             value,
@@ -63,17 +62,17 @@ export default function AccountScreen() {
           onChange={(theme) => updateTheme.mutate(theme)}
         />
         {updateTheme.isError && (
-          <Text style={form.error}>
+          <Text className={form.error}>
             Nie udało się zapisać motywu. Spróbuj ponownie.
           </Text>
         )}
-        <Text style={form.hint}>
+        <Text className={form.hint}>
           Zapisywany na koncie, wspólny dla wszystkich urządzeń.
         </Text>
       </View>
       <TabBarSettings />
-      <View style={[card.section, { gap: 12 }]}>
-        <View style={{ flexDirection: "row" }}>
+      <View className="mx-4 mt-4 gap-3 rounded-lg border border-card-line bg-paper p-5 shadow-[0_8px_18px_rgba(29,55,57,0.06)]">
+        <View className="flex-row">
           <Button
             label="Wyloguj"
             variant="secondary"
@@ -81,7 +80,7 @@ export default function AccountScreen() {
             onPress={logout}
           />
         </View>
-        <View style={{ flexDirection: "row" }}>
+        <View className="flex-row">
           <Button
             label="Usuń konto"
             variant="danger"
@@ -89,7 +88,9 @@ export default function AccountScreen() {
             onPress={() => void deleteAccount()}
           />
         </View>
-        {deleteError !== "" && <Text style={form.error}>{deleteError}</Text>}
+        {deleteError !== "" && (
+          <Text className={form.error}>{deleteError}</Text>
+        )}
       </View>
     </ScrollView>
   );

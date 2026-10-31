@@ -15,9 +15,6 @@ export const common = {
   muted: "text-xs text-muted",
   /** A list row (web `ListRow`): no card, a thin line underneath. */
   row: "mx-4 min-h-[62px] flex-row items-center gap-[13px] border-b border-row-line px-[3px] py-2.5",
-  /** `row` that dims while pressed. */
-  rowPressable:
-    "mx-4 min-h-[62px] flex-row items-center gap-[13px] border-b border-row-line px-[3px] py-2.5 active:opacity-60",
   rowTitle: "text-sm font-medium text-ink",
   rowSubtitle: "mt-0.5 text-xs text-muted",
   /** Small all-caps line above a title (web `PageHeader` eyebrow). */

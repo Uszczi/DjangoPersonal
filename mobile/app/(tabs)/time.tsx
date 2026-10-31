@@ -9,13 +9,12 @@ import { useTimeEntries, useTimer } from "@personal/shared/queries/timer";
 import { RecentEntries } from "../../src/features/time/RecentEntries";
 import { TimerCard } from "../../src/features/time/TimerCard";
 import { TimeSummary } from "../../src/features/time/TimeSummary";
-import { useTheme } from "../../src/theme";
+import { common } from "../../src/ui/classes";
 import { Button } from "../../src/ui/Button";
 import { useRefreshOnFocus } from "../../src/useRefreshOnFocus";
 
 /** The web Timer page: the running timer, recent entries and the time summary. */
 export default function TimeScreen() {
-  const { common } = useTheme();
   const { data: projects = [], refetch: refetchProjects } = useProjects();
   const timer = useTimer();
   const entriesQuery = useTimeEntries();
@@ -72,8 +71,8 @@ export default function TimeScreen() {
 
   if (pageError) {
     return (
-      <View style={common.center}>
-        <Text style={common.error}>{pageError}</Text>
+      <View className={common.center}>
+        <Text className={common.error}>{pageError}</Text>
         <Button
           label="Spróbuj ponownie"
           variant="secondary"
@@ -85,8 +84,8 @@ export default function TimeScreen() {
 
   return (
     <ScrollView
-      style={common.screen}
-      contentContainerStyle={{ paddingBottom: 32 }}
+      className={common.screen}
+      contentContainerClassName="pb-8"
       keyboardShouldPersistTaps="handled"
       refreshControl={
         <RefreshControl

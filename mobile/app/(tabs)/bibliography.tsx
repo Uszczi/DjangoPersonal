@@ -28,14 +28,12 @@ import {
   MonthRule,
   YearBar,
 } from "../../src/features/bibliography/SectionHeaders";
-import { makeStyles, useTheme } from "../../src/theme";
+import { common } from "../../src/ui/classes";
 import { Fab } from "../../src/ui/Fab";
 import { useRefreshOnFocus } from "../../src/useRefreshOnFocus";
 
 /** The Bibliography: films and books with their status, narrowed by kind and status and found by a fuzzy search. */
 export default function BibliographyScreen() {
-  const { common } = useTheme();
-  const styles = useStyles();
   const [kind, setKind] = useState<ItemKind | undefined>();
   const [status, setStatus] = useState<ItemStatus | undefined>();
   const [query, setQuery] = useState("");
@@ -81,12 +79,12 @@ export default function BibliographyScreen() {
   }
 
   return (
-    <View style={common.screen}>
+    <View className={common.screen}>
       {isError && (
-        <Text style={common.error}>{BIBLIOGRAPHY_ITEMS_LOAD_ERROR}</Text>
+        <Text className={common.error}>{BIBLIOGRAPHY_ITEMS_LOAD_ERROR}</Text>
       )}
       {isYearView && attempts.isError && (
-        <Text style={common.error}>{ATTEMPTS_LOAD_ERROR}</Text>
+        <Text className={common.error}>{ATTEMPTS_LOAD_ERROR}</Text>
       )}
       <SearchBar
         query={query}
@@ -103,7 +101,7 @@ export default function BibliographyScreen() {
         keyExtractor={({ item, attempt }) =>
           attempt ? `a${attempt.id}` : `i${item.id}`
         }
-        contentContainerStyle={styles.listContent}
+        contentContainerClassName="pb-24"
         stickySectionHeadersEnabled={false}
         refreshControl={
           <RefreshControl
@@ -113,7 +111,7 @@ export default function BibliographyScreen() {
         }
         ListEmptyComponent={
           !isLoading && !isError ? (
-            <Text style={[common.muted, styles.empty]}>
+            <Text className="p-6 text-center text-xs text-muted">
               {isSearching
                 ? "Brak pozycji pasujących do wyszukiwania"
                 : isFiltered
@@ -156,8 +154,3 @@ export default function BibliographyScreen() {
     </View>
   );
 }
-
-const useStyles = makeStyles(() => ({
-  listContent: { paddingBottom: 96 },
-  empty: { padding: 24, textAlign: "center" },
-}));
