@@ -20,10 +20,10 @@ import {
 } from "@personal/shared/queries/bibliographyAttempts";
 import { dateFromKey, dateKey, todayKey } from "@personal/shared/timeFormat";
 
-import { Button } from "../src/ui/Button";
-import { DateTimeField } from "../src/ui/DateTimeField";
-import { OptionalDateField } from "../src/ui/OptionalDateField";
-import { common, form } from "../src/ui/classes";
+import { Button } from "../../src/ui/Button";
+import { DateTimeField } from "../../src/ui/DateTimeField";
+import { OptionalDateField } from "../../src/ui/OptionalDateField";
+import { common, form } from "../../src/ui/classes";
 
 function today() {
   return dateFromKey(todayKey());
