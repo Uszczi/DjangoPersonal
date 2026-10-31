@@ -3,3 +3,4 @@ dist/
 expo-env.d.ts
 ios/
 android/
+global.css

@@ -26,7 +26,6 @@ import { ChipGroup } from "../../src/ui/ChipGroup";
 import { ColorDot } from "../../src/ui/ColorDot";
 import { Fab } from "../../src/ui/Fab";
 import { plusOneEntry } from "../../src/features/counters/plusOne";
-import { makeStyles, fonts, useTheme } from "../../src/theme";
 
 const VIEW_MODES = COUNTER_VIEW_MODES.map((value) => ({
   value,
@@ -42,9 +41,11 @@ function openCounter(counter: CounterResponse) {
   router.push({ pathname: "/counters/[id]", params: { id: counter.id } });
 }
 
+/**
+ * Liczniki, styled with Uniwind classes (the prototype screen): colours are
+ * the shared palette tokens, so they follow the theme like `makeStyles` does.
+ */
 export default function CountersScreen() {
-  const { common } = useTheme();
-  const styles = useStyles();
   const { data: counters = [], isPending, isError, refetch } = useCounters();
   const saveEntry = useSaveCounterEntry();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -75,19 +76,21 @@ export default function CountersScreen() {
   }
 
   return (
-    <View style={common.screen}>
+    <View className="flex-1 bg-canvas">
       {(pageError || actionError) !== "" && (
-        <Text style={common.error}>{pageError || actionError}</Text>
+        <Text className="p-4 text-[13px] text-danger">
+          {pageError || actionError}
+        </Text>
       )}
-      <View style={styles.toolbar}>
+      <View className="px-4 pt-3 pb-1">
         <ChipGroup
           options={VIEW_MODES}
           value={viewMode}
           onChange={setViewMode}
         />
         {isTiles && (
-          <View style={styles.tileValues}>
-            <Text style={common.muted}>Na środku kafelka</Text>
+          <View className="mt-2.5 gap-1.5">
+            <Text className="text-xs text-muted">Na środku kafelka</Text>
             <ChipGroup
               options={TILE_VALUES}
               value={tileValue}
@@ -101,12 +104,9 @@ export default function CountersScreen() {
         key={viewMode}
         data={counters}
         numColumns={isTiles ? 2 : 1}
-        columnWrapperStyle={isTiles ? styles.tileRow : undefined}
+        columnWrapperClassName={isTiles ? "gap-3" : undefined}
         keyExtractor={(counter) => String(counter.id)}
-        contentContainerStyle={[
-          styles.listContent,
-          isTiles && styles.tileListContent,
-        ]}
+        contentContainerClassName={isTiles ? "px-4 pt-2 pb-24 gap-3" : "pb-24"}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing || isPending}
@@ -115,7 +115,7 @@ export default function CountersScreen() {
         }
         ListEmptyComponent={
           !isPending && pageError === "" ? (
-            <Text style={[common.muted, styles.empty]}>
+            <Text className="p-6 text-center text-xs text-muted">
               Brak liczników. Utwórz pierwszy przyciskiem +.
             </Text>
           ) : undefined
@@ -129,20 +129,22 @@ export default function CountersScreen() {
             />
           ) : (
             <Pressable
-              style={common.row}
+              className="mx-4 min-h-[62px] flex-row items-center gap-[13px] border-b border-row-line px-[3px] py-2.5"
               accessibilityRole="button"
               accessibilityLabel={`Otwórz licznik: ${item.name}`}
               onPress={() => openCounter(item)}
             >
               <ColorDot color={item.color} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.name}>{item.name}</Text>
-                <Text style={common.rowSubtitle}>
+              <View className="flex-1">
+                <Text className="text-sm font-medium text-ink">
+                  {item.name}
+                </Text>
+                <Text className="mt-0.5 text-xs text-muted">
                   {entryCountLabel(item.entryCount)}
                 </Text>
               </View>
               <Text
-                style={styles.total}
+                className="mr-1 font-utility text-[18px] font-semibold text-ink tabular-nums"
                 accessibilityLabel={`Suma: ${item.total}`}
               >
                 {item.total}
@@ -170,24 +172,27 @@ function CounterTile({
   content: CounterTileContent;
   onAddOne: (counter: CounterResponse) => Promise<void>;
 }) {
-  const { common } = useTheme();
-  const styles = useStyles();
   return (
-    <View style={[styles.tile, { borderTopColor: counter.color }]}>
+    <View
+      className="flex-1 overflow-hidden rounded-lg border border-t-4 border-row-line bg-surface"
+      // The Counter's own colour is data, not a theme token.
+      style={{ borderTopColor: counter.color }}
+    >
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Otwórz licznik: ${counter.name}`}
         onPress={() => openCounter(counter)}
-        style={({ pressed }) => [
-          styles.tileBody,
-          pressed && styles.tilePressed,
-        ]}
+        className="items-center gap-1 px-3.5 pt-3.5 pb-2.5 active:bg-wash"
       >
-        <Text style={[styles.name, styles.tileText]} numberOfLines={1}>
+        {/* Full width, so long names truncate and the total shrinks to fit, centred. */}
+        <Text
+          className="self-stretch text-center text-sm font-medium text-ink"
+          numberOfLines={1}
+        >
           {counter.name}
         </Text>
         <Text
-          style={[styles.tileTotal, styles.tileText]}
+          className="self-stretch text-center font-utility text-[30px] font-semibold text-ink tabular-nums"
           numberOfLines={1}
           adjustsFontSizeToFit
           accessibilityLabel={content.valueLabel}
@@ -195,16 +200,22 @@ function CounterTile({
           {content.value}
         </Text>
         {content.unit !== null && (
-          <Text style={common.muted}>{content.unit}</Text>
+          <Text className="text-xs text-muted">{content.unit}</Text>
         )}
-        <Text style={common.muted}>{content.caption}</Text>
+        <Text className="text-xs text-muted">{content.caption}</Text>
         {content.recency !== null && (
-          <Text style={[common.muted, counter.streakDays > 0 && styles.streak]}>
+          <Text
+            className={
+              counter.streakDays > 0
+                ? "text-xs font-medium text-ink"
+                : "text-xs text-muted"
+            }
+          >
             {content.recency}
           </Text>
         )}
       </Pressable>
-      <View style={styles.tileFooter}>
+      <View className="flex-row justify-center border-t border-row-line px-2.5 py-2">
         <PlusOneButton counter={counter} onPress={onAddOne} />
       </View>
     </View>
@@ -218,80 +229,15 @@ function PlusOneButton({
   counter: CounterResponse;
   onPress: (counter: CounterResponse) => Promise<void>;
 }) {
-  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`Dodaj 1 do licznika: ${counter.name}`}
       hitSlop={8}
       onPress={() => void onPress(counter)}
-      style={({ pressed }) => [styles.plusOne, pressed && styles.pressed]}
+      className="rounded-[5px] border border-control-border px-3.5 py-2 active:opacity-60"
     >
-      <Text style={styles.plusOneLabel}>+1</Text>
+      <Text className="text-[13px] font-semibold text-ink-soft">+1</Text>
     </Pressable>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  toolbar: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 },
-  tileValues: { marginTop: 10, gap: 6 },
-  listContent: { paddingBottom: 96 },
-  tileListContent: { paddingHorizontal: 16, paddingTop: 8, gap: 12 },
-  tileRow: { gap: 12 },
-  // The web CounterTile: name, big total, entry count, +1 in a footer.
-  tile: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: colors.rowLine,
-    // The Counter's colour, set per tile.
-    borderTopWidth: 4,
-    borderRadius: 8,
-    backgroundColor: colors.surface,
-    overflow: "hidden",
-  },
-  tileBody: {
-    alignItems: "center",
-    paddingHorizontal: 14,
-    paddingTop: 14,
-    paddingBottom: 10,
-    gap: 4,
-  },
-  tilePressed: { backgroundColor: colors.wash },
-  // Full width, so long names truncate and the total shrinks to fit, centred.
-  tileText: { alignSelf: "stretch", textAlign: "center" },
-  streak: { color: colors.ink, fontWeight: "500" },
-  tileTotal: {
-    fontFamily: fonts.utility,
-    fontSize: 30,
-    fontWeight: "600",
-    color: colors.ink,
-    fontVariant: ["tabular-nums"],
-  },
-  tileFooter: {
-    flexDirection: "row",
-    justifyContent: "center",
-    borderTopWidth: 1,
-    borderTopColor: colors.rowLine,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  empty: { padding: 24, textAlign: "center" },
-  name: { fontSize: 14, fontWeight: "500", color: colors.ink },
-  total: {
-    marginRight: 4,
-    fontFamily: fonts.utility,
-    fontSize: 18,
-    fontWeight: "600",
-    color: colors.ink,
-    fontVariant: ["tabular-nums"],
-  },
-  plusOne: {
-    borderWidth: 1,
-    borderColor: colors.controlBorder,
-    borderRadius: 5,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  pressed: { opacity: 0.6 },
-  plusOneLabel: { color: colors.inkSoft, fontWeight: "600", fontSize: 13 },
-}));

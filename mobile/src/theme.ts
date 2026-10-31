@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Appearance, Platform, StyleSheet, useColorScheme } from "react-native";
+import { Uniwind } from "uniwind";
 
 import { useAccountThemeSync } from "@personal/shared/queries/settings";
 import { useThemeStore } from "@personal/shared/stores/theme";
@@ -53,6 +54,20 @@ export function useNativeColorScheme() {
     Appearance.setColorScheme(
       preference === "system" ? "unspecified" : themes[preference].scheme,
     );
+  }, [preference]);
+}
+
+/**
+ * Point Uniwind's `className` colours at the chosen theme. "system" stays
+ * "system", so Uniwind follows the device's light/dark like `resolveTheme`;
+ * forcing light or dark here would also pin `Appearance` and stop
+ * `useColorScheme` from following the device. Mounted once, in the root
+ * layout, after the theme store has rehydrated.
+ */
+export function useUniwindTheme() {
+  const preference = useThemeStore((state) => state.preference);
+  useEffect(() => {
+    Uniwind.setTheme(preference);
   }, [preference]);
 }
 
