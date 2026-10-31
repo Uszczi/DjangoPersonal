@@ -7,7 +7,7 @@ import {
   type ItemStatus,
 } from "@personal/shared/bibliographyFormat";
 
-import { makeStyles, useTheme } from "../../theme";
+import { useTheme } from "../../theme";
 import { KIND_FILTER_LABELS } from "./filterLabels";
 
 type SearchBarProps = {
@@ -30,18 +30,17 @@ export function SearchBar({
   onClearStatus,
   onOpenFilters,
 }: SearchBarProps) {
-  const { colors, form } = useTheme();
-  const styles = useStyles();
+  const { colors } = useTheme();
   const filterCount = (kind ? 1 : 0) + (status ? 1 : 0);
   return (
-    <View style={styles.filters}>
-      <View style={styles.searchRow}>
+    <View className="gap-2 px-4 pt-3 pb-1">
+      <View className="flex-row gap-2">
         <TextInput
-          style={[form.input, styles.search]}
+          className="flex-1 rounded border border-control-border bg-input px-[11px] py-2.5 text-[14px] text-ink"
           value={query}
           onChangeText={onQueryChange}
           placeholder="Szukaj po tytule, twórcy, roku…"
-          placeholderTextColor={colors.hint}
+          placeholderTextColorClassName="accent-hint"
           accessibilityLabel="Szukaj w Bibliografii"
           autoCorrect={false}
           autoCapitalize="none"
@@ -54,11 +53,11 @@ export function SearchBar({
             filterCount > 0 ? `Filtry, aktywne: ${filterCount}` : "Filtry"
           }
           onPress={onOpenFilters}
-          style={({ pressed }) => [
-            styles.filtersButton,
-            filterCount > 0 && styles.filtersButtonActive,
-            pressed && styles.pressed,
-          ]}
+          className={
+            filterCount > 0
+              ? "w-[46px] items-center justify-center rounded-[5px] border border-signal bg-signal active:opacity-60"
+              : "w-[46px] items-center justify-center rounded-[5px] border border-control-border active:opacity-60"
+          }
         >
           <Ionicons
             name="options-outline"
@@ -66,14 +65,16 @@ export function SearchBar({
             color={filterCount > 0 ? colors.onSignal : colors.ink}
           />
           {filterCount > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{filterCount}</Text>
+            <View className="absolute -top-1.5 -right-1.5 h-[18px] min-w-[18px] items-center justify-center rounded-[9px] bg-deep-ink px-1">
+              <Text className="text-[10px] font-bold text-nav-text">
+                {filterCount}
+              </Text>
             </View>
           )}
         </Pressable>
       </View>
       {filterCount > 0 && (
-        <View style={styles.pills}>
+        <View className="flex-row flex-wrap gap-1.5">
           {kind && (
             <FilterPill
               label={KIND_FILTER_LABELS[kind]}
@@ -101,60 +102,16 @@ function FilterPill({
   onRemove: () => void;
 }) {
   const { colors } = useTheme();
-  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`Usuń filtr: ${label}`}
       onPress={onRemove}
       hitSlop={4}
-      style={({ pressed }) => [styles.pill, pressed && styles.pressed]}
+      className="flex-row items-center gap-1 rounded-full bg-wash px-2.5 py-1 active:opacity-60"
     >
-      <Text style={styles.pillText}>{label}</Text>
+      <Text className="text-xs text-ink-soft">{label}</Text>
       <Ionicons name="close" size={13} color={colors.inkSoft} />
     </Pressable>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  filters: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4, gap: 8 },
-  searchRow: { flexDirection: "row", gap: 8 },
-  search: { flex: 1 },
-  filtersButton: {
-    width: 46,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: colors.controlBorder,
-    borderRadius: 5,
-  },
-  filtersButtonActive: {
-    backgroundColor: colors.signal,
-    borderColor: colors.signal,
-  },
-  badge: {
-    position: "absolute",
-    top: -6,
-    right: -6,
-    minWidth: 18,
-    height: 18,
-    paddingHorizontal: 4,
-    borderRadius: 9,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.deepInk,
-  },
-  badgeText: { fontSize: 10, fontWeight: "700", color: colors.navText },
-  pills: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
-  pill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: colors.wash,
-  },
-  pillText: { fontSize: 12, color: colors.inkSoft },
-  pressed: { opacity: 0.6 },
-}));

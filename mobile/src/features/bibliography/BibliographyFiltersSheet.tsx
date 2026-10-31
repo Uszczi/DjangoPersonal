@@ -14,7 +14,6 @@ import {
 
 import { ChipGroup } from "../../ui/ChipGroup";
 import { Sheet } from "../../ui/Sheet";
-import { fonts, makeStyles } from "../../theme";
 import { KIND_FILTER_LABELS } from "./filterLabels";
 
 /** A chip value for "no filter": ChipGroup needs a value for every option. */
@@ -56,7 +55,6 @@ export function BibliographyFiltersSheet({
   onUnfoldAll: () => void;
   onClose: () => void;
 }) {
-  const styles = useStyles();
   const viewMode = useBibliographyViewStore((state) => state.mode);
   const setViewMode = useBibliographyViewStore((state) => state.setMode);
   const dividers = useBibliographyViewStore((state) => state.dividers);
@@ -71,7 +69,7 @@ export function BibliographyFiltersSheet({
 
   return (
     <Sheet title="Filtry i widok" onClose={onClose}>
-      <View style={styles.body}>
+      <View className="gap-[18px] py-2">
         <Section title="Widok">
           <ChipGroup
             options={VIEW_MODES}
@@ -79,7 +77,7 @@ export function BibliographyFiltersSheet({
             onChange={setViewMode}
           />
           {viewMode === "years" && (
-            <View style={styles.yearActions}>
+            <View className="flex-row flex-wrap gap-4">
               {dividers && hasYears && (
                 <>
                   <TextButton label="Zwiń wszystko" onPress={onFoldAll} />
@@ -126,10 +124,12 @@ export function BibliographyFiltersSheet({
 }
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
-  const styles = useStyles();
   return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle} accessibilityRole="header">
+    <View className="gap-2">
+      <Text
+        className="font-utility text-[11px] font-semibold tracking-[0.9px] text-muted"
+        accessibilityRole="header"
+      >
         {title.toUpperCase()}
       </Text>
       {children}
@@ -144,30 +144,14 @@ function TextButton({
   label: string;
   onPress: () => void;
 }) {
-  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
       hitSlop={6}
-      style={({ pressed }) => pressed && styles.pressed}
+      className="active:opacity-60"
     >
-      <Text style={styles.textButton}>{label}</Text>
+      <Text className="text-[13px] text-muted">{label}</Text>
     </Pressable>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  body: { paddingVertical: 8, gap: 18 },
-  section: { gap: 8 },
-  sectionTitle: {
-    fontFamily: fonts.utility,
-    fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 0.9,
-    color: colors.muted,
-  },
-  yearActions: { flexDirection: "row", flexWrap: "wrap", gap: 16 },
-  textButton: { fontSize: 13, color: colors.muted },
-  pressed: { opacity: 0.6 },
-}));

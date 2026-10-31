@@ -17,7 +17,7 @@ import {
 import { formatClock, formatElapsed } from "@personal/shared/timeFormat";
 import { timerLimitOptions, timerRemaining } from "@personal/shared/timerLimit";
 
-import { fonts, makeStyles, useTheme } from "../../theme";
+import { card, common, form } from "../../ui/classes";
 import { Button } from "../../ui/Button";
 import { ChipGroup } from "../../ui/ChipGroup";
 import { TitleSuggestions } from "../tasks/TitleSuggestions";
@@ -49,8 +49,6 @@ export function TimerCard({
   taskTitles,
   onStarted,
 }: TimerCardProps) {
-  const { colors, common, card, form } = useTheme();
-  const styles = useStyles();
   const startTimer = useStartTimer();
   const stopTimer = useStopTimer();
   const discardTimer = useDiscardTimer();
@@ -122,25 +120,25 @@ export function TimerCard({
       : tasks.filter((task) => task.projectId === chosenProjectId);
 
   return (
-    <View style={card.section}>
+    <View className={card.section}>
       {runningEntry ? (
         <>
-          <Text style={[card.kicker, { color: colors.signal }]}>
-            TIMER AKTYWNY
+          <Text className={card.kickerSignal}>TIMER AKTYWNY</Text>
+          <Text className={card.title}>
+            {entryTitle(runningEntry, taskTitles)}
           </Text>
-          <Text style={card.title}>{entryTitle(runningEntry, taskTitles)}</Text>
-          <Text style={styles.elapsed}>
+          <Text className="font-utility text-[36px] font-bold text-ink tabular-nums">
             {formatElapsed(
               timerRemaining(runningEntry, nowTick + serverOffset) ??
                 nowTick + serverOffset - runningEntry.start.getTime(),
             )}
           </Text>
           {runningEntry.plannedEnd && (
-            <Text style={common.muted}>
+            <Text className={common.muted}>
               Pozostało · zatrzyma się o {formatClock(runningEntry.plannedEnd)}
             </Text>
           )}
-          <View style={form.actions}>
+          <View className={form.actions}>
             <Button
               label="Zatrzymaj"
               isBusy={isBusy}
@@ -158,8 +156,8 @@ export function TimerCard({
         </>
       ) : (
         <>
-          <Text style={card.kicker}>BRAK AKTYWNEGO TIMERA</Text>
-          <Text style={form.label}>Projekt</Text>
+          <Text className={card.kicker}>BRAK AKTYWNEGO TIMERA</Text>
+          <Text className={form.label}>Projekt</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <ChipGroup
               options={[
@@ -177,9 +175,9 @@ export function TimerCard({
               nowrap
             />
           </ScrollView>
-          <Text style={form.label}>Zadanie</Text>
+          <Text className={form.label}>Zadanie</Text>
           <TextInput
-            style={form.input}
+            className={form.input}
             value={startTitle}
             onChangeText={setStartTitle}
             placeholder="Tytuł zadania"
@@ -191,7 +189,7 @@ export function TimerCard({
             query={startTitle}
             onPick={setStartTitle}
           />
-          <Text style={form.label}>Limit czasu</Text>
+          <Text className={form.label}>Limit czasu</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <ChipGroup
               options={[
@@ -206,8 +204,10 @@ export function TimerCard({
               nowrap
             />
           </ScrollView>
-          {startError !== "" && <Text style={form.error}>{startError}</Text>}
-          <View style={form.actions}>
+          {startError !== "" && (
+            <Text className={form.error}>{startError}</Text>
+          )}
+          <View className={form.actions}>
             <Button
               label="Rozpocznij timer"
               isBusy={isBusy}
@@ -216,17 +216,7 @@ export function TimerCard({
           </View>
         </>
       )}
-      {actionError !== "" && <Text style={form.error}>{actionError}</Text>}
+      {actionError !== "" && <Text className={form.error}>{actionError}</Text>}
     </View>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  elapsed: {
-    fontFamily: fonts.utility,
-    fontSize: 36,
-    fontWeight: "700",
-    color: colors.ink,
-    fontVariant: ["tabular-nums"],
-  },
-}));

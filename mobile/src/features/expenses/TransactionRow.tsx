@@ -7,7 +7,8 @@ import type {
   TransactionResponse,
 } from "@personal/shared/generated/api";
 
-import { fonts, makeStyles, useTheme } from "../../theme";
+import { useTheme } from "../../theme";
+import { common } from "../../ui/classes";
 import { NamedIcon } from "../../ui/NamedIcon";
 
 type TransactionRowProps = {
@@ -18,8 +19,7 @@ type TransactionRowProps = {
 
 /** One transaction: title, description and category, with a signed amount; a tap edits it. */
 export function TransactionRow({ transaction, category }: TransactionRowProps) {
-  const { colors, common } = useTheme();
-  const styles = useStyles();
+  const { colors } = useTheme();
   // A system entry (no kind) carries its own sign; others are signed by kind.
   const isSystem = transaction.kind === null;
   const income = transaction.kind === "income";
@@ -28,14 +28,14 @@ export function TransactionRow({ transaction, category }: TransactionRowProps) {
     : income
       ? `+${transaction.amount}`
       : `−${transaction.amount}`;
-  const amountColor = isSystem
-    ? colors.muted
+  const amountClass = isSystem
+    ? "font-utility text-sm font-semibold text-muted tabular-nums"
     : income
-      ? colors.income
-      : colors.expense;
+      ? "font-utility text-sm font-semibold text-income tabular-nums"
+      : "font-utility text-sm font-semibold text-expense tabular-nums";
   return (
     <Pressable
-      style={common.row}
+      className={common.row}
       accessibilityRole="button"
       accessibilityLabel={`Edytuj transakcję: ${transaction.title}`}
       onPress={() =>
@@ -48,40 +48,30 @@ export function TransactionRow({ transaction, category }: TransactionRowProps) {
         })
       }
     >
-      <View style={{ flex: 1, gap: 2 }}>
-        <Text style={styles.title}>{transaction.title}</Text>
+      <View className="flex-1 gap-0.5">
+        <Text className="text-sm font-medium text-ink">
+          {transaction.title}
+        </Text>
         {transaction.description !== "" && (
-          <Text style={common.muted} numberOfLines={2}>
+          <Text className={common.muted} numberOfLines={2}>
             {transaction.description}
           </Text>
         )}
         {isSystem ? (
-          <Text style={common.muted}>Wpis systemowy</Text>
+          <Text className={common.muted}>Wpis systemowy</Text>
         ) : category ? (
-          <View style={styles.category}>
+          <View className="flex-row items-center gap-1">
             <NamedIcon
               name={category.icon}
               fallback={DEFAULT_CATEGORY_ICON}
               size={14}
               color={colors.muted}
             />
-            <Text style={common.muted}>{category.name}</Text>
+            <Text className={common.muted}>{category.name}</Text>
           </View>
         ) : null}
       </View>
-      <Text style={[styles.amount, { color: amountColor }]}>{amountText}</Text>
+      <Text className={amountClass}>{amountText}</Text>
     </Pressable>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  title: { fontSize: 14, fontWeight: "500", color: colors.ink },
-  category: { flexDirection: "row", alignItems: "center", gap: 4 },
-  amount: {
-    fontFamily: fonts.utility,
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.ink,
-    fontVariant: ["tabular-nums"],
-  },
-}));

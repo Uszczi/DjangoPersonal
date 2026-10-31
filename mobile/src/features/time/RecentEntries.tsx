@@ -10,7 +10,7 @@ import {
   formatDuration,
 } from "@personal/shared/timeFormat";
 
-import { makeStyles, useTheme } from "../../theme";
+import { card, form } from "../../ui/classes";
 import { Button } from "../../ui/Button";
 import { ChipGroup } from "../../ui/ChipGroup";
 import { daysAgoKey, entryTitle } from "./entryDays";
@@ -37,8 +37,6 @@ export function RecentEntries({
   nowTick,
   taskTitles,
 }: RecentEntriesProps) {
-  const { common, card, form } = useTheme();
-  const styles = useStyles();
   const [entryRange, setEntryRange] = useState<EntryRange>("today");
 
   const today = dateKey(new Date(nowTick));
@@ -50,17 +48,17 @@ export function RecentEntries({
   });
 
   return (
-    <View style={card.section}>
-      <View style={styles.sectionHeader}>
-        <Text style={card.title}>Ostatnie wpisy</Text>
-        <Text style={card.kicker}>
+    <View className={card.section}>
+      <View className="flex-row items-center justify-between">
+        <Text className={card.title}>Ostatnie wpisy</Text>
+        <Text className={card.kicker}>
           {recentEntries.length}{" "}
           {recentEntries.length === 1 ? "WPIS" : "WPISÓW"}
         </Text>
       </View>
       <ChipGroup options={RANGES} value={entryRange} onChange={setEntryRange} />
       {recentEntries.length === 0 ? (
-        <Text style={[common.muted, { paddingVertical: 8 }]}>
+        <Text className="py-2 text-xs text-muted">
           {entryRange === "today"
             ? "Brak wpisów na dziś."
             : "Brak wpisów w wybranym zakresie."}
@@ -79,23 +77,26 @@ export function RecentEntries({
                   params: { entryId: entry.id },
                 })
               }
-              style={styles.entryRow}
+              className="flex-row items-center gap-2.5 border-b border-row-line py-3"
             >
-              <Text style={styles.entryClock}>
+              <Text className="text-xs text-muted tabular-nums">
                 {formatClock(entry.start)}–
                 {entry.end ? formatClock(entry.end) : "…"}
               </Text>
-              <Text style={styles.entryTitle} numberOfLines={1}>
+              <Text
+                className="flex-1 text-sm font-medium text-ink"
+                numberOfLines={1}
+              >
                 {title}
               </Text>
-              <Text style={styles.entryDuration}>
+              <Text className="text-xs font-semibold text-muted">
                 {formatDuration(entryMinutes(entry))}
               </Text>
             </Pressable>
           );
         })
       )}
-      <View style={form.actions}>
+      <View className={form.actions}>
         <Button
           label="+ Dodaj wpis ręcznie"
           variant="secondary"
@@ -105,26 +106,3 @@ export function RecentEntries({
     </View>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  entryRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.rowLine,
-  },
-  entryClock: {
-    color: colors.muted,
-    fontSize: 12,
-    fontVariant: ["tabular-nums"],
-  },
-  entryTitle: { flex: 1, color: colors.ink, fontSize: 14, fontWeight: "500" },
-  entryDuration: { color: colors.muted, fontSize: 12, fontWeight: "600" },
-}));

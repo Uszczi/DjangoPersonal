@@ -37,7 +37,9 @@ export function Sheet({
           // Taps inside the sheet must not reach the backdrop.
           onPress={() => {}}
         >
-          <Text className="mb-1 font-utility text-[11px] font-semibold tracking-[0.9px] text-muted">{title.toUpperCase()}</Text>
+          <Text className="mb-1 font-utility text-[11px] font-semibold tracking-[0.9px] text-muted">
+            {title.toUpperCase()}
+          </Text>
           <ScrollView bounces={false}>{children}</ScrollView>
         </Pressable>
       </Pressable>

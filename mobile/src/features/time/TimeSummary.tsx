@@ -7,7 +7,7 @@ import {
   formatDuration,
 } from "@personal/shared/timeFormat";
 
-import { fonts, makeStyles, useTheme } from "../../theme";
+import { card, common } from "../../ui/classes";
 import { daysAgoKey } from "./entryDays";
 
 type TimeSummaryProps = {
@@ -23,9 +23,6 @@ export function TimeSummary({
   nowTick,
   taskTitles,
 }: TimeSummaryProps) {
-  const { common, card } = useTheme();
-  const styles = useStyles();
-
   const today = dateKey(new Date(nowTick));
   const todaysEntries = entries.filter(
     (entry) => dateKey(entry.start) === today,
@@ -53,30 +50,36 @@ export function TimeSummary({
   }
 
   return (
-    <View style={card.section}>
-      <Text style={card.title}>Suma czasu</Text>
-      <Text style={card.kicker}>DZIŚ ŁĄCZNIE</Text>
-      <Text style={styles.total}>{formatDuration(todaysMinutes)}</Text>
+    <View className={card.section}>
+      <Text className={card.title}>Suma czasu</Text>
+      <Text className={card.kicker}>DZIŚ ŁĄCZNIE</Text>
+      <Text className="font-utility text-[24px] font-bold text-ink">
+        {formatDuration(todaysMinutes)}
+      </Text>
 
-      <Text style={[card.kicker, { marginTop: 8 }]}>WEDŁUG ZADANIA (DZIŚ)</Text>
+      <Text className="mt-2 font-utility text-[11px] font-semibold tracking-[0.9px] text-muted">
+        WEDŁUG ZADANIA (DZIŚ)
+      </Text>
       {perTaskMinutes.size === 0 ? (
-        <Text style={common.muted}>Brak wpisów.</Text>
+        <Text className={common.muted}>Brak wpisów.</Text>
       ) : (
         [...perTaskMinutes.entries()].map(([taskId, minutes]) => (
-          <View key={taskId} style={styles.summaryRow}>
-            <Text style={styles.summaryLabel} numberOfLines={1}>
+          <View key={taskId} className="flex-row justify-between gap-3">
+            <Text className="flex-1 text-ink" numberOfLines={1}>
               {taskTitles.get(taskId) ?? `Zadanie #${taskId}`}
             </Text>
-            <Text style={common.muted}>{formatDuration(minutes)}</Text>
+            <Text className={common.muted}>{formatDuration(minutes)}</Text>
           </View>
         ))
       )}
 
-      <Text style={[card.kicker, { marginTop: 8 }]}>OSTATNIE 7 DNI</Text>
+      <Text className="mt-2 font-utility text-[11px] font-semibold tracking-[0.9px] text-muted">
+        OSTATNIE 7 DNI
+      </Text>
       {dayKeys.map((key) => (
-        <View key={key} style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>{key}</Text>
-          <Text style={common.muted}>
+        <View key={key} className="flex-row justify-between gap-3">
+          <Text className="flex-1 text-ink">{key}</Text>
+          <Text className={common.muted}>
             {formatDuration(minutesByDay.get(key) ?? 0)}
           </Text>
         </View>
@@ -84,18 +87,3 @@ export function TimeSummary({
     </View>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  total: {
-    fontFamily: fonts.utility,
-    fontSize: 24,
-    fontWeight: "700",
-    color: colors.ink,
-  },
-  summaryRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  summaryLabel: { flex: 1, color: colors.ink },
-}));

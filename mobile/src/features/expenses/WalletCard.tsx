@@ -3,26 +3,29 @@ import { Text, View } from "react-native";
 
 import type { WalletResponse } from "@personal/shared/generated/api";
 
-import { fonts, makeStyles, useTheme } from "../../theme";
+import { card } from "../../ui/classes";
 import { Button } from "../../ui/Button";
 import { WalletMark } from "./WalletMark";
 
 /** The shown wallet: its name and balance, with links to edit it and the categories. */
 export function WalletCard({ wallet }: { wallet: WalletResponse }) {
-  const { card } = useTheme();
-  const styles = useStyles();
   return (
-    <View style={card.section}>
-      <View style={styles.walletHeader}>
+    <View className={card.section}>
+      <View className="flex-row items-center gap-2.5">
         <WalletMark wallet={wallet} size={24} />
-        <Text style={[card.title, { flex: 1 }]} numberOfLines={1}>
+        <Text
+          className="flex-1 font-display text-[22px] font-bold tracking-[-0.4px] text-ink"
+          numberOfLines={1}
+        >
           {wallet.name}
         </Text>
         {wallet.balance != null && (
-          <Text style={styles.balance}>{wallet.balance}</Text>
+          <Text className="font-utility text-[18px] font-bold text-ink tabular-nums">
+            {wallet.balance}
+          </Text>
         )}
       </View>
-      <View style={styles.actions}>
+      <View className="flex-row gap-3">
         <Button
           label="Edytuj portfel"
           variant="secondary"
@@ -42,15 +45,3 @@ export function WalletCard({ wallet }: { wallet: WalletResponse }) {
     </View>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  walletHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
-  balance: {
-    fontFamily: fonts.utility,
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.ink,
-    fontVariant: ["tabular-nums"],
-  },
-  actions: { flexDirection: "row", gap: 12 },
-}));

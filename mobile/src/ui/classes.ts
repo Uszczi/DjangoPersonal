@@ -23,8 +23,7 @@ export const common = {
   /** Small all-caps line above a title (web `PageHeader` eyebrow). */
   eyebrow: "font-utility text-[11px] font-semibold tracking-[0.9px] text-muted",
   /** A page title (web `PageHeader`). */
-  pageTitle:
-    "font-display text-[28px] font-bold tracking-[-0.5px] text-ink",
+  pageTitle: "font-display text-[28px] font-bold tracking-[-0.5px] text-ink",
   pageHeader: "gap-1 px-4 pt-5 pb-2",
   /** The boxed form error (web `ErrorAlert`). */
   alert:
@@ -55,7 +54,5 @@ export const form = {
     "min-h-24 rounded border border-control-border bg-input px-[11px] py-2.5 text-[14px] text-ink align-top",
   error: "mt-2 text-xs text-danger-ink",
   /** The footer of an editor (web `ModalFooter`): a line above the buttons. */
-  actions:
-    "mt-[26px] flex-row gap-[9px] border-t border-line-soft pt-[18px]",
+  actions: "mt-[26px] flex-row gap-[9px] border-t border-line-soft pt-[18px]",
 } as const;
-
