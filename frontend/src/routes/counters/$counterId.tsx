@@ -1,6 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Palette } from "lucide-react";
 import { useEffect } from "react";
 
+import { ColorDot } from "@/components/ColorDot";
 import { CounterCalendar } from "@/components/counters/CounterCalendar";
 import { CounterEntryList } from "@/components/counters/CounterEntryList";
 import { CounterEditorModal } from "@/components/modals/CounterEditorModal";
@@ -10,6 +12,7 @@ import { entryCountLabel } from "@personal/shared/counterFormat";
 import {
   Button,
   ErrorMessage,
+  IconButton,
   LoadingStatus,
   PageHeader,
 } from "@/design-system";
@@ -73,15 +76,30 @@ function CounterPage() {
         }
         title={counter.name}
         onTitleClick={() => ShowModal(CounterEditorModal, { counter })}
-        titleClickLabel={`Zmień nazwę licznika: ${counter.name}`}
-        subtitle={entryCountLabel(counter.entryCount)}
+        titleClickLabel={`Edytuj licznik: ${counter.name}`}
+        subtitle={
+          <span className="inline-flex items-center gap-2">
+            <ColorDot color={counter.color} />
+            {entryCountLabel(counter.entryCount)}
+          </span>
+        }
         actions={
-          <p
-            className="font-display text-[44px] leading-none font-bold tracking-[-0.03em] text-ink"
-            aria-label={`Suma: ${counter.total}`}
-          >
-            {counter.total}
-          </p>
+          <div className="flex items-center gap-3">
+            <IconButton
+              aria-label={`Zmień kolor licznika: ${counter.name}`}
+              title="Zmień kolor"
+              onClick={() => ShowModal(CounterEditorModal, { counter })}
+              style={{ color: counter.color }}
+            >
+              <Palette aria-hidden="true" className="size-[22px]" />
+            </IconButton>
+            <p
+              className="font-display text-[44px] leading-none font-bold tracking-[-0.03em] text-ink"
+              aria-label={`Suma: ${counter.total}`}
+            >
+              {counter.total}
+            </p>
+          </div>
         }
       />
 

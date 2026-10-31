@@ -38,18 +38,20 @@ def get_counter(ctx: ToolContext, counter_id: int, time_zone: str = 'UTC') -> di
 
 
 @tool
-def create_counter(ctx: ToolContext, name: str) -> dict[str, Any]:
-    """Create a counter."""
-    payload = CounterRequest.model_validate({'name': name})
+def create_counter(ctx: ToolContext, name: str, color: str | None = None) -> dict[str, Any]:
+    """Create a counter. ``color`` is ``#RRGGBB``; it defaults to the app's teal."""
+    payload = CounterRequest.model_validate({'name': name, **provided(color=color)})
     with unit_of_work(ctx) as (session, user):
         handler = counter_handlers.CreateCounter(wiring.counter_repository(session), user)
         return counter(handler.execute(payload))
 
 
 @tool
-def update_counter(ctx: ToolContext, counter_id: int, name: str | None = None) -> dict[str, Any]:
-    """Rename a counter."""
-    payload = PatchedCounterRequest.model_validate(provided(name=name))
+def update_counter(
+    ctx: ToolContext, counter_id: int, name: str | None = None, color: str | None = None
+) -> dict[str, Any]:
+    """Rename a counter or change its colour (``#RRGGBB``); only the given fields change."""
+    payload = PatchedCounterRequest.model_validate(provided(name=name, color=color))
     with unit_of_work(ctx) as (session, user):
         handler = counter_handlers.UpdateCounter(wiring.counter_repository(session), user)
         return counter(handler.execute(counter_id, payload))

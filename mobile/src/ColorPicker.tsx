@@ -1,6 +1,6 @@
 import { Pressable, View } from "react-native";
 
-import { WALLET_COLORS } from "@personal/shared/walletColors";
+import { COLORS } from "@personal/shared/colors";
 
 import { makeStyles } from "./theme";
 
@@ -10,7 +10,7 @@ type ColorPickerProps = {
   disabled?: boolean;
 };
 
-/** The wallet colour as a row of swatches. */
+/** A Wallet's or a Counter's colour as a row of swatches. */
 export function ColorPicker({
   value,
   onChange,
@@ -19,7 +19,7 @@ export function ColorPicker({
   const styles = useStyles();
   return (
     <View style={styles.row} accessibilityRole="radiogroup">
-      {WALLET_COLORS.map((color) => {
+      {COLORS.map((color) => {
         const isSelected = color.value === value;
         return (
           <Pressable

@@ -24,6 +24,8 @@ import {
 } from "@personal/shared/queries/counters";
 
 import { Button } from "../../src/Button";
+import { ColorDot } from "../../src/ColorDot";
+import { NamedIcon } from "../../src/NamedIcon";
 import { plusOneEntry } from "../../src/plusOne";
 import { makeStyles, fonts, useTheme } from "../../src/theme";
 
@@ -55,6 +57,11 @@ export default function CounterScreen() {
     } catch (error) {
       setActionError(await apiErrorMessage(error));
     }
+  }
+
+  /** The editor changes the name and the colour. */
+  function openEditor() {
+    router.push({ pathname: "/counter", params: { counterId: id } });
   }
 
   function confirmDelete() {
@@ -109,15 +116,37 @@ export default function CounterScreen() {
         }
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text
-              style={styles.total}
-              accessibilityLabel={`Suma: ${counter.total}`}
-            >
-              {counter.total}
-            </Text>
-            <Text style={common.muted}>
-              {entryCountLabel(counter.entryCount)}
-            </Text>
+            <View style={styles.totalRow}>
+              <Text
+                style={styles.total}
+                accessibilityLabel={`Suma: ${counter.total}`}
+              >
+                {counter.total}
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Zmień kolor licznika: ${counter.name}`}
+                hitSlop={8}
+                onPress={openEditor}
+                style={({ pressed }) => [
+                  styles.colorButton,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <NamedIcon
+                  name="palette"
+                  fallback="palette"
+                  color={counter.color}
+                  size={26}
+                />
+              </Pressable>
+            </View>
+            <View style={styles.countRow}>
+              <ColorDot color={counter.color} />
+              <Text style={common.muted}>
+                {entryCountLabel(counter.entryCount)}
+              </Text>
+            </View>
             <View style={styles.actions}>
               <Button label="+1" onPress={() => void addOne()} />
               <Button
@@ -132,16 +161,7 @@ export default function CounterScreen() {
               />
             </View>
             <View style={styles.actions}>
-              <Button
-                label="Zmień nazwę"
-                variant="secondary"
-                onPress={() =>
-                  router.push({
-                    pathname: "/counter",
-                    params: { counterId: id },
-                  })
-                }
-              />
+              <Button label="Edytuj" variant="secondary" onPress={openEditor} />
               <Button
                 label="Usuń licznik"
                 variant="danger"
@@ -205,6 +225,14 @@ const useStyles = makeStyles((colors) => ({
     color: colors.ink,
     fontVariant: ["tabular-nums"],
   },
+  totalRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  colorButton: { padding: 6, borderRadius: 8 },
+  pressed: { opacity: 0.6 },
+  countRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   actions: { flexDirection: "row", gap: 12, marginTop: 12 },
   error: { color: colors.danger, marginTop: 8 },
   sectionTitle: {

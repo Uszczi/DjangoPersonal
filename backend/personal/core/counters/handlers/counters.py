@@ -81,7 +81,7 @@ class CreateCounter:
         self.tz = tz
 
     def execute(self, data: CounterRequest) -> CounterModel:
-        counter = self.counters.save(CounterModel(user=self.user, name=data.name))
+        counter = self.counters.save(CounterModel(user=self.user, name=data.name, color=data.color))
         return _with_recency(self.counters, [counter], user=self.user, tz=self.tz)[0]
 
 

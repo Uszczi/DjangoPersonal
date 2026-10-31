@@ -1,16 +1,23 @@
 import { Stack, router, useLocalSearchParams } from "expo-router";
+import { useState } from "react";
 
 import { useProjects } from "@personal/shared/queries/projects";
 
 import { ProjectTasks } from "../../src/ProjectTasks";
 import { ScreenHeader } from "../../src/ScreenHeader";
+import { TaskListSettingsSheet } from "../../src/TaskListSettingsSheet";
+import { taskListSettingsAction } from "../../src/taskListSettings";
 
-/** One Project opened from the Projekty tab: its Tasks, and a way to edit it. */
+/**
+ * One Project opened from the Projekty tab: its Tasks, a way to edit it and
+ * the task list settings.
+ */
 export default function ProjectTasksScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const projectId = Number(id);
   const { data: projects = [] } = useProjects();
   const project = projects.find((item) => item.id === projectId) ?? null;
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   return (
     <>
@@ -22,6 +29,7 @@ export default function ProjectTasksScreen() {
               actions={
                 project
                   ? [
+                      taskListSettingsAction(() => setIsSettingsOpen(true)),
                       {
                         icon: "pencil",
                         accessibilityLabel: "Edytuj projekt",
@@ -39,6 +47,9 @@ export default function ProjectTasksScreen() {
         }}
       />
       <ProjectTasks project={project} />
+      {isSettingsOpen && (
+        <TaskListSettingsSheet onClose={() => setIsSettingsOpen(false)} />
+      )}
     </>
   );
 }

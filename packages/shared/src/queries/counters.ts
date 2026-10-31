@@ -77,11 +77,13 @@ function updateEntries(
   );
 }
 
+export type CounterInput = { name: string; color: string };
+
 export function useCreateCounter() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (name: string) =>
-      api.countersCreate({ counterRequest: { name }, tz: localTimeZone() }),
+    mutationFn: (input: CounterInput) =>
+      api.countersCreate({ counterRequest: input, tz: localTimeZone() }),
     onSuccess: (created) => {
       // A counter with no entries yet sorts by its creation, so it goes first.
       queryClient.setQueryData(
@@ -92,13 +94,14 @@ export function useCreateCounter() {
   });
 }
 
-export function useRenameCounter() {
+/** Change a Counter's name and colour. */
+export function useUpdateCounter() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, name }: { id: number; name: string }) =>
+    mutationFn: ({ id, ...input }: CounterInput & { id: number }) =>
       api.countersPartialUpdate({
         id,
-        patchedCounterRequest: { name },
+        patchedCounterRequest: input,
         tz: localTimeZone(),
       }),
     onSuccess: (updated) => {

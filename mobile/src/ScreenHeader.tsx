@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -17,13 +17,23 @@ export type HeaderAction = {
  * (`headerOptions`). Screens use it through `header: () => ...` when they need
  * actions in the top bar: native header buttons can miss taps on Android,
  * these are ordinary Pressables with a generous hit area.
+ *
+ * `left` replaces the back button (the tabs show the logo there), and
+ * `onTitlePress` turns the title into a button with a chevron, for a title
+ * that opens a picker.
  */
 export function ScreenHeader({
   title,
   actions = [],
+  left,
+  onTitlePress,
+  titleAccessibilityLabel,
 }: {
   title: string;
   actions?: HeaderAction[];
+  left?: ReactNode;
+  onTitlePress?: () => void;
+  titleAccessibilityLabel?: string;
 }) {
   const { headerOptions } = useTheme();
   const styles = useStyles();
@@ -33,32 +43,59 @@ export function ScreenHeader({
   return (
     <View style={[headerOptions.headerStyle, { paddingTop: insets.top }]}>
       <View style={styles.row}>
-        {router.canGoBack() && (
+        {left ??
+          (router.canGoBack() && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Wstecz"
+              hitSlop={12}
+              onPress={() => router.back()}
+              style={styles.button}
+            >
+              <Ionicons
+                name={Platform.OS === "ios" ? "chevron-back" : "arrow-back"}
+                size={24}
+                color={tint}
+              />
+            </Pressable>
+          ))}
+        {onTitlePress ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Wstecz"
-            hitSlop={12}
-            onPress={() => router.back()}
-            style={styles.button}
+            accessibilityLabel={titleAccessibilityLabel ?? title}
+            hitSlop={8}
+            onPress={onTitlePress}
+            style={({ pressed }) => [
+              styles.title,
+              styles.titleButton,
+              pressed && styles.pressed,
+            ]}
           >
-            <Ionicons
-              name={Platform.OS === "ios" ? "chevron-back" : "arrow-back"}
-              size={24}
-              color={tint}
-            />
+            <Text
+              numberOfLines={1}
+              style={[
+                styles.titleText,
+                headerOptions.headerTitleStyle,
+                { color: tint },
+              ]}
+            >
+              {title}
+            </Text>
+            <Ionicons name="chevron-down" size={16} color={tint} />
           </Pressable>
+        ) : (
+          <Text
+            accessibilityRole="header"
+            numberOfLines={1}
+            style={[
+              styles.title,
+              headerOptions.headerTitleStyle,
+              { color: tint },
+            ]}
+          >
+            {title}
+          </Text>
         )}
-        <Text
-          accessibilityRole="header"
-          numberOfLines={1}
-          style={[
-            styles.title,
-            headerOptions.headerTitleStyle,
-            { color: tint },
-          ]}
-        >
-          {title}
-        </Text>
         {actions.map((action) => (
           <Pressable
             key={action.accessibilityLabel}
@@ -91,4 +128,12 @@ const useStyles = makeStyles(() => ({
     justifyContent: "center",
   },
   title: { flex: 1, marginHorizontal: 8 },
+  titleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    minHeight: 40,
+  },
+  titleText: { flexShrink: 1 },
+  pressed: { opacity: 0.6 },
 }));

@@ -4,7 +4,7 @@ from typing import Any
 from sqlalchemy import ForeignKey, String, Text, event
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from personal.infra.rules import normalize_counter_name
+from personal.infra.rules import DEFAULT_COUNTER_COLOR, normalize_color, normalize_counter_name
 
 from .base import Base, UTCDateTime, utc_now
 from .user import User
@@ -21,6 +21,10 @@ class Counter(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
     name: Mapped[str] = mapped_column(String(100))
+    #: ``#RRGGBB``, shown with the counter in the lists.
+    color: Mapped[str] = mapped_column(
+        String(7), default=DEFAULT_COUNTER_COLOR, server_default=DEFAULT_COUNTER_COLOR
+    )
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utc_now)
 
     user: Mapped[User] = relationship()
@@ -42,6 +46,8 @@ class Counter(Base):
 @event.listens_for(Counter, 'before_update')
 def _normalize_counter(mapper: Any, connection: Any, counter: Counter) -> None:
     counter.name = normalize_counter_name(counter.name)
+    if counter.color is not None:
+        counter.color = normalize_color(counter.color)
 
 
 class CounterEntry(Base):

@@ -1,17 +1,13 @@
 from decimal import Decimal
-from typing import Annotated
 
 from pydantic import Field, field_validator
 
 from personal.core.shared.base import BaseModel
+from personal.core.shared.colors import HexColor
 from personal.infra.rules import DEFAULT_WALLET_COLOR, normalize_wallet_name
 
 from .icons import IconName
 from .transactions import Amount
-
-#: A ``#RRGGBB`` hex colour.
-WalletColor = Annotated[str, Field(pattern=r'^#[0-9a-fA-F]{6}$')]
-
 
 class _WalletPayload(BaseModel):
     """Name and balance rules shared by the create and the partial payloads.
@@ -48,7 +44,7 @@ class _WalletPayload(BaseModel):
 
 class WalletRequest(_WalletPayload):
     name: str = Field(min_length=1, max_length=100)
-    color: WalletColor = DEFAULT_WALLET_COLOR
+    color: HexColor = DEFAULT_WALLET_COLOR
     #: Optional; without one the UI shows the wallet's colour dot.
     icon: IconName | None = None
 
@@ -61,7 +57,7 @@ class WalletCreateRequest(WalletRequest):
 
 class PatchedWalletRequest(_WalletPayload):
     name: str | None = Field(default=None, min_length=1, max_length=100)
-    color: WalletColor | None = None
+    color: HexColor | None = None
     #: An explicit ``null`` removes the icon; leaving it out keeps it.
     icon: IconName | None = None
     current_balance: Amount | None = None

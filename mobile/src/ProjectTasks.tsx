@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useState } from "react";
 import { Platform, Pressable, RefreshControl, Text, View } from "react-native";
 import {
   NestedReorderableList,
@@ -25,6 +25,7 @@ import {
 import { useStartTimer } from "@personal/shared/queries/timer";
 
 import { Fab } from "./Fab";
+import { useTaskListSettingsStore } from "./taskListSettings";
 import { makeStyles, fonts, useTheme } from "./theme";
 
 // A plain boolean, so the drag worklets capture it instead of `Platform`.
@@ -110,16 +111,9 @@ function dropTarget(
  * The Tasks of one Project, one collapsible section per status. All sections
  * are one reorderable list, so a long press drags a Task within its status or
  * past a heading into another one (an empty or collapsed status too), like
- * the web. Shared by the Zadania tab and the Project screen; `header` goes
- * above the list, inside its scroll view.
+ * the web. Shared by the Zadania tab and the Project screen.
  */
-export function ProjectTasks({
-  project,
-  header,
-}: {
-  project: ProjectResponse | null;
-  header?: ReactNode;
-}) {
+export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
   const { colors, common } = useTheme();
   const styles = useStyles();
   const projectId = project?.id;
@@ -128,6 +122,9 @@ export function ProjectTasks({
   const toggleTaskStatus = useToggleTaskStatus();
   const moveTask = useMoveTask();
   const startTaskTimer = useStartTimer();
+  const showTimerButton = useTaskListSettingsStore(
+    (state) => state.showTimerButton,
+  );
   const [actionError, setActionError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -227,7 +224,6 @@ export function ProjectTasks({
           />
         }
       >
-        {header}
         <View style={styles.header}>
           {project?.description ? (
             <Text style={common.muted}>{project.description}</Text>
@@ -292,7 +288,9 @@ export function ProjectTasks({
                   })
                 }
                 onToggle={() => void toggleTask(task)}
-                onStartTimer={() => void startTimer(task)}
+                onStartTimer={
+                  showTimerButton ? () => void startTimer(task) : undefined
+                }
               />
             );
           }}
@@ -326,7 +324,8 @@ function TaskRow({
   isDone: boolean;
   onOpen: () => void;
   onToggle: () => void;
-  onStartTimer: () => void;
+  /** Absent when the timer button is switched off in the settings. */
+  onStartTimer?: () => void;
 }) {
   const { colors, common } = useTheme();
   const styles = useStyles();
@@ -361,7 +360,7 @@ function TaskRow({
           </Text>
         )}
       </View>
-      {!isDone && (
+      {!isDone && onStartTimer && (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Uruchom timer: ${task.title}`}

@@ -307,7 +307,9 @@ class _UserSeeder:
     def _seed_counters(self) -> None:
         counter_seeds: tuple[CounterSeed, ...] = COUNTERS
         for counter_seed in self._some(counter_seeds, 2, 3):
-            counter = CounterFactory.create(user=self.user, name=counter_seed.name)
+            counter = CounterFactory.create(
+                user=self.user, name=counter_seed.name, color=counter_seed.color
+            )
             self.stats['counters'] += 1
             notes = list(counter_seed.notes)
             for occurred_at in self._counter_moments(counter_seed):

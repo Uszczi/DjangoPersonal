@@ -413,6 +413,7 @@ BOARD = BoardSeed(
 @dataclass(frozen=True)
 class CounterSeed:
     name: str
+    color: str
     #: Range of one entry's value.
     min_value: int
     max_value: int
@@ -425,17 +426,18 @@ class CounterSeed:
 
 
 COUNTERS: tuple[CounterSeed, ...] = (
-    CounterSeed('Kawa', 1, 1, daily_chance=0.95, max_per_day=3),
-    CounterSeed('Pompki', 10, 30, daily_chance=0.6, max_per_day=2),
+    CounterSeed('Kawa', '#c2922b', 1, 1, daily_chance=0.95, max_per_day=3),
+    CounterSeed('Pompki', '#d45b3e', 10, 30, daily_chance=0.6, max_per_day=2),
     CounterSeed(
         'Przeczytane książki',
+        '#7a5ab8',
         1,
         1,
         daily_chance=0.12,
         max_per_day=1,
         notes=('Solaris', 'Diuna', 'Czysty kod', 'Lalka', 'Mistrz i Małgorzata'),
     ),
-    CounterSeed('Szklanki wody', 1, 2, daily_chance=0.95, max_per_day=6),
+    CounterSeed('Szklanki wody', '#3d6fb6', 1, 2, daily_chance=0.95, max_per_day=6),
 )
 
 #: A negative entry showing that a mistaken tally can be taken back.

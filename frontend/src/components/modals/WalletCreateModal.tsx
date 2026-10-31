@@ -9,11 +9,11 @@ import {
   ModalFooter,
   TextInput,
 } from "@/design-system";
-import { WalletColorPicker } from "@/components/WalletColorPicker";
+import { ColorPicker } from "@/components/ColorPicker";
 import { WalletIconPicker } from "@/components/WalletIconPicker";
 import { balanceError } from "@personal/shared/money";
 import { useCreateWallet } from "@personal/shared/queries/wallets";
-import { DEFAULT_WALLET_COLOR } from "@personal/shared/walletColors";
+import { DEFAULT_WALLET_COLOR } from "@personal/shared/colors";
 
 type WalletCreateModalProps = {
   onClose: () => void;
@@ -82,7 +82,7 @@ export function WalletCreateModal({ onClose }: WalletCreateModalProps) {
             required
           />
         </Field>
-        <WalletColorPicker value={color} onChange={setColor} />
+        <ColorPicker name="wallet-color" value={color} onChange={setColor} />
         <WalletIconPicker value={icon} onChange={setIcon} />
         <Field label="Stan początkowy">
           <TextInput

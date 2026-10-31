@@ -17,7 +17,7 @@ import {
   useUpdateWallet,
   useWallets,
 } from "@personal/shared/queries/wallets";
-import { DEFAULT_WALLET_COLOR } from "@personal/shared/walletColors";
+import { DEFAULT_WALLET_COLOR } from "@personal/shared/colors";
 import { WALLET_ICON_SUGGESTIONS } from "@personal/shared/walletIcons";
 
 import { Button } from "../src/Button";

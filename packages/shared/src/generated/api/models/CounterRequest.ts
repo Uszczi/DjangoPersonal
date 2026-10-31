@@ -24,6 +24,10 @@ export interface CounterRequest {
      *
      */
     name: string;
+    /**
+     *
+     */
+    color?: string;
 }
 
 /**
@@ -45,6 +49,7 @@ export function CounterRequestFromJSONTyped(json: any, ignoreDiscriminator: bool
     return {
 
         'name': json['name'],
+        'color': json['color'] == null ? undefined : json['color'],
     };
 }
 
@@ -60,6 +65,7 @@ export function CounterRequestToJSONTyped(value?: CounterRequest | null, ignoreD
     return {
 
         'name': value['name'],
+        'color': value['color'],
     };
 }
 

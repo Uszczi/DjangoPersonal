@@ -16,6 +16,7 @@ import { useThemeStore } from "@personal/shared/stores/theme";
 import { useCounterViewStore } from "@personal/shared/stores/counterView";
 import { queryClient } from "../src/queryClient";
 import { useTabBarStore } from "../src/tabBar";
+import { useTaskListSettingsStore } from "../src/taskListSettings";
 import { useTaskProjectStore } from "../src/taskProject";
 import { AccountThemeSync, useNativeColorScheme, useTheme } from "../src/theme";
 
@@ -38,6 +39,7 @@ export default function RootLayout() {
       useBibliographyViewStore.persist.rehydrate(),
       useTabBarStore.persist.rehydrate(),
       useTaskProjectStore.persist.rehydrate(),
+      useTaskListSettingsStore.persist.rehydrate(),
     ]).finally(() => setIsHydrated(true));
   }, []);
 

@@ -1,5 +1,8 @@
-/** The colours a wallet can be given. The API accepts any `#RRGGBB`; the UI offers this palette. */
-export const WALLET_COLORS = [
+/**
+ * The colours a Wallet or a Counter can be given. The API accepts any
+ * `#RRGGBB`; the UI offers this palette.
+ */
+export const COLORS = [
   { value: "#477c7c", label: "Morski" },
   { value: "#d45b3e", label: "Pomarańczowy" },
   { value: "#3d6fb6", label: "Niebieski" },
@@ -11,4 +14,7 @@ export const WALLET_COLORS = [
 ] as const;
 
 /** Mirrors the backend's `DEFAULT_WALLET_COLOR`. */
-export const DEFAULT_WALLET_COLOR = WALLET_COLORS[0].value;
+export const DEFAULT_WALLET_COLOR = COLORS[0].value;
+
+/** Mirrors the backend's `DEFAULT_COUNTER_COLOR`. */
+export const DEFAULT_COUNTER_COLOR = COLORS[0].value;

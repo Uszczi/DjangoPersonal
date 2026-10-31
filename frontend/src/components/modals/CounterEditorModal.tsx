@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 
+import { ColorPicker } from "@/components/ColorPicker";
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
+import { DEFAULT_COUNTER_COLOR } from "@personal/shared/colors";
 import {
   Button,
   ErrorAlert,
@@ -12,11 +14,11 @@ import {
 import type { CounterResponse } from "@personal/shared/generated/api";
 import {
   useCreateCounter,
-  useRenameCounter,
+  useUpdateCounter,
 } from "@personal/shared/queries/counters";
 
 type CounterEditorModalProps = {
-  /** Omit to create a new counter; pass one to rename it. */
+  /** Omit to create a new counter; pass one to edit its name and colour. */
   counter?: CounterResponse | null;
   /** Called with the saved counter, e.g. to open a newly created one. */
   onSaved?: (counter: CounterResponse) => void;
@@ -29,9 +31,12 @@ export function CounterEditorModal({
   onClose,
 }: CounterEditorModalProps) {
   const createCounter = useCreateCounter();
-  const renameCounter = useRenameCounter();
+  const updateCounter = useUpdateCounter();
 
   const [name, setName] = useState(counter?.name ?? "");
+  const [color, setColor] = useState<string>(
+    counter?.color ?? DEFAULT_COUNTER_COLOR,
+  );
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -51,8 +56,12 @@ export function CounterEditorModal({
     setFormError("");
     try {
       const saved = counter
-        ? await renameCounter.mutateAsync({ id: counter.id, name: trimmed })
-        : await createCounter.mutateAsync(trimmed);
+        ? await updateCounter.mutateAsync({
+            id: counter.id,
+            name: trimmed,
+            color,
+          })
+        : await createCounter.mutateAsync({ name: trimmed, color });
       onClose();
       onSaved?.(saved);
     } catch (error) {
@@ -64,7 +73,7 @@ export function CounterEditorModal({
 
   return (
     <Modal
-      kicker={counter ? "ZMIANA NAZWY" : "NOWY LICZNIK"}
+      kicker={counter ? "EDYCJA" : "NOWY LICZNIK"}
       title={counter ? "Edytuj licznik" : "Nowy licznik"}
       titleId="counter-dialog-title"
       onClose={close}
@@ -79,6 +88,7 @@ export function CounterEditorModal({
             required
           />
         </Field>
+        <ColorPicker name="counter-color" value={color} onChange={setColor} />
         {formError && <ErrorAlert>{formError}</ErrorAlert>}
         <ModalFooter>
           <Button variant="secondary" onClick={close} disabled={isSaving}>

@@ -6,7 +6,7 @@ type WalletIconPickerProps = {
   onChange: (icon: string | null) => void;
 };
 
-/** The wallet's optional icon, as a form row matching `WalletColorPicker`. */
+/** The wallet's optional icon, as a form row matching `ColorPicker`. */
 export function WalletIconPicker({ value, onChange }: WalletIconPickerProps) {
   return (
     <div className="mb-[18px] grid justify-items-start gap-2">

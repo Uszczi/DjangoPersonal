@@ -15,6 +15,7 @@ import { renderApp } from "../renderApp";
 type Counter = {
   id: number;
   name: string;
+  color?: string;
   created_at: string;
   /** What the server would count from the entry days; set per test. */
   streak_days?: number;
@@ -50,6 +51,7 @@ function fakeBackend(
     const own = entries.filter((entry) => entry.counter_id === counter.id);
     return {
       ...counter,
+      color: counter.color ?? "#477c7c",
       entry_count: own.length,
       total: own.reduce((sum, entry) => sum + entry.value, 0),
       streak_days: counter.streak_days ?? 0,
@@ -74,6 +76,7 @@ function fakeBackend(
         const counter = {
           id: nextId++,
           name: body.name,
+          color: body.color,
           created_at: "2026-10-24T10:00:00Z",
         };
         counters.unshift(counter);
@@ -168,6 +171,67 @@ describe("Counters", () => {
     expect(
       await screen.findByText("Brak wpisów. Dodaj pierwszy wpis."),
     ).toBeInTheDocument();
+  });
+
+  test("user can give a counter a colour and change it later", async () => {
+    fetchMock.mockImplementation(fakeBackend());
+    const user = userEvent.setup();
+
+    renderApp("/counters");
+    await user.click(
+      await screen.findByRole("button", { name: "Nowy licznik" }),
+    );
+    await user.type(await screen.findByLabelText("Nazwa licznika"), "Pompki");
+    expect(screen.getByRole("radio", { name: "Morski" })).toBeChecked();
+    await user.click(screen.getByRole("radio", { name: "Fioletowy" }));
+    await user.click(screen.getByRole("button", { name: "Utwórz licznik" }));
+    await screen.findByRole("region", { name: "Licznik: Pompki" });
+
+    await user.click(
+      screen.getByRole("button", { name: "Edytuj licznik: Pompki" }),
+    );
+    expect(
+      await screen.findByRole("radio", { name: "Fioletowy" }),
+    ).toBeChecked();
+    await user.click(screen.getByRole("radio", { name: "Zielony" }));
+    await user.click(screen.getByRole("button", { name: "Zapisz zmiany" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+    const bodies = fetchMock.mock.calls
+      .filter(([, init]) => init?.method === "POST" || init?.method === "PATCH")
+      .map(([, init]) => JSON.parse(String(init?.body)));
+    expect(bodies).toEqual([
+      { name: "Pompki", color: "#7a5ab8" },
+      { name: "Pompki", color: "#4f8a3c" },
+    ]);
+  });
+
+  test("the palette icon on a counter's page changes its colour", async () => {
+    fetchMock.mockImplementation(fakeBackend({ counters: [coffee] }));
+    const user = userEvent.setup();
+
+    renderApp("/counters/1");
+    await user.click(
+      await screen.findByRole("button", { name: "Zmień kolor licznika: Kawa" }),
+    );
+    expect(await screen.findByRole("radio", { name: "Morski" })).toBeChecked();
+    await user.click(screen.getByRole("radio", { name: "Różowy" }));
+    await user.click(screen.getByRole("button", { name: "Zapisz zmiany" }));
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining("/api/v1/counters/1/"),
+        expect.objectContaining({
+          method: "PATCH",
+          body: JSON.stringify({ name: "Kawa", color: "#b84a7a" }),
+        }),
+      ),
+    );
+    expect(
+      await screen.findByRole("button", { name: "Zmień kolor licznika: Kawa" }),
+    ).toHaveStyle({ color: "#b84a7a" });
   });
 
   test("the list shows each counter with its total and a quick +1", async () => {
@@ -518,7 +582,7 @@ describe("Counters", () => {
 
     const { router } = renderApp("/counters/1");
     await user.click(
-      await screen.findByRole("button", { name: "Zmień nazwę licznika: Kawa" }),
+      await screen.findByRole("button", { name: "Edytuj licznik: Kawa" }),
     );
     const name = await screen.findByLabelText("Nazwa licznika");
     await user.clear(name);

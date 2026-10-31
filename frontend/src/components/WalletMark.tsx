@@ -1,6 +1,6 @@
 import type { WalletResponse } from "@personal/shared/generated/api";
 import { NamedIcon } from "@/design-system";
-import { WalletColorDot } from "@/components/WalletColorDot";
+import { ColorDot } from "@/components/ColorDot";
 
 type WalletMarkProps = {
   wallet: Pick<WalletResponse, "color" | "icon">;
@@ -13,7 +13,7 @@ type WalletMarkProps = {
  */
 export function WalletMark({ wallet, className = "" }: WalletMarkProps) {
   if (!wallet.icon)
-    return <WalletColorDot color={wallet.color} className={className} />;
+    return <ColorDot color={wallet.color} className={className} />;
   return (
     <span
       className={`inline-flex shrink-0 ${className}`.trim()}
