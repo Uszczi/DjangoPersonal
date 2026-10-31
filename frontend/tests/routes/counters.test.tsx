@@ -249,7 +249,74 @@ describe("Counters", () => {
       within(list).getByRole("button", { name: "Dodaj 1 do licznika: Kawa" }),
     );
     expect(await within(list).findByLabelText("Suma: 1")).toBeInTheDocument();
-    expect(window.localStorage.getItem("countersView")).toBe("tiles");
+    expect(
+      JSON.parse(window.localStorage.getItem("countersView") ?? "{}").state
+        .mode,
+    ).toBe("tiles");
+  });
+
+  test("user can choose what the middle of a tile shows, and the choice is remembered", async () => {
+    fetchMock.mockImplementation(
+      fakeBackend({
+        counters: [{ ...coffee, streak_days: 3, days_since_last_entry: 0 }],
+        entries: [
+          {
+            id: 1,
+            counter_id: 1,
+            value: 2,
+            occurred_at: "2026-10-20T10:00:00Z",
+            note: "",
+          },
+          {
+            id: 2,
+            counter_id: 1,
+            value: 3,
+            occurred_at: "2026-10-21T10:00:00Z",
+            note: "",
+          },
+        ],
+      }),
+    );
+    const user = userEvent.setup();
+
+    renderApp("/counters");
+    const views = await screen.findByRole("group", { name: "Widok liczników" });
+    await user.click(within(views).getByRole("button", { name: "Kafelki" }));
+    const list = screen.getByRole("list", { name: "Liczniki" });
+    expect(within(list).getByLabelText("Suma: 5")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Wygląd kafelków" }));
+    const dialog = await screen.findByRole("dialog", {
+      name: "Wygląd kafelków",
+    });
+    const middle = within(dialog).getByRole("group", {
+      name: "Na środku kafelka",
+    });
+    expect(
+      within(middle).getByRole("button", { name: "Suma" }),
+    ).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(
+      within(middle).getByRole("button", { name: "Liczba wpisów" }),
+    );
+    expect(within(list).getByLabelText("Liczba wpisów: 2")).toBeInTheDocument();
+    expect(within(list).getByText("wpisy")).toBeInTheDocument();
+    expect(within(list).getByText("Suma: 5")).toBeInTheDocument();
+
+    await user.click(
+      within(middle).getByRole("button", { name: "Dni pod rząd" }),
+    );
+    expect(within(list).getByLabelText("Dni pod rząd: 3")).toBeInTheDocument();
+    expect(within(list).getByText("dni pod rząd")).toBeInTheDocument();
+    // The streak is already in the middle, so its line below is left out.
+    expect(within(list).queryByText("3 dni pod rząd")).not.toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole("button", { name: "Gotowe" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(
+      JSON.parse(window.localStorage.getItem("countersView") ?? "{}").state
+        .tileValue,
+    ).toBe("streak");
   });
 
   test("tiles show the streak, or the days since the last entry", async () => {

@@ -5,12 +5,15 @@ import {
   ListRowSubtitle,
   ListRowTitle,
 } from "@/design-system";
-import type { CounterViewMode } from "@/lib/counterViewMode";
 import {
-  counterRecencyLabel,
+  counterTileContent,
   entryCountLabel,
 } from "@personal/shared/counterFormat";
 import type { CounterResponse } from "@personal/shared/generated/api";
+import {
+  type CounterViewMode,
+  useCounterViewStore,
+} from "@personal/shared/stores/counterView";
 
 type CounterItemProps = {
   counter: CounterResponse;
@@ -34,7 +37,11 @@ function AddOneButton({
 }
 
 function CounterTile({ counter, onOpen, onAddOne }: CounterItemProps) {
-  const recency = counterRecencyLabel(counter);
+  const tileValue = useCounterViewStore((state) => state.tileValue);
+  const { value, valueLabel, unit, caption, recency } = counterTileContent(
+    counter,
+    tileValue,
+  );
   return (
     <li className="flex flex-col rounded-lg border border-row-line bg-surface">
       <button
@@ -48,13 +55,16 @@ function CounterTile({ counter, onOpen, onAddOne }: CounterItemProps) {
         </span>
         <span
           className="font-utility text-[32px] leading-tight font-semibold text-ink"
-          aria-label={`Suma: ${counter.total}`}
+          aria-label={valueLabel}
         >
-          {counter.total}
+          {value}
         </span>
-        <small className="text-[12px] text-muted">
-          {entryCountLabel(counter.entryCount)}
-        </small>
+        {unit !== null && (
+          <small className="-mt-1 text-[12px] text-muted" aria-hidden="true">
+            {unit}
+          </small>
+        )}
+        <small className="text-[12px] text-muted">{caption}</small>
         {recency !== null && (
           <small
             className={`text-[12px] font-medium ${counter.streakDays > 0 ? "text-ink" : "text-muted"}`}
