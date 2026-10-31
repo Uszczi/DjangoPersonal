@@ -15,14 +15,10 @@ import {
 import { ChipGroup } from "../../ui/ChipGroup";
 import { Sheet } from "../../ui/Sheet";
 import { fonts, makeStyles } from "../../theme";
+import { KIND_FILTER_LABELS } from "./filterLabels";
 
 /** A chip value for "no filter": ChipGroup needs a value for every option. */
 const ALL = "all";
-
-export const KIND_FILTER_LABELS: Record<ItemKind, string> = {
-  film: "Filmy",
-  book: "Książki",
-};
 
 const KIND_FILTERS: { value: ItemKind | typeof ALL; label: string }[] = [
   { value: ALL, label: "Wszystkie" },
