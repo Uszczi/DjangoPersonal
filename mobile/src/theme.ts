@@ -74,13 +74,9 @@ export function useUniwindTheme() {
   }, [preference]);
 }
 
-/** Shared screen options: the dark header of the web Navbar. */
-function headerOptions(colors: Colors) {
+/** Shared screen options: the screen's background colour. */
+function stackOptions(colors: Colors) {
   return {
-    headerStyle: { backgroundColor: colors.deepInk },
-    headerTintColor: colors.navText,
-    headerTitleStyle: { fontWeight: "700" as const, fontSize: 16 },
-    headerShadowVisible: false,
     contentStyle: { backgroundColor: colors.canvas },
   };
 }
@@ -113,7 +109,7 @@ export function useTheme() {
     name,
     scheme: themes[name].scheme,
     colors,
-    headerOptions: headerOptions(colors),
+    stackOptions: stackOptions(colors),
     tabOptions: tabOptions(colors),
   };
 }

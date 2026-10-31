@@ -18,12 +18,6 @@ import {
 } from "@/features/tasks/taskProject";
 import { common } from "@/ui/classes";
 
-/**
- * The Zadania tab, like the web's Tasks page: the Tasks of one Project. The
- * header's title is the Project's name; tapping it opens the Projects to
- * switch between. Starts on the Inbox and then remembers the last Project
- * chosen.
- */
 export default function TasksScreen() {
   const { data: projects = [], isPending, isError } = useProjects();
   const projectId = useTaskProjectStore((state) => state.projectId);
@@ -72,11 +66,7 @@ export default function TasksScreen() {
   return (
     <>
       {header}
-      <ProjectTasks
-        // A fresh list per Project, so collapsed statuses do not carry over.
-        key={project?.id ?? "none"}
-        project={project}
-      />
+      <ProjectTasks key={project?.id ?? "none"} project={project} />
       {isPickerOpen && (
         <Sheet title="Projekt" onClose={() => setIsPickerOpen(false)}>
           {projects.map((item) => (

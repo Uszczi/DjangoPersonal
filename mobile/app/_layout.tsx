@@ -26,9 +26,8 @@ import {
   useUniwindTheme,
 } from "@/theme";
 import { common } from "@/ui/classes";
+import { StackHeader } from "@/ui/NavigationHeader";
 
-// The editors in app/(modals)/, opened over the current screen. The group
-// is not part of the URL, so they are still pushed as "/task", "/wallet"...
 const modalScreens = [
   ["project", "Projekt"],
   ["task", "Zadanie"],
@@ -44,16 +43,12 @@ const modalScreens = [
 ] as const;
 
 export default function RootLayout() {
-  const { headerOptions } = useTheme();
+  const { stackOptions } = useTheme();
   const [isHydrated, setIsHydrated] = useState(false);
   const isSignedIn = useAuthStore((state) => state.user !== null);
   useNativeColorScheme();
   useUniwindTheme();
 
-  // The persisted stores were created before setup pointed them at secure
-  // storage, so read the saved session and the theme, view, status, tab
-  // bar and Zadania project choices again from there before showing any
-  // screen.
   useEffect(() => {
     void Promise.allSettled([
       useAuthStore.persist.rehydrate(),
@@ -84,7 +79,12 @@ export default function RootLayout() {
       >
         <AccountThemeSync />
         <StatusBar style="light" />
-        <Stack screenOptions={headerOptions}>
+        <Stack
+          screenOptions={{
+            ...stackOptions,
+            header: (props) => <StackHeader {...props} />,
+          }}
+        >
           <Stack.Protected guard={isSignedIn}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="projects/[id]" options={{ title: "Zadania" }} />

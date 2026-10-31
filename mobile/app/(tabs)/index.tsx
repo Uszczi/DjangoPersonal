@@ -11,11 +11,6 @@ import {
 import { useTheme } from "@/theme";
 import { common } from "@/ui/classes";
 
-/**
- * The app opens on this tab ("/"). When the user has hidden Start, send
- * them to their first visible tab instead; `Redirect` acts only while this
- * screen is focused, so hiding the tab from Konto does not navigate away.
- */
 export default function StartTab() {
   const target = useTabBarStore((state) =>
     state.hidden.includes("index")
@@ -29,10 +24,6 @@ export default function StartTab() {
   );
 }
 
-/**
- * A tile per section, like the web's Start page (`NavTiles`). Tiles follow
- * the tab bar's order and include hidden tabs, so those stay one tap away.
- */
 function StartScreen() {
   const { colors } = useTheme();
   const order = useTabBarStore((state) => state.order);

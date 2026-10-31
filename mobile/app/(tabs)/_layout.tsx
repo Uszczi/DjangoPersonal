@@ -3,7 +3,7 @@ import { Tabs } from "expo-router";
 import { useState } from "react";
 import type { ColorValue } from "react-native";
 
-import { LogoMark } from "@/ui/LogoMark";
+import { TabHeader } from "@/ui/NavigationHeader";
 import { MoreTabsMenu } from "@/features/tabs/MoreTabsMenu";
 import {
   pinnedTab,
@@ -24,7 +24,7 @@ function tabIcon(name: TabDefinition["icon"]) {
 }
 
 export default function TabsLayout() {
-  const { headerOptions, tabOptions } = useTheme();
+  const { tabOptions } = useTheme();
   // The user's order and visibility (Konto > Pasek kart). A hidden tab only
   // loses its button: `href: null` would mark the tab hidden, and expo-router
   // redirects away from a focused hidden tab, so Więcej could never open it.
@@ -39,11 +39,7 @@ export default function TabsLayout() {
     <>
       <Tabs
         screenOptions={{
-          headerStyle: headerOptions.headerStyle,
-          headerTintColor: headerOptions.headerTintColor,
-          headerTitleStyle: headerOptions.headerTitleStyle,
-          headerShadowVisible: false,
-          headerLeft: () => <LogoMark />,
+          header: (props) => <TabHeader {...props} />,
           ...tabOptions,
         }}
       >
