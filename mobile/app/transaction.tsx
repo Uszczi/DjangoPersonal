@@ -20,10 +20,10 @@ import {
 import { useWallets } from "@personal/shared/queries/wallets";
 import { dateFromKey, dateKey, todayKey } from "@personal/shared/timeFormat";
 
-import { Button } from "../src/Button";
-import { ChipGroup } from "../src/ChipGroup";
-import { confirmDestructive } from "../src/confirm";
-import { DateTimeField } from "../src/DateTimeField";
+import { Button } from "../src/ui/Button";
+import { ChipGroup } from "../src/ui/ChipGroup";
+import { confirmDestructive } from "../src/ui/confirm";
+import { DateTimeField } from "../src/ui/DateTimeField";
 import { makeStyles, useTheme } from "../src/theme";
 
 /** `0` stands for "no category" in the chip group, which needs a non-null value. */

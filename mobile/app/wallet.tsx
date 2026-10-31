@@ -20,10 +20,10 @@ import {
 import { DEFAULT_WALLET_COLOR } from "@personal/shared/colors";
 import { WALLET_ICON_SUGGESTIONS } from "@personal/shared/walletIcons";
 
-import { Button } from "../src/Button";
-import { ColorPicker } from "../src/ColorPicker";
-import { confirmDestructive } from "../src/confirm";
-import { IconPicker } from "../src/IconPicker";
+import { Button } from "../src/ui/Button";
+import { ColorPicker } from "../src/ui/ColorPicker";
+import { confirmDestructive } from "../src/ui/confirm";
+import { IconPicker } from "../src/ui/IconPicker";
 import { useTheme } from "../src/theme";
 
 /**

@@ -17,8 +17,8 @@ import {
   useSaveCounterEntry,
 } from "@personal/shared/queries/counters";
 
-import { Button } from "../src/Button";
-import { DateTimeField } from "../src/DateTimeField";
+import { Button } from "../src/ui/Button";
+import { DateTimeField } from "../src/ui/DateTimeField";
 import { useTheme } from "../src/theme";
 
 function validateValue(raw: string): string {

@@ -1,6 +1,6 @@
 import { Text, View } from "react-native";
 
-import { makeStyles, fonts } from "./theme";
+import { makeStyles, fonts } from "../theme";
 
 /** The tilted orange "D" of the web Navbar, shown at the left of the tab headers. */
 export function LogoMark() {

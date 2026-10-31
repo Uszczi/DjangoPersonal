@@ -3,7 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import type { IconSuggestion } from "@personal/shared/iconSuggestion";
 
 import { NamedIcon } from "./NamedIcon";
-import { makeStyles, useTheme } from "./theme";
+import { makeStyles, useTheme } from "../theme";
 
 type IconPickerProps = {
   value: string | null;

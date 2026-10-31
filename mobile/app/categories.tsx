@@ -9,7 +9,7 @@ import {
   type CategoryKind,
 } from "@personal/shared/queries/categories";
 
-import { NamedIcon } from "../src/NamedIcon";
+import { NamedIcon } from "../src/ui/NamedIcon";
 import { makeStyles, useTheme } from "../src/theme";
 
 type CategorySection = {
@@ -23,10 +23,7 @@ type CategorySection = {
 export default function CategoriesScreen() {
   const { colors, common } = useTheme();
   const styles = useStyles();
-  const {
-    data: categories = [],
-    isError,
-  } = useCategories();
+  const { data: categories = [], isError } = useCategories();
 
   const visible = categories.filter((category) => !category.isSystem);
   const sections: CategorySection[] = [

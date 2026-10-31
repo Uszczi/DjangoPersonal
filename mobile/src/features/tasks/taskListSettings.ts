@@ -3,7 +3,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 import { platformStorage } from "@personal/shared/platform";
 
-import type { HeaderAction } from "./ScreenHeader";
+import type { HeaderAction } from "../../ui/ScreenHeader";
 
 /**
  * How the task lists (the Zadania tab and a Project's screen) show their

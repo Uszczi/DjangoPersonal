@@ -29,7 +29,7 @@ import {
   useDeleteBibliographyItem,
 } from "@personal/shared/queries/bibliographyItems";
 
-import { Button } from "../../src/Button";
+import { Button } from "../../src/ui/Button";
 import { makeStyles, fonts, useTheme } from "../../src/theme";
 import { useRefreshOnFocus } from "../../src/useRefreshOnFocus";
 

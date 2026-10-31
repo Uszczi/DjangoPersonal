@@ -1,8 +1,8 @@
 import { Switch, Text } from "react-native";
 
-import { Sheet, SheetRow } from "./Sheet";
+import { Sheet, SheetRow } from "../../ui/Sheet";
 import { useTaskListSettingsStore } from "./taskListSettings";
-import { makeStyles, useTheme } from "./theme";
+import { makeStyles, useTheme } from "../../theme";
 
 /** The task list settings, opened from the gear in the task lists' header. */
 export function TaskListSettingsSheet({ onClose }: { onClose: () => void }) {

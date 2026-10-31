@@ -1,6 +1,6 @@
 import { Pressable, Text } from "react-native";
 
-import { makeStyles } from "./theme";
+import { makeStyles } from "../theme";
 
 type FabProps = { accessibilityLabel: string; onPress: () => void };
 

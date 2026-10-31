@@ -20,9 +20,9 @@ import {
 } from "@personal/shared/queries/bibliographyAttempts";
 import { dateFromKey, dateKey, todayKey } from "@personal/shared/timeFormat";
 
-import { Button } from "../src/Button";
-import { DateTimeField } from "../src/DateTimeField";
-import { OptionalDateField } from "../src/OptionalDateField";
+import { Button } from "../src/ui/Button";
+import { DateTimeField } from "../src/ui/DateTimeField";
+import { OptionalDateField } from "../src/ui/OptionalDateField";
 import { useTheme } from "../src/theme";
 
 function today() {

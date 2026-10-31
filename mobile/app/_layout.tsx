@@ -15,9 +15,9 @@ import { useThemeStore } from "@personal/shared/stores/theme";
 
 import { useCounterViewStore } from "@personal/shared/stores/counterView";
 import { queryClient } from "../src/queryClient";
-import { useTabBarStore } from "../src/tabBar";
-import { useTaskListSettingsStore } from "../src/taskListSettings";
-import { useTaskProjectStore } from "../src/taskProject";
+import { useTabBarStore } from "../src/features/tabs/tabBar";
+import { useTaskListSettingsStore } from "../src/features/tasks/taskListSettings";
+import { useTaskProjectStore } from "../src/features/tasks/taskProject";
 import { AccountThemeSync, useNativeColorScheme, useTheme } from "../src/theme";
 
 export default function RootLayout() {

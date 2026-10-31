@@ -24,9 +24,9 @@ import {
 } from "@personal/shared/queries/tasks";
 import { useStartTimer } from "@personal/shared/queries/timer";
 
-import { Fab } from "./Fab";
+import { Fab } from "../../ui/Fab";
 import { useTaskListSettingsStore } from "./taskListSettings";
-import { makeStyles, fonts, useTheme } from "./theme";
+import { makeStyles, fonts, useTheme } from "../../theme";
 
 // A plain boolean, so the drag worklets capture it instead of `Platform`.
 const isAndroid = Platform.OS === "android";

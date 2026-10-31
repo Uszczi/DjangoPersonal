@@ -23,10 +23,10 @@ import {
   useSaveCounterEntry,
 } from "@personal/shared/queries/counters";
 
-import { Button } from "../../src/Button";
-import { ColorDot } from "../../src/ColorDot";
-import { NamedIcon } from "../../src/NamedIcon";
-import { plusOneEntry } from "../../src/plusOne";
+import { Button } from "../../src/ui/Button";
+import { ColorDot } from "../../src/ui/ColorDot";
+import { NamedIcon } from "../../src/ui/NamedIcon";
+import { plusOneEntry } from "../../src/features/counters/plusOne";
 import { makeStyles, fonts, useTheme } from "../../src/theme";
 
 /** One Counter: its total, quick +1, and the entries to add, edit and delete. */

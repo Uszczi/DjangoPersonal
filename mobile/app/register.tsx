@@ -3,7 +3,7 @@ import { useState } from "react";
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { useAuthStore } from "@personal/shared/stores/auth";
 
-import { AuthCard, AuthField } from "../src/AuthCard";
+import { AuthCard, AuthField } from "../src/features/accounts/AuthCard";
 
 export default function RegisterScreen() {
   const register = useAuthStore((state) => state.register);

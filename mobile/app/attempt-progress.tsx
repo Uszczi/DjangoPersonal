@@ -18,7 +18,7 @@ import {
 } from "@personal/shared/queries/bibliographyAttempts";
 import { useBibliographyItem } from "@personal/shared/queries/bibliographyItems";
 
-import { Button } from "../src/Button";
+import { Button } from "../src/ui/Button";
 import { useTheme } from "../src/theme";
 
 /**

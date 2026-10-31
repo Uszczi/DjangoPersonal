@@ -4,7 +4,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { makeStyles, useTheme } from "./theme";
+import { makeStyles, useTheme } from "../theme";
 
 export type HeaderAction = {
   icon: ComponentProps<typeof Ionicons>["name"];

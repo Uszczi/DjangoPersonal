@@ -3,7 +3,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { fonts, makeStyles, useTheme } from "./theme";
+import { fonts, makeStyles, useTheme } from "../theme";
 
 /**
  * A popup sliding from the bottom of the screen over a dimmed backdrop, with

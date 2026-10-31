@@ -24,9 +24,9 @@ import {
 } from "@personal/shared/queries/taskComments";
 import { useAuthStore } from "@personal/shared/stores/auth";
 
-import { Button } from "./Button";
-import { confirmDestructive } from "./confirm";
-import { makeStyles, useTheme } from "./theme";
+import { Button } from "../../ui/Button";
+import { confirmDestructive } from "../../ui/confirm";
+import { makeStyles, useTheme } from "../../theme";
 
 /** A picked photo waiting to be sent: React Native uploads it from its file URI. */
 type PendingPhoto = { uri: string; name: string; type: string };

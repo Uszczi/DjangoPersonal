@@ -5,17 +5,17 @@ import { Text, View } from "react-native";
 import { PROJECTS_LOAD_ERROR } from "@personal/shared/loadErrors";
 import { useProjects } from "@personal/shared/queries/projects";
 
-import { Button } from "../../src/Button";
-import { LogoMark } from "../../src/LogoMark";
-import { ProjectTasks } from "../../src/ProjectTasks";
-import { ScreenHeader } from "../../src/ScreenHeader";
-import { Sheet, SheetItem } from "../../src/Sheet";
-import { TaskListSettingsSheet } from "../../src/TaskListSettingsSheet";
-import { taskListSettingsAction } from "../../src/taskListSettings";
+import { Button } from "../../src/ui/Button";
+import { LogoMark } from "../../src/ui/LogoMark";
+import { ProjectTasks } from "../../src/features/tasks/ProjectTasks";
+import { ScreenHeader } from "../../src/ui/ScreenHeader";
+import { Sheet, SheetItem } from "../../src/ui/Sheet";
+import { TaskListSettingsSheet } from "../../src/features/tasks/TaskListSettingsSheet";
+import { taskListSettingsAction } from "../../src/features/tasks/taskListSettings";
 import {
   selectedTaskProject,
   useTaskProjectStore,
-} from "../../src/taskProject";
+} from "../../src/features/tasks/taskProject";
 import { makeStyles, useTheme } from "../../src/theme";
 
 /**
