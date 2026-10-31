@@ -25,6 +25,7 @@ import {
 import { useStartTimer } from "@personal/shared/queries/timer";
 
 import { Fab } from "./Fab";
+import { useTaskListSettingsStore } from "./taskListSettings";
 import { makeStyles, fonts, useTheme } from "./theme";
 
 // A plain boolean, so the drag worklets capture it instead of `Platform`.
@@ -121,6 +122,9 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
   const toggleTaskStatus = useToggleTaskStatus();
   const moveTask = useMoveTask();
   const startTaskTimer = useStartTimer();
+  const showTimerButton = useTaskListSettingsStore(
+    (state) => state.showTimerButton,
+  );
   const [actionError, setActionError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -284,7 +288,9 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
                   })
                 }
                 onToggle={() => void toggleTask(task)}
-                onStartTimer={() => void startTimer(task)}
+                onStartTimer={
+                  showTimerButton ? () => void startTimer(task) : undefined
+                }
               />
             );
           }}
@@ -318,7 +324,8 @@ function TaskRow({
   isDone: boolean;
   onOpen: () => void;
   onToggle: () => void;
-  onStartTimer: () => void;
+  /** Absent when the timer button is switched off in the settings. */
+  onStartTimer?: () => void;
 }) {
   const { colors, common } = useTheme();
   const styles = useStyles();
@@ -353,7 +360,7 @@ function TaskRow({
           </Text>
         )}
       </View>
-      {!isDone && (
+      {!isDone && onStartTimer && (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Uruchom timer: ${task.title}`}

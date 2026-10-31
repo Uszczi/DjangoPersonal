@@ -10,6 +10,8 @@ import { LogoMark } from "../../src/LogoMark";
 import { ProjectTasks } from "../../src/ProjectTasks";
 import { ScreenHeader } from "../../src/ScreenHeader";
 import { Sheet, SheetItem } from "../../src/Sheet";
+import { TaskListSettingsSheet } from "../../src/TaskListSettingsSheet";
+import { taskListSettingsAction } from "../../src/taskListSettings";
 import {
   selectedTaskProject,
   useTaskProjectStore,
@@ -30,6 +32,7 @@ export default function TasksScreen() {
   const setProjectId = useTaskProjectStore((state) => state.setProjectId);
   const project = selectedTaskProject(projects, projectId);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const header = (
     <Tabs.Screen
@@ -42,6 +45,7 @@ export default function TasksScreen() {
               projects.length > 0 ? () => setIsPickerOpen(true) : undefined
             }
             titleAccessibilityLabel={`Projekt: ${project?.name ?? ""}. Zmień projekt`}
+            actions={[taskListSettingsAction(() => setIsSettingsOpen(true))]}
           />
         ),
       }}
@@ -90,6 +94,9 @@ export default function TasksScreen() {
             />
           ))}
         </Sheet>
+      )}
+      {isSettingsOpen && (
+        <TaskListSettingsSheet onClose={() => setIsSettingsOpen(false)} />
       )}
     </>
   );
