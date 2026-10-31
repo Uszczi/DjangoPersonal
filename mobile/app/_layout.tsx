@@ -25,9 +25,10 @@ import {
   useTheme,
   useUniwindTheme,
 } from "../src/theme";
+import { common } from "../src/ui/classes";
 
 export default function RootLayout() {
-  const { common, headerOptions } = useTheme();
+  const { headerOptions } = useTheme();
   const [isHydrated, setIsHydrated] = useState(false);
   const isSignedIn = useAuthStore((state) => state.user !== null);
   useNativeColorScheme();
@@ -52,7 +53,7 @@ export default function RootLayout() {
 
   if (!isHydrated) {
     return (
-      <View style={common.center}>
+      <View className={common.center}>
         <ActivityIndicator />
       </View>
     );

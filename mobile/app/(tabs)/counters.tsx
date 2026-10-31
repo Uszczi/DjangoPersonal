@@ -41,10 +41,7 @@ function openCounter(counter: CounterResponse) {
   router.push({ pathname: "/counters/[id]", params: { id: counter.id } });
 }
 
-/**
- * Liczniki, styled with Uniwind classes (the prototype screen): colours are
- * the shared palette tokens, so they follow the theme like `makeStyles` does.
- */
+/** The Liczniki tab: the user's Counters as a list or as tiles, each with a +1. */
 export default function CountersScreen() {
   const { data: counters = [], isPending, isError, refetch } = useCounters();
   const saveEntry = useSaveCounterEntry();

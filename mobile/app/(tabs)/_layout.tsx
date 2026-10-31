@@ -11,7 +11,7 @@ import {
   useTabBarStore,
   type TabDefinition,
 } from "../../src/features/tabs/tabBar";
-import { fonts, useTheme } from "../../src/theme";
+import { useTheme } from "../../src/theme";
 
 function tabIcon(name: TabDefinition["icon"]) {
   return ({ color, size }: { color: ColorValue; size: number }) => (
@@ -24,7 +24,7 @@ function tabIcon(name: TabDefinition["icon"]) {
 }
 
 export default function TabsLayout() {
-  const { colors } = useTheme();
+  const { headerOptions, tabOptions } = useTheme();
   // The user's order and visibility (Konto > Pasek kart). A hidden tab only
   // loses its button: `href: null` would mark the tab hidden, and expo-router
   // redirects away from a focused hidden tab, so Więcej could never open it.
@@ -39,26 +39,12 @@ export default function TabsLayout() {
     <>
       <Tabs
         screenOptions={{
-          // The web Navbar: a deep-ink bar with small monospace labels.
-          headerStyle: { backgroundColor: colors.deepInk },
-          headerTintColor: colors.navText,
-          headerTitleStyle: { fontWeight: "700", fontSize: 16 },
+          headerStyle: headerOptions.headerStyle,
+          headerTintColor: headerOptions.headerTintColor,
+          headerTitleStyle: headerOptions.headerTitleStyle,
           headerShadowVisible: false,
           headerLeft: () => <LogoMark />,
-          sceneStyle: { backgroundColor: colors.canvas },
-          tabBarStyle: {
-            backgroundColor: colors.deepInk,
-            borderTopColor: colors.deepInk,
-          },
-          tabBarActiveTintColor: colors.onSignal,
-          tabBarInactiveTintColor: colors.navMuted,
-          tabBarActiveBackgroundColor: colors.navSelected,
-          tabBarLabelStyle: {
-            fontFamily: fonts.utility,
-            fontSize: 10,
-            fontWeight: "600",
-            letterSpacing: 0.6,
-          },
+          ...tabOptions,
         }}
       >
         {order.map((name) => {
