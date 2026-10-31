@@ -2,7 +2,7 @@ import { Pressable, ScrollView, Text } from "react-native";
 
 import type { WalletResponse } from "@personal/shared/generated/api";
 
-import { WalletMark } from "./WalletMark";
+import { WalletMark } from "@/features/expenses/WalletMark";
 
 type WalletTabsProps = {
   wallets: WalletResponse[];

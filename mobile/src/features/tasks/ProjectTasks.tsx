@@ -24,10 +24,10 @@ import {
 } from "@personal/shared/queries/tasks";
 import { useStartTimer } from "@personal/shared/queries/timer";
 
-import { Fab } from "../../ui/Fab";
-import { useTaskListSettingsStore } from "./taskListSettings";
-import { useTheme } from "../../theme";
-import { common } from "../../ui/classes";
+import { Fab } from "@/ui/Fab";
+import { useTaskListSettingsStore } from "@/features/tasks/taskListSettings";
+import { useTheme } from "@/theme";
+import { common } from "@/ui/classes";
 
 // A plain boolean, so the drag worklets capture it instead of `Platform`.
 const isAndroid = Platform.OS === "android";

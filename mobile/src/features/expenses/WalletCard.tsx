@@ -3,9 +3,9 @@ import { Text, View } from "react-native";
 
 import type { WalletResponse } from "@personal/shared/generated/api";
 
-import { card } from "../../ui/classes";
-import { Button } from "../../ui/Button";
-import { WalletMark } from "./WalletMark";
+import { card } from "@/ui/classes";
+import { Button } from "@/ui/Button";
+import { WalletMark } from "@/features/expenses/WalletMark";
 
 /** The shown wallet: its name and balance, with links to edit it and the categories. */
 export function WalletCard({ wallet }: { wallet: WalletResponse }) {

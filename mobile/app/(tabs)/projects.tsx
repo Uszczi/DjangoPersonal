@@ -5,8 +5,8 @@ import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 import { PROJECTS_LOAD_ERROR } from "@personal/shared/loadErrors";
 import { useProjects } from "@personal/shared/queries/projects";
 
-import { Fab } from "../../src/ui/Fab";
-import { common } from "../../src/ui/classes";
+import { Fab } from "@/ui/Fab";
+import { common } from "@/ui/classes";
 
 /** The Projekty tab: the user's Projects, each opening its Tasks. */
 export default function ProjectsScreen() {

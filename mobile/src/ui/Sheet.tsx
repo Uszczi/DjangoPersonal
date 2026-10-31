@@ -3,7 +3,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useTheme } from "../theme";
+import { useTheme } from "@/theme";
 
 const ROW =
   "min-h-[52px] flex-row items-center gap-3.5 border-b border-row-line px-1";

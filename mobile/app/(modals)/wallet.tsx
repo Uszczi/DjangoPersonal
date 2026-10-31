@@ -20,11 +20,11 @@ import {
 import { DEFAULT_WALLET_COLOR } from "@personal/shared/colors";
 import { WALLET_ICON_SUGGESTIONS } from "@personal/shared/walletIcons";
 
-import { Button } from "../../src/ui/Button";
-import { ColorPicker } from "../../src/ui/ColorPicker";
-import { confirmDestructive } from "../../src/ui/confirm";
-import { IconPicker } from "../../src/ui/IconPicker";
-import { common, form } from "../../src/ui/classes";
+import { Button } from "@/ui/Button";
+import { ColorPicker } from "@/ui/ColorPicker";
+import { confirmDestructive } from "@/ui/confirm";
+import { IconPicker } from "@/ui/IconPicker";
+import { common, form } from "@/ui/classes";
 
 /**
  * Creates a Wallet (with an opening balance), or edits one (`?walletId=`):

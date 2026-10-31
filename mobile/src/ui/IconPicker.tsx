@@ -2,8 +2,8 @@ import { Pressable, Text, View } from "react-native";
 
 import type { IconSuggestion } from "@personal/shared/iconSuggestion";
 
-import { NamedIcon } from "./NamedIcon";
-import { useTheme } from "../theme";
+import { NamedIcon } from "@/ui/NamedIcon";
+import { useTheme } from "@/theme";
 
 type IconPickerProps = {
   value: string | null;

@@ -23,9 +23,9 @@ import {
   useUpdateBibliographyItem,
 } from "@personal/shared/queries/bibliographyItems";
 
-import { Button } from "../../src/ui/Button";
-import { ChipGroup } from "../../src/ui/ChipGroup";
-import { common, form } from "../../src/ui/classes";
+import { Button } from "@/ui/Button";
+import { ChipGroup } from "@/ui/ChipGroup";
+import { common, form } from "@/ui/classes";
 
 const KIND_OPTIONS = ITEM_KINDS.map((value) => ({
   value,

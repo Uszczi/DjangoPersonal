@@ -11,11 +11,11 @@ import {
   themePreferences,
 } from "@personal/shared/themes";
 
-import { Button } from "../../src/ui/Button";
-import { ChipGroup } from "../../src/ui/ChipGroup";
-import { confirmDestructive } from "../../src/ui/confirm";
-import { TabBarSettings } from "../../src/features/tabs/TabBarSettings";
-import { card, common, form } from "../../src/ui/classes";
+import { Button } from "@/ui/Button";
+import { ChipGroup } from "@/ui/ChipGroup";
+import { confirmDestructive } from "@/ui/confirm";
+import { TabBarSettings } from "@/features/tabs/TabBarSettings";
+import { card, common, form } from "@/ui/classes";
 
 export default function AccountScreen() {
   const user = useAuthStore((state) => state.user);

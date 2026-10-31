@@ -7,9 +7,9 @@ import type {
   TransactionResponse,
 } from "@personal/shared/generated/api";
 
-import { useTheme } from "../../theme";
-import { common } from "../../ui/classes";
-import { NamedIcon } from "../../ui/NamedIcon";
+import { useTheme } from "@/theme";
+import { common } from "@/ui/classes";
+import { NamedIcon } from "@/ui/NamedIcon";
 
 type TransactionRowProps = {
   transaction: TransactionResponse;

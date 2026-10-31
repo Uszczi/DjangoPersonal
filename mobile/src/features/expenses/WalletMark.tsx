@@ -2,7 +2,7 @@ import { View } from "react-native";
 
 import type { WalletResponse } from "@personal/shared/generated/api";
 
-import { NamedIcon } from "../../ui/NamedIcon";
+import { NamedIcon } from "@/ui/NamedIcon";
 
 type WalletMarkProps = {
   wallet: Pick<WalletResponse, "color" | "icon">;

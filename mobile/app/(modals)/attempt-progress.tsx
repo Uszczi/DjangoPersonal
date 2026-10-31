@@ -18,8 +18,8 @@ import {
 } from "@personal/shared/queries/bibliographyAttempts";
 import { useBibliographyItem } from "@personal/shared/queries/bibliographyItems";
 
-import { Button } from "../../src/ui/Button";
-import { common, form } from "../../src/ui/classes";
+import { Button } from "@/ui/Button";
+import { common, form } from "@/ui/classes";
 
 /**
  * Move on the Attempt in progress (`?itemId=&attemptId=`): the page reached in

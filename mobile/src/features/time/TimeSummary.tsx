@@ -7,8 +7,8 @@ import {
   formatDuration,
 } from "@personal/shared/timeFormat";
 
-import { card, common } from "../../ui/classes";
-import { daysAgoKey } from "./entryDays";
+import { card, common } from "@/ui/classes";
+import { daysAgoKey } from "@/features/time/entryDays";
 
 type TimeSummaryProps = {
   /** The stopped entries. */

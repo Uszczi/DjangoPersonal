@@ -3,15 +3,15 @@ import { Tabs } from "expo-router";
 import { useState } from "react";
 import type { ColorValue } from "react-native";
 
-import { LogoMark } from "../../src/ui/LogoMark";
-import { MoreTabsMenu } from "../../src/features/tabs/MoreTabsMenu";
+import { LogoMark } from "@/ui/LogoMark";
+import { MoreTabsMenu } from "@/features/tabs/MoreTabsMenu";
 import {
   pinnedTab,
   tabDefinitions,
   useTabBarStore,
   type TabDefinition,
-} from "../../src/features/tabs/tabBar";
-import { useTheme } from "../../src/theme";
+} from "@/features/tabs/tabBar";
+import { useTheme } from "@/theme";
 
 function tabIcon(name: TabDefinition["icon"]) {
   return ({ color, size }: { color: ColorValue; size: number }) => (

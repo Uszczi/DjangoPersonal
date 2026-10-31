@@ -24,9 +24,9 @@ import {
 } from "@personal/shared/queries/taskComments";
 import { useAuthStore } from "@personal/shared/stores/auth";
 
-import { Button } from "../../ui/Button";
-import { confirmDestructive } from "../../ui/confirm";
-import { common, form } from "../../ui/classes";
+import { Button } from "@/ui/Button";
+import { confirmDestructive } from "@/ui/confirm";
+import { common, form } from "@/ui/classes";
 
 const THUMBNAIL = "size-[88px] rounded-md bg-wash";
 const COMMENT_INPUT =

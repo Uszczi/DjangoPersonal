@@ -22,11 +22,11 @@ import {
   useNewTaskStatusStore,
 } from "@personal/shared/stores/newTaskStatus";
 
-import { Button } from "../../src/ui/Button";
-import { ChipGroup } from "../../src/ui/ChipGroup";
-import { TaskComments } from "../../src/features/tasks/TaskComments";
-import { confirmDestructive } from "../../src/ui/confirm";
-import { common, form } from "../../src/ui/classes";
+import { Button } from "@/ui/Button";
+import { ChipGroup } from "@/ui/ChipGroup";
+import { TaskComments } from "@/features/tasks/TaskComments";
+import { confirmDestructive } from "@/ui/confirm";
+import { common, form } from "@/ui/classes";
 
 /**
  * Creates a Task in `?projectId=`, or edits `?taskId=` of that Project, like

@@ -17,20 +17,17 @@ import { useAllAttempts } from "@personal/shared/queries/bibliographyAttempts";
 import { useBibliographyItems } from "@personal/shared/queries/bibliographyItems";
 import { useBibliographyViewStore } from "@personal/shared/stores/bibliographyView";
 
-import { BibliographyFiltersSheet } from "../../src/features/bibliography/BibliographyFiltersSheet";
-import { ItemRow } from "../../src/features/bibliography/ItemRow";
+import { BibliographyFiltersSheet } from "@/features/bibliography/BibliographyFiltersSheet";
+import { ItemRow } from "@/features/bibliography/ItemRow";
 import {
   itemSections,
   yearSections,
-} from "../../src/features/bibliography/listSections";
-import { SearchBar } from "../../src/features/bibliography/SearchBar";
-import {
-  MonthRule,
-  YearBar,
-} from "../../src/features/bibliography/SectionHeaders";
-import { common } from "../../src/ui/classes";
-import { Fab } from "../../src/ui/Fab";
-import { useRefreshOnFocus } from "../../src/useRefreshOnFocus";
+} from "@/features/bibliography/listSections";
+import { SearchBar } from "@/features/bibliography/SearchBar";
+import { MonthRule, YearBar } from "@/features/bibliography/SectionHeaders";
+import { common } from "@/ui/classes";
+import { Fab } from "@/ui/Fab";
+import { useRefreshOnFocus } from "@/useRefreshOnFocus";
 
 /** The Bibliography: films and books with their status, narrowed by kind and status and found by a fuzzy search. */
 export default function BibliographyScreen() {

@@ -7,9 +7,9 @@ import {
   pinnedTab,
   tabDefinitions,
   useTabBarStore,
-} from "../../src/features/tabs/tabBar";
-import { useTheme } from "../../src/theme";
-import { common } from "../../src/ui/classes";
+} from "@/features/tabs/tabBar";
+import { useTheme } from "@/theme";
+import { common } from "@/ui/classes";
 
 /**
  * The app opens on this tab ("/"). When the user has hidden Start, send

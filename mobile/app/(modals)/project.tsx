@@ -18,10 +18,10 @@ import {
   type ProjectInput,
 } from "@personal/shared/queries/projects";
 
-import { Button } from "../../src/ui/Button";
-import { ChipGroup } from "../../src/ui/ChipGroup";
-import { confirmDestructive } from "../../src/ui/confirm";
-import { common, form } from "../../src/ui/classes";
+import { Button } from "@/ui/Button";
+import { ChipGroup } from "@/ui/ChipGroup";
+import { confirmDestructive } from "@/ui/confirm";
+import { common, form } from "@/ui/classes";
 
 /** A status being edited; `id` stays stable while statuses are renamed and reordered. */
 type StatusDraft = { id: number; name: string };

@@ -17,11 +17,11 @@ import {
 import { formatClock, formatElapsed } from "@personal/shared/timeFormat";
 import { timerLimitOptions, timerRemaining } from "@personal/shared/timerLimit";
 
-import { card, common, form } from "../../ui/classes";
-import { Button } from "../../ui/Button";
-import { ChipGroup } from "../../ui/ChipGroup";
-import { TitleSuggestions } from "../tasks/TitleSuggestions";
-import { entryTitle } from "./entryDays";
+import { card, common, form } from "@/ui/classes";
+import { Button } from "@/ui/Button";
+import { ChipGroup } from "@/ui/ChipGroup";
+import { TitleSuggestions } from "@/features/tasks/TitleSuggestions";
+import { entryTitle } from "@/features/time/entryDays";
 
 /** The project chip for starting a timer with no project (project ids start at 1). */
 const NO_PROJECT = 0;

@@ -10,10 +10,10 @@ import {
   formatDuration,
 } from "@personal/shared/timeFormat";
 
-import { card, form } from "../../ui/classes";
-import { Button } from "../../ui/Button";
-import { ChipGroup } from "../../ui/ChipGroup";
-import { daysAgoKey, entryTitle } from "./entryDays";
+import { card, form } from "@/ui/classes";
+import { Button } from "@/ui/Button";
+import { ChipGroup } from "@/ui/ChipGroup";
+import { daysAgoKey, entryTitle } from "@/features/time/entryDays";
 
 type EntryRange = "today" | "7" | "30" | "all";
 

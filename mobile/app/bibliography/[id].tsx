@@ -29,9 +29,9 @@ import {
   useDeleteBibliographyItem,
 } from "@personal/shared/queries/bibliographyItems";
 
-import { Button } from "../../src/ui/Button";
-import { common } from "../../src/ui/classes";
-import { useRefreshOnFocus } from "../../src/useRefreshOnFocus";
+import { Button } from "@/ui/Button";
+import { common } from "@/ui/classes";
+import { useRefreshOnFocus } from "@/useRefreshOnFocus";
 
 /** One film or book: its derived status, the actions its Attempts allow, and their history. */
 export default function BibliographyItemScreen() {

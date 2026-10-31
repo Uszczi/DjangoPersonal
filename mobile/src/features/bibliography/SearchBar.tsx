@@ -7,8 +7,8 @@ import {
   type ItemStatus,
 } from "@personal/shared/bibliographyFormat";
 
-import { useTheme } from "../../theme";
-import { KIND_FILTER_LABELS } from "./filterLabels";
+import { useTheme } from "@/theme";
+import { KIND_FILTER_LABELS } from "@/features/bibliography/filterLabels";
 
 type SearchBarProps = {
   query: string;

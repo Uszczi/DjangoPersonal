@@ -5,18 +5,18 @@ import { Text, View } from "react-native";
 import { PROJECTS_LOAD_ERROR } from "@personal/shared/loadErrors";
 import { useProjects } from "@personal/shared/queries/projects";
 
-import { Button } from "../../src/ui/Button";
-import { LogoMark } from "../../src/ui/LogoMark";
-import { ProjectTasks } from "../../src/features/tasks/ProjectTasks";
-import { ScreenHeader } from "../../src/ui/ScreenHeader";
-import { Sheet, SheetItem } from "../../src/ui/Sheet";
-import { TaskListSettingsSheet } from "../../src/features/tasks/TaskListSettingsSheet";
-import { taskListSettingsAction } from "../../src/features/tasks/taskListSettings";
+import { Button } from "@/ui/Button";
+import { LogoMark } from "@/ui/LogoMark";
+import { ProjectTasks } from "@/features/tasks/ProjectTasks";
+import { ScreenHeader } from "@/ui/ScreenHeader";
+import { Sheet, SheetItem } from "@/ui/Sheet";
+import { TaskListSettingsSheet } from "@/features/tasks/TaskListSettingsSheet";
+import { taskListSettingsAction } from "@/features/tasks/taskListSettings";
 import {
   selectedTaskProject,
   useTaskProjectStore,
-} from "../../src/features/tasks/taskProject";
-import { common } from "../../src/ui/classes";
+} from "@/features/tasks/taskProject";
+import { common } from "@/ui/classes";
 
 /**
  * The Zadania tab, like the web's Tasks page: the Tasks of one Project. The

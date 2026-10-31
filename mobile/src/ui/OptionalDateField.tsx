@@ -2,8 +2,8 @@ import { View } from "react-native";
 
 import { dateFromKey, todayKey } from "@personal/shared/timeFormat";
 
-import { Button } from "./Button";
-import { DateTimeField } from "./DateTimeField";
+import { Button } from "@/ui/Button";
+import { DateTimeField } from "@/ui/DateTimeField";
 
 type OptionalDateFieldProps = {
   value: Date | null;

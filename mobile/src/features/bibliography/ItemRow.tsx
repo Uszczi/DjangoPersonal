@@ -9,7 +9,7 @@ import {
 } from "@personal/shared/bibliographyFormat";
 import type { YearRow } from "@personal/shared/bibliographyYears";
 
-import { common } from "../../ui/classes";
+import { common } from "@/ui/classes";
 
 /** One list row: an item, or in the year view one of its Attempts; a tap opens the item. */
 export function ItemRow({ row: { item, attempt } }: { row: YearRow }) {

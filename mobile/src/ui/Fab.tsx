@@ -1,6 +1,6 @@
 import { Pressable, Text } from "react-native";
 
-import { useTheme } from "../theme";
+import { useTheme } from "@/theme";
 
 type FabProps = { accessibilityLabel: string; onPress: () => void };
 

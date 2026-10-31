@@ -6,12 +6,12 @@ import { useProjects } from "@personal/shared/queries/projects";
 import { useAllTasks } from "@personal/shared/queries/tasks";
 import { useTimeEntries, useTimer } from "@personal/shared/queries/timer";
 
-import { RecentEntries } from "../../src/features/time/RecentEntries";
-import { TimerCard } from "../../src/features/time/TimerCard";
-import { TimeSummary } from "../../src/features/time/TimeSummary";
-import { common } from "../../src/ui/classes";
-import { Button } from "../../src/ui/Button";
-import { useRefreshOnFocus } from "../../src/useRefreshOnFocus";
+import { RecentEntries } from "@/features/time/RecentEntries";
+import { TimerCard } from "@/features/time/TimerCard";
+import { TimeSummary } from "@/features/time/TimeSummary";
+import { common } from "@/ui/classes";
+import { Button } from "@/ui/Button";
+import { useRefreshOnFocus } from "@/useRefreshOnFocus";
 
 /** The web Timer page: the running timer, recent entries and the time summary. */
 export default function TimeScreen() {

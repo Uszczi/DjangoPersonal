@@ -9,9 +9,9 @@ import {
   type CategoryKind,
 } from "@personal/shared/queries/categories";
 
-import { NamedIcon } from "../src/ui/NamedIcon";
-import { useTheme } from "../src/theme";
-import { common } from "../src/ui/classes";
+import { NamedIcon } from "@/ui/NamedIcon";
+import { useTheme } from "@/theme";
+import { common } from "@/ui/classes";
 
 type CategorySection = {
   title: string;

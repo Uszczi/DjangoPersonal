@@ -9,14 +9,14 @@ import { useWallets, validSelection } from "@personal/shared/queries/wallets";
 import { useWalletSelectionStore } from "@personal/shared/stores/walletSelection";
 import { TRANSACTIONS_LOAD_ERROR } from "@personal/shared/transactionList";
 
-import { groupByDay } from "../../src/features/expenses/groupByDay";
-import { TransactionRow } from "../../src/features/expenses/TransactionRow";
-import { WalletCard } from "../../src/features/expenses/WalletCard";
-import { WalletTabs } from "../../src/features/expenses/WalletTabs";
-import { common } from "../../src/ui/classes";
-import { Button } from "../../src/ui/Button";
-import { Fab } from "../../src/ui/Fab";
-import { useRefreshOnFocus } from "../../src/useRefreshOnFocus";
+import { groupByDay } from "@/features/expenses/groupByDay";
+import { TransactionRow } from "@/features/expenses/TransactionRow";
+import { WalletCard } from "@/features/expenses/WalletCard";
+import { WalletTabs } from "@/features/expenses/WalletTabs";
+import { common } from "@/ui/classes";
+import { Button } from "@/ui/Button";
+import { Fab } from "@/ui/Fab";
+import { useRefreshOnFocus } from "@/useRefreshOnFocus";
 
 /** The web Wydatki page: one wallet at a time, its transactions by day. */
 export default function ExpensesScreen() {

@@ -23,11 +23,11 @@ import {
   useSaveCounterEntry,
 } from "@personal/shared/queries/counters";
 
-import { Button } from "../../src/ui/Button";
-import { ColorDot } from "../../src/ui/ColorDot";
-import { NamedIcon } from "../../src/ui/NamedIcon";
-import { plusOneEntry } from "../../src/features/counters/plusOne";
-import { common } from "../../src/ui/classes";
+import { Button } from "@/ui/Button";
+import { ColorDot } from "@/ui/ColorDot";
+import { NamedIcon } from "@/ui/NamedIcon";
+import { plusOneEntry } from "@/features/counters/plusOne";
+import { common } from "@/ui/classes";
 
 /** One Counter: its total, quick +1, and the entries to add, edit and delete. */
 export default function CounterScreen() {

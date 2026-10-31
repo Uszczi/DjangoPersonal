@@ -1,4 +1,4 @@
-import "../src/setup";
+import "@/setup";
 import "../global.css";
 
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
@@ -15,17 +15,17 @@ import { useNewTaskStatusStore } from "@personal/shared/stores/newTaskStatus";
 import { useThemeStore } from "@personal/shared/stores/theme";
 
 import { useCounterViewStore } from "@personal/shared/stores/counterView";
-import { queryClient } from "../src/queryClient";
-import { useTabBarStore } from "../src/features/tabs/tabBar";
-import { useTaskListSettingsStore } from "../src/features/tasks/taskListSettings";
-import { useTaskProjectStore } from "../src/features/tasks/taskProject";
+import { queryClient } from "@/queryClient";
+import { useTabBarStore } from "@/features/tabs/tabBar";
+import { useTaskListSettingsStore } from "@/features/tasks/taskListSettings";
+import { useTaskProjectStore } from "@/features/tasks/taskProject";
 import {
   AccountThemeSync,
   useNativeColorScheme,
   useTheme,
   useUniwindTheme,
-} from "../src/theme";
-import { common } from "../src/ui/classes";
+} from "@/theme";
+import { common } from "@/ui/classes";
 
 // The editors in app/(modals)/, opened over the current screen. The group
 // is not part of the URL, so they are still pushed as "/task", "/wallet"...

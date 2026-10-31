@@ -17,9 +17,9 @@ import {
   useSaveCounterEntry,
 } from "@personal/shared/queries/counters";
 
-import { Button } from "../../src/ui/Button";
-import { DateTimeField } from "../../src/ui/DateTimeField";
-import { common, form } from "../../src/ui/classes";
+import { Button } from "@/ui/Button";
+import { DateTimeField } from "@/ui/DateTimeField";
+import { common, form } from "@/ui/classes";
 
 function validateValue(raw: string): string {
   if (!raw) return "Podaj wartość.";

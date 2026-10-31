@@ -12,9 +12,9 @@ import {
   type BibliographyViewMode,
 } from "@personal/shared/stores/bibliographyView";
 
-import { ChipGroup } from "../../ui/ChipGroup";
-import { Sheet } from "../../ui/Sheet";
-import { KIND_FILTER_LABELS } from "./filterLabels";
+import { ChipGroup } from "@/ui/ChipGroup";
+import { Sheet } from "@/ui/Sheet";
+import { KIND_FILTER_LABELS } from "@/features/bibliography/filterLabels";
 
 /** A chip value for "no filter": ChipGroup needs a value for every option. */
 const ALL = "all";
