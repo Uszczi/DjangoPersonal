@@ -1,3 +1,4 @@
+import { ColorDot } from "@/components/ColorDot";
 import {
   Button,
   ListRow,
@@ -43,7 +44,10 @@ function CounterTile({ counter, onOpen, onAddOne }: CounterItemProps) {
     tileValue,
   );
   return (
-    <li className="flex flex-col rounded-lg border border-row-line bg-surface">
+    <li
+      className="flex flex-col overflow-hidden rounded-lg border border-t-4 border-row-line bg-surface"
+      style={{ borderTopColor: counter.color }}
+    >
       <button
         type="button"
         aria-label={`Otwórz licznik: ${counter.name}`}
@@ -87,6 +91,7 @@ function CounterRow({ counter, onOpen, onAddOne }: CounterItemProps) {
         aria-label={`Otwórz licznik: ${counter.name}`}
         onClick={onOpen}
       >
+        <ColorDot color={counter.color} />
         <div className="min-w-0">
           <ListRowTitle>{counter.name}</ListRowTitle>
           <ListRowSubtitle>

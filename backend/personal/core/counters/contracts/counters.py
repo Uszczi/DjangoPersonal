@@ -3,10 +3,20 @@ from datetime import datetime
 from pydantic import AwareDatetime, Field, field_validator
 
 from personal.core.shared.base import BaseModel
+from personal.core.shared.colors import HexColor
+from personal.infra.rules import DEFAULT_COUNTER_COLOR
 
 
 class _CounterPayload(BaseModel):
     """``check_fields=False`` because this base declares no fields itself."""
+
+    @field_validator('color', mode='before', check_fields=False)
+    @classmethod
+    def reject_null_color(cls, value: object) -> object:
+        """An explicit ``null`` is not "leave it alone" — it is a validation error."""
+        if value is None:
+            raise ValueError('This field may not be null.')
+        return value
 
     @field_validator('name', mode='before', check_fields=False)
     @classmethod
@@ -22,15 +32,18 @@ class _CounterPayload(BaseModel):
 
 class CounterRequest(_CounterPayload):
     name: str = Field(min_length=1, max_length=100)
+    color: HexColor = DEFAULT_COUNTER_COLOR
 
 
 class PatchedCounterRequest(_CounterPayload):
     name: str | None = Field(default=None, min_length=1, max_length=100)
+    color: HexColor | None = None
 
 
 class CounterResponse(BaseModel):
     id: int = Field(..., json_schema_extra={'readOnly': True})
     name: str
+    color: str
     created_at: datetime = Field(..., json_schema_extra={'readOnly': True})
     entry_count: int = Field(..., json_schema_extra={'readOnly': True})
     total: int = Field(..., json_schema_extra={'readOnly': True})

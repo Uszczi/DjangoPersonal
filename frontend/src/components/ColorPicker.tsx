@@ -1,22 +1,29 @@
-import { WALLET_COLORS } from "@personal/shared/walletColors";
+import { COLORS } from "@personal/shared/colors";
 
-type WalletColorPickerProps = {
+type ColorPickerProps = {
   value: string;
   onChange: (color: string) => void;
+  /** The radio group's `name`; unique per form. */
+  name?: string;
 };
 
 /**
- * The wallet colour as a row of swatches. A radio group in a fieldset rather
- * than a `Field`, because `Field` nests its control in a single `<label>`.
+ * A Wallet's or a Counter's colour as a row of swatches. A radio group in a
+ * fieldset rather than a `Field`, because `Field` nests its control in a
+ * single `<label>`.
  */
-export function WalletColorPicker({ value, onChange }: WalletColorPickerProps) {
+export function ColorPicker({
+  value,
+  onChange,
+  name = "color",
+}: ColorPickerProps) {
   return (
     <fieldset className="mb-[18px] grid gap-2 border-0 p-0">
       <legend className="mb-2 p-0 text-[12px] font-semibold text-ink-soft">
         Kolor
       </legend>
       <div className="flex flex-wrap gap-2">
-        {WALLET_COLORS.map((color) => (
+        {COLORS.map((color) => (
           <label
             key={color.value}
             className="cursor-pointer"
@@ -24,7 +31,7 @@ export function WalletColorPicker({ value, onChange }: WalletColorPickerProps) {
           >
             <input
               type="radio"
-              name="wallet-color"
+              name={name}
               className="peer sr-only"
               value={color.value}
               checked={value === color.value}

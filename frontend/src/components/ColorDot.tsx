@@ -1,5 +1,5 @@
-/** The wallet's colour as a small circle next to its name; decorative, the name carries the meaning. */
-export function WalletColorDot({
+/** A Wallet's or a Counter's colour as a small circle next to its name; decorative, the name carries the meaning. */
+export function ColorDot({
   color,
   className = "",
 }: {

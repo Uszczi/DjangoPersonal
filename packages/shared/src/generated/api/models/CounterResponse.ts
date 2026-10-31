@@ -31,6 +31,10 @@ export interface CounterResponse {
     /**
      *
      */
+    color: string;
+    /**
+     *
+     */
     readonly createdAt: Date;
     /**
      *
@@ -56,6 +60,7 @@ export interface CounterResponse {
 export function instanceOfCounterResponse(value: object): value is CounterResponse {
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
+    if (!('color' in value) || value['color'] === undefined) return false;
     if ((!('createdAt' in (value as Record<string, any>)) && !('created_at' in (value as Record<string, any>))) || ((value as Record<string, any>)['createdAt'] === undefined && (value as Record<string, any>)['created_at'] === undefined)) return false;
     if ((!('entryCount' in (value as Record<string, any>)) && !('entry_count' in (value as Record<string, any>))) || ((value as Record<string, any>)['entryCount'] === undefined && (value as Record<string, any>)['entry_count'] === undefined)) return false;
     if (!('total' in value) || value['total'] === undefined) return false;
@@ -76,6 +81,7 @@ export function CounterResponseFromJSONTyped(json: any, ignoreDiscriminator: boo
 
         'id': json['id'],
         'name': json['name'],
+        'color': json['color'],
         'createdAt': (json['created_at'] == null ? json['created_at'] : parseDateTime(json['created_at'])),
         'entryCount': json['entry_count'],
         'total': json['total'],
@@ -96,6 +102,7 @@ export function CounterResponseToJSONTyped(value?: Omit<CounterResponse, 'id'|'c
     return {
 
         'name': value['name'],
+        'color': value['color'],
     };
 }
 

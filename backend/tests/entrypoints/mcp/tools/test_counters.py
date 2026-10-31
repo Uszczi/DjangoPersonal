@@ -32,3 +32,15 @@ def test_counter_tools(mcp_user: User) -> None:
     assert call('update_counter', counter_id=counter['id'], name='Herbata')['total'] == 3
     call('delete_counter', counter_id=counter['id'])
     assert call('list_counters') == []
+
+
+def test_counter_color_tools(mcp_user: User) -> None:
+    counter = call('create_counter', name='Kawa', color='#D45B3E')
+    assert counter['color'] == '#d45b3e'
+
+    updated = call('update_counter', counter_id=counter['id'], color='#3d6fb6')
+    assert updated['color'] == '#3d6fb6'
+    assert updated['name'] == 'Kawa'
+
+    with pytest.raises(ToolError):
+        call('update_counter', counter_id=counter['id'], color='red')

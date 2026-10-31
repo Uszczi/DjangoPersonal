@@ -23,6 +23,7 @@ import {
 } from "@personal/shared/stores/counterView";
 
 import { ChipGroup } from "../../src/ChipGroup";
+import { ColorDot } from "../../src/ColorDot";
 import { Fab } from "../../src/Fab";
 import { plusOneEntry } from "../../src/plusOne";
 import { makeStyles, fonts, useTheme } from "../../src/theme";
@@ -133,6 +134,7 @@ export default function CountersScreen() {
               accessibilityLabel={`Otwórz licznik: ${item.name}`}
               onPress={() => openCounter(item)}
             >
+              <ColorDot color={item.color} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.name}>{item.name}</Text>
                 <Text style={common.rowSubtitle}>
@@ -171,7 +173,7 @@ function CounterTile({
   const { common } = useTheme();
   const styles = useStyles();
   return (
-    <View style={styles.tile}>
+    <View style={[styles.tile, { borderTopColor: counter.color }]}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Otwórz licznik: ${counter.name}`}
@@ -241,6 +243,8 @@ const useStyles = makeStyles((colors) => ({
     flex: 1,
     borderWidth: 1,
     borderColor: colors.rowLine,
+    // The Counter's colour, set per tile.
+    borderTopWidth: 4,
     borderRadius: 8,
     backgroundColor: colors.surface,
     overflow: "hidden",

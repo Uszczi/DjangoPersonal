@@ -10,16 +10,18 @@ import {
 } from "react-native";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
+import { DEFAULT_COUNTER_COLOR } from "@personal/shared/colors";
 import {
   useCounters,
   useCreateCounter,
-  useRenameCounter,
+  useUpdateCounter,
 } from "@personal/shared/queries/counters";
 
 import { Button } from "../src/Button";
+import { ColorPicker } from "../src/ColorPicker";
 import { useTheme } from "../src/theme";
 
-/** Creates a Counter, or renames one (`?counterId=`). */
+/** Creates a Counter, or edits one (`?counterId=`): its name and colour. */
 export default function CounterEditorScreen() {
   const { common, form } = useTheme();
   const params = useLocalSearchParams<{ counterId?: string }>();
@@ -30,9 +32,12 @@ export default function CounterEditorScreen() {
       ? null
       : (counters.find((item) => item.id === counterId) ?? null);
   const createCounter = useCreateCounter();
-  const renameCounter = useRenameCounter();
+  const updateCounter = useUpdateCounter();
 
   const [name, setName] = useState(counter?.name ?? "");
+  const [color, setColor] = useState<string>(
+    counter?.color ?? DEFAULT_COUNTER_COLOR,
+  );
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -46,11 +51,18 @@ export default function CounterEditorScreen() {
     setFormError("");
     try {
       if (counter) {
-        await renameCounter.mutateAsync({ id: counter.id, name: trimmed });
+        await updateCounter.mutateAsync({
+          id: counter.id,
+          name: trimmed,
+          color,
+        });
         router.back();
       } else {
         // Like the web: a new Counter opens straight away.
-        const created = await createCounter.mutateAsync(trimmed);
+        const created = await createCounter.mutateAsync({
+          name: trimmed,
+          color,
+        });
         router.replace({
           pathname: "/counters/[id]",
           params: { id: created.id },
@@ -85,6 +97,9 @@ export default function CounterEditorScreen() {
           onSubmitEditing={() => void submit()}
           editable={!isSaving}
         />
+
+        <Text style={form.label}>Kolor</Text>
+        <ColorPicker value={color} onChange={setColor} disabled={isSaving} />
         {formError !== "" && <Text style={form.error}>{formError}</Text>}
         <View style={form.actions}>
           <Button

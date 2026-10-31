@@ -11,7 +11,7 @@ import {
 } from "@/design-system";
 import type { WalletResponse } from "@personal/shared/generated/api";
 import { DeleteWalletModal } from "@/components/modals/DeleteWalletModal";
-import { WalletColorPicker } from "@/components/WalletColorPicker";
+import { ColorPicker } from "@/components/ColorPicker";
 import { WalletIconPicker } from "@/components/WalletIconPicker";
 import { balanceError } from "@personal/shared/money";
 import { ShowModal } from "@/stores/modal";
@@ -99,7 +99,7 @@ export function WalletEditModal({ wallet, onClose }: WalletEditModalProps) {
               required
             />
           </Field>
-          <WalletColorPicker value={color} onChange={setColor} />
+          <ColorPicker name="wallet-color" value={color} onChange={setColor} />
           <WalletIconPicker value={icon} onChange={setIcon} />
           <Field label="Stan aktualny">
             <TextInput

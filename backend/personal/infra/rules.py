@@ -89,8 +89,9 @@ def normalize_wallet_name(name: str) -> str:
 DEFAULT_WALLET_COLOR = '#477c7c'
 
 
-def normalize_wallet_color(color: str) -> str:
-    """Store ``#RRGGBB`` in lower case, so equal colours compare equal."""
+def normalize_color(color: str) -> str:
+    """Store a ``#RRGGBB`` colour (a Wallet's or a Counter's) in lower case,
+    so equal colours compare equal."""
     return color.strip().lower()
 
 
@@ -114,6 +115,11 @@ def category_name_key(name: str) -> str:
 
 def normalize_counter_name(name: str) -> str:
     return name.strip()
+
+
+#: The colour a counter gets when none is chosen (and the one existing
+#: counters were given when the column was added).
+DEFAULT_COUNTER_COLOR = '#477c7c'
 
 
 def normalize_bibliography_item_text(text: str) -> str:

@@ -66,6 +66,42 @@ def test_rename_counter(post_json: Any, patch_json: Any) -> None:
     assert patch_json(f'/api/v1/counters/{counter_id}/', {'name': None}).status_code == 422
 
 
+def test_new_counter_gets_the_default_color(post_json: Any) -> None:
+    response = post_json('/api/v1/counters/', {'name': 'Kawa'})
+
+    assert response.json()['color'] == '#477c7c'
+
+
+def test_create_counter_with_color(post_json: Any) -> None:
+    response = post_json('/api/v1/counters/', {'name': 'Kawa', 'color': '#D45B3E'})
+
+    assert response.status_code == HTTPStatus.CREATED
+    assert response.json()['color'] == '#d45b3e'
+
+
+def test_counter_color_can_be_changed(
+    post_json: Any, patch_json: Any, api_client: ApiClient
+) -> None:
+    counter_id = _counter(post_json)
+
+    response = patch_json(f'/api/v1/counters/{counter_id}/', {'color': '#3d6fb6'})
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['color'] == '#3d6fb6'
+    assert response.json()['name'] == 'Kawa'
+    assert [c['color'] for c in api_client.get('/api/v1/counters/').json()] == ['#3d6fb6']
+    renamed = patch_json(f'/api/v1/counters/{counter_id}/', {'name': 'Herbata'})
+    assert renamed.json()['color'] == '#3d6fb6'
+
+
+def test_counter_color_must_be_a_hex_color(post_json: Any, patch_json: Any) -> None:
+    for color in ['red', '#fff', '#12345g', '477c7c', None]:
+        response = post_json('/api/v1/counters/', {'name': 'Kawa', 'color': color})
+        assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, color
+    counter_id = _counter(post_json)
+    assert patch_json(f'/api/v1/counters/{counter_id}/', {'color': None}).status_code == 422
+
+
 def test_entries_add_up_to_the_total(post_json: Any, api_client: ApiClient) -> None:
     counter_id = _counter(post_json)
     first = _entry(post_json, counter_id)

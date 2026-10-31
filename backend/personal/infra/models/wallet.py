@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from personal.infra.rules import (
     DEFAULT_WALLET_COLOR,
-    normalize_wallet_color,
+    normalize_color,
     normalize_wallet_name,
     wallet_name_key,
 )
@@ -51,4 +51,4 @@ def _normalize_wallet(mapper: Any, connection: Any, wallet: Wallet) -> None:
     wallet.name = normalize_wallet_name(wallet.name)
     wallet.normalized_name = wallet_name_key(wallet.name)
     if wallet.color is not None:
-        wallet.color = normalize_wallet_color(wallet.color)
+        wallet.color = normalize_color(wallet.color)

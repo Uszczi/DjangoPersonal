@@ -24,6 +24,10 @@ export interface PatchedCounterRequest {
      *
      */
     name?: string | null;
+    /**
+     *
+     */
+    color?: string | null;
 }
 
 /**
@@ -44,6 +48,7 @@ export function PatchedCounterRequestFromJSONTyped(json: any, ignoreDiscriminato
     return {
 
         'name': json['name'] === undefined ? undefined : json['name'] === null ? null : json['name'],
+        'color': json['color'] === undefined ? undefined : json['color'] === null ? null : json['color'],
     };
 }
 
@@ -59,6 +64,7 @@ export function PatchedCounterRequestToJSONTyped(value?: PatchedCounterRequest |
     return {
 
         'name': value['name'],
+        'color': value['color'],
     };
 }
 

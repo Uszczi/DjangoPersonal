@@ -72,7 +72,7 @@ The reserved Category (`is_system`) that holds a Wallet's balance ledger — the
 
 
 **Counter** (Licznik):
-A named tally a user keeps of anything countable — coffees, push-ups, days without sugar. Has a required name (trimmed) and owns its Counter entries. A Counter's total is the sum of its entries' values; like a Wallet balance it is never stored, only computed. Deleting a Counter cascades to its entries.
+A named tally a user keeps of anything countable — coffees, push-ups, days without sugar. Has a required name (trimmed), a colour (`#RRGGBB`, default teal, shown with it in the lists) and owns its Counter entries. A Counter's total is the sum of its entries' values; like a Wallet balance it is never stored, only computed. Deleting a Counter cascades to its entries.
 
 **Counter entry**:
 One change to a Counter: a non-zero whole-number value (default 1; negative values subtract), the moment it happened (date and time, stored in UTC), and an optional note. An entry stays in the Counter it was added to.

@@ -21,7 +21,7 @@ export const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
  * Bump when a cached response's shape changes incompatibly, so clients drop a
  * cache saved by an older version instead of rendering it.
  */
-const CACHE_VERSION = "3";
+const CACHE_VERSION = "4";
 
 const DATE_TAG = "$date";
 
