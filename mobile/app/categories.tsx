@@ -10,7 +10,8 @@ import {
 } from "@personal/shared/queries/categories";
 
 import { NamedIcon } from "../src/ui/NamedIcon";
-import { makeStyles, useTheme } from "../src/theme";
+import { useTheme } from "../src/theme";
+import { common } from "../src/ui/classes";
 
 type CategorySection = {
   title: string;
@@ -21,8 +22,7 @@ type CategorySection = {
 /** The categories a transaction can have, grouped by kind; the System category
  * is not managed here. Each section adds a category of its own kind. */
 export default function CategoriesScreen() {
-  const { colors, common } = useTheme();
-  const styles = useStyles();
+  const { colors } = useTheme();
   const { data: categories = [], isError } = useCategories();
 
   const visible = categories.filter((category) => !category.isSystem);
@@ -40,16 +40,18 @@ export default function CategoriesScreen() {
   ];
 
   return (
-    <View style={common.screen}>
-      {isError && <Text style={common.error}>{CATEGORIES_LOAD_ERROR}</Text>}
+    <View className={common.screen}>
+      {isError && <Text className={common.error}>{CATEGORIES_LOAD_ERROR}</Text>}
       <SectionList
         sections={sections}
         keyExtractor={(category) => String(category.id)}
-        contentContainerStyle={{ paddingBottom: 96 }}
+        contentContainerClassName="pb-24"
         stickySectionHeadersEnabled={false}
         renderSectionHeader={({ section }) => (
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{section.title}</Text>
+          <View className="flex-row items-center justify-between px-[19px] pt-5 pb-1">
+            <Text className="text-[16px] font-bold text-ink">
+              {section.title}
+            </Text>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`Nowa kategoria ${
@@ -62,13 +64,15 @@ export default function CategoriesScreen() {
                 })
               }
             >
-              <Text style={styles.addLabel}>+ Dodaj</Text>
+              <Text className="text-[13px] font-semibold text-signal">
+                + Dodaj
+              </Text>
             </Pressable>
           </View>
         )}
         renderItem={({ item }) => (
           <Pressable
-            style={common.row}
+            className={common.row}
             accessibilityRole="button"
             accessibilityLabel={`Edytuj kategorię: ${item.name}`}
             onPress={() =>
@@ -83,32 +87,13 @@ export default function CategoriesScreen() {
               fallback={DEFAULT_CATEGORY_ICON}
               color={colors.icon}
             />
-            <Text style={[common.rowTitle, { flex: 1 }]}>{item.name}</Text>
-            <Text style={common.muted}>›</Text>
+            <Text className="flex-1 text-sm font-medium text-ink">
+              {item.name}
+            </Text>
+            <Text className={common.muted}>›</Text>
           </Pressable>
         )}
       />
     </View>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 19,
-    paddingTop: 20,
-    paddingBottom: 4,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: colors.ink,
-  },
-  addLabel: {
-    color: colors.signal,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-}));

@@ -27,12 +27,10 @@ import { Button } from "../../src/ui/Button";
 import { ColorDot } from "../../src/ui/ColorDot";
 import { NamedIcon } from "../../src/ui/NamedIcon";
 import { plusOneEntry } from "../../src/features/counters/plusOne";
-import { makeStyles, fonts, useTheme } from "../../src/theme";
+import { common } from "../../src/ui/classes";
 
 /** One Counter: its total, quick +1, and the entries to add, edit and delete. */
 export default function CounterScreen() {
-  const { common } = useTheme();
-  const styles = useStyles();
   const { id: rawId } = useLocalSearchParams<{ id: string }>();
   const id = Number(rawId);
 
@@ -89,8 +87,8 @@ export default function CounterScreen() {
 
   if (!counter) {
     return (
-      <View style={common.center}>
-        <Text style={common.muted}>Nie znaleziono licznika.</Text>
+      <View className={common.center}>
+        <Text className={common.muted}>Nie znaleziono licznika.</Text>
       </View>
     );
   }
@@ -100,12 +98,12 @@ export default function CounterScreen() {
   const errorMessage = actionError || entriesError;
 
   return (
-    <View style={common.screen}>
+    <View className={common.screen}>
       <Stack.Screen options={{ title: counter.name }} />
       <FlatList
         data={entries ?? []}
         keyExtractor={(entry) => String(entry.id)}
-        contentContainerStyle={styles.listContent}
+        contentContainerClassName="pb-8"
         refreshControl={
           <RefreshControl
             refreshing={
@@ -115,10 +113,10 @@ export default function CounterScreen() {
           />
         }
         ListHeaderComponent={
-          <View style={styles.header}>
-            <View style={styles.totalRow}>
+          <View className="gap-1 p-4">
+            <View className="flex-row items-center justify-between">
               <Text
-                style={styles.total}
+                className="font-utility text-[44px] font-bold text-ink tabular-nums"
                 accessibilityLabel={`Suma: ${counter.total}`}
               >
                 {counter.total}
@@ -128,10 +126,7 @@ export default function CounterScreen() {
                 accessibilityLabel={`Zmień kolor licznika: ${counter.name}`}
                 hitSlop={8}
                 onPress={openEditor}
-                style={({ pressed }) => [
-                  styles.colorButton,
-                  pressed && styles.pressed,
-                ]}
+                className="rounded-lg p-1.5 active:opacity-60"
               >
                 <NamedIcon
                   name="palette"
@@ -141,13 +136,13 @@ export default function CounterScreen() {
                 />
               </Pressable>
             </View>
-            <View style={styles.countRow}>
+            <View className="flex-row items-center gap-2">
               <ColorDot color={counter.color} />
-              <Text style={common.muted}>
+              <Text className={common.muted}>
                 {entryCountLabel(counter.entryCount)}
               </Text>
             </View>
-            <View style={styles.actions}>
+            <View className="mt-3 flex-row gap-3">
               <Button label="+1" onPress={() => void addOne()} />
               <Button
                 label="Nowy wpis"
@@ -160,7 +155,7 @@ export default function CounterScreen() {
                 }
               />
             </View>
-            <View style={styles.actions}>
+            <View className="mt-3 flex-row gap-3">
               <Button label="Edytuj" variant="secondary" onPress={openEditor} />
               <Button
                 label="Usuń licznik"
@@ -169,23 +164,25 @@ export default function CounterScreen() {
               />
             </View>
             {errorMessage !== "" && (
-              <Text style={styles.error}>{errorMessage}</Text>
+              <Text className="mt-2 text-danger">{errorMessage}</Text>
             )}
             {entries !== null && entries.length > 0 && (
-              <Text style={styles.sectionTitle}>Wpisy</Text>
+              <Text className="mt-5 font-utility text-[11px] font-semibold tracking-[0.9px] text-muted">
+                Wpisy
+              </Text>
             )}
           </View>
         }
         ListEmptyComponent={
           entries !== null ? (
-            <Text style={[common.muted, styles.empty]}>
+            <Text className="p-6 text-center text-xs text-muted">
               Brak wpisów. Dodaj pierwszy wpis.
             </Text>
           ) : undefined
         }
         renderItem={({ item }) => (
           <Pressable
-            style={common.row}
+            className={common.row}
             accessibilityRole="button"
             accessibilityLabel={`Edytuj wpis ${signedValue(item.value)} z ${formatEntryTime(item.occurredAt)}`}
             onPress={() =>
@@ -195,16 +192,20 @@ export default function CounterScreen() {
               })
             }
           >
-            <View style={{ flex: 1 }}>
-              <Text style={styles.entryTime}>
+            <View className="flex-1">
+              <Text className="text-sm font-medium text-ink">
                 {formatEntryTime(item.occurredAt)}
               </Text>
               {item.note !== "" && (
-                <Text style={common.muted}>{item.note}</Text>
+                <Text className={common.muted}>{item.note}</Text>
               )}
             </View>
             <Text
-              style={[styles.entryValue, item.value < 0 && styles.negative]}
+              className={
+                item.value < 0
+                  ? "font-utility text-sm font-semibold text-danger"
+                  : "font-utility text-sm font-semibold text-ink"
+              }
             >
               {signedValue(item.value)}
             </Text>
@@ -214,42 +215,3 @@ export default function CounterScreen() {
     </View>
   );
 }
-
-const useStyles = makeStyles((colors) => ({
-  listContent: { paddingBottom: 32 },
-  header: { padding: 16, gap: 4 },
-  total: {
-    fontFamily: fonts.utility,
-    fontSize: 44,
-    fontWeight: "700",
-    color: colors.ink,
-    fontVariant: ["tabular-nums"],
-  },
-  totalRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  colorButton: { padding: 6, borderRadius: 8 },
-  pressed: { opacity: 0.6 },
-  countRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  actions: { flexDirection: "row", gap: 12, marginTop: 12 },
-  error: { color: colors.danger, marginTop: 8 },
-  sectionTitle: {
-    marginTop: 20,
-    color: colors.muted,
-    fontFamily: fonts.utility,
-    fontSize: 11,
-    fontWeight: "600",
-    letterSpacing: 0.9,
-  },
-  empty: { padding: 24, textAlign: "center" },
-  entryTime: { fontSize: 14, fontWeight: "500", color: colors.ink },
-  entryValue: {
-    fontFamily: fonts.utility,
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.ink,
-  },
-  negative: { color: colors.danger },
-}));

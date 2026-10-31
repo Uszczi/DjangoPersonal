@@ -26,7 +26,7 @@ import { Button } from "../src/ui/Button";
 import { ChipGroup } from "../src/ui/ChipGroup";
 import { TaskComments } from "../src/features/tasks/TaskComments";
 import { confirmDestructive } from "../src/ui/confirm";
-import { useTheme } from "../src/theme";
+import { common, form } from "../src/ui/classes";
 
 /**
  * Creates a Task in `?projectId=`, or edits `?taskId=` of that Project, like
@@ -36,7 +36,6 @@ import { useTheme } from "../src/theme";
  * Task also shows its comments, where photos can be attached.
  */
 export default function TaskEditorScreen() {
-  const { common, form } = useTheme();
   const params = useLocalSearchParams<{
     projectId?: string;
     taskId?: string;
@@ -88,8 +87,8 @@ export default function TaskEditorScreen() {
 
   if (taskId !== null && !task) {
     return (
-      <View style={common.center}>
-        <Text style={common.muted}>Nie znaleziono zadania.</Text>
+      <View className={common.center}>
+        <Text className={common.muted}>Nie znaleziono zadania.</Text>
       </View>
     );
   }
@@ -143,7 +142,7 @@ export default function TaskEditorScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={common.screen}
+      className={common.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Stack.Screen
@@ -154,12 +153,12 @@ export default function TaskEditorScreen() {
         }}
       />
       <ScrollView
-        contentContainerStyle={form.content}
+        contentContainerClassName={form.content}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={form.label}>Tytuł zadania</Text>
+        <Text className={form.label}>Tytuł zadania</Text>
         <TextInput
-          style={form.input}
+          className={form.input}
           value={form_.title}
           onChangeText={(title) =>
             setForm((current) => ({ ...current, title }))
@@ -171,9 +170,9 @@ export default function TaskEditorScreen() {
           editable={!isSaving}
         />
 
-        <Text style={form.label}>Opis (opcjonalnie)</Text>
+        <Text className={form.label}>Opis (opcjonalnie)</Text>
         <TextInput
-          style={[form.input, form.multiline]}
+          className={form.multiline}
           value={form_.description}
           onChangeText={(description) =>
             setForm((current) => ({ ...current, description }))
@@ -184,7 +183,7 @@ export default function TaskEditorScreen() {
 
         {task && (
           <>
-            <Text style={form.label}>Projekt zadania</Text>
+            <Text className={form.label}>Projekt zadania</Text>
             <ChipGroup
               options={projects.map((project) => ({
                 value: project.id,
@@ -201,7 +200,7 @@ export default function TaskEditorScreen() {
 
         {statuses.length > 0 && (
           <>
-            <Text style={form.label}>Status</Text>
+            <Text className={form.label}>Status</Text>
             <ChipGroup
               options={statuses.map((status) => ({
                 value: status,
@@ -216,8 +215,8 @@ export default function TaskEditorScreen() {
           </>
         )}
 
-        {formError !== "" && <Text style={form.error}>{formError}</Text>}
-        <View style={form.actions}>
+        {formError !== "" && <Text className={form.error}>{formError}</Text>}
+        <View className={form.actions}>
           <Button
             label="Anuluj"
             variant="secondary"
@@ -232,7 +231,7 @@ export default function TaskEditorScreen() {
         </View>
 
         {task && (
-          <View style={form.actions}>
+          <View className={form.actions}>
             <Button
               label="Usuń zadanie"
               variant="danger"

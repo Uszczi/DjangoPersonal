@@ -23,7 +23,7 @@ import { dateFromKey, dateKey, todayKey } from "@personal/shared/timeFormat";
 import { Button } from "../src/ui/Button";
 import { DateTimeField } from "../src/ui/DateTimeField";
 import { OptionalDateField } from "../src/ui/OptionalDateField";
-import { useTheme } from "../src/theme";
+import { common, form } from "../src/ui/classes";
 
 function today() {
   return dateFromKey(todayKey());
@@ -31,7 +31,6 @@ function today() {
 
 /** An Attempt of `?itemId=`: `&action=` says what to do, `&attemptId=` which one to change. */
 export default function AttemptEditorScreen() {
-  const { common, form } = useTheme();
   const params = useLocalSearchParams<{
     itemId: string;
     action: string;
@@ -64,8 +63,8 @@ export default function AttemptEditorScreen() {
 
   if (!action || (actionNeedsAttempt(action) && !attempt)) {
     return (
-      <View style={common.center}>
-        <Text style={common.muted}>Nie znaleziono podejścia.</Text>
+      <View className={common.center}>
+        <Text className={common.muted}>Nie znaleziono podejścia.</Text>
       </View>
     );
   }
@@ -124,26 +123,26 @@ export default function AttemptEditorScreen() {
   }
 
   return (
-    <View style={common.screen}>
+    <View className={common.screen}>
       <Stack.Screen options={{ title: ATTEMPT_TITLES[action] }} />
       <ScrollView
-        contentContainerStyle={form.content}
+        contentContainerClassName={form.content}
         keyboardShouldPersistTaps="handled"
       >
         {showsStart && (
           <>
-            <Text style={form.label}>Data rozpoczęcia</Text>
+            <Text className={form.label}>Data rozpoczęcia</Text>
             <OptionalDateField
               value={startedOn}
               onChange={setStartedOn}
               disabled={isSaving}
             />
-            <Text style={form.hint}>Opcjonalna.</Text>
+            <Text className={form.hint}>Opcjonalna.</Text>
           </>
         )}
         {showsEnd && (
           <>
-            <Text style={form.label}>Data zakończenia</Text>
+            <Text className={form.label}>Data zakończenia</Text>
             <DateTimeField
               mode="date"
               value={endedOn ?? today()}
@@ -152,8 +151,8 @@ export default function AttemptEditorScreen() {
             />
           </>
         )}
-        {formError !== "" && <Text style={form.error}>{formError}</Text>}
-        <View style={form.actions}>
+        {formError !== "" && <Text className={form.error}>{formError}</Text>}
+        <View className={form.actions}>
           <Button
             label="Anuluj"
             variant="secondary"
@@ -167,7 +166,7 @@ export default function AttemptEditorScreen() {
           />
         </View>
         {action === "edit" && (
-          <View style={form.actions}>
+          <View className={form.actions}>
             <Button
               label="Usuń podejście"
               variant="danger"

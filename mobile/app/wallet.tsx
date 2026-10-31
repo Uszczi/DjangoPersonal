@@ -24,7 +24,7 @@ import { Button } from "../src/ui/Button";
 import { ColorPicker } from "../src/ui/ColorPicker";
 import { confirmDestructive } from "../src/ui/confirm";
 import { IconPicker } from "../src/ui/IconPicker";
-import { useTheme } from "../src/theme";
+import { common, form } from "../src/ui/classes";
 
 /**
  * Creates a Wallet (with an opening balance), or edits one (`?walletId=`):
@@ -32,7 +32,6 @@ import { useTheme } from "../src/theme";
  * recorded by the server as a System correction.
  */
 export default function WalletEditorScreen() {
-  const { common, form } = useTheme();
   const params = useLocalSearchParams<{ walletId?: string }>();
   const walletId = params.walletId ? Number(params.walletId) : null;
   const { data: wallets = [] } = useWallets();
@@ -57,8 +56,8 @@ export default function WalletEditorScreen() {
 
   if (walletId !== null && !wallet) {
     return (
-      <View style={common.center}>
-        <Text style={common.muted}>Nie znaleziono portfela.</Text>
+      <View className={common.center}>
+        <Text className={common.muted}>Nie znaleziono portfela.</Text>
       </View>
     );
   }
@@ -125,19 +124,19 @@ export default function WalletEditorScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={common.screen}
+      className={common.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Stack.Screen
         options={{ title: wallet ? "Edytuj portfel" : "Nowy portfel" }}
       />
       <ScrollView
-        contentContainerStyle={form.content}
+        contentContainerClassName={form.content}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={form.label}>Nazwa portfela</Text>
+        <Text className={form.label}>Nazwa portfela</Text>
         <TextInput
-          style={form.input}
+          className={form.input}
           value={name}
           onChangeText={setName}
           maxLength={100}
@@ -145,10 +144,10 @@ export default function WalletEditorScreen() {
           editable={!isSaving}
         />
 
-        <Text style={form.label}>Kolor</Text>
+        <Text className={form.label}>Kolor</Text>
         <ColorPicker value={color} onChange={setColor} disabled={isSaving} />
 
-        <Text style={form.label}>Ikona (opcjonalnie)</Text>
+        <Text className={form.label}>Ikona (opcjonalnie)</Text>
         <IconPicker
           value={icon}
           onChange={setIcon}
@@ -158,11 +157,11 @@ export default function WalletEditorScreen() {
           disabled={isSaving}
         />
 
-        <Text style={form.label}>
+        <Text className={form.label}>
           {wallet ? "Stan aktualny" : "Stan początkowy"}
         </Text>
         <TextInput
-          style={form.input}
+          className={form.input}
           value={balance}
           onChangeText={setBalance}
           keyboardType="numbers-and-punctuation"
@@ -170,13 +169,13 @@ export default function WalletEditorScreen() {
           editable={!isSaving}
         />
         {wallet && (
-          <Text style={form.hint}>
+          <Text className={form.hint}>
             Zmiana stanu zapisze transakcję „Korekta stanu”.
           </Text>
         )}
 
-        {formError !== "" && <Text style={form.error}>{formError}</Text>}
-        <View style={form.actions}>
+        {formError !== "" && <Text className={form.error}>{formError}</Text>}
+        <View className={form.actions}>
           <Button
             label="Anuluj"
             variant="secondary"
@@ -190,7 +189,7 @@ export default function WalletEditorScreen() {
           />
         </View>
         {wallet && (
-          <View style={form.actions}>
+          <View className={form.actions}>
             <Button
               label="Usuń portfel"
               variant="danger"

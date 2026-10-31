@@ -25,7 +25,7 @@ import {
 
 import { Button } from "../src/ui/Button";
 import { ChipGroup } from "../src/ui/ChipGroup";
-import { useTheme } from "../src/theme";
+import { common, form } from "../src/ui/classes";
 
 const KIND_OPTIONS = ITEM_KINDS.map((value) => ({
   value,
@@ -47,7 +47,6 @@ function numberText(value: number | null | undefined) {
  * is filled in later by editing.
  */
 export default function BibliographyItemEditorScreen() {
-  const { common, form } = useTheme();
   const params = useLocalSearchParams<{ itemId?: string }>();
   const itemId = params.itemId ? Number(params.itemId) : null;
   const item = useBibliographyItem(itemId).data ?? null;
@@ -65,8 +64,8 @@ export default function BibliographyItemEditorScreen() {
 
   if (itemId !== null && !item) {
     return (
-      <View style={common.center}>
-        <Text style={common.muted}>Nie znaleziono pozycji.</Text>
+      <View className={common.center}>
+        <Text className={common.muted}>Nie znaleziono pozycji.</Text>
       </View>
     );
   }
@@ -116,28 +115,28 @@ export default function BibliographyItemEditorScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={common.screen}
+      className={common.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Stack.Screen
         options={{ title: item ? "Edytuj pozycję" : "Nowa pozycja" }}
       />
       <ScrollView
-        contentContainerStyle={form.content}
+        contentContainerClassName={form.content}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={form.label}>Rodzaj</Text>
+        <Text className={form.label}>Rodzaj</Text>
         <ChipGroup
           options={KIND_OPTIONS}
           value={kind}
           onChange={setKind}
           disabled={item !== null || isSaving}
         />
-        {item && <Text style={form.hint}>Rodzaju nie można zmienić.</Text>}
+        {item && <Text className={form.hint}>Rodzaju nie można zmienić.</Text>}
 
-        <Text style={form.label}>Tytuł</Text>
+        <Text className={form.label}>Tytuł</Text>
         <TextInput
-          style={form.input}
+          className={form.input}
           value={title}
           onChangeText={setTitle}
           maxLength={300}
@@ -150,9 +149,9 @@ export default function BibliographyItemEditorScreen() {
 
         {item && (
           <>
-            <Text style={form.label}>{CREATOR_LABELS[kind]}</Text>
+            <Text className={form.label}>{CREATOR_LABELS[kind]}</Text>
             <TextInput
-              style={form.input}
+              className={form.input}
               value={creator}
               onChangeText={setCreator}
               maxLength={200}
@@ -160,27 +159,27 @@ export default function BibliographyItemEditorScreen() {
               editable={!isSaving}
             />
 
-            <Text style={form.label}>Rok</Text>
+            <Text className={form.label}>Rok</Text>
             <TextInput
-              style={form.input}
+              className={form.input}
               value={year}
               onChangeText={setYear}
               keyboardType="number-pad"
               editable={!isSaving}
             />
 
-            <Text style={form.label}>{ITEM_LENGTH_LABELS[kind]}</Text>
+            <Text className={form.label}>{ITEM_LENGTH_LABELS[kind]}</Text>
             <TextInput
-              style={form.input}
+              className={form.input}
               value={length}
               onChangeText={setLength}
               keyboardType="number-pad"
               editable={!isSaving}
             />
 
-            <Text style={form.label}>Notatka</Text>
+            <Text className={form.label}>Notatka</Text>
             <TextInput
-              style={[form.input, form.multiline]}
+              className={form.multiline}
               value={note}
               onChangeText={setNote}
               maxLength={10000}
@@ -190,8 +189,8 @@ export default function BibliographyItemEditorScreen() {
           </>
         )}
 
-        {formError !== "" && <Text style={form.error}>{formError}</Text>}
-        <View style={form.actions}>
+        {formError !== "" && <Text className={form.error}>{formError}</Text>}
+        <View className={form.actions}>
           <Button
             label="Anuluj"
             variant="secondary"
