@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useState } from "react";
 import { Platform, Pressable, RefreshControl, Text, View } from "react-native";
 import {
   NestedReorderableList,
@@ -110,16 +110,9 @@ function dropTarget(
  * The Tasks of one Project, one collapsible section per status. All sections
  * are one reorderable list, so a long press drags a Task within its status or
  * past a heading into another one (an empty or collapsed status too), like
- * the web. Shared by the Zadania tab and the Project screen; `header` goes
- * above the list, inside its scroll view.
+ * the web. Shared by the Zadania tab and the Project screen.
  */
-export function ProjectTasks({
-  project,
-  header,
-}: {
-  project: ProjectResponse | null;
-  header?: ReactNode;
-}) {
+export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
   const { colors, common } = useTheme();
   const styles = useStyles();
   const projectId = project?.id;
@@ -227,7 +220,6 @@ export function ProjectTasks({
           />
         }
       >
-        {header}
         <View style={styles.header}>
           {project?.description ? (
             <Text style={common.muted}>{project.description}</Text>
