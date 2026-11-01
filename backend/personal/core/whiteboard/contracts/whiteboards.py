@@ -32,6 +32,14 @@ class PatchedWhiteboardRequest(_WhiteboardPayload):
     #: Moves it to this Folder; an explicit ``null`` takes it out of its Folder.
     folder_id: int | None = None
 
+    @field_validator('kind', 'name', 'content')
+    @classmethod
+    def reject_null(cls, value: object) -> object:
+        """An explicit ``null`` is not "leave it alone"; only ``folder_id`` may be cleared."""
+        if value is None:
+            raise ValueError('This field may not be null.')
+        return value
+
 
 class WhiteboardResponse(BaseModel):
     id: int = Field(..., json_schema_extra={'readOnly': True})

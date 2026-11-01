@@ -1,7 +1,7 @@
 from datetime import date as datetime_date
 from datetime import datetime
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from personal.core.shared.base import BaseModel
 
@@ -22,6 +22,14 @@ class PatchedTimeEntryRequest(BaseModel):
     duration_minutes: int | None = Field(
         default=None, ge=1, le=MAX_ENTRY_DURATION_MINUTES
     )
+
+    @field_validator('title', 'date', 'duration_minutes')
+    @classmethod
+    def reject_null(cls, value: object) -> object:
+        """An explicit ``null`` is not "leave it alone"; only ``task`` may be cleared."""
+        if value is None:
+            raise ValueError('This field may not be null.')
+        return value
 
 
 class TimeEntryResponse(BaseModel):
