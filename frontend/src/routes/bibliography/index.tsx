@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Search } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import { useState } from "react";
 
-import { BibliographyItemFilters } from "@/components/bibliography/BibliographyItemFilters";
 import { BibliographyItemList } from "@/components/bibliography/BibliographyItemList";
 import { BibliographyYearList } from "@/components/bibliography/BibliographyYearList";
+import { BibliographyFiltersModal } from "@/components/modals/BibliographyFiltersModal";
 import { BibliographyItemEditorModal } from "@/components/modals/BibliographyItemEditorModal";
 import {
   Button,
@@ -13,12 +13,13 @@ import {
   LoadingStatus,
   PageHeader,
   TextInput,
-  ToggleGroup,
 } from "@/design-system";
 import {
+  ITEM_KIND_FILTER_LABELS,
   ITEM_KINDS,
   ITEM_STATUSES,
   itemSearchText,
+  itemStatusFilterLabel,
   type ItemKind,
   type ItemStatus,
 } from "@personal/shared/bibliographyFormat";
@@ -34,18 +35,8 @@ import {
   useBibliographyItems,
   type BibliographyItemFilters as Filters,
 } from "@personal/shared/queries/bibliographyItems";
-import {
-  useBibliographyViewStore,
-  type BibliographyViewMode,
-} from "@personal/shared/stores/bibliographyView";
+import { useBibliographyViewStore } from "@personal/shared/stores/bibliographyView";
 import { ShowModal } from "@/stores/modal";
-
-const VIEW_MODES: BibliographyViewMode[] = ["items", "years"];
-
-const VIEW_MODE_LABELS: Record<BibliographyViewMode, string> = {
-  items: "Pozycje",
-  years: "Lata",
-};
 
 /** The list's filters live in the address (`?status=planned&kind=film`), so a narrowed list can be linked to. */
 function validateFilters(search: Record<string, unknown>): Filters {
@@ -71,14 +62,28 @@ function BibliographyPage() {
     isError,
   } = useBibliographyItems(filters);
   const viewMode = useBibliographyViewStore((state) => state.mode);
-  const setViewMode = useBibliographyViewStore((state) => state.setMode);
   const isYearView = viewMode === "years";
   const attempts = useAllAttempts(isYearView);
   const [query, setQuery] = useState("");
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  // Folded years are not remembered, so they live here, not in a store.
+  const [folded, setFolded] = useState<ReadonlySet<string>>(new Set());
   const navigate = useNavigate();
   const isFiltered = Boolean(filters.status || filters.kind);
   const isSearching = query.trim() !== "";
   const shownItems = fuzzyFilter(items, query, itemSearchText);
+  const filterCount = (filters.status ? 1 : 0) + (filters.kind ? 1 : 0);
+  const yearGroups =
+    isYearView && attempts.data ? groupByYear(shownItems, attempts.data) : [];
+
+  function toggleFolded(key: string) {
+    setFolded((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
 
   function changeFilters(next: Filters) {
     navigate({ to: "/bibliography", search: next, replace: true });
@@ -108,41 +113,70 @@ function BibliographyPage() {
       <PageHeader
         title="Bibliografia"
         actions={
-          <>
-            <ToggleGroup
-              label="Widok Bibliografii"
-              options={VIEW_MODES}
-              labels={VIEW_MODE_LABELS}
-              value={viewMode}
-              onChange={setViewMode}
-            />
-            <Button variant="primary" onClick={showCreate}>
-              <span aria-hidden="true">+</span>
-              Nowa pozycja
-            </Button>
-          </>
+          <Button variant="primary" onClick={showCreate}>
+            <span aria-hidden="true">+</span>
+            Nowa pozycja
+          </Button>
         }
       />
 
-      <div className="relative mb-4 max-w-md">
-        <Search
-          aria-hidden="true"
-          className="pointer-events-none absolute top-1/2 left-3 size-[15px] -translate-y-1/2 text-muted"
-        />
-        <TextInput
-          type="search"
-          aria-label="Szukaj w Bibliografii"
-          placeholder="Szukaj po tytule, twórcy, roku…"
-          className="pl-9"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") setQuery("");
-          }}
-        />
+      <div className="mb-4 flex max-w-xl flex-col gap-2">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search
+              aria-hidden="true"
+              className="pointer-events-none absolute top-1/2 left-3 size-[15px] -translate-y-1/2 text-muted"
+            />
+            <TextInput
+              type="search"
+              aria-label="Szukaj w Bibliografii"
+              placeholder="Szukaj po tytule, twórcy, roku…"
+              className="pl-9"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") setQuery("");
+              }}
+            />
+          </div>
+          <Button
+            variant={filterCount > 0 ? "primary" : "secondary"}
+            aria-label={
+              filterCount > 0 ? `Filtry, aktywne: ${filterCount}` : "Filtry"
+            }
+            onClick={() => setIsFiltersOpen(true)}
+          >
+            <SlidersHorizontal aria-hidden="true" className="size-[15px]" />
+            Filtry
+            {filterCount > 0 && (
+              <span
+                aria-hidden="true"
+                className="rounded-full bg-deep-ink px-1.5 text-[11px] font-bold text-nav-text"
+              >
+                {filterCount}
+              </span>
+            )}
+          </Button>
+        </div>
+        {filterCount > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {filters.kind && (
+              <FilterPill
+                label={ITEM_KIND_FILTER_LABELS[filters.kind]}
+                onRemove={() => changeFilters({ ...filters, kind: undefined })}
+              />
+            )}
+            {filters.status && (
+              <FilterPill
+                label={itemStatusFilterLabel(filters.status, filters.kind)}
+                onRemove={() =>
+                  changeFilters({ ...filters, status: undefined })
+                }
+              />
+            )}
+          </div>
+        )}
       </div>
-
-      <BibliographyItemFilters filters={filters} onChange={changeFilters} />
 
       {isYearView && attempts.isPending ? (
         <LoadingStatus>Wczytywanie podejść…</LoadingStatus>
@@ -161,12 +195,47 @@ function BibliographyPage() {
         />
       ) : isYearView ? (
         <BibliographyYearList
-          groups={groupByYear(shownItems, attempts.data ?? [])}
+          groups={yearGroups}
+          folded={folded}
+          onToggleFolded={toggleFolded}
           onOpen={openItem}
         />
       ) : (
         <BibliographyItemList items={shownItems} onOpen={openItem} />
       )}
+
+      {isFiltersOpen && (
+        <BibliographyFiltersModal
+          filters={filters}
+          onChange={changeFilters}
+          onFoldAll={() =>
+            setFolded(new Set(yearGroups.map((group) => group.key)))
+          }
+          onUnfoldAll={() => setFolded(new Set())}
+          onClose={() => setIsFiltersOpen(false)}
+        />
+      )}
     </>
+  );
+}
+
+/** A filter in force under the search box; clicking it removes the filter. */
+function FilterPill({
+  label,
+  onRemove,
+}: {
+  label: string;
+  onRemove: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={`Usuń filtr: ${label}`}
+      onClick={onRemove}
+      className="inline-flex cursor-pointer items-center gap-1 rounded-full border-0 bg-wash px-2.5 py-1 font-inherit text-[12px] text-ink-soft hover:bg-icon-wash focus-visible:outline-2 focus-visible:outline-accent"
+    >
+      {label}
+      <X aria-hidden="true" className="size-[13px]" />
+    </button>
   );
 }
