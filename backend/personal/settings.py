@@ -47,6 +47,9 @@ class Settings(BaseSettings):
         default=INSECURE_DEV_ADMIN_SECRET_KEY, validation_alias='ADMIN_SECRET_KEY'
     )
     debug: EnvBool = Field(default=False, validation_alias='DEBUG')
+    #: The deployed commit, baked into the image (``deploy.sh`` passes the git SHA);
+    #: Grafana shows it so a stale deploy is visible at a glance.
+    app_version: str = Field(default='dev', validation_alias='APP_VERSION')
     allowed_hosts: EnvList = Field(
         default_factory=lambda: ['localhost', '127.0.0.1'],
         validation_alias='ALLOWED_HOSTS',

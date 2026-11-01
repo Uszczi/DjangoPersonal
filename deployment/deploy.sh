@@ -17,7 +17,11 @@ for key in SECRET_KEY ADMIN_SECRET_KEY DOMAIN; do
     fi
 done
 
-echo "Running build."
+# The commit the images report (CI passes it; a manual run reads git).
+export APP_VERSION="${APP_VERSION:-$(git rev-parse --short HEAD 2>/dev/null || echo unknown)}"
+APP_VERSION="${APP_VERSION:0:7}"
+
+echo "Running build of $APP_VERSION."
 "${COMPOSE[@]}" build
 
 echo "Starting the database."

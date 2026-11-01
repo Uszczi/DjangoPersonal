@@ -1,3 +1,7 @@
+# The commit the Docker images report on the Grafana "App (API)" dashboard;
+# "-dirty" marks a build with uncommitted changes.
+export APP_VERSION := `git describe --always --dirty 2>/dev/null || echo dev`
+
 default:
     @just --list
 
@@ -169,6 +173,7 @@ deploy-createsuperuser username:
 # Apply the Alembic migrations inside the app container.
 deploy-migrate:
     {{compose}} run --rm app alembic upgrade head
+    {{compose}} restart app
 
 # Back up the database now (the daily kind: local rotation + offsite copy).
 deploy-backup:
@@ -212,6 +217,8 @@ local-logs service="":
 # Apply the Alembic migrations against the local stack.
 local-migrate:
     {{compose-local}} run --rm app alembic upgrade head
+    # The app reports the schema revision at startup (Grafana "Database migrations").
+    {{compose-local}} restart app
 
 # Create or promote a staff account for the local stack's admin panel.
 local-createsuperuser username:
