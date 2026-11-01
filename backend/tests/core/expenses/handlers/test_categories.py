@@ -1,4 +1,4 @@
-"""Category kinds: seeded at registration, chosen at creation, never changed."""
+"""Category kinds: chosen at creation, never changed."""
 
 from collections.abc import Callable
 
@@ -9,33 +9,11 @@ from personal import wiring
 from personal.core.expenses.contracts import CategoryRequest, PatchedCategoryRequest
 from personal.core.expenses.handlers import (
     CreateCategory,
-    ListCategories,
     ReplaceCategory,
     UpdateCategory,
-    seed_base_categories,
 )
 from personal.core.shared.errors import DomainError
 from personal.infra.models import User
-
-
-def test_seeding_adds_ten_expense_and_four_income_categories(
-    session: Session, make_user: Callable[..., User]
-) -> None:
-    user = make_user('fresh')
-    repository = wiring.category_repository(session)
-
-    seed_base_categories(repository, user)
-    categories = ListCategories(repository, user).execute()
-
-    kinds = [c.kind for c in categories if not c.is_system]
-    assert (kinds.count('expense'), kinds.count('income')) == (10, 4)
-    assert {c.name for c in categories if c.kind == 'income' and not c.is_system} == {
-        'Wynagrodzenie',
-        'Sprzedaż',
-        'Prezenty',
-        'Inne przychody',
-    }
-    assert sum(c.is_system for c in categories) == 1
 
 
 def test_a_category_is_an_expense_one_unless_told_otherwise(

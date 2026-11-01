@@ -1,11 +1,13 @@
 """The shared tool machinery: registration, one unit of work per call, errors."""
 
 import asyncio
+from collections.abc import Callable
 
 import pytest
 from mcp.server.fastmcp.exceptions import ToolError
 
 from personal.entrypoints.mcp.server import mcp
+from personal.infra import factories
 from personal.infra.models import User
 from tests.entrypoints.mcp.helpers import call
 
@@ -36,3 +38,13 @@ def test_a_refused_call_stores_nothing(mcp_user: User) -> None:
         call('create_task', title='Nope', status='missing')
 
     assert call('list_tasks') == []
+
+
+def test_tools_see_only_the_callers_rows(
+    mcp_user: User, make_user: Callable[..., User]
+) -> None:
+    theirs = factories.ProjectFactory.create(user=make_user('someone-else'), name='Cudzy')
+
+    with pytest.raises(ToolError, match='Project not found.'):
+        call('get_project', project_id=theirs.id)
+    assert [project['name'] for project in call('list_projects')] == ['Inbox']

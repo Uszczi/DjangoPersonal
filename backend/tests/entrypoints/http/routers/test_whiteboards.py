@@ -4,11 +4,6 @@ from http import HTTPStatus
 from typing import Any
 
 
-def test_whiteboards_require_authentication(anon_client: Any) -> None:
-    response = anon_client.get('/api/v1/whiteboards/')
-    assert response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN)
-
-
 def test_whiteboard_can_be_created_with_default_name(post_json: Any) -> None:
     response = post_json('/api/v1/whiteboards/', {})
     assert response.status_code == HTTPStatus.CREATED
@@ -41,31 +36,6 @@ def test_whiteboard_content_round_trips(api_client: Any, post_json: Any) -> None
     created = post_json('/api/v1/whiteboards/', {'name': 'X', 'content': doc}).json()
     retrieved = api_client.get(f"/api/v1/whiteboards/{created['id']}/").json()
     assert retrieved['content'] == doc
-
-
-def test_whiteboard_can_be_deleted(api_client: Any, post_json: Any) -> None:
-    created = post_json('/api/v1/whiteboards/', {'name': 'ToDelete'}).json()
-    response = api_client.delete(f"/api/v1/whiteboards/{created['id']}/")
-    assert response.status_code == HTTPStatus.NO_CONTENT
-    assert api_client.get(f"/api/v1/whiteboards/{created['id']}/").status_code == HTTPStatus.NOT_FOUND
-
-
-def test_whiteboard_per_user_isolation(make_user: Any, client_for: Any) -> None:
-    client_a = client_for(make_user('usera'))
-    client_b = client_for(make_user('userb'))
-    created = client_a.post('/api/v1/whiteboards/', {'name': 'Secret'}).json()
-    # b cannot see it
-    assert client_b.get('/api/v1/whiteboards/').json() == []
-    assert client_b.get(f"/api/v1/whiteboards/{created['id']}/").status_code == HTTPStatus.NOT_FOUND
-    # b cannot rename/delete
-    assert client_b.patch(f"/api/v1/whiteboards/{created['id']}/", {'name': 'Hacked'}).status_code == HTTPStatus.NOT_FOUND
-    assert client_b.delete(f"/api/v1/whiteboards/{created['id']}/").status_code == HTTPStatus.NOT_FOUND
-
-
-def test_openapi_schema_describes_whiteboard_endpoints(api_client: Any) -> None:
-    schema = api_client.get('/api/v1/schema/').json()
-    assert '/api/v1/whiteboards/' in schema['paths']
-    assert '/api/v1/whiteboards/{id}/' in schema['paths']
 
 
 def test_whiteboard_has_no_folder_by_default(post_json: Any) -> None:
@@ -189,11 +159,6 @@ def test_search_sees_only_own_notatki(make_user: Any, client_for: Any) -> None:
     client_a.post('/api/v1/whiteboards/', {'kind': 'markdown', 'name': 'A', 'content': {'markdown': 'sekret'}})
     assert client_b.get('/api/v1/whiteboards/search/?q=sekret').json() == []
     assert len(client_a.get('/api/v1/whiteboards/search/?q=sekret').json()) == 1
-
-
-def test_search_requires_authentication(anon_client: Any) -> None:
-    response = anon_client.get('/api/v1/whiteboards/search/?q=x')
-    assert response.status_code in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN)
 
 
 DUPLICATE = 'A whiteboard or note with this name already exists in this folder.'

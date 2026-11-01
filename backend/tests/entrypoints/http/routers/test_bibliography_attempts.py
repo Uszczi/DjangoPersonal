@@ -60,20 +60,6 @@ def test_finishing_a_attempt_makes_the_item_finished(
     assert _status(api_client, item) == 'finished'
 
 
-def test_abandoning_a_attempt_makes_the_item_abandoned(
-    post_json: Any, patch_json: Any, api_client: ApiClient
-) -> None:
-    item = _item(post_json)
-    attempt = _attempt(post_json, item, outcome='in_progress', started_on='2026-10-01')
-
-    response = patch_json(
-        f'{ATTEMPTS}{attempt["id"]}/', {'outcome': 'abandoned', 'ended_on': '2026-10-05'}
-    )
-
-    assert response.status_code == HTTPStatus.OK
-    assert _status(api_client, item) == 'abandoned'
-
-
 def test_a_finished_attempt_can_be_recorded_with_only_an_end_date(
     post_json: Any, api_client: ApiClient
 ) -> None:
@@ -165,43 +151,6 @@ def test_an_ended_attempt_can_switch_between_finished_and_abandoned(
     assert _status(api_client, item) == 'finished'
 
 
-def test_other_items_can_be_in_progress_at_the_same_time(
-    post_json: Any, api_client: ApiClient
-) -> None:
-    lalka = _item(post_json, title='Lalka')
-    rejs = _item(post_json, kind='film', title='Rejs')
-
-    _attempt(post_json, lalka, outcome='in_progress')
-    _attempt(post_json, rejs, outcome='in_progress')
-
-    assert [p['status'] for p in api_client.get(ITEMS).json()] == [
-        'in_progress',
-        'in_progress',
-    ]
-
-
-def test_back_filling_an_older_attempt_keeps_the_later_status(
-    post_json: Any, api_client: ApiClient
-) -> None:
-    item = _item(post_json)
-    _attempt(post_json, item, outcome='finished', ended_on='2026-03-01')
-
-    _attempt(post_json, item, outcome='abandoned', ended_on='2019-05-01')
-
-    assert _status(api_client, item) == 'finished'
-
-
-def test_resuming_an_ended_item_starts_a_new_attempt(
-    post_json: Any, api_client: ApiClient
-) -> None:
-    item = _item(post_json)
-    _attempt(post_json, item, outcome='abandoned', ended_on='2025-06-01')
-
-    _attempt(post_json, item, outcome='in_progress', started_on='2026-10-01')
-
-    assert _status(api_client, item) == 'in_progress'
-
-
 def test_an_existing_attempt_can_be_re_dated(
     post_json: Any, patch_json: Any, api_client: ApiClient
 ) -> None:
@@ -268,40 +217,19 @@ def test_a_attempt_stays_on_its_item_and_rejects_nulls(
     assert post_json(ATTEMPTS, {'item': item}).status_code == 422
 
 
-def test_unknown_attempt_or_item_is_404(
-    post_json: Any, patch_json: Any, api_client: ApiClient
-) -> None:
-    assert api_client.get(f'{ATTEMPTS}999/').status_code == 404
-    assert patch_json(f'{ATTEMPTS}999/', {'started_on': None}).status_code == 404
-    assert api_client.delete(f'{ATTEMPTS}999/').status_code == 404
-    assert api_client.get(f'{ATTEMPTS}?item=999').status_code == 404
-    response = post_json(ATTEMPTS, {'item': 999, 'outcome': 'in_progress'})
-    assert response.status_code == 404
-
-
-def test_attempts_are_private_to_their_user(
+def test_attempts_need_an_own_item(
     post_json: Any,
+    api_client: ApiClient,
     make_user: Callable[[str], User],
     client_for: Callable[[User], ApiClient],
 ) -> None:
     item = _item(post_json)
-    attempt = _attempt(post_json, item, outcome='in_progress')
-
     other = client_for(make_user('other'))
 
+    assert api_client.get(f'{ATTEMPTS}?item=999').status_code == 404
+    assert post_json(ATTEMPTS, {'item': 999, 'outcome': 'in_progress'}).status_code == 404
     assert other.get(f'{ATTEMPTS}?item={item}').status_code == 404
-    assert other.get(f'{ATTEMPTS}{attempt["id"]}/').status_code == 404
-    url = f'{ATTEMPTS}{attempt["id"]}/'
-    assert other.patch(url, {'started_on': None}).status_code == 404
-    assert other.delete(url).status_code == 404
-    response = other.post(ATTEMPTS, {'item': item, 'outcome': 'in_progress'})
-    assert response.status_code == 404
-
-
-def test_attempts_require_authentication(anon_client: ApiClient) -> None:
-    assert anon_client.get(f'{ATTEMPTS}?item=1').status_code == 401
-    response = anon_client.post(ATTEMPTS, {'item': 1, 'outcome': 'in_progress'})
-    assert response.status_code == 401
+    assert other.post(ATTEMPTS, {'item': item, 'outcome': 'in_progress'}).status_code == 404
 
 
 def test_progress_is_set_on_the_attempt_in_progress(

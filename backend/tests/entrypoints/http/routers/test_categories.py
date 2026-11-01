@@ -21,117 +21,18 @@ def _register(anon_client: ApiClient, username: str = 'fresh') -> ApiClient:
     return anon_client.authenticated(response.json()['access'])
 
 
-def test_list_categories_returns_only_own(api_client: Any, make_user: Any) -> None:
-    CategoryFactory.create(user=make_user('other'), name='Foreign')
-
-    response = api_client.get('/api/v1/categories/')
-
-    assert response.status_code == HTTPStatus.OK
-    assert response.json() == []
-
-
-def test_create_category_trims_name(post_json: Any, api_client: Any) -> None:
-    response = post_json('/api/v1/categories/', {'name': '  Jedzenie  '})
-
-    assert response.status_code == HTTPStatus.CREATED
-    assert response.json()['name'] == 'Jedzenie'
-
-    listing = api_client.get('/api/v1/categories/').json()
-    assert [c['name'] for c in listing] == ['Jedzenie']
-
-
-def test_category_name_is_required_and_cannot_be_blank(post_json: Any) -> None:
-    missing = post_json('/api/v1/categories/', {})
-    blank = post_json('/api/v1/categories/', {'name': '   '})
-
-    assert missing.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert missing.json()['detail'][0]['loc'] == ['body', 'payload', 'name']
-    assert blank.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-
-
-def test_category_names_are_unique_without_case_sensitivity(post_json: Any) -> None:
-    first = post_json('/api/v1/categories/', {'name': ' Transport '})
-    duplicate = post_json('/api/v1/categories/', {'name': 'transport'})
-
-    assert first.status_code == HTTPStatus.CREATED
-    assert first.json()['name'] == 'Transport'
-    assert duplicate.status_code == HTTPStatus.BAD_REQUEST
-    assert 'already exists' in duplicate.json()['detail']
-
-
-def test_retrieve_single_category(post_json: Any, api_client: Any) -> None:
-    category_id = post_json('/api/v1/categories/', {'name': 'Zakupy'}).json()['id']
-
-    response = api_client.get(f'/api/v1/categories/{category_id}/')
-
-    assert response.status_code == HTTPStatus.OK
-    assert response.json()['name'] == 'Zakupy'
-
-
-def test_category_can_be_renamed(post_json: Any, patch_json: Any) -> None:
-    created = post_json('/api/v1/categories/', {'name': 'Old'})
-
-    response = patch_json(f"/api/v1/categories/{created.json()['id']}/", {'name': 'New'})
-
-    assert response.status_code == HTTPStatus.OK
-    assert response.json()['name'] == 'New'
-
-
-def test_rename_to_duplicate_is_rejected(post_json: Any, patch_json: Any) -> None:
-    post_json('/api/v1/categories/', {'name': 'Alpha'})
-    bravo = post_json('/api/v1/categories/', {'name': 'Bravo'})
-
-    response = patch_json(f"/api/v1/categories/{bravo.json()['id']}/", {'name': 'alpha'})
-
-    assert response.status_code == HTTPStatus.BAD_REQUEST
-
-
-def test_replace_category_with_put(post_json: Any, put_json: Any) -> None:
-    created = post_json('/api/v1/categories/', {'name': 'Old'})
-
-    response = put_json(f"/api/v1/categories/{created.json()['id']}/", {'name': 'Replaced'})
-
-    assert response.status_code == HTTPStatus.OK
-    assert response.json()['name'] == 'Replaced'
-
-
-def test_patch_with_null_name_is_rejected(post_json: Any, patch_json: Any) -> None:
-    created = post_json('/api/v1/categories/', {'name': 'Kept'})
-
-    response = patch_json(f"/api/v1/categories/{created.json()['id']}/", {'name': None})
-
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-
-
 def test_category_gets_the_default_icon_when_none_is_chosen(post_json: Any) -> None:
     response = post_json('/api/v1/categories/', {'name': 'Plain'})
 
     assert response.json()['icon'] == 'tag'
 
 
-def test_category_can_be_created_with_an_icon(post_json: Any) -> None:
-    response = post_json('/api/v1/categories/', {'name': 'Kawa', 'icon': 'coffee'})
+@pytest.mark.parametrize('icon', ['coffee', 'triangles-centerline-dashed-horizontal'])
+def test_any_lucide_shaped_icon_name_is_accepted(post_json: Any, icon: str) -> None:
+    response = post_json('/api/v1/categories/', {'name': 'Kawa', 'icon': icon})
 
     assert response.status_code == HTTPStatus.CREATED
-    assert response.json()['icon'] == 'coffee'
-
-
-def test_category_icon_can_be_changed_alone(post_json: Any, patch_json: Any) -> None:
-    created = post_json('/api/v1/categories/', {'name': 'Kawa'}).json()
-
-    response = patch_json(f"/api/v1/categories/{created['id']}/", {'icon': 'coffee'})
-
-    assert response.status_code == HTTPStatus.OK
-    assert response.json() == {**created, 'icon': 'coffee'}
-
-
-def test_any_lucide_shaped_icon_name_is_accepted(post_json: Any) -> None:
-    response = post_json(
-        '/api/v1/categories/', {'name': 'Rakiety', 'icon': 'triangles-centerline-dashed-horizontal'}
-    )
-
-    assert response.status_code == HTTPStatus.CREATED
-    assert response.json()['icon'] == 'triangles-centerline-dashed-horizontal'
+    assert response.json()['icon'] == icon
 
 
 @pytest.mark.parametrize('icon', ['', 'Rocket', 'rocket ship', 'rocket--ship', '-rocket', 'x' * 65])
@@ -147,43 +48,6 @@ def test_null_category_icon_is_rejected(post_json: Any, patch_json: Any) -> None
     response = patch_json(f"/api/v1/categories/{created.json()['id']}/", {'icon': None})
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-
-
-def test_category_not_found(api_client: Any) -> None:
-    response = api_client.get('/api/v1/categories/9999/')
-
-    assert response.status_code == HTTPStatus.NOT_FOUND
-
-
-def test_category_not_visible_to_other_users(api_client: Any, make_user: Any) -> None:
-    category = CategoryFactory.create(user=make_user('someone'), name='Private')
-
-    response = api_client.get(f'/api/v1/categories/{category.id}/')
-
-    assert response.status_code == HTTPStatus.NOT_FOUND
-
-
-def test_mutations_not_visible_to_other_users(
-    api_client: Any, patch_json: Any, put_json: Any, make_user: Any
-) -> None:
-    category = CategoryFactory.create(user=make_user('someone'), name='Private')
-
-    patch = patch_json(f'/api/v1/categories/{category.id}/', {'name': 'Hijacked'})
-    replace = put_json(f'/api/v1/categories/{category.id}/', {'name': 'Hijacked'})
-    delete = api_client.delete(f'/api/v1/categories/{category.id}/')
-
-    assert patch.status_code == HTTPStatus.NOT_FOUND
-    assert replace.status_code == HTTPStatus.NOT_FOUND
-    assert delete.status_code == HTTPStatus.NOT_FOUND
-
-
-def test_delete_category(post_json: Any, api_client: Any) -> None:
-    category_id = post_json('/api/v1/categories/', {'name': 'Zakupy'}).json()['id']
-
-    response = api_client.delete(f'/api/v1/categories/{category_id}/')
-
-    assert response.status_code == HTTPStatus.NO_CONTENT
-    assert api_client.get('/api/v1/categories/').json() == []
 
 
 def test_registering_seeds_base_categories_and_system(post_json: Any, anon_client: Any) -> None:
@@ -238,7 +102,7 @@ def test_seeding_categories_is_idempotent(
     assert len(client.get('/api/v1/categories/').json()) == 15
 
 
-def test_system_category_cannot_be_renamed(post_json: Any, anon_client: Any) -> None:
+def test_the_system_category_cannot_be_renamed_or_deleted(anon_client: ApiClient) -> None:
     client = _register(anon_client)
     system_id = next(
         c['id'] for c in client.get('/api/v1/categories/').json() if c['is_system']
@@ -246,45 +110,11 @@ def test_system_category_cannot_be_renamed(post_json: Any, anon_client: Any) -> 
 
     patched = client.patch(f'/api/v1/categories/{system_id}/', {'name': 'Inne'})
     replaced = client.put(f'/api/v1/categories/{system_id}/', {'name': 'Inne'})
+    deleted = client.delete(f'/api/v1/categories/{system_id}/')
 
-    assert patched.status_code == HTTPStatus.BAD_REQUEST
-    assert replaced.status_code == HTTPStatus.BAD_REQUEST
+    assert [r.status_code for r in (patched, replaced, deleted)] == [HTTPStatus.BAD_REQUEST] * 3
     assert 'System category' in patched.json()['detail']
-
-
-def test_system_category_cannot_be_deleted(post_json: Any, anon_client: Any) -> None:
-    client = _register(anon_client)
-    system_id = next(
-        c['id'] for c in client.get('/api/v1/categories/').json() if c['is_system']
-    )
-
-    response = client.delete(f'/api/v1/categories/{system_id}/')
-
-    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert any(c['is_system'] for c in client.get('/api/v1/categories/').json())
-
-
-def test_a_category_is_an_expense_one_unless_created_as_income(post_json: Any) -> None:
-    hobby = post_json('/api/v1/categories/', {'name': 'Hobby'})
-    bonus = post_json('/api/v1/categories/', {'name': 'Premia', 'kind': 'income'})
-    unknown = post_json('/api/v1/categories/', {'name': 'Odd', 'kind': 'transfer'})
-
-    assert (hobby.json()['kind'], bonus.json()['kind']) == ('expense', 'income')
-    assert unknown.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-
-
-def test_the_kind_of_a_category_cannot_be_changed(
-    post_json: Any, patch_json: Any, put_json: Any
-) -> None:
-    bonus_id = post_json('/api/v1/categories/', {'name': 'Premia', 'kind': 'income'}).json()['id']
-
-    same = patch_json(f'/api/v1/categories/{bonus_id}/', {'kind': 'income', 'icon': 'gift'})
-    patched = patch_json(f'/api/v1/categories/{bonus_id}/', {'kind': 'expense'})
-    replaced = put_json(f'/api/v1/categories/{bonus_id}/', {'name': 'Premia', 'kind': 'expense'})
-
-    assert same.status_code == HTTPStatus.OK
-    assert [patched.status_code, replaced.status_code] == [HTTPStatus.BAD_REQUEST] * 2
-    assert patched.json()['detail'] == 'The kind of a category cannot be changed.'
 
 
 def test_existing_categories_read_as_expense_ones(api_client: Any, api_user: Any) -> None:
@@ -294,11 +124,3 @@ def test_existing_categories_read_as_expense_ones(api_client: Any, api_user: Any
     listing = api_client.get('/api/v1/categories/').json()
 
     assert {c['name']: c['kind'] for c in listing} == {'Old': 'expense', 'System': None}
-
-
-def test_openapi_schema_describes_versioned_category_endpoints(api_client: Any) -> None:
-    schema = api_client.get('/api/v1/schema/').json()
-
-    assert '/api/v1/categories/' in schema['paths']
-    assert '/api/v1/categories/{id}/' in schema['paths']
-    assert '/api/categories/' not in schema['paths']

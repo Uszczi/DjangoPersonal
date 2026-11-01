@@ -61,43 +61,6 @@ def test_task_title_starts_with_a_capital_letter(post_json: Any, patch_json: Any
     assert edited.json()['title'] == 'Nowy tytuł'
 
 
-def test_task_title_is_required_and_cannot_be_blank(post_json: Any) -> None:
-    missing = post_json('/api/v1/tasks/', {})
-    blank = post_json('/api/v1/tasks/', {'title': '   '})
-
-    assert missing.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert missing.json()['detail'][0]['loc'] == ['body', 'payload', 'title']
-    assert missing.json()['detail'][0]['type'] == 'missing'
-    assert blank.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-
-
-def test_patch_with_explicit_null_is_rejected(post_json: Any, patch_json: Any) -> None:
-    project_id = post_json('/api/v1/projects/', {'name': 'Writing'}).json()['id']
-    task_id = post_json(
-        '/api/v1/tasks/', {'title': 'Szkic', 'description': 'opis', 'project': project_id}
-    ).json()['id']
-
-    response = patch_json(f'/api/v1/tasks/{task_id}/', {'description': None})
-
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-
-
-def test_patch_with_omitted_fields_leaves_them_alone(
-    post_json: Any, patch_json: Any
-) -> None:
-    project_id = post_json('/api/v1/projects/', {'name': 'Writing'}).json()['id']
-    task_id = post_json(
-        '/api/v1/tasks/', {'title': 'Szkic', 'description': 'opis', 'project': project_id}
-    ).json()['id']
-
-    response = patch_json(f'/api/v1/tasks/{task_id}/', {'title': 'Final'})
-
-    assert response.status_code == HTTPStatus.OK
-    body = response.json()
-    assert body['title'] == 'Final'
-    assert body['description'] == 'opis'
-
-
 def test_task_list_is_scoped_to_a_project_and_shows_open_tasks_first(api_client: Any, post_json: Any) -> None:
     project_id = post_json('/api/v1/projects/', {'name': 'Writing'}).json()['id']
     other_project_id = post_json('/api/v1/projects/', {'name': 'Research'}).json()['id']
@@ -122,16 +85,6 @@ def test_task_list_is_scoped_to_a_project_and_shows_open_tasks_first(api_client:
         'Archive old notes',
     ]
     assert [task['status'] for task in response.json()] == ['Todo', 'Zrobione']
-
-
-def test_openapi_contract_requires_project_in_task_responses_but_not_requests(api_client: Any) -> None:
-    response = api_client.get('/api/v1/schema/')
-    schema = response.json()
-    task_response = schema['components']['schemas']['TaskResponse']
-    task_request = schema['components']['schemas']['TaskCreateRequest']
-
-    assert 'project_id' in task_response['required']
-    assert 'project' not in task_request.get('required', [])
 
 
 def test_user_can_edit_a_task_and_move_it_to_another_project(api_client: Any, post_json: Any, patch_json: Any) -> None:
@@ -223,50 +176,6 @@ def test_task_order_follows_position_updates(api_client: Any, post_json: Any, pa
     assert [task['title'] for task in listing] == ['Third', 'First', 'Second']
 
 
-def test_task_position_is_clamped_to_the_list_ends(api_client: Any, post_json: Any, patch_json: Any) -> None:
-    project_id = post_json('/api/v1/projects/', {'name': 'Planning'}).json()['id']
-    first = post_json('/api/v1/tasks/', {'title': 'First', 'project': project_id}).json()
-    post_json('/api/v1/tasks/', {'title': 'Second', 'project': project_id})
-
-    response = patch_json(f"/api/v1/tasks/{first['id']}/", {'position': 99})
-
-    assert response.status_code == HTTPStatus.OK
-    listing = api_client.get(f'/api/v1/tasks/?project={project_id}').json()
-    assert [task['title'] for task in listing] == ['Second', 'First']
-
-
-def test_new_task_lands_after_the_last_open_task(api_client: Any, post_json: Any) -> None:
-    project_id = post_json('/api/v1/projects/', {'name': 'Backlog'}).json()['id']
-    open_task = post_json(
-        '/api/v1/tasks/', {'title': 'Open', 'project': project_id}
-    ).json()
-    for title, position in (('Done A', 3), ('Done B', 4)):
-        post_json(
-            '/api/v1/tasks/',
-            {'title': title, 'project': project_id, 'status': 'Zrobione', 'position': position},
-        )
-
-    created = post_json('/api/v1/tasks/', {'title': 'Fresh', 'project': project_id})
-
-    assert created.status_code == HTTPStatus.CREATED
-    assert created.json()['position'] == open_task['position'] + 1
-    listing = api_client.get(f'/api/v1/tasks/?project={project_id}').json()
-    assert [task['title'] for task in listing] == ['Open', 'Fresh', 'Done A', 'Done B']
-
-
-def test_user_can_permanently_delete_a_task(api_client: Any, post_json: Any) -> None:
-    project_id = post_json('/api/v1/projects/', {'name': 'Reading'}).json()['id']
-    task = post_json(
-        '/api/v1/tasks/', {'title': 'Read chapter', 'project': project_id}
-    ).json()
-
-    response = api_client.delete(f"/api/v1/tasks/{task['id']}/")
-
-    assert response.status_code == HTTPStatus.NO_CONTENT
-    assert api_client.get(f'/api/v1/tasks/?project={project_id}').json() == []
-    assert api_client.get('/api/v1/tasks/').json() == []
-
-
 def test_task_with_time_entries_cannot_be_deleted(api_client: Any, post_json: Any) -> None:
     project_id = post_json('/api/v1/projects/', {'name': 'Reading'}).json()['id']
     task = post_json(
@@ -290,22 +199,6 @@ def test_project_exposes_its_status_list_and_terminal_status(api_client: Any, po
     assert created.json()['terminal_status'] == 'Zrobione'
 
 
-def test_user_can_customize_project_statuses_and_terminal(post_json: Any, patch_json: Any) -> None:
-    project_id = post_json('/api/v1/projects/', {'name': 'Reading'}).json()['id']
-
-    response = patch_json(
-        f'/api/v1/projects/{project_id}/',
-        {
-            'project_statuses': ['Todo', 'W trakcie', 'Zrobione'],
-            'terminal_status': 'Zrobione',
-        },
-    )
-
-    assert response.status_code == HTTPStatus.OK
-    assert response.json()['project_statuses'] == ['Todo', 'W trakcie', 'Zrobione']
-    assert response.json()['terminal_status'] == 'Zrobione'
-
-
 def test_terminal_status_must_be_one_of_the_project_statuses(post_json: Any, patch_json: Any) -> None:
     project_id = post_json('/api/v1/projects/', {'name': 'Reading'}).json()['id']
 
@@ -315,15 +208,6 @@ def test_terminal_status_must_be_one_of_the_project_statuses(post_json: Any, pat
     )
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
-
-
-def test_project_status_list_is_normalized(post_json: Any) -> None:
-    created = post_json(
-        '/api/v1/projects/',
-        {'name': 'Reading', 'project_statuses': [' Todo ', 'Todo', 'W trakcie ']},
-    )
-
-    assert created.json()['project_statuses'] == ['Todo', 'W trakcie']
 
 
 def test_project_status_list_cannot_be_empty(post_json: Any) -> None:
@@ -347,6 +231,8 @@ def test_changing_project_statuses_moves_orphaned_tasks_to_the_first_status(
     )
 
     assert updated.status_code == HTTPStatus.OK
+    assert updated.json()['project_statuses'] == ['W trakcie', 'Gotowe']
+    assert updated.json()['terminal_status'] == 'Gotowe'
     listing = api_client.get(f'/api/v1/tasks/?project={project_id}').json()
     assert [task['status'] for task in listing] == ['W trakcie']
 

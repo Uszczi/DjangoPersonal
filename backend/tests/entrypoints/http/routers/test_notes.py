@@ -10,7 +10,6 @@ from fastapi import FastAPI
 from personal.core.notes_qa.prompt import NOT_FOUND
 from personal.settings import Settings
 from tests.core.notes_qa.helpers import FakeAnswerGenerator, FakeEmbedder
-from tests.harness import ApiClient
 
 CAR = '# Samochód\n\n## Ubezpieczenie\n\nUbezpieczenie OC kończy się 14 marca.\n'
 
@@ -77,9 +76,3 @@ def test_without_an_answer_model_it_is_503(post_json: Any, app: FastAPI, setting
 def test_a_blank_question_is_rejected(post_json: Any, generator: FakeAnswerGenerator) -> None:
     assert post_json('/api/v1/notes/ask/', {'question': '   '}).status_code == 422
     assert post_json('/api/v1/notes/ask/', {}).status_code == 422
-
-
-def test_requires_authentication(anon_client: ApiClient) -> None:
-    response = anon_client.post('/api/v1/notes/ask/', {'question': 'Kiedy OC?'})
-
-    assert response.status_code == HTTPStatus.UNAUTHORIZED

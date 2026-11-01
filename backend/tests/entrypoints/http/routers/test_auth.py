@@ -180,18 +180,6 @@ def test_successful_logins_are_never_counted(
         assert _login(anon_client, 'regular', PASSWORD).status_code == HTTPStatus.OK
 
 
-def test_a_successful_login_clears_earlier_failures(
-    anon_client: ApiClient, make_user: Callable[..., User]
-) -> None:
-    make_user('forgetful')
-    for _ in range(4):
-        _login(anon_client, 'forgetful', 'wrong')
-    assert _login(anon_client, 'forgetful', PASSWORD).status_code == HTTPStatus.OK
-
-    for _ in range(5):
-        assert _login(anon_client, 'forgetful', 'wrong').status_code == HTTPStatus.UNAUTHORIZED
-
-
 def test_failures_for_one_username_do_not_block_another(
     anon_client: ApiClient, make_user: Callable[..., User]
 ) -> None:

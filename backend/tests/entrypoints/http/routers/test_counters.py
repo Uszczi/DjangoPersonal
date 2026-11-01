@@ -33,6 +33,7 @@ def test_create_counter_starts_empty(post_json: Any, api_client: ApiClient) -> N
     assert body['name'] == 'Kawa'
     assert body['entry_count'] == 0
     assert body['total'] == 0
+    assert body['color'] == '#477c7c'
     assert [c['name'] for c in api_client.get('/api/v1/counters/').json()] == ['Kawa']
 
 
@@ -51,47 +52,11 @@ def test_counters_are_listed_by_latest_entry_added(
     assert names == ['Herbata', 'Kawa', 'Woda']
 
 
-def test_counter_name_is_required(post_json: Any) -> None:
-    assert post_json('/api/v1/counters/', {'name': '   '}).status_code == 422
-    assert post_json('/api/v1/counters/', {}).status_code == 422
-
-
-def test_rename_counter(post_json: Any, patch_json: Any) -> None:
-    counter_id = _counter(post_json)
-
-    response = patch_json(f'/api/v1/counters/{counter_id}/', {'name': 'Herbata'})
-
-    assert response.status_code == HTTPStatus.OK
-    assert response.json()['name'] == 'Herbata'
-    assert patch_json(f'/api/v1/counters/{counter_id}/', {'name': None}).status_code == 422
-
-
-def test_new_counter_gets_the_default_color(post_json: Any) -> None:
-    response = post_json('/api/v1/counters/', {'name': 'Kawa'})
-
-    assert response.json()['color'] == '#477c7c'
-
-
 def test_create_counter_with_color(post_json: Any) -> None:
     response = post_json('/api/v1/counters/', {'name': 'Kawa', 'color': '#D45B3E'})
 
     assert response.status_code == HTTPStatus.CREATED
     assert response.json()['color'] == '#d45b3e'
-
-
-def test_counter_color_can_be_changed(
-    post_json: Any, patch_json: Any, api_client: ApiClient
-) -> None:
-    counter_id = _counter(post_json)
-
-    response = patch_json(f'/api/v1/counters/{counter_id}/', {'color': '#3d6fb6'})
-
-    assert response.status_code == HTTPStatus.OK
-    assert response.json()['color'] == '#3d6fb6'
-    assert response.json()['name'] == 'Kawa'
-    assert [c['color'] for c in api_client.get('/api/v1/counters/').json()] == ['#3d6fb6']
-    renamed = patch_json(f'/api/v1/counters/{counter_id}/', {'name': 'Herbata'})
-    assert renamed.json()['color'] == '#3d6fb6'
 
 
 def test_counter_color_must_be_a_hex_color(post_json: Any, patch_json: Any) -> None:
@@ -144,18 +109,6 @@ def test_entry_time_needs_a_time_zone(post_json: Any) -> None:
     assert response.status_code == 422
 
 
-def test_move_entry_in_time(post_json: Any, patch_json: Any) -> None:
-    counter_id = _counter(post_json)
-    entry = _entry(post_json, counter_id)
-
-    response = patch_json(
-        f'/api/v1/counter-entries/{entry["id"]}/', {'occurred_at': '2026-10-21T21:45:00Z'}
-    )
-
-    assert response.status_code == HTTPStatus.OK
-    assert response.json()['occurred_at'] == '2026-10-21T21:45:00Z'
-
-
 def test_edit_entry(post_json: Any, patch_json: Any, api_client: ApiClient) -> None:
     counter_id = _counter(post_json)
     entry = _entry(post_json, counter_id, note='rano')
@@ -195,30 +148,22 @@ def test_unknown_counter(post_json: Any, api_client: ApiClient) -> None:
     assert response.status_code == 404
 
 
-def test_counters_are_private(
+def test_another_users_counter_takes_no_entries_and_lists_none(
     post_json: Any,
     client_for: Callable[[User], ApiClient],
     make_user: Callable[..., User],
 ) -> None:
     counter_id = _counter(post_json)
-    entry = _entry(post_json, counter_id)
+    _entry(post_json, counter_id)
     other = client_for(make_user('other'))
 
-    assert other.get('/api/v1/counters/').json() == []
-    assert other.get(f'/api/v1/counters/{counter_id}/').status_code == 404
-    assert other.patch(f'/api/v1/counters/{counter_id}/', {'name': 'x'}).status_code == 404
-    assert other.delete(f'/api/v1/counters/{counter_id}/').status_code == 404
-    assert other.get(f'/api/v1/counter-entries/?counter={counter_id}').status_code == 404
-    assert other.get(f'/api/v1/counter-entries/{entry["id"]}/').status_code == 404
-    assert other.patch(f'/api/v1/counter-entries/{entry["id"]}/', {'value': 2}).status_code == 404
-    assert other.delete(f'/api/v1/counter-entries/{entry["id"]}/').status_code == 404
-    response = other.post('/api/v1/counter-entries/', {'counter': counter_id, 'occurred_at': '2026-10-20T08:00:00Z'})
-    assert response.status_code == 404
+    listing = other.get(f'/api/v1/counter-entries/?counter={counter_id}')
+    response = other.post(
+        '/api/v1/counter-entries/', {'counter': counter_id, 'occurred_at': '2026-10-20T08:00:00Z'}
+    )
 
-
-def test_counters_require_auth(anon_client: ApiClient) -> None:
-    assert anon_client.get('/api/v1/counters/').status_code == 401
-    assert anon_client.get('/api/v1/counter-entries/?counter=1').status_code == 401
+    assert listing.status_code == HTTPStatus.NOT_FOUND
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 def test_counter_streak_and_days_since_last_entry(

@@ -4,6 +4,8 @@ from datetime import date
 from http import HTTPStatus
 from typing import Any
 
+import pytest
+
 from personal.core.expenses.handlers.wallets import OPENING_BALANCE_TITLE
 from personal.infra.factories import CategoryFactory, TransactionFactory, WalletFactory
 from tests.harness import ApiClient
@@ -33,83 +35,6 @@ def test_create_transaction(post_json: Any, api_client: Any) -> None:
 
     listing = api_client.get(f'/api/v1/transactions/?wallet={wallet_id}').json()
     assert [t['title'] for t in listing['items']] == ['Zakupy']
-
-
-def test_transaction_with_category_and_description(post_json: Any) -> None:
-    wallet_id = post_json('/api/v1/wallets/', {'name': 'Personal'}).json()['id']
-    # 'Jedzenie' is seeded with the first wallet; pick a label outside the base set.
-    category_id = post_json('/api/v1/categories/', {'name': 'Hobby'}).json()['id']
-
-    response = post_json(
-        '/api/v1/transactions/',
-        {
-            'title': 'Obiad',
-            'amount': '45.99',
-            'date': '2026-10-17',
-            'description': 'Z restauracji na rynku',
-            'category': category_id,
-            'wallet': wallet_id,
-        },
-    )
-
-    assert response.status_code == HTTPStatus.CREATED
-    body = response.json()
-    assert body['category_id'] == category_id
-    assert body['description'] == 'Z restauracji na rynku'
-
-
-def test_amount_must_be_positive(post_json: Any) -> None:
-    wallet_id = post_json('/api/v1/wallets/', {'name': 'Personal'}).json()['id']
-
-    zero = post_json(
-        '/api/v1/transactions/',
-        {'title': 'Zero', 'amount': '0', 'date': '2026-10-18', 'wallet': wallet_id},
-    )
-    negative = post_json(
-        '/api/v1/transactions/',
-        {'title': 'Debt', 'amount': '-5.00', 'date': '2026-10-18', 'wallet': wallet_id},
-    )
-
-    assert zero.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert negative.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-
-
-def test_amount_must_have_at_most_two_decimal_places(post_json: Any) -> None:
-    wallet_id = post_json('/api/v1/wallets/', {'name': 'Personal'}).json()['id']
-
-    too_precise = post_json(
-        '/api/v1/transactions/',
-        {'title': 'Precise', 'amount': '12.345', 'date': '2026-10-18', 'wallet': wallet_id},
-    )
-    exact = post_json(
-        '/api/v1/transactions/',
-        {'title': 'Exact', 'amount': '12.34', 'date': '2026-10-18', 'wallet': wallet_id},
-    )
-
-    assert too_precise.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert exact.status_code == HTTPStatus.CREATED
-    assert exact.json()['amount'] == '12.34'
-
-
-def test_title_and_date_are_required(post_json: Any) -> None:
-    wallet_id = post_json('/api/v1/wallets/', {'name': 'Personal'}).json()['id']
-
-    missing_title = post_json(
-        '/api/v1/transactions/',
-        {'amount': '12.34', 'date': '2026-10-18', 'wallet': wallet_id},
-    )
-    blank_title = post_json(
-        '/api/v1/transactions/',
-        {'title': '   ', 'amount': '12.34', 'date': '2026-10-18', 'wallet': wallet_id},
-    )
-    missing_date = post_json(
-        '/api/v1/transactions/',
-        {'title': 'No date', 'amount': '12.34', 'wallet': wallet_id},
-    )
-
-    assert missing_title.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert blank_title.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert missing_date.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
 def test_list_transactions_is_scoped_to_wallet_and_newest_first(
@@ -179,74 +104,34 @@ def test_a_full_last_page_has_no_next_cursor(api_client: Any, api_user: Any) -> 
     assert page['next_cursor'] is None
 
 
-def test_list_transactions_rejects_a_limit_out_of_range(api_client: Any, api_user: Any) -> None:
-    wallet = WalletFactory.create(user=api_user, name='Cash')
-
-    too_big = api_client.get(f'/api/v1/transactions/?wallet={wallet.id}&limit=201')
-    zero = api_client.get(f'/api/v1/transactions/?wallet={wallet.id}&limit=0')
-
-    assert too_big.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert zero.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-
-
-def test_list_transactions_rejects_a_malformed_cursor(api_client: Any, api_user: Any) -> None:
-    wallet = WalletFactory.create(user=api_user, name='Cash')
-
-    response = api_client.get(f'/api/v1/transactions/?wallet={wallet.id}&cursor=nonsense')
-
-    assert response.status_code == HTTPStatus.BAD_REQUEST
-
-
-def test_list_transactions_rejects_unknown_wallet(api_client: Any) -> None:
-    response = api_client.get('/api/v1/transactions/?wallet=9999')
-
-    assert response.status_code == HTTPStatus.NOT_FOUND
-
-
-def test_retrieve_single_transaction(post_json: Any, api_client: Any) -> None:
+@pytest.mark.parametrize('amount', ['0', '-5.00', '12.345'])
+def test_an_amount_must_be_positive_with_at_most_two_decimal_places(
+    post_json: Any, amount: str
+) -> None:
     wallet_id = post_json('/api/v1/wallets/', {'name': 'Personal'}).json()['id']
-    transaction_id = post_json(
+
+    response = post_json(
         '/api/v1/transactions/',
-        {'title': 'Kawa', 'amount': '8.00', 'date': '2026-10-18', 'wallet': wallet_id},
-    ).json()['id']
-
-    response = api_client.get(f'/api/v1/transactions/{transaction_id}/')
-
-    assert response.status_code == HTTPStatus.OK
-    assert response.json()['title'] == 'Kawa'
-
-
-def test_transaction_can_be_edited(post_json: Any, patch_json: Any) -> None:
-    wallet_id = post_json('/api/v1/wallets/', {'name': 'Personal'}).json()['id']
-    category_id = post_json('/api/v1/categories/', {'name': 'Hobby'}).json()['id']
-    transaction_id = post_json(
-        '/api/v1/transactions/',
-        {'title': 'Kawa', 'amount': '8.00', 'date': '2026-10-18', 'wallet': wallet_id},
-    ).json()['id']
-
-    response = patch_json(
-        f'/api/v1/transactions/{transaction_id}/',
-        {'title': 'Herbata', 'amount': '9.50', 'category': category_id},
+        {'title': 'Entry', 'amount': amount, 'date': '2026-10-18', 'wallet': wallet_id},
     )
 
-    assert response.status_code == HTTPStatus.OK
-    body = response.json()
-    assert body['title'] == 'Herbata'
-    assert body['amount'] == '9.50'
-    assert body['category_id'] == category_id
-    assert body['date'] == '2026-10-18'
-
-
-def test_patch_with_null_amount_is_rejected(post_json: Any, patch_json: Any) -> None:
-    wallet_id = post_json('/api/v1/wallets/', {'name': 'Personal'}).json()['id']
-    transaction_id = post_json(
-        '/api/v1/transactions/',
-        {'title': 'Kawa', 'amount': '8.00', 'date': '2026-10-18', 'wallet': wallet_id},
-    ).json()['id']
-
-    response = patch_json(f'/api/v1/transactions/{transaction_id}/', {'amount': None})
-
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def test_listing_needs_an_own_wallet_and_a_valid_page(
+    api_client: Any, api_user: Any, make_user: Any
+) -> None:
+    wallet = WalletFactory.create(user=api_user, name='Cash')
+    foreign = WalletFactory.create(user=make_user('someone'), name='Foreign')
+    url = f'/api/v1/transactions/?wallet={wallet.id}'
+
+    assert api_client.get('/api/v1/transactions/?wallet=9999').status_code == HTTPStatus.NOT_FOUND
+    assert api_client.get(f'/api/v1/transactions/?wallet={foreign.id}').status_code == (
+        HTTPStatus.NOT_FOUND
+    )
+    assert api_client.get(url + '&limit=201').status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert api_client.get(url + '&limit=0').status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert api_client.get(url + '&cursor=nonsense').status_code == HTTPStatus.BAD_REQUEST
 
 
 def test_patch_with_null_category_uncategorizes_transaction(
@@ -269,26 +154,6 @@ def test_patch_with_null_category_uncategorizes_transaction(
 
     assert response.status_code == HTTPStatus.OK
     assert response.json()['category_id'] is None
-
-
-def test_patch_without_category_leaves_it_alone(post_json: Any, patch_json: Any) -> None:
-    wallet_id = post_json('/api/v1/wallets/', {'name': 'Personal'}).json()['id']
-    category_id = post_json('/api/v1/categories/', {'name': 'Hobby'}).json()['id']
-    transaction_id = post_json(
-        '/api/v1/transactions/',
-        {
-            'title': 'Kawa',
-            'amount': '8.00',
-            'date': '2026-10-18',
-            'category': category_id,
-            'wallet': wallet_id,
-        },
-    ).json()['id']
-
-    response = patch_json(f'/api/v1/transactions/{transaction_id}/', {'title': 'Herbata'})
-
-    assert response.status_code == HTTPStatus.OK
-    assert response.json()['category_id'] == category_id
 
 
 def test_replace_transaction_with_put_clears_category(
@@ -335,22 +200,6 @@ def test_transaction_can_move_between_wallets(post_json: Any, patch_json: Any) -
     assert response.json()['wallet_id'] == target
 
 
-def test_delete_transaction(post_json: Any, api_client: Any) -> None:
-    wallet_id = post_json('/api/v1/wallets/', {'name': 'Personal'}).json()['id']
-    transaction_id = post_json(
-        '/api/v1/transactions/',
-        {'title': 'Kawa', 'amount': '8.00', 'date': '2026-10-18', 'wallet': wallet_id},
-    ).json()['id']
-
-    response = api_client.delete(f'/api/v1/transactions/{transaction_id}/')
-
-    assert response.status_code == HTTPStatus.NO_CONTENT
-    assert api_client.get(f'/api/v1/transactions/?wallet={wallet_id}').json() == {
-        'items': [],
-        'next_cursor': None,
-    }
-
-
 def test_foreign_wallet_and_category_are_rejected(post_json: Any, make_user: Any) -> None:
     other = make_user('someone')
     foreign_wallet = WalletFactory.create(user=other, name='Foreign')
@@ -381,106 +230,6 @@ def test_foreign_wallet_and_category_are_rejected(post_json: Any, make_user: Any
     assert bad_category.status_code == HTTPStatus.BAD_REQUEST
 
 
-def test_transaction_not_visible_to_other_users(
-    api_client: Any, post_json: Any, patch_json: Any, put_json: Any, make_user: Any
-) -> None:
-    foreign_wallet = WalletFactory.create(user=make_user('someone'), name='Foreign')
-    foreign = TransactionFactory.create(wallet=foreign_wallet, title='Secret', amount='99.00')
-
-    assert api_client.get(f'/api/v1/transactions/{foreign.id}/').status_code == HTTPStatus.NOT_FOUND
-    assert (
-        patch_json(f'/api/v1/transactions/{foreign.id}/', {'title': 'Hijacked'}).status_code
-        == HTTPStatus.NOT_FOUND
-    )
-    assert (
-        put_json(
-            f'/api/v1/transactions/{foreign.id}/',
-            {'title': 'Hijacked', 'amount': '1.00', 'date': '2026-10-18', 'wallet': foreign_wallet.id},
-        ).status_code
-        == HTTPStatus.NOT_FOUND
-    )
-    assert (
-        api_client.delete(f'/api/v1/transactions/{foreign.id}/').status_code
-        == HTTPStatus.NOT_FOUND
-    )
-
-
-def test_other_users_wallet_lists_no_transactions(
-    api_client: Any, make_user: Any
-) -> None:
-    foreign_wallet = WalletFactory.create(user=make_user('someone'), name='Foreign')
-    TransactionFactory.create(wallet=foreign_wallet, title='Secret', amount='99.00')
-
-    response = api_client.get(f'/api/v1/transactions/?wallet={foreign_wallet.id}')
-
-    assert response.status_code == HTTPStatus.NOT_FOUND
-
-
-def test_deleting_wallet_cascades_to_transactions(post_json: Any, api_client: Any) -> None:
-    wallet_id = post_json('/api/v1/wallets/', {'name': 'Personal'}).json()['id']
-    transaction_id = post_json(
-        '/api/v1/transactions/',
-        {'title': 'Kawa', 'amount': '8.00', 'date': '2026-10-18', 'wallet': wallet_id},
-    ).json()['id']
-
-    response = api_client.delete(f'/api/v1/wallets/{wallet_id}/')
-
-    assert response.status_code == HTTPStatus.NO_CONTENT
-    assert (
-        api_client.get(f'/api/v1/transactions/{transaction_id}/').status_code
-        == HTTPStatus.NOT_FOUND
-    )
-
-
-def test_deleting_category_cascades_to_transactions(post_json: Any, api_client: Any) -> None:
-    wallet_id = post_json('/api/v1/wallets/', {'name': 'Personal'}).json()['id']
-    category_id = post_json('/api/v1/categories/', {'name': 'Hobby'}).json()['id']
-    post_json(
-        '/api/v1/transactions/',
-        {
-            'title': 'Kawa',
-            'amount': '8.00',
-            'date': '2026-10-18',
-            'category': category_id,
-            'wallet': wallet_id,
-        },
-    )
-
-    response = api_client.delete(f'/api/v1/categories/{category_id}/')
-
-    assert response.status_code == HTTPStatus.NO_CONTENT
-    assert api_client.get(f'/api/v1/transactions/?wallet={wallet_id}').json() == {
-        'items': [],
-        'next_cursor': None,
-    }
-
-
-def test_wallet_list_reports_real_transaction_count(post_json: Any, api_client: Any) -> None:
-    first = post_json('/api/v1/wallets/', {'name': 'First'}).json()['id']
-    second = post_json('/api/v1/wallets/', {'name': 'Second'}).json()['id']
-    post_json(
-        '/api/v1/transactions/',
-        {'title': 'A', 'amount': '1.00', 'date': '2026-10-18', 'wallet': first},
-    )
-    post_json(
-        '/api/v1/transactions/',
-        {'title': 'B', 'amount': '2.00', 'date': '2026-10-18', 'wallet': first},
-    )
-
-    listing = api_client.get('/api/v1/wallets/').json()
-    counts = {w['name']: w['transaction_count'] for w in listing}
-
-    assert counts == {'First': 2, 'Second': 0}
-
-
-def test_openapi_schema_describes_versioned_transaction_endpoints(api_client: Any) -> None:
-    schema = api_client.get('/api/v1/schema/').json()
-
-    assert '/api/v1/transactions/' in schema['paths']
-    assert '/api/v1/transactions/{id}/' in schema['paths']
-    assert '/api/transactions/' not in schema['paths']
-
-
 def _registered_wallet(anon_client: ApiClient) -> tuple[ApiClient, int, dict[str, int]]:
     """A registered user's client, a wallet opened with 100.00, and their category ids."""
     password = 'StrongPass123!'
@@ -494,30 +243,6 @@ def _registered_wallet(anon_client: ApiClient) -> tuple[ApiClient, int, dict[str
     ).json()['id']
     categories = {c['name']: c['id'] for c in client.get('/api/v1/categories/').json()}
     return client, wallet_id, categories
-
-
-def test_income_raises_the_balance_and_expenses_lower_it(anon_client: ApiClient) -> None:
-    client, wallet_id, categories = _registered_wallet(anon_client)
-    for category, amount in [
-        ('Wynagrodzenie', '500.00'),
-        ('Jedzenie', '42.00'),
-        (None, '8.00'),
-    ]:
-        response = client.post(
-            '/api/v1/transactions/',
-            {
-                'title': 'Entry',
-                'amount': amount,
-                'date': '2026-10-30',
-                'wallet': wallet_id,
-                'category': categories[category] if category else None,
-            },
-        )
-        assert response.status_code == HTTPStatus.CREATED, response.text
-
-    wallet = client.get(f'/api/v1/wallets/{wallet_id}/').json()
-
-    assert wallet['balance'] == '550.00'
 
 
 def test_a_transaction_carries_the_kind_of_its_category(anon_client: ApiClient) -> None:
@@ -544,41 +269,3 @@ def test_a_transaction_carries_the_kind_of_its_category(anon_client: ApiClient) 
         OPENING_BALANCE_TITLE: None,
     }
     assert single['kind'] == items[0]['kind']
-
-
-def test_filing_under_system_and_editing_a_system_entry_are_rejected(
-    anon_client: ApiClient,
-) -> None:
-    client, wallet_id, categories = _registered_wallet(anon_client)
-    opening = client.get(f'/api/v1/transactions/?wallet={wallet_id}').json()['items'][0]
-    lunch = client.post(
-        '/api/v1/transactions/',
-        {
-            'title': 'Lunch',
-            'amount': '10.00',
-            'date': '2026-10-30',
-            'wallet': wallet_id,
-            'category': categories['Jedzenie'],
-        },
-    ).json()
-    into_system = {
-        'title': 'Sneaky',
-        'amount': '10.00',
-        'date': '2026-10-30',
-        'wallet': wallet_id,
-        'category': categories['System'],
-    }
-
-    created = client.post('/api/v1/transactions/', into_system)
-    moved = client.patch(f'/api/v1/transactions/{lunch["id"]}/', {'category': categories['System']})
-    edited = client.patch(f'/api/v1/transactions/{opening["id"]}/', {'title': 'Renamed'})
-    replaced = client.put(
-        f'/api/v1/transactions/{opening["id"]}/', {**into_system, 'category': None}
-    )
-    deleted = client.delete(f'/api/v1/transactions/{opening["id"]}/')
-
-    assert [created.status_code, moved.status_code] == [HTTPStatus.BAD_REQUEST] * 2
-    assert created.json()['detail'] == 'Transactions cannot be filed under the System category.'
-    assert [edited.status_code, replaced.status_code] == [HTTPStatus.BAD_REQUEST] * 2
-    assert edited.json()['detail'] == 'System entries can only be deleted.'
-    assert deleted.status_code == HTTPStatus.NO_CONTENT

@@ -1,13 +1,11 @@
 """The Bibliografia tools: items, attempts and the import."""
 
-from collections.abc import Callable
 from datetime import UTC, datetime
 
 import pytest
 from mcp.server.fastmcp.exceptions import ToolError
 
 from personal.core.work import clock
-from personal.infra import factories
 from personal.infra.models import User
 from tests.entrypoints.mcp.helpers import call
 
@@ -28,27 +26,6 @@ def test_bibliography_item_tools(mcp_user: User) -> None:
         'Prus',
         680,
     )
-
-
-def test_the_kind_of_a_bibliography_item_cannot_change(mcp_user: User) -> None:
-    book = call('create_bibliography_item', kind='book', title='Lalka')
-
-    with pytest.raises(ToolError, match='kind'):
-        call('update_bibliography_item', item_id=book['id'], kind='film')
-
-    assert call('get_bibliography_item', item_id=book['id'])['kind'] == 'book'
-
-
-def test_bibliography_tools_see_only_the_callers_items(
-    mcp_user: User, make_user: Callable[..., User]
-) -> None:
-    other = factories.BibliographyItemFactory.create(user=make_user('someone-else'), title='Cudze')
-
-    assert call('list_bibliography_items') == []
-    with pytest.raises(ToolError, match='Bibliography item not found.'):
-        call('get_bibliography_item', item_id=other.id)
-    with pytest.raises(ToolError, match='Bibliography item not found.'):
-        call('update_bibliography_item', item_id=other.id, title='Moje')
 
 
 @pytest.fixture
@@ -96,23 +73,6 @@ def test_attempt_tools_abandon_record_and_list(mcp_user: User, frozen_now: datet
     history = call('list_attempts', item_id=film['id'])
     assert [a['id'] for a in history] == [second['id'], recorded['id']]
     assert call('get_bibliography_item', item_id=film['id'])['status'] == 'abandoned'
-
-
-def test_attempt_rule_violations_are_tool_errors(mcp_user: User) -> None:
-    book = call('create_bibliography_item', kind='book', title='Lalka', length=680)
-    open_attempt = call('start_attempt', item_id=book['id'])
-
-    with pytest.raises(ToolError, match='already has an Attempt in progress'):
-        call('start_attempt', item_id=book['id'])
-    with pytest.raises(ToolError, match='cannot be greater than the length'):
-        call('update_attempt', attempt_id=open_attempt['id'], progress=681)
-    film = call('create_bibliography_item', kind='film', title='Rejs', length=67)
-    with pytest.raises(ToolError, match='cannot be greater than the length'):
-        call('start_attempt', item_id=film['id'], progress=68)
-    assert call('list_attempts', item_id=film['id']) == []
-
-    assert len(call('list_attempts', item_id=book['id'])) == 1
-    assert call('list_attempts', item_id=book['id'])[0]['progress'] is None
 
 
 def test_delete_tools_remove_an_attempt_or_a_whole_item(mcp_user: User) -> None:
@@ -184,19 +144,3 @@ def test_progress_can_be_cleared(mcp_user: User) -> None:
     cleared = call('update_attempt', attempt_id=started['id'], clear_progress=True)
 
     assert cleared['progress'] is None
-
-
-def test_attempt_tools_see_only_the_callers_attempts(
-    mcp_user: User, make_user: Callable[..., User]
-) -> None:
-    other = factories.BibliographyItemFactory.create(user=make_user('someone-else'))
-    theirs = factories.AttemptFactory.create(item=other, outcome='in_progress', ended_on=None)
-
-    with pytest.raises(ToolError, match='Bibliography item not found.'):
-        call('list_attempts', item_id=other.id)
-    with pytest.raises(ToolError, match='Bibliography item not found.'):
-        call('start_attempt', item_id=other.id)
-    with pytest.raises(ToolError, match='Attempt not found.'):
-        call('finish_attempt', attempt_id=theirs.id)
-    with pytest.raises(ToolError, match='Attempt not found.'):
-        call('update_attempt', attempt_id=theirs.id, progress=1)

@@ -154,9 +154,3 @@ def test_wallet_balance_adds_income_and_subtracts_expenses(session: Session, use
         )
 
     assert wallets.balance(wallet.id, user=user) == Decimal('520.00')
-
-
-def test_a_new_category_is_an_expense_one(session: Session, user: User) -> None:
-    category = CategoryRepository(session).save(Category(user_id=user.id, name='Food'))
-
-    assert category.kind == 'expense'

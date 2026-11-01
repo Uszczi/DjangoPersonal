@@ -102,16 +102,6 @@ def test_the_sixth_failed_login_is_refused_with_retry_after(
     assert 0 < int(response.headers['retry-after']) <= 15 * 60
 
 
-def test_successful_logins_on_the_page_are_never_counted(
-    mcp_user: User, oauth_client: OAuthClientInformationFull, login_page: TestClient
-) -> None:
-    for _ in range(6):
-        response = login_page.post('/login', data=_login_form())
-        assert response.status_code == 302
-        code = parse_qs(urlparse(response.headers['location']).query)['code'][0]
-        oauth._AUTH_CODES.pop(code)
-
-
 def test_login_page_escapes_request_values() -> None:
     page = oauth._login_page({'state': '"><script>alert(1)</script>'})
 

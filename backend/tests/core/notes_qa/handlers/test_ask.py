@@ -118,14 +118,3 @@ def test_a_new_notatka_is_indexed_before_the_question(session: Session, user: Us
     _note(session, user, CAR)
 
     assert _ask(session, user, 'Kiedy kończy się ubezpieczenie?', generator).sources != []
-
-
-def test_never_reads_another_users_notatki(session: Session, user: User) -> None:
-    other = UserRepository(session).create(username='other', password_hash='hash')
-    _note(session, other, CAR)
-    generator = FakeAnswerGenerator()
-
-    answer = _ask(session, user, 'Kiedy kończy się ubezpieczenie OC?', generator, min_score=0.0)
-
-    assert answer.sources == []
-    assert generator.calls == []

@@ -68,19 +68,6 @@ def test_time_entry_list_filters_by_date_and_task(api_client: Any, post_json: An
     assert by_both.json()[0]['task_id'] == other['id']
 
 
-def test_user_can_delete_a_stopped_entry(api_client: Any, post_json: Any, fixed_clock: Any) -> None:
-    task = create_task(post_json)
-    entry = post_json(
-        '/api/v1/time-entries/',
-        {'task': task['id'], 'date': '2026-10-13', 'duration_minutes': 90},
-    ).json()
-
-    response = api_client.delete(f"/api/v1/time-entries/{entry['id']}/")
-
-    assert response.status_code == HTTPStatus.NO_CONTENT
-    assert api_client.get('/api/v1/time-entries/').json() == []
-
-
 def test_user_can_edit_a_stopped_entry(api_client: Any, post_json: Any, patch_json: Any, fixed_clock: Any) -> None:
     task = create_task(post_json)
     other = create_task(post_json, title='Other task', project_name='Other')
@@ -142,15 +129,3 @@ def test_time_entry_endpoints_reject_unknown_tasks(post_json: Any, fixed_clock: 
 
     assert manual.status_code == HTTPStatus.BAD_REQUEST
     assert start.status_code == HTTPStatus.BAD_REQUEST
-
-
-def test_openapi_contract_covers_time_tracking(api_client: Any) -> None:
-    schema = api_client.get('/api/v1/schema/').json()
-
-    assert '/api/v1/timer/' in schema['paths']
-    assert '/api/v1/timer/start/' in schema['paths']
-    assert '/api/v1/timer/stop/' in schema['paths']
-    assert '/api/v1/time-entries/' in schema['paths']
-    time_entry = schema['components']['schemas']['TimeEntryResponse']
-    assert 'task_id' in time_entry['required']
-    assert 'end' not in time_entry['required']

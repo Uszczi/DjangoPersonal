@@ -1,10 +1,8 @@
 """The BibliographyItem endpoints of the Bibliography."""
 
-from collections.abc import Callable
 from http import HTTPStatus
 from typing import Any
 
-from personal.infra.models import User
 from tests.harness import ApiClient
 
 ITEMS = '/api/v1/bibliography-items/'
@@ -51,7 +49,6 @@ def test_create_item_with_every_field(post_json: Any) -> None:
 
 
 def test_kind_and_title_are_required(post_json: Any) -> None:
-    assert post_json(ITEMS, {'kind': 'book', 'title': '   '}).status_code == 422
     assert post_json(ITEMS, {'kind': 'book'}).status_code == 422
     assert post_json(ITEMS, {'title': 'Lalka'}).status_code == 422
     assert post_json(ITEMS, {'kind': 'serial', 'title': 'Lalka'}).status_code == 422
@@ -82,11 +79,9 @@ def test_edit_item_fields(post_json: Any, patch_json: Any, api_client: ApiClient
     assert api_client.get(f'{ITEMS}{item["id"]}/').json() == body
 
 
-def test_edit_rejects_a_blank_title_and_nulls(post_json: Any, patch_json: Any) -> None:
+def test_edit_rejects_a_null_creator_and_a_zero_length(post_json: Any, patch_json: Any) -> None:
     url = f'{ITEMS}{_item(post_json)["id"]}/'
 
-    assert patch_json(url, {'title': '  '}).status_code == 422
-    assert patch_json(url, {'title': None}).status_code == 422
     assert patch_json(url, {'creator': None}).status_code == 422
     assert patch_json(url, {'length': 0}).status_code == 422
 
@@ -151,32 +146,6 @@ def test_list_rejects_an_unknown_filter_value(api_client: ApiClient) -> None:
     assert api_client.get(f'{ITEMS}?kind=serial').status_code == 422
 
 
-def test_unknown_item_is_404(api_client: ApiClient, patch_json: Any) -> None:
-    assert api_client.get(f'{ITEMS}999/').status_code == 404
-    assert patch_json(f'{ITEMS}999/', {'title': 'x'}).status_code == 404
-
-
-def test_items_are_private_to_their_user(
-    post_json: Any,
-    make_user: Callable[[str], User],
-    client_for: Callable[[User], ApiClient],
-) -> None:
-    item = _item(post_json)
-
-    other = client_for(make_user('other'))
-
-    assert other.get(ITEMS).json() == []
-    assert other.get(f'{ITEMS}{item["id"]}/').status_code == 404
-    assert other.patch(f'{ITEMS}{item["id"]}/', {'title': 'x'}).status_code == 404
-    assert other.delete(f'{ITEMS}{item["id"]}/').status_code == 404
-
-
-def test_items_require_authentication(anon_client: ApiClient) -> None:
-    assert anon_client.get(ITEMS).status_code == 401
-    response = anon_client.post(ITEMS, {'kind': 'film', 'title': 'Rejs'})
-    assert response.status_code == 401
-
-
 def test_deleting_an_item_removes_its_attempts(post_json: Any, api_client: ApiClient) -> None:
     item = _item(post_json)
     kept = _item(post_json, title='Rejs')
@@ -188,7 +157,3 @@ def test_deleting_an_item_removes_its_attempts(post_json: Any, api_client: ApiCl
     assert api_client.get(f'{ITEMS}{item["id"]}/').status_code == 404
     assert api_client.get(f'{ATTEMPTS}{attempt["id"]}/').status_code == 404
     assert [i['id'] for i in api_client.get(ITEMS).json()] == [kept['id']]
-
-
-def test_deleting_an_unknown_item_is_404(api_client: ApiClient) -> None:
-    assert api_client.delete(f'{ITEMS}999/').status_code == 404

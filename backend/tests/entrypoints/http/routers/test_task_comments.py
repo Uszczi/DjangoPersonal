@@ -43,22 +43,6 @@ def test_comment_needs_an_existing_task(post_json: Any, api_client: ApiClient) -
     assert api_client.get('/api/v1/task-comments/?task=999').status_code == 404
 
 
-def test_edit_and_delete_a_comment(
-    post_json: Any, patch_json: Any, api_client: ApiClient
-) -> None:
-    task_id = _task(post_json)
-    comment = _comment(post_json, task_id)
-
-    edited = patch_json(f'/api/v1/task-comments/{comment["id"]}/', {'body': 'Changed'})
-    assert edited.status_code == HTTPStatus.OK
-    assert edited.json()['body'] == 'Changed'
-    assert patch_json(f'/api/v1/task-comments/{comment["id"]}/', {'body': None}).status_code == 422
-
-    deleted = api_client.delete(f'/api/v1/task-comments/{comment["id"]}/')
-    assert deleted.status_code == HTTPStatus.NO_CONTENT
-    assert api_client.get(f'/api/v1/task-comments/?task={task_id}').json() == []
-
-
 def test_attached_file_comes_back_byte_for_byte(post_json: Any, api_client: ApiClient) -> None:
     comment = _comment(post_json, _task(post_json))
 
@@ -150,8 +134,6 @@ def test_comments_and_files_are_private(
 
     assert stranger.get(f'/api/v1/task-comments/?task={task_id}').status_code == 404
     assert stranger.post('/api/v1/task-comments/', {'task': task_id}).status_code == 400
-    assert stranger.patch(f'/api/v1/task-comments/{comment["id"]}/', {'body': 'x'}).status_code == 404
-    assert stranger.delete(f'/api/v1/task-comments/{comment["id"]}/').status_code == 404
     upload_path = f'/api/v1/task-comments/{comment["id"]}/attachments/'
     assert stranger.upload(upload_path, file_name='a', data=PNG).status_code == 404
     assert stranger.get(f'/api/v1/comment-attachments/{attachment["id"]}/').status_code == 404

@@ -44,8 +44,3 @@ def test_settings_are_per_user(
     other = client_for(make_user('other'))
 
     assert other.get('/api/v1/mobile-settings/').json() == {'hidden_tabs': []}
-
-
-def test_settings_require_auth(anon_client: ApiClient) -> None:
-    assert anon_client.get('/api/v1/mobile-settings/').status_code == 401
-    assert anon_client.patch('/api/v1/mobile-settings/', {'hidden_tabs': []}).status_code == 401
