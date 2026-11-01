@@ -5,9 +5,10 @@ OAuth flow (``opencode mcp auth``) instead of requiring a hand-managed JWT.
 The resource owner signs in on ``/login`` with their account's username and
 password, checked by the same use case as the API login.
 
-Registered clients live in ``runtime.clients`` (Redis when configured), so they
-survive a restart. Codes and tokens are kept in process memory: after a restart
-a client signs in on ``/login`` again, with the client id it already has.
+Registered clients (``runtime.clients``) and issued tokens
+(``runtime.oauth_tokens``) live in Redis when configured, so a restart or deploy
+keeps clients signed in. Authorization codes stay in process memory: they last
+five minutes.
 """
 
 import functools
@@ -37,18 +38,22 @@ from . import runtime
 from .auth import request_address
 
 _AUTH_CODES: dict[str, AuthorizationCode] = {}
-_ACCESS_TOKENS: dict[str, AccessToken] = {}
-_REFRESH_TOKENS: dict[str, RefreshToken] = {}
 
 
 def _now() -> float:
     return time.time()
 
 
-class OAuthProvider:
-    """OAuth provider with clients in ``runtime.clients`` and the rest in memory.
+def _store_pair(access: AccessToken, refresh: RefreshToken) -> None:
+    runtime.oauth_tokens.add_access(access)
+    runtime.oauth_tokens.add_refresh(refresh)
 
-    The client store is synchronous (Redis), so calls to it run in a worker thread.
+
+class OAuthProvider:
+    """OAuth provider with clients and tokens in ``runtime``, codes in memory.
+
+    The client and token stores are synchronous (Redis), so calls to them run in
+    a worker thread.
     """
 
     async def get_client(self, client_id: str) -> OAuthClientInformationFull | None:
@@ -90,7 +95,7 @@ class OAuthProvider:
         expires_in = 3600 * 24 * 7
         expires_at = int(_now()) + expires_in
 
-        _ACCESS_TOKENS[access] = AccessToken(
+        access_token = AccessToken(
             token=access,
             client_id=authorization_code.client_id,
             scopes=authorization_code.scopes,
@@ -98,7 +103,7 @@ class OAuthProvider:
             resource=authorization_code.resource,
             subject=subject,
         )
-        _REFRESH_TOKENS[refresh] = RefreshToken(
+        refresh_token = RefreshToken(
             token=refresh,
             client_id=authorization_code.client_id,
             scopes=authorization_code.scopes,
@@ -106,6 +111,7 @@ class OAuthProvider:
             resource=authorization_code.resource,
             subject=subject,
         )
+        await anyio.to_thread.run_sync(_store_pair, access_token, refresh_token)
         return OAuthToken(
             access_token=access,
             token_type="Bearer",
@@ -117,7 +123,7 @@ class OAuthProvider:
     async def load_refresh_token(
         self, client: OAuthClientInformationFull, refresh_token: str
     ) -> RefreshToken | None:
-        token = _REFRESH_TOKENS.get(refresh_token)
+        token = await anyio.to_thread.run_sync(runtime.oauth_tokens.refresh, refresh_token)
         if token is None or token.client_id != client.client_id:
             return None
         return token
@@ -130,12 +136,12 @@ class OAuthProvider:
     ) -> OAuthToken:
         del client
         # rotate
-        _REFRESH_TOKENS.pop(refresh_token.token, None)
+        await anyio.to_thread.run_sync(runtime.oauth_tokens.remove_refresh, refresh_token.token)
         access = secrets.token_urlsafe(48)
         new_refresh = secrets.token_urlsafe(48)
         expires_in = 3600 * 24 * 7
         expires_at = int(_now()) + expires_in
-        _ACCESS_TOKENS[access] = AccessToken(
+        access_token = AccessToken(
             token=access,
             client_id=refresh_token.client_id,
             scopes=scopes or refresh_token.scopes,
@@ -143,7 +149,7 @@ class OAuthProvider:
             resource=refresh_token.resource,
             subject=refresh_token.subject,
         )
-        _REFRESH_TOKENS[new_refresh] = RefreshToken(
+        rotated = RefreshToken(
             token=new_refresh,
             client_id=refresh_token.client_id,
             scopes=scopes or refresh_token.scopes,
@@ -151,6 +157,7 @@ class OAuthProvider:
             resource=refresh_token.resource,
             subject=refresh_token.subject,
         )
+        await anyio.to_thread.run_sync(_store_pair, access_token, rotated)
         return OAuthToken(
             access_token=access,
             token_type="Bearer",
@@ -160,19 +167,13 @@ class OAuthProvider:
         )
 
     async def load_access_token(self, token: str) -> AccessToken | None:
-        access = _ACCESS_TOKENS.get(token)
-        if access is None:
-            return None
-        if access.expires_at and access.expires_at < int(_now()):
-            _ACCESS_TOKENS.pop(token, None)
-            return None
-        return access
+        return await anyio.to_thread.run_sync(runtime.oauth_tokens.access, token)
 
     async def revoke_token(self, token: AccessToken | RefreshToken) -> None:
         if isinstance(token, AccessToken):
-            _ACCESS_TOKENS.pop(token.token, None)
+            await anyio.to_thread.run_sync(runtime.oauth_tokens.remove_access, token.token)
         else:
-            _REFRESH_TOKENS.pop(token.token, None)
+            await anyio.to_thread.run_sync(runtime.oauth_tokens.remove_refresh, token.token)
 
 
 provider = OAuthProvider()
