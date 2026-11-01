@@ -459,6 +459,49 @@ describe("Projects", () => {
     ).toEqual(["Open note", "Completed note"]);
   });
 
+  test("the task list settings hide the timer button on every row, remembered on this device", async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse([inbox]))
+      .mockResolvedValueOnce(
+        jsonResponse([
+          {
+            id: 1,
+            title: "Open note",
+            description: "",
+            project_id: 1,
+            status: "Todo",
+          },
+        ]),
+      );
+    const user = userEvent.setup();
+
+    renderApp("/tasks");
+    expect(
+      await screen.findByRole("button", { name: "Uruchom timer: Open note" }),
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: "Ustawienia listy zadań" }),
+    );
+    const dialog = await screen.findByRole("dialog", {
+      name: "Ustawienia listy zadań",
+    });
+    const toggle = within(dialog).getByRole("switch", {
+      name: "Przycisk timera w każdym wierszu",
+    });
+    expect(toggle).toBeChecked();
+    await user.click(toggle);
+    await user.click(within(dialog).getByRole("button", { name: "Gotowe" }));
+
+    expect(screen.getByText("Open note")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Uruchom timer: Open note" }),
+    ).not.toBeInTheDocument();
+    expect(
+      JSON.parse(window.localStorage.getItem("taskListSettings") ?? "{}").state,
+    ).toEqual({ showTimerButton: false });
+  });
+
   test("user can create a task in the selected project", async () => {
     fetchMock
       .mockResolvedValueOnce(

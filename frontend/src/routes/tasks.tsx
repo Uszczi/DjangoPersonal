@@ -3,17 +3,20 @@ import {
   useNavigate,
   useSearch,
 } from "@tanstack/react-router";
+import { Settings } from "lucide-react";
 import { useState } from "react";
 
 import {
   Button,
   EmptyState,
   ErrorMessage,
+  IconButton,
   LoadingStatus,
   PageHeader,
 } from "@/design-system";
 import { ProjectEditorModal } from "@/components/modals/ProjectEditorModal";
 import { TaskEditorModal } from "@/components/modals/TaskEditorModal";
+import { TaskListSettingsModal } from "@/components/modals/TaskListSettingsModal";
 import { ProjectsSidebar } from "@/components/ProjectsSidebar";
 import {
   ProjectsDrawer,
@@ -178,6 +181,13 @@ function TasksPage() {
                 <span className="mr-2 font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">
                   {tasks.length} {tasks.length === 1 ? "ZADANIE" : "ZADAŃ"}
                 </span>
+                <IconButton
+                  aria-label="Ustawienia listy zadań"
+                  title="Ustawienia listy zadań"
+                  onClick={() => ShowModal(TaskListSettingsModal)}
+                >
+                  <Settings size={20} aria-hidden="true" />
+                </IconButton>
                 <Button variant="primary" onClick={openTaskForm}>
                   <span aria-hidden="true">+</span>
                   Nowe zadanie

@@ -20,6 +20,7 @@ export {
   ListRowSubtitle,
   ListRowTitle,
 } from "./components/ListRow";
+export { MenuButton, type MenuItem } from "./components/MenuButton";
 export { Modal, ModalFooter } from "./components/Modal";
 export { DeleteButton } from "./components/DeleteButton";
 export { Select } from "./components/Select";

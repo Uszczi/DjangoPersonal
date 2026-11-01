@@ -3,7 +3,7 @@ import { Settings } from "lucide-react";
 
 import { CounterList } from "@/components/counters/CounterList";
 import { CounterEditorModal } from "@/components/modals/CounterEditorModal";
-import { CounterTileSettingsModal } from "@/components/modals/CounterTileSettingsModal";
+import { CounterSettingsModal } from "@/components/modals/CounterSettingsModal";
 import {
   Button,
   EmptyState,
@@ -11,19 +11,14 @@ import {
   IconButton,
   LoadingStatus,
   PageHeader,
-  ToggleGroup,
 } from "@/design-system";
 import type { CounterResponse } from "@personal/shared/generated/api";
-import { COUNTER_VIEW_MODE_LABELS } from "@personal/shared/counterFormat";
 import { COUNTERS_LOAD_ERROR } from "@personal/shared/loadErrors";
 import {
   useCounters,
   useSaveCounterEntry,
 } from "@personal/shared/queries/counters";
-import {
-  COUNTER_VIEW_MODES,
-  useCounterViewStore,
-} from "@personal/shared/stores/counterView";
+import { useCounterViewStore } from "@personal/shared/stores/counterView";
 import { ShowModal } from "@/stores/modal";
 
 export const Route = createFileRoute("/counters/")({
@@ -35,7 +30,6 @@ function CountersPage() {
   const saveEntry = useSaveCounterEntry();
   const navigate = useNavigate();
   const viewMode = useCounterViewStore((state) => state.mode);
-  const setViewMode = useCounterViewStore((state) => state.setMode);
 
   function addOne(counter: CounterResponse) {
     saveEntry.mutate({
@@ -69,17 +63,10 @@ function CountersPage() {
         title="Liczniki"
         actions={
           <>
-            <ToggleGroup
-              label="Widok liczników"
-              options={COUNTER_VIEW_MODES}
-              labels={COUNTER_VIEW_MODE_LABELS}
-              value={viewMode}
-              onChange={setViewMode}
-            />
             <IconButton
-              aria-label="Wygląd kafelków"
-              title="Wygląd kafelków"
-              onClick={() => ShowModal(CounterTileSettingsModal)}
+              aria-label="Ustawienia liczników"
+              title="Ustawienia liczników"
+              onClick={() => ShowModal(CounterSettingsModal)}
             >
               <Settings size={20} aria-hidden="true" />
             </IconButton>
