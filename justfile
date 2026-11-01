@@ -222,8 +222,12 @@ deploy:
 compose-local := compose + " -f deployment/docker-compose.local.yml"
 
 # Build images and start the whole stack locally, reverse proxy on :80.
+# Restarts nginx afterwards: `up --build` recreates app/frontend, which can
+# change their IPs, and the long-lived nginx container would otherwise keep
+# the stale upstream IPs and answer 502 until restarted.
 local-up:
     ./deployment/config_hashes.sh {{compose-local}} up --detach --build
+    {{compose-local}} restart nginx
 
 # Stop the local stack (keeps named volumes).
 local-down:
