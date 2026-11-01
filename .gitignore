@@ -21,3 +21,6 @@ mobile/eas.json.bak
 
 # APKs built by `just mobile-apk-local`
 *.apk
+
+# Isolated prototyping app: database, logs, screenshots (`just proto-up`)
+.proto/

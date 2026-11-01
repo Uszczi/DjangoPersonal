@@ -116,6 +116,29 @@ mobile-apk-local:
     cp android/app/build/outputs/apk/release/app-release.apk djangopersonal.apk
     echo "APK: $PWD/djangopersonal.apk"
 
+# --- Prototyping (isolated app copy + screenshots) ---------------------------
+
+# Start an isolated web app (API :8010, Vite :5180, own seeded SQLite in .proto/).
+proto-up:
+    ./scripts/proto.sh up
+
+# Stop the isolated app (keeps its database).
+proto-down:
+    ./scripts/proto.sh down
+
+# Show whether the isolated app is running.
+proto-status:
+    ./scripts/proto.sh status
+
+# Stop the isolated app and delete its database, logs and screenshots.
+proto-reset:
+    ./scripts/proto.sh reset
+
+# Screenshot pages of the isolated app, e.g. `just shot /tasks --viewport mobile`.
+[positional-arguments]
+shot *args:
+    node frontend/scripts/screenshot.mjs "$@"
+
 # Run Storybook (component workshop) on port 6006.
 storybook:
     cd frontend && npm run storybook

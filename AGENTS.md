@@ -69,7 +69,11 @@ just typecheck        # mypy (strict) over backend/
 just format           # Prettier over frontend/ and mobile/ sources (format-check: verify only)
 just check            # full gate: mypy + pytest + npm test + lint + build (+ shared/mobile typecheck and lint)
 just generate-api     # regenerate backend/openapi.yaml + the TypeScript client (packages/shared)
+just proto-up         # isolated web app for prototyping (API :8010, Vite :5180, seeded SQLite in .proto/)
+just shot /tasks      # screenshot pages of it signed in as demo (scripts: scripts/proto.sh, frontend/scripts/screenshot.mjs)
 ```
+
+To see a UI change in the real app, use the `app-preview` skill (`.agents/skills/app-preview/`): `just proto-up`, then `just shot <route>` and read the PNG from `.proto/shots/`.
 
 Deployment stacks:
 
