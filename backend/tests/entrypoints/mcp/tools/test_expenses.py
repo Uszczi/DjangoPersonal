@@ -24,6 +24,10 @@ def test_expense_tools(mcp_user: User) -> None:
     rest = call('list_transactions', wallet_id=wallet['id'], cursor=first['next_cursor'])
     assert len(first['items']) == 1 and rest['next_cursor'] is None
     assert first['items'] + rest['items'] == page['items']
+    day = spent['date']
+    assert call('list_transactions', wallet_id=wallet['id'], date_from=day, date_to=day)[
+        'items'
+    ] == [spent]
 
     renamed = call('update_transaction', transaction_id=spent['id'], title='Kolacja')
     assert renamed['category_id'] == food['id']

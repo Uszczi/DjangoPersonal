@@ -32,6 +32,8 @@ class TransactionRepository:
         user: User,
         limit: int | None = None,
         after: TransactionKey | None = None,
+        date_from: date | None = None,
+        date_to: date | None = None,
     ) -> list[TransactionModel]:
         """The wallet's transactions of ``user``, newest first: ``(date, id)`` descending.
 
@@ -39,6 +41,8 @@ class TransactionRepository:
         caller already has, and the page starts right after it. Unlike an
         offset, this stays correct when rows are added between pages and reads
         the ``(wallet_id, date, id)`` index instead of skipping rows.
+        ``date_from``/``date_to`` (both inclusive) narrow it to a date range,
+        the same index range.
         """
         # The category comes with the page: each row's kind is read off it.
         query = (
@@ -46,6 +50,10 @@ class TransactionRepository:
             .options(joinedload(TransactionModel.category))
             .where(TransactionModel.wallet_id == wallet_id, TransactionModel.user_id == user.id)
         )
+        if date_from is not None:
+            query = query.where(TransactionModel.date >= date_from)
+        if date_to is not None:
+            query = query.where(TransactionModel.date <= date_to)
         if after is not None:
             # A row-value comparison, so Postgres turns it into one index range.
             query = query.where(tuple_(TransactionModel.date, TransactionModel.id) < after)

@@ -16,6 +16,7 @@ from personal.core.expenses.contracts import (
 from ..serialization import (
     categories,
     category,
+    parse_date,
     transaction,
     transaction_page,
     wallet,
@@ -152,17 +153,28 @@ def list_transactions(
     wallet_id: int,
     limit: int = expense_handlers.DEFAULT_PAGE_SIZE,
     cursor: str | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
 ) -> dict[str, Any]:
     """List one page of a wallet's transactions, newest first.
 
     Returns ``{"items": [...], "next_cursor": ...}``; pass ``next_cursor`` back as
     ``cursor`` for the next page (``null`` means there is none). ``limit`` is 1–200.
+    ``date_from``/``date_to`` (YYYY-MM-DD, both inclusive) narrow it to a date range.
     """
     with unit_of_work(ctx) as (session, user):
         handler = expense_handlers.ListTransactions(
             wiring.transaction_repository(session), wiring.wallet_repository(session), user
         )
-        return transaction_page(handler.execute(wallet_id, limit=limit, cursor=cursor))
+        return transaction_page(
+            handler.execute(
+                wallet_id,
+                limit=limit,
+                cursor=cursor,
+                date_from=parse_date(date_from),
+                date_to=parse_date(date_to),
+            )
+        )
 
 
 @tool

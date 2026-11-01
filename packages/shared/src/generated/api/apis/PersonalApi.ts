@@ -793,6 +793,14 @@ export interface TransactionsListRequest {
      *
      */
     cursor?: string | null;
+    /**
+     * Only transactions on or after this day.
+     */
+    dateFrom?: Date | null;
+    /**
+     * Only transactions on or before this day.
+     */
+    dateTo?: Date | null;
 }
 
 export interface TransactionsPartialUpdateRequest {
@@ -4521,6 +4529,14 @@ export class PersonalApi extends runtime.BaseAPI {
 
         if (requestParameters['cursor'] != null) {
             queryParameters['cursor'] = requestParameters['cursor'];
+        }
+
+        if (requestParameters['dateFrom'] != null) {
+            queryParameters['date_from'] = runtime.serializeDate(requestParameters['dateFrom'] as any);
+        }
+
+        if (requestParameters['dateTo'] != null) {
+            queryParameters['date_to'] = runtime.serializeDate(requestParameters['dateTo'] as any);
         }
 
         const headerParameters: runtime.HTTPHeaders = {};

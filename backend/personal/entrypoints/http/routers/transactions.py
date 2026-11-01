@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Query, Response, status
@@ -29,9 +30,15 @@ def list_transactions(
         int, Query(ge=1, le=handlers.MAX_PAGE_SIZE)
     ] = handlers.DEFAULT_PAGE_SIZE,
     cursor: str | None = None,
+    date_from: Annotated[
+        date | None, Query(description='Only transactions on or after this day.')
+    ] = None,
+    date_to: Annotated[
+        date | None, Query(description='Only transactions on or before this day.')
+    ] = None,
 ) -> TransactionPageResponse:
     page = handlers.ListTransactions(transactions, wallets, user).execute(
-        wallet, limit=limit, cursor=cursor
+        wallet, limit=limit, cursor=cursor, date_from=date_from, date_to=date_to
     )
     return TransactionPageResponse(
         items=[TransactionResponse.model_validate(t) for t in page.items],

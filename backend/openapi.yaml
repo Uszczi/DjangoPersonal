@@ -1235,6 +1235,28 @@ paths:
           - type: string
           - type: 'null'
           title: Cursor
+      - name: date_from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: Only transactions on or after this day.
+          title: Date From
+        description: Only transactions on or after this day.
+      - name: date_to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          description: Only transactions on or before this day.
+          title: Date To
+        description: Only transactions on or before this day.
       responses:
         '200':
           description: Successful Response

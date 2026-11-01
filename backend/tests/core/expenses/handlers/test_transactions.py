@@ -14,6 +14,7 @@ from personal.core.expenses.handlers import (
     CreateTransaction,
     DeleteTransaction,
     GetTransaction,
+    ListTransactions,
     ReplaceTransaction,
     UpdateTransaction,
 )
@@ -104,3 +105,16 @@ def test_a_system_entry_can_be_deleted(ledger: Ledger) -> None:
 
     with pytest.raises(NotFound):
         GetTransaction(transactions, ledger.user).execute(entry.id)
+
+
+def test_a_date_range_must_not_end_before_it_starts(ledger: Ledger) -> None:
+    handler = ListTransactions(
+        wiring.transaction_repository(ledger.session),
+        wiring.wallet_repository(ledger.session),
+        ledger.user,
+    )
+
+    with pytest.raises(DomainError, match='date_from must not be after date_to.'):
+        handler.execute(
+            ledger.wallet.id, date_from=date(2026, 10, 31), date_to=date(2026, 10, 1)
+        )
