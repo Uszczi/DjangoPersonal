@@ -1,8 +1,6 @@
-import { ChevronDown, ChevronRight, Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
 import {
-  Button,
   ListRow,
   ListRowButton,
   ListRowSubtitle,
@@ -26,61 +24,26 @@ type OnOpen = (item: BibliographyItemResponse) => void;
  * top. With dividers on, each year is a bar that folds its rows away and each
  * month is a thin labelled rule; with them off, the Attempts are one list.
  * The items without an Attempt sit under a folding bar of their own either way.
- * Whether dividers show is remembered on the device; folded years are not.
+ * Whether dividers show is remembered on the device; which groups are folded
+ * is the page's, so its Filtry dialog can fold and unfold them all.
  */
 export function BibliographyYearList({
   groups,
+  folded,
+  onToggleFolded: toggleYear,
   onOpen,
 }: {
   groups: YearGroup[];
+  folded: ReadonlySet<string>;
+  onToggleFolded: (key: string) => void;
   onOpen: OnOpen;
 }) {
   const dividers = useBibliographyViewStore((state) => state.dividers);
-  const setDividers = useBibliographyViewStore((state) => state.setDividers);
-  const [folded, setFolded] = useState<ReadonlySet<string>>(new Set());
   const planned = groups.find((group) => group.key === "planned");
   const years = groups.filter((group) => group !== planned);
 
-  function toggleYear(key: string) {
-    setFolded((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  }
-
   return (
     <div>
-      <div className="mb-3 flex flex-wrap items-center justify-end gap-1">
-        {/* The planned items fold whether dividers show or not; the years only with them. */}
-        {(planned || (dividers && years.length > 0)) && (
-          <>
-            <Button
-              variant="ghost"
-              onClick={() => setFolded(new Set(groups.map((g) => g.key)))}
-            >
-              Zwiń wszystko
-            </Button>
-            <Button variant="ghost" onClick={() => setFolded(new Set())}>
-              Rozwiń wszystko
-            </Button>
-          </>
-        )}
-        <Button
-          variant="ghost"
-          aria-pressed={!dividers}
-          onClick={() => setDividers(!dividers)}
-        >
-          {dividers ? (
-            <EyeOff aria-hidden="true" className="size-[14px]" />
-          ) : (
-            <Eye aria-hidden="true" className="size-[14px]" />
-          )}
-          {dividers ? "Ukryj podziały" : "Pokaż podziały"}
-        </Button>
-      </div>
-
       {planned && (
         <section aria-labelledby="year-planned" className="mb-6">
           <h2 id="year-planned">

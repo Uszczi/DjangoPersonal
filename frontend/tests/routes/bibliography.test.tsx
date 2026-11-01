@@ -6,6 +6,21 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { renderApp } from "../renderApp";
 
+/** Opens the Filtry dialog unless it is open already, and returns it. */
+async function filtersDialog() {
+  const open = screen.queryByRole("dialog", { name: "Filtry i widok" });
+  if (open) return open;
+  await userEvent.click(screen.getByRole("button", { name: /^Filtry/ }));
+  return screen.findByRole("dialog", { name: "Filtry i widok" });
+}
+
+/** Clicks one button in the Filtry dialog, then closes the dialog. */
+async function inFilters(name: string) {
+  const dialog = await filtersDialog();
+  await userEvent.click(within(dialog).getByRole("button", { name }));
+  await userEvent.click(within(dialog).getByRole("button", { name: "Gotowe" }));
+}
+
 type Outcome = "in_progress" | "finished" | "abandoned";
 
 type BibliographyItem = {
@@ -265,8 +280,7 @@ describe("Bibliography", () => {
 
     renderApp("/bibliography");
     await screen.findByRole("list", { name: "Pozycje" });
-    const view = screen.getByRole("group", { name: "Widok Bibliografii" });
-    await user.click(within(view).getByRole("button", { name: "Lata" }));
+    await inFilters("Lata");
 
     await screen.findByRole("list", { name: "Planowane" });
     expect(
@@ -299,7 +313,7 @@ describe("Bibliography", () => {
       screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent),
     ).toEqual(["Planowane1"]);
 
-    await user.click(within(view).getByRole("button", { name: "Pozycje" }));
+    await inFilters("Pozycje");
     expect(
       await screen.findByRole("list", { name: "Pozycje" }),
     ).toBeInTheDocument();
@@ -316,7 +330,8 @@ describe("Bibliography", () => {
     const user = userEvent.setup();
 
     renderApp("/bibliography");
-    await user.click(await screen.findByRole("button", { name: "Lata" }));
+    await screen.findByRole("list", { name: "Pozycje" });
+    await inFilters("Lata");
     const planned = await screen.findByRole("button", { name: /^Planowane/ });
     expect(planned).toHaveAttribute("aria-expanded", "true");
 
@@ -327,9 +342,9 @@ describe("Bibliography", () => {
     ).not.toBeInTheDocument();
     expect(screen.getByRole("list", { name: "maj 2025" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Rozwiń wszystko" }));
+    await inFilters("Rozwiń wszystko");
     expect(screen.getByRole("list", { name: "Planowane" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Zwiń wszystko" }));
+    await inFilters("Zwiń wszystko");
     expect(
       screen.queryByRole("list", { name: "Planowane" }),
     ).not.toBeInTheDocument();
@@ -337,7 +352,7 @@ describe("Bibliography", () => {
       screen.queryByRole("list", { name: "maj 2025" }),
     ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Ukryj podziały" }));
+    await inFilters("Ukryj podziały");
     expect(screen.getByRole("button", { name: /^Planowane/ })).toHaveAttribute(
       "aria-expanded",
       "false",
@@ -359,7 +374,8 @@ describe("Bibliography", () => {
     const user = userEvent.setup();
 
     renderApp("/bibliography");
-    await user.click(await screen.findByRole("button", { name: "Lata" }));
+    await screen.findByRole("list", { name: "Pozycje" });
+    await inFilters("Lata");
     expect(
       (await screen.findAllByRole("heading", { level: 3 })).map(
         (heading) => heading.textContent,
@@ -375,12 +391,12 @@ describe("Bibliography", () => {
     ).not.toBeInTheDocument();
     expect(screen.getByRole("list", { name: "maj 2025" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Zwiń wszystko" }));
+    await inFilters("Zwiń wszystko");
     expect(screen.queryByRole("heading", { level: 3 })).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Rozwiń wszystko" }));
+    await inFilters("Rozwiń wszystko");
     expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(3);
 
-    await user.click(screen.getByRole("button", { name: "Ukryj podziały" }));
+    await inFilters("Ukryj podziały");
     expect(screen.queryByRole("heading", { level: 2 })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { level: 3 })).not.toBeInTheDocument();
     const all = screen.getByRole("list", { name: "Podejścia" });
@@ -397,7 +413,7 @@ describe("Bibliography", () => {
       JSON.parse(window.localStorage.getItem("bibliographyView") ?? "{}").state,
     ).toEqual({ mode: "years", dividers: false });
 
-    await user.click(screen.getByRole("button", { name: "Pokaż podziały" }));
+    await inFilters("Pokaż podziały");
     expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(3);
   });
 
@@ -912,12 +928,16 @@ describe("Bibliography", () => {
         );
     }
 
-    function statusFilter() {
-      return screen.getByRole("group", { name: "Filtr statusu" });
+    async function statusFilter() {
+      return within(await filtersDialog()).getByRole("group", {
+        name: "Filtr statusu",
+      });
     }
 
-    function kindFilter() {
-      return screen.getByRole("group", { name: "Filtr rodzaju" });
+    async function kindFilter() {
+      return within(await filtersDialog()).getByRole("group", {
+        name: "Filtr rodzaju",
+      });
     }
 
     test("both filters default to all", async () => {
@@ -927,10 +947,10 @@ describe("Bibliography", () => {
       await screen.findByRole("list", { name: "Pozycje" });
 
       expect(
-        within(statusFilter()).getByRole("button", { name: "Wszystkie" }),
+        within(await statusFilter()).getByRole("button", { name: "Wszystkie" }),
       ).toHaveAttribute("aria-pressed", "true");
       expect(
-        within(kindFilter()).getByRole("button", { name: "Wszystkie" }),
+        within(await kindFilter()).getByRole("button", { name: "Wszystkie" }),
       ).toHaveAttribute("aria-pressed", "true");
       expect(await listedTitles()).toEqual([
         "Seksmisja",
@@ -948,14 +968,14 @@ describe("Bibliography", () => {
       await screen.findByRole("list", { name: "Pozycje" });
 
       await user.click(
-        within(kindFilter()).getByRole("button", { name: "Książki" }),
+        within(await kindFilter()).getByRole("button", { name: "Książki" }),
       );
       await vi.waitFor(async () =>
         expect(await listedTitles()).toEqual(["Chłopi", "Lalka"]),
       );
 
       await user.click(
-        within(statusFilter()).getByRole("button", { name: "W trakcie" }),
+        within(await statusFilter()).getByRole("button", { name: "W trakcie" }),
       );
       await vi.waitFor(async () =>
         expect(await listedTitles()).toEqual(["Chłopi"]),
@@ -964,14 +984,14 @@ describe("Bibliography", () => {
       expect(within(list).getByText("W trakcie")).toBeInTheDocument();
 
       await user.click(
-        within(kindFilter()).getByRole("button", { name: "Filmy" }),
+        within(await kindFilter()).getByRole("button", { name: "Filmy" }),
       );
       expect(
         await screen.findByText("Brak pozycji pasujących do filtrów"),
       ).toBeInTheDocument();
 
       await user.click(
-        within(statusFilter()).getByRole("button", { name: "Ukończone" }),
+        within(await statusFilter()).getByRole("button", { name: "Ukończone" }),
       );
       await vi.waitFor(async () =>
         expect(await listedTitles()).toEqual(["Rejs"]),
@@ -985,30 +1005,74 @@ describe("Bibliography", () => {
       renderApp("/bibliography");
       await screen.findByRole("list", { name: "Pozycje" });
       expect(
-        within(statusFilter()).getByRole("button", {
+        within(await statusFilter()).getByRole("button", {
           name: "Do obejrzenia / przeczytania",
         }),
       ).toBeInTheDocument();
 
       await user.click(
-        within(kindFilter()).getByRole("button", { name: "Filmy" }),
+        within(await kindFilter()).getByRole("button", { name: "Filmy" }),
       );
       await user.click(
-        within(statusFilter()).getByRole("button", { name: "Do obejrzenia" }),
+        within(await statusFilter()).getByRole("button", {
+          name: "Do obejrzenia",
+        }),
       );
       await vi.waitFor(async () =>
         expect(await listedTitles()).toEqual(["Seksmisja"]),
       );
 
       await user.click(
-        within(kindFilter()).getByRole("button", { name: "Książki" }),
+        within(await kindFilter()).getByRole("button", { name: "Książki" }),
       );
       expect(
-        within(statusFilter()).getByRole("button", { name: "Do przeczytania" }),
+        within(await statusFilter()).getByRole("button", {
+          name: "Do przeczytania",
+        }),
       ).toHaveAttribute("aria-pressed", "true");
       await vi.waitFor(async () =>
         expect(await listedTitles()).toEqual(["Lalka"]),
       );
+    });
+
+    test("the filters in force show as pills under the search and on the Filtry button", async () => {
+      fetchMock.mockImplementation(shelf().handler);
+      const user = userEvent.setup();
+
+      renderApp("/bibliography?status=planned&kind=film");
+      await vi.waitFor(async () =>
+        expect(await listedTitles()).toEqual(["Seksmisja"]),
+      );
+      expect(
+        screen.getByRole("button", { name: "Filtry, aktywne: 2" }),
+      ).toBeInTheDocument();
+
+      await user.click(
+        screen.getByRole("button", { name: "Usuń filtr: Filmy" }),
+      );
+      await vi.waitFor(async () =>
+        expect(await listedTitles()).toEqual(["Seksmisja", "Lalka"]),
+      );
+      expect(
+        screen.getByRole("button", { name: "Filtry, aktywne: 1" }),
+      ).toBeInTheDocument();
+
+      const dialog = await filtersDialog();
+      await user.click(
+        within(dialog).getByRole("button", { name: "Wyczyść filtry" }),
+      );
+      await vi.waitFor(async () =>
+        expect(await listedTitles()).toHaveLength(4),
+      );
+      expect(
+        within(dialog).queryByRole("button", { name: "Wyczyść filtry" }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Filtry" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /^Usuń filtr/ }),
+      ).not.toBeInTheDocument();
     });
 
     test("the filters are kept in the address", async () => {
@@ -1020,7 +1084,7 @@ describe("Bibliography", () => {
         expect(await listedTitles()).toEqual(["Seksmisja"]),
       );
       expect(
-        within(kindFilter()).getByRole("button", { name: "Filmy" }),
+        within(await kindFilter()).getByRole("button", { name: "Filmy" }),
       ).toHaveAttribute("aria-pressed", "true");
     });
 
@@ -1043,7 +1107,7 @@ describe("Bibliography", () => {
       expect(await listedTitles()).toEqual(["Chłopi"]);
 
       await user.click(
-        within(statusFilter()).getByRole("button", { name: "Wszystkie" }),
+        within(await statusFilter()).getByRole("button", { name: "Wszystkie" }),
       );
       await vi.waitFor(async () =>
         expect((await listedTitles())[0]).toBe("Solaris"),
