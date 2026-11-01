@@ -25,7 +25,7 @@ import {
 import { useStartTimer } from "@personal/shared/queries/timer";
 
 import { Fab } from "@/ui/Fab";
-import { useTaskListSettingsStore } from "@/features/tasks/taskListSettings";
+import { useTaskListSettingsStore } from "@personal/shared/stores/taskListSettings";
 import { useTheme } from "@/theme";
 import { common } from "@/ui/classes";
 

@@ -273,7 +273,7 @@ describe("Bibliography", () => {
       screen
         .getAllByRole("heading", { level: 2 })
         .map((heading) => heading.textContent),
-    ).toEqual(["Planowane", "20261", "20251"]);
+    ).toEqual(["Planowane1", "20261", "20251"]);
     const planned = screen.getByRole("list", { name: "Planowane" });
     expect(within(planned).getByText("Rejs")).toBeInTheDocument();
     for (const [year, day] of [
@@ -297,13 +297,52 @@ describe("Bibliography", () => {
     );
     expect(
       screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent),
-    ).toEqual(["Planowane"]);
+    ).toEqual(["Planowane1"]);
 
     await user.click(within(view).getByRole("button", { name: "Pozycje" }));
     expect(
       await screen.findByRole("list", { name: "Pozycje" }),
     ).toBeInTheDocument();
     expect(screen.queryByRole("heading", { level: 2 })).not.toBeInTheDocument();
+  });
+
+  test("the planned items fold under their own bar, dividers or not", async () => {
+    fetchMock.mockImplementation(
+      fakeBackend(
+        [rejs, lalka],
+        [attempt({ id: 51, item_id: lalka.id, ended_on: "2025-05-10" })],
+      ).handler,
+    );
+    const user = userEvent.setup();
+
+    renderApp("/bibliography");
+    await user.click(await screen.findByRole("button", { name: "Lata" }));
+    const planned = await screen.findByRole("button", { name: /^Planowane/ });
+    expect(planned).toHaveAttribute("aria-expanded", "true");
+
+    await user.click(planned);
+    expect(planned).toHaveAttribute("aria-expanded", "false");
+    expect(
+      screen.queryByRole("list", { name: "Planowane" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "maj 2025" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Rozwiń wszystko" }));
+    expect(screen.getByRole("list", { name: "Planowane" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Zwiń wszystko" }));
+    expect(
+      screen.queryByRole("list", { name: "Planowane" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("list", { name: "maj 2025" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Ukryj podziały" }));
+    expect(screen.getByRole("button", { name: /^Planowane/ })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(screen.getByRole("list", { name: "Podejścia" })).toBeInTheDocument();
   });
 
   test("the year view folds a year and can hide the year and month dividers", async () => {

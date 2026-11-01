@@ -25,6 +25,7 @@ type OnOpen = (item: BibliographyItemResponse) => void;
  * two years is listed under both), newest first, items without an Attempt on
  * top. With dividers on, each year is a bar that folds its rows away and each
  * month is a thin labelled rule; with them off, the Attempts are one list.
+ * The items without an Attempt sit under a folding bar of their own either way.
  * Whether dividers show is remembered on the device; folded years are not.
  */
 export function BibliographyYearList({
@@ -52,11 +53,12 @@ export function BibliographyYearList({
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center justify-end gap-1">
-        {dividers && years.length > 0 && (
+        {/* The planned items fold whether dividers show or not; the years only with them. */}
+        {(planned || (dividers && years.length > 0)) && (
           <>
             <Button
               variant="ghost"
-              onClick={() => setFolded(new Set(years.map((y) => y.key)))}
+              onClick={() => setFolded(new Set(groups.map((g) => g.key)))}
             >
               Zwiń wszystko
             </Button>
@@ -81,13 +83,17 @@ export function BibliographyYearList({
 
       {planned && (
         <section aria-labelledby="year-planned" className="mb-6">
-          <h2
-            id="year-planned"
-            className="mb-1 border-b border-row-line pb-1 font-utility text-[13px] font-semibold tracking-[0.08em] text-muted uppercase"
-          >
-            {planned.label}
+          <h2 id="year-planned">
+            <FoldBar
+              label={planned.label}
+              count={planned.rows.length}
+              isOpen={!folded.has(planned.key)}
+              onToggle={() => toggleYear(planned.key)}
+            />
           </h2>
-          <Rows label={planned.label} rows={planned.rows} onOpen={onOpen} />
+          {!folded.has(planned.key) && (
+            <Rows label={planned.label} rows={planned.rows} onOpen={onOpen} />
+          )}
         </section>
       )}
 
@@ -106,24 +112,12 @@ export function BibliographyYearList({
             return (
               <section key={year.key} aria-labelledby={`year-${year.key}`}>
                 <h2 id={`year-${year.key}`}>
-                  <button
-                    type="button"
-                    aria-expanded={isOpen}
-                    onClick={() => toggleYear(year.key)}
-                    className="flex w-full cursor-pointer items-center gap-2 rounded border-0 bg-wash px-3 py-2 text-left font-inherit text-ink hover:bg-nav-hover focus-visible:outline-2 focus-visible:outline-accent"
-                  >
-                    {isOpen ? (
-                      <ChevronDown aria-hidden="true" className="size-4" />
-                    ) : (
-                      <ChevronRight aria-hidden="true" className="size-4" />
-                    )}
-                    <span className="text-[16px] font-semibold">
-                      {year.label}
-                    </span>
-                    <span className="ml-auto text-[12px] font-normal text-muted">
-                      {year.rows.length}
-                    </span>
-                  </button>
+                  <FoldBar
+                    label={year.label}
+                    count={year.rows.length}
+                    isOpen={isOpen}
+                    onToggle={() => toggleYear(year.key)}
+                  />
                 </h2>
                 {isOpen &&
                   year.months.map((month) => (
@@ -152,6 +146,38 @@ export function BibliographyYearList({
         </div>
       )}
     </div>
+  );
+}
+
+/** A year's (or the planned items') header: clicking it folds its rows away or back. */
+function FoldBar({
+  label,
+  count,
+  isOpen,
+  onToggle,
+}: {
+  label: string;
+  count: number;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-expanded={isOpen}
+      onClick={onToggle}
+      className="flex w-full cursor-pointer items-center gap-2 rounded border-0 bg-wash px-3 py-2 text-left font-inherit text-ink hover:bg-nav-hover focus-visible:outline-2 focus-visible:outline-accent"
+    >
+      {isOpen ? (
+        <ChevronDown aria-hidden="true" className="size-4" />
+      ) : (
+        <ChevronRight aria-hidden="true" className="size-4" />
+      )}
+      <span className="text-[16px] font-semibold">{label}</span>
+      <span className="ml-auto text-[12px] font-normal text-muted">
+        {count}
+      </span>
+    </button>
   );
 }
 

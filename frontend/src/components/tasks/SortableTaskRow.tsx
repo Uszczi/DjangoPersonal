@@ -10,8 +10,9 @@ import {
   ListRowTitle,
 } from "@/design-system";
 import type { TaskResponse } from "@personal/shared/generated/api";
+import { useTaskListSettingsStore } from "@personal/shared/stores/taskListSettings";
 
-/** One Task in its status list: drag handle, done checkbox, title (opens the editor), timer start. */
+/** One Task in its status list: drag handle, done checkbox, title (opens the editor), timer start (unless turned off in the list's settings). */
 export function SortableTaskRow({
   task,
   isCompleted,
@@ -33,6 +34,9 @@ export function SortableTaskRow({
     transition,
     isDragging,
   } = useSortable({ id: task.id, data: { status: task.status } });
+  const showTimerButton = useTaskListSettingsStore(
+    (state) => state.showTimerButton,
+  );
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -77,14 +81,16 @@ export function SortableTaskRow({
         </ListRowButton>
       </>
       <>
-        <IconButton
-          className="text-[14px] hover:text-ink"
-          aria-label={`Uruchom timer: ${task.title}`}
-          title="Uruchom timer"
-          onClick={onStartTimer}
-        >
-          <span aria-hidden="true">▶</span>
-        </IconButton>
+        {showTimerButton && (
+          <IconButton
+            className="text-[14px] hover:text-ink"
+            aria-label={`Uruchom timer: ${task.title}`}
+            title="Uruchom timer"
+            onClick={onStartTimer}
+          >
+            <span aria-hidden="true">▶</span>
+          </IconButton>
+        )}
       </>
     </ListRow>
   );

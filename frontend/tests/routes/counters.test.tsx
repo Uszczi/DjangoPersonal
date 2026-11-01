@@ -208,14 +208,15 @@ describe("Counters", () => {
     ]);
   });
 
-  test("the palette icon on a counter's page changes its colour", async () => {
+  test("the options menu on a counter's page edits its colour", async () => {
     fetchMock.mockImplementation(fakeBackend({ counters: [coffee] }));
     const user = userEvent.setup();
 
     renderApp("/counters/1");
     await user.click(
-      await screen.findByRole("button", { name: "Zmień kolor licznika: Kawa" }),
+      await screen.findByRole("button", { name: "Opcje licznika" }),
     );
+    await user.click(screen.getByRole("menuitem", { name: "Edytuj licznik" }));
     expect(await screen.findByRole("radio", { name: "Morski" })).toBeChecked();
     await user.click(screen.getByRole("radio", { name: "Różowy" }));
     await user.click(screen.getByRole("button", { name: "Zapisz zmiany" }));
@@ -229,9 +230,10 @@ describe("Counters", () => {
         }),
       ),
     );
-    expect(
-      await screen.findByRole("button", { name: "Zmień kolor licznika: Kawa" }),
-    ).toHaveStyle({ color: "#b84a7a" });
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });
 
   test("the list shows each counter with its total and a quick +1", async () => {
@@ -297,16 +299,32 @@ describe("Counters", () => {
     const user = userEvent.setup();
 
     renderApp("/counters");
-    const views = await screen.findByRole("group", { name: "Widok liczników" });
+    await user.click(
+      await screen.findByRole("button", { name: "Ustawienia liczników" }),
+    );
+    const dialog = await screen.findByRole("dialog", {
+      name: "Ustawienia liczników",
+    });
+    const views = within(dialog).getByRole("group", {
+      name: "Widok liczników",
+    });
     expect(
       within(views).getByRole("button", { name: "Wiersze" }),
     ).toHaveAttribute("aria-pressed", "true");
+    // Only tiles have a middle to choose.
+    expect(
+      within(dialog).queryByRole("group", { name: "Na środku kafelka" }),
+    ).not.toBeInTheDocument();
 
     await user.click(within(views).getByRole("button", { name: "Kafelki" }));
 
     expect(
       within(views).getByRole("button", { name: "Kafelki" }),
     ).toHaveAttribute("aria-pressed", "true");
+    expect(
+      within(dialog).getByRole("group", { name: "Na środku kafelka" }),
+    ).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Gotowe" }));
     const list = screen.getByRole("list", { name: "Liczniki" });
     expect(within(list).getByLabelText("Suma: 0")).toBeInTheDocument();
     await user.click(
@@ -344,15 +362,16 @@ describe("Counters", () => {
     const user = userEvent.setup();
 
     renderApp("/counters");
-    const views = await screen.findByRole("group", { name: "Widok liczników" });
-    await user.click(within(views).getByRole("button", { name: "Kafelki" }));
+    await user.click(
+      await screen.findByRole("button", { name: "Ustawienia liczników" }),
+    );
+    const dialog = await screen.findByRole("dialog", {
+      name: "Ustawienia liczników",
+    });
+    await user.click(within(dialog).getByRole("button", { name: "Kafelki" }));
     const list = screen.getByRole("list", { name: "Liczniki" });
     expect(within(list).getByLabelText("Suma: 5")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Wygląd kafelków" }));
-    const dialog = await screen.findByRole("dialog", {
-      name: "Wygląd kafelków",
-    });
     const middle = within(dialog).getByRole("group", {
       name: "Na środku kafelka",
     });
@@ -402,8 +421,11 @@ describe("Counters", () => {
     const user = userEvent.setup();
 
     renderApp("/counters");
-    const views = await screen.findByRole("group", { name: "Widok liczników" });
-    await user.click(within(views).getByRole("button", { name: "Kafelki" }));
+    await user.click(
+      await screen.findByRole("button", { name: "Ustawienia liczników" }),
+    );
+    await user.click(await screen.findByRole("button", { name: "Kafelki" }));
+    await user.click(screen.getByRole("button", { name: "Gotowe" }));
     const list = screen.getByRole("list", { name: "Liczniki" });
 
     expect(within(list).getByText("3 dni pod rząd")).toBeInTheDocument();
@@ -593,8 +615,9 @@ describe("Counters", () => {
     });
 
     await user.click(
-      within(page).getByRole("button", { name: "Usuń licznik" }),
+      within(page).getByRole("button", { name: "Opcje licznika" }),
     );
+    await user.click(screen.getByRole("menuitem", { name: "Usuń licznik" }));
     const dialog = await screen.findByRole("dialog", {
       name: "Usunąć licznik?",
     });

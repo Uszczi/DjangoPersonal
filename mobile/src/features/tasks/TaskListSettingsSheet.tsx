@@ -1,7 +1,7 @@
 import { Switch, Text } from "react-native";
 
 import { Sheet, SheetRow } from "@/ui/Sheet";
-import { useTaskListSettingsStore } from "@/features/tasks/taskListSettings";
+import { useTaskListSettingsStore } from "@personal/shared/stores/taskListSettings";
 import { useTheme } from "@/theme";
 
 /** The task list settings, opened from the gear in the task lists' header. */

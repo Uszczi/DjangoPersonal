@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Palette } from "lucide-react";
+import { Pencil, Settings, Trash2 } from "lucide-react";
 import { useEffect } from "react";
 
 import { ColorDot } from "@/components/ColorDot";
@@ -12,8 +12,8 @@ import { entryCountLabel } from "@personal/shared/counterFormat";
 import {
   Button,
   ErrorMessage,
-  IconButton,
   LoadingStatus,
+  MenuButton,
   PageHeader,
 } from "@/design-system";
 import {
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/counters/$counterId")({
   component: CounterPage,
 });
 
-/** One counter: its total, quick +1, a calendar of the days its entries fall on, and the entries to add, edit and delete. */
+/** One counter: its total, quick +1, an options menu (edit, delete), a calendar of the days its entries fall on, and the entries to add, edit and delete. */
 function CounterPage() {
   const { counterId } = Route.useParams();
   const id = Number(counterId);
@@ -85,20 +85,33 @@ function CounterPage() {
         }
         actions={
           <div className="flex items-center gap-3">
-            <IconButton
-              aria-label={`Zmień kolor licznika: ${counter.name}`}
-              title="Zmień kolor"
-              onClick={() => ShowModal(CounterEditorModal, { counter })}
-              style={{ color: counter.color }}
-            >
-              <Palette aria-hidden="true" className="size-[22px]" />
-            </IconButton>
             <p
               className="font-display text-[44px] leading-none font-bold tracking-[-0.03em] text-ink"
               aria-label={`Suma: ${counter.total}`}
             >
               {counter.total}
             </p>
+            <MenuButton
+              label="Opcje licznika"
+              icon={<Settings size={20} aria-hidden="true" />}
+              items={[
+                {
+                  label: "Edytuj licznik",
+                  icon: <Pencil size={16} aria-hidden="true" />,
+                  onSelect: () => ShowModal(CounterEditorModal, { counter }),
+                },
+                {
+                  label: "Usuń licznik",
+                  icon: <Trash2 size={16} aria-hidden="true" />,
+                  isDanger: true,
+                  onSelect: () =>
+                    ShowModal(DeleteCounterModal, {
+                      counter,
+                      onDeleted: () => navigate({ to: "/counters" }),
+                    }),
+                },
+              ]}
+            />
           </div>
         }
       />
@@ -121,18 +134,6 @@ function CounterPage() {
         >
           <span aria-hidden="true">+</span>
           Nowy wpis
-        </Button>
-        <Button
-          variant="ghostDanger"
-          className="ml-auto"
-          onClick={() =>
-            ShowModal(DeleteCounterModal, {
-              counter,
-              onDeleted: () => navigate({ to: "/counters" }),
-            })
-          }
-        >
-          Usuń licznik
         </Button>
       </div>
 

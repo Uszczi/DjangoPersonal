@@ -14,6 +14,7 @@ import { useAuthStore } from "@personal/shared/stores/auth";
 import { useBibliographyViewStore } from "@personal/shared/stores/bibliographyView";
 import { useCounterViewStore } from "@personal/shared/stores/counterView";
 import { useNewTaskStatusStore } from "@personal/shared/stores/newTaskStatus";
+import { useTaskListSettingsStore } from "@personal/shared/stores/taskListSettings";
 import { useThemeStore } from "@personal/shared/stores/theme";
 import { useWalletSelectionStore } from "@personal/shared/stores/walletSelection";
 import { useLayoutStore } from "@/stores/layout";
@@ -35,6 +36,7 @@ export function resetStores(options?: { preserveStorage?: boolean }) {
   useNewTaskStatusStore.setState(useNewTaskStatusStore.getInitialState());
   useBibliographyViewStore.setState(useBibliographyViewStore.getInitialState());
   useCounterViewStore.setState(useCounterViewStore.getInitialState());
+  useTaskListSettingsStore.setState(useTaskListSettingsStore.getInitialState());
   // No retries, so a mocked failure shows at once; the app's other defaults
   // (such as how long data stays fresh) stay as they are.
   queryClient.clear();
