@@ -5416,5 +5416,6 @@ export type BibliographyItemsListStatusEnum = typeof BibliographyItemsListStatus
 export const BibliographyItemsListKindEnum = {
     Film: 'film',
     Book: 'book',
+    Series: 'series',
 } as const;
 export type BibliographyItemsListKindEnum = typeof BibliographyItemsListKindEnum[keyof typeof BibliographyItemsListKindEnum];

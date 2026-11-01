@@ -2,13 +2,13 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Pressable, Text, TextInput, View } from "react-native";
 
 import {
+  ITEM_KIND_FILTER_LABELS,
   itemStatusFilterLabel,
   type ItemKind,
   type ItemStatus,
 } from "@personal/shared/bibliographyFormat";
 
 import { useTheme } from "@/theme";
-import { KIND_FILTER_LABELS } from "@/features/bibliography/filterLabels";
 
 type SearchBarProps = {
   query: string;
@@ -77,7 +77,7 @@ export function SearchBar({
         <View className="flex-row flex-wrap gap-1.5">
           {kind && (
             <FilterPill
-              label={KIND_FILTER_LABELS[kind]}
+              label={ITEM_KIND_FILTER_LABELS[kind]}
               onRemove={onClearKind}
             />
           )}

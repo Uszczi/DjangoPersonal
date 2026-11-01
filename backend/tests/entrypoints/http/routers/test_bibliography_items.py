@@ -134,6 +134,7 @@ def test_list_filters_by_kind_and_derived_status(post_json: Any, api_client: Api
     _attempt(post_json, abandoned_then_restarted, 'abandoned')
     _attempt(post_json, abandoned_then_restarted, 'in_progress')
     _item(post_json, kind='film', title='Seksmisja')
+    _item(post_json, kind='series', title='Ranczo')
 
     assert _listed(api_client, 'kind=book') == ['Chłopi', 'Lalka']
     assert _listed(api_client, 'status=in_progress') == ['Miś', 'Chłopi']
@@ -142,6 +143,7 @@ def test_list_filters_by_kind_and_derived_status(post_json: Any, api_client: Api
     assert _listed(api_client, 'status=finished') == ['Rejs']
     assert _listed(api_client, 'status=abandoned') == []
     assert _listed(api_client, 'status=planned&kind=book') == ['Lalka']
+    assert _listed(api_client, 'kind=series') == ['Ranczo']
 
 
 def test_list_rejects_an_unknown_filter_value(api_client: ApiClient) -> None:

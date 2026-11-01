@@ -78,11 +78,11 @@ A named tally a user keeps of anything countable — coffees, push-ups, days wit
 One change to a Counter: a non-zero whole-number value (default 1; negative values subtract), the moment it happened (date and time, stored in UTC), and an optional note. An entry stays in the Counter it was added to.
 
 **Bibliografia**:
-The section of the app where a user keeps track of the films they watch and the books they read, as Pozycje.
-_Avoid_: Bibliografia for a single film or book (that is a Pozycja)
+The section of the app where a user keeps track of the films and series they watch and the books they read, as Pozycje.
+_Avoid_: Bibliografia for a single film, series or book (that is a Pozycja)
 
 **Pozycja** (Item):
-One film or one book a user tracks in the Bibliografia. Has a kind (film or book) and a title; optionally a creator (author or director, as written), a year, a length (pages for a book, minutes for a film) and one note. Films and books are the same concept, differing only in kind. Watching or reading it again is a new Podejście on the same Pozycja, never a new Pozycja.
+One film, series (Serial) or book a user tracks in the Bibliografia. Has a kind (film, series or book) and a title; optionally a creator (author, director or a series' creator, as written), a year, a length (pages for a book, minutes for a film, episodes for a series) and one note. Films, series and books are the same concept, differing only in kind. Watching or reading it again is a new Podejście on the same Pozycja, never a new Pozycja.
 _Avoid_: Entry, Wpis (a Counter entry is something else), Bibliografia
 
 **Podejście** (Attempt):

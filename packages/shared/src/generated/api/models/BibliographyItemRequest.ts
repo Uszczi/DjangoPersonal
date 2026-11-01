@@ -53,6 +53,7 @@ export interface BibliographyItemRequest {
 export const BibliographyItemRequestKindEnum = {
     Film: 'film',
     Book: 'book',
+    Series: 'series',
 } as const;
 export type BibliographyItemRequestKindEnum = typeof BibliographyItemRequestKindEnum[keyof typeof BibliographyItemRequestKindEnum];
 

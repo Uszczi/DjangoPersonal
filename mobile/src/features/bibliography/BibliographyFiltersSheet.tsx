@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 
 import {
+  ITEM_KIND_FILTER_LABELS,
+  ITEM_KINDS,
   ITEM_STATUSES,
   itemStatusFilterLabel,
   type ItemKind,
@@ -14,15 +16,16 @@ import {
 
 import { ChipGroup } from "@/ui/ChipGroup";
 import { Sheet } from "@/ui/Sheet";
-import { KIND_FILTER_LABELS } from "@/features/bibliography/filterLabels";
 
 /** A chip value for "no filter": ChipGroup needs a value for every option. */
 const ALL = "all";
 
 const KIND_FILTERS: { value: ItemKind | typeof ALL; label: string }[] = [
   { value: ALL, label: "Wszystkie" },
-  { value: "film", label: KIND_FILTER_LABELS.film },
-  { value: "book", label: KIND_FILTER_LABELS.book },
+  ...ITEM_KINDS.map((value) => ({
+    value,
+    label: ITEM_KIND_FILTER_LABELS[value],
+  })),
 ];
 
 const VIEW_MODES: { value: BibliographyViewMode; label: string }[] = [

@@ -11,6 +11,7 @@ import {
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import {
+  ITEM_CREATOR_LABELS,
   ITEM_KIND_LABELS,
   ITEM_KINDS,
   ITEM_LENGTH_LABELS,
@@ -31,11 +32,6 @@ const KIND_OPTIONS = ITEM_KINDS.map((value) => ({
   value,
   label: ITEM_KIND_LABELS[value],
 }));
-
-const CREATOR_LABELS: Record<ItemKind, string> = {
-  film: "Reżyser",
-  book: "Autor",
-};
 
 function numberText(value: number | null | undefined) {
   return value === null || value === undefined ? "" : String(value);
@@ -149,7 +145,7 @@ export default function BibliographyItemEditorScreen() {
 
         {item && (
           <>
-            <Text className={form.label}>{CREATOR_LABELS[kind]}</Text>
+            <Text className={form.label}>{ITEM_CREATOR_LABELS[kind]}</Text>
             <TextInput
               className={form.input}
               value={creator}

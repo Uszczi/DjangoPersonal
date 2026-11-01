@@ -113,7 +113,7 @@ export default function BibliographyScreen() {
                 ? "Brak pozycji pasujących do wyszukiwania"
                 : isFiltered
                   ? "Brak pozycji pasujących do filtrów"
-                  : "Brak pozycji. Dodaj pierwszy film lub książkę przyciskiem +."}
+                  : "Brak pozycji. Dodaj pierwszy film, serial lub książkę przyciskiem +."}
             </Text>
           ) : undefined
         }

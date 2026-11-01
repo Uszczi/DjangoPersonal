@@ -36,7 +36,7 @@ class AttemptRequest(_AttemptPayload):
 class PatchedAttemptRequest(_AttemptPayload):
     """Finish, abandon, re-date or move on an Attempt; it stays on its BibliographyItem.
 
-    ``progress`` is a page (book) or minute (film), set only while in progress;
+    ``progress`` is a page (book), minute (film) or episode (series), set only while in progress;
     ``null`` clears it.
     """
 

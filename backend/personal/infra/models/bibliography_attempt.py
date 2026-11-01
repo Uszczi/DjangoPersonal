@@ -55,7 +55,7 @@ class Attempt(Base):
     #: Calendar days, no time of day.
     started_on: Mapped[date | None] = mapped_column(default=None)
     ended_on: Mapped[date | None] = mapped_column(default=None)
-    #: How far the user is (a page for a book, a minute for a film); only while in progress.
+    #: How far the user is (a page for a book, a minute for a film, an episode for a series); only while in progress.
     progress: Mapped[int | None] = mapped_column(default=None)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utc_now)
 

@@ -1654,6 +1654,7 @@ paths:
           - enum:
             - film
             - book
+            - series
             type: string
           - type: 'null'
           title: Kind
@@ -1992,6 +1993,7 @@ components:
           enum:
           - film
           - book
+          - series
           title: Kind
         title:
           type: string
@@ -2038,6 +2040,7 @@ components:
           enum:
           - film
           - book
+          - series
           title: Kind
         title:
           type: string
@@ -2478,7 +2481,8 @@ components:
         BibliographyItem.
 
 
-        ``progress`` is a page (book) or minute (film), set only while in progress;
+        ``progress`` is a page (book), minute (film) or episode (series), set only
+        while in progress;
 
         ``null`` clears it.'
     PatchedBibliographyItemRequest:

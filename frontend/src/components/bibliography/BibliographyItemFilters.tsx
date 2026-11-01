@@ -1,5 +1,6 @@
 import { ToggleGroup } from "@/design-system";
 import {
+  ITEM_KIND_FILTER_LABELS,
   ITEM_KINDS,
   ITEM_STATUSES,
   itemStatusFilterLabel,
@@ -12,8 +13,7 @@ const ALL = "all";
 
 const KIND_FILTER_LABELS: Record<ItemKind | typeof ALL, string> = {
   all: "Wszystkie",
-  film: "Filmy",
-  book: "Książki",
+  ...ITEM_KIND_FILTER_LABELS,
 };
 
 /** Narrow the BibliographyItem list by status and kind; "all" clears a filter. */

@@ -5,7 +5,7 @@ from pydantic import ConfigDict, Field, field_validator
 
 from personal.core.shared.base import BaseModel
 
-ItemKind = Literal['film', 'book']
+ItemKind = Literal['film', 'book', 'series']
 
 #: Where a BibliographyItem stands; never sent by a client, always derived.
 #: ``planned`` means to watch or to read: no Attempt yet.
@@ -46,7 +46,7 @@ class BibliographyItemRequest(_BibliographyItemPayload):
     title: str = Field(min_length=1, max_length=300)
     creator: str = Field(default='', max_length=200)
     year: int | None = Field(default=None, gt=0, le=9999)
-    #: Pages for a book, minutes for a film.
+    #: Pages for a book, minutes for a film, episodes for a series.
     length: int | None = Field(default=None, gt=0, le=1_000_000)
     note: str = Field(default='', max_length=10_000)
 

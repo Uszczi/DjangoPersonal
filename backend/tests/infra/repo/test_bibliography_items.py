@@ -29,6 +29,15 @@ def test_list_and_find_see_only_the_users_items(session: Session, user: User) ->
     assert repository.find(theirs.id, user=user) is None
 
 
+@pytest.mark.parametrize('kind', ['film', 'book', 'series'])
+def test_database_accepts_every_kind(session: Session, user: User, kind: str) -> None:
+    item = BibliographyItemRepository(session).save(
+        BibliographyItem(user=user, kind=kind, title='Ranczo')
+    )
+
+    assert item.kind == kind
+
+
 @pytest.mark.parametrize(
     'fields', [{'kind': 'serial'}, {'year': 0}, {'length': -1}]
 )

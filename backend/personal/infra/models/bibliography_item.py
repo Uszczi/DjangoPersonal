@@ -11,7 +11,7 @@ from .user import User
 
 
 class BibliographyItem(Base):
-    """One film or one book a user tracks in the Bibliography.
+    """One film, book or series a user tracks in the Bibliography.
 
     Its status is not stored: the ``bibliography`` use cases derive it from its Attempts
     (see ``GLOSSARY.md``).
@@ -19,22 +19,23 @@ class BibliographyItem(Base):
 
     __tablename__ = 'bibliography_items'
     __table_args__ = (
-        CheckConstraint("kind IN ('film', 'book')", name='kind'),
+        CheckConstraint("kind IN ('film', 'book', 'series')", name='kind'),
         CheckConstraint('year IS NULL OR year > 0', name='year_positive'),
         CheckConstraint('length IS NULL OR length > 0', name='length_positive'),
     )
 
     KIND_FILM = 'film'
     KIND_BOOK = 'book'
+    KIND_SERIES = 'series'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
     kind: Mapped[str] = mapped_column(String(10))
     title: Mapped[str] = mapped_column(String(300))
-    #: The author or director, as written.
+    #: The author, director or a series' creator, as written.
     creator: Mapped[str] = mapped_column(String(200), default='')
     year: Mapped[int | None] = mapped_column(default=None)
-    #: Pages for a book, minutes for a film.
+    #: Pages for a book, minutes for a film, episodes for a series.
     length: Mapped[int | None] = mapped_column(default=None)
     note: Mapped[str] = mapped_column(Text, default='')
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utc_now)

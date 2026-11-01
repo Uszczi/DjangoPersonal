@@ -13,7 +13,9 @@ import {
 } from "@/design-system";
 import type { BibliographyItemResponse } from "@personal/shared/generated/api";
 import {
+  ITEM_CREATOR_LABELS,
   ITEM_KIND_LABELS,
+  ITEM_KINDS,
   ITEM_LENGTH_LABELS,
   type ItemKind,
 } from "@personal/shared/bibliographyFormat";
@@ -27,13 +29,6 @@ type BibliographyItemEditorModalProps = {
   /** Omit to add a new BibliographyItem; pass one to edit it. */
   item?: BibliographyItemResponse | null;
   onClose: () => void;
-};
-
-const KINDS: ItemKind[] = ["film", "book"];
-
-const CREATOR_LABELS: Record<ItemKind, string> = {
-  film: "Reżyser",
-  book: "Autor",
 };
 
 function numberText(value: number | null | undefined) {
@@ -118,7 +113,7 @@ export function BibliographyItemEditorModal({
             disabled={item !== null}
             onChange={(event) => setKind(event.target.value as ItemKind)}
           >
-            {KINDS.map((option) => (
+            {ITEM_KINDS.map((option) => (
               <option key={option} value={option}>
                 {ITEM_KIND_LABELS[option]}
               </option>
@@ -133,7 +128,7 @@ export function BibliographyItemEditorModal({
             required
           />
         </Field>
-        <Field label={CREATOR_LABELS[kind]}>
+        <Field label={ITEM_CREATOR_LABELS[kind]}>
           <TextInput
             maxLength={200}
             value={creator}

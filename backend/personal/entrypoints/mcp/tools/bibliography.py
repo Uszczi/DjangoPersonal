@@ -28,7 +28,7 @@ from .common import ToolContext, provided, tool, unit_of_work, zone
 def list_bibliography_items(
     ctx: ToolContext, status: ItemStatus | None = None, kind: ItemKind | None = None
 ) -> list[dict[str, Any]]:
-    """List the Bibliography's films and books, the most recently added first.
+    """List the Bibliography's films, series and books, the most recently added first.
 
     ``status`` (derived from the item's attempts: ``planned`` = nothing started yet)
     and ``kind`` narrow the list."""
@@ -41,7 +41,7 @@ def list_bibliography_items(
 
 @tool
 def get_bibliography_item(ctx: ToolContext, item_id: int) -> dict[str, Any]:
-    """Fetch one film or book with its status (``list_attempts`` gives its history)."""
+    """Fetch one film, series or book with its status (``list_attempts`` gives its history)."""
     with unit_of_work(ctx) as (session, user):
         handler = bibliography_handlers.GetBibliographyItem(
             wiring.bibliography_item_repository(session), wiring.attempt_repository(session), user
@@ -59,8 +59,9 @@ def create_bibliography_item(
     length: int | None = None,
     note: str = '',
 ) -> dict[str, Any]:
-    """Add a film or book to the Bibliography. ``creator`` is the director or author;
-    ``length`` is minutes for a film, pages for a book. The kind cannot change later."""
+    """Add a film, series or book to the Bibliography. ``creator`` is the director,
+    the series' creator or the author; ``length`` is minutes for a film, episodes for a
+    series, pages for a book. The kind cannot change later."""
     payload = BibliographyItemRequest.model_validate(
         {
             'kind': kind,
@@ -89,7 +90,7 @@ def update_bibliography_item(
     note: str | None = None,
     kind: ItemKind | None = None,
 ) -> dict[str, Any]:
-    """Update a film or book (partial). The kind is fixed at creation: passing
+    """Update a film, series or book (partial). The kind is fixed at creation: passing
     ``kind`` is refused, so a wrong kind means adding the item again."""
     payload = PatchedBibliographyItemRequest.model_validate(
         provided(title=title, creator=creator, year=year, length=length, note=note, kind=kind)
@@ -103,7 +104,7 @@ def update_bibliography_item(
 
 @tool
 def delete_bibliography_item(ctx: ToolContext, item_id: int) -> str:
-    """Delete a film or book together with all its attempts."""
+    """Delete a film, series or book together with all its attempts."""
     with unit_of_work(ctx) as (session, user):
         bibliography_handlers.DeleteBibliographyItem(
             wiring.bibliography_item_repository(session), user
@@ -115,7 +116,7 @@ def delete_bibliography_item(ctx: ToolContext, item_id: int) -> str:
 def import_bibliography(
     ctx: ToolContext, items: list[ImportedBibliographyItem]
 ) -> dict[str, Any]:
-    """Add many films and books at once, each with its past attempts (``finished`` or
+    """Add many films, series and books at once, each with its past attempts (``finished`` or
     ``abandoned``, ``ended_on`` YYYY-MM-DD required). All or nothing: one broken rule
     fails the whole import and names the item. Returns the counts added."""
     payload = BibliographyImportRequest(items=items)
@@ -143,7 +144,7 @@ def _today(time_zone: str) -> date_type:
 @tool
 def list_attempts(ctx: ToolContext, item_id: int) -> list[dict[str, Any]]:
     """The attempts at watching or reading one item, latest first (the one in progress,
-    then by end date). ``progress`` is a page (book) or minute (film)."""
+    then by end date). ``progress`` is a page (book), minute (film) or episode (series)."""
     with unit_of_work(ctx) as (session, user):
         handler = bibliography_handlers.ListAttempts(
             wiring.attempt_repository(session), wiring.bibliography_item_repository(session), user
@@ -240,8 +241,8 @@ def update_attempt(
     ended_on: str | None = None,
     clear_progress: bool = False,
 ) -> dict[str, Any]:
-    """Move on or re-date an attempt (partial). ``progress`` is the page (book) or
-    minute (film) reached, only while in progress and never beyond the item's
+    """Move on or re-date an attempt (partial). ``progress`` is the page (book),
+    minute (film) or episode (series) reached, only while in progress and never beyond the item's
     length; ``clear_progress`` removes it."""
     fields = provided(progress=progress, started_on=started_on, ended_on=ended_on)
     if clear_progress:

@@ -23,7 +23,7 @@ import { common, form } from "@/ui/classes";
 
 /**
  * Move on the Attempt in progress (`?itemId=&attemptId=`): the page reached in
- * a book, the minute in a film. An empty field clears it; reaching the length
+ * a book, the minute in a film, the episode of a series. An empty field clears it; reaching the length
  * does not finish it.
  */
 export default function AttemptProgressScreen() {

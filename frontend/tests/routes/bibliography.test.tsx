@@ -10,7 +10,7 @@ type Outcome = "in_progress" | "finished" | "abandoned";
 
 type BibliographyItem = {
   id: number;
-  kind: "film" | "book";
+  kind: "film" | "book" | "series";
   title: string;
   creator: string;
   year: number | null;
@@ -418,6 +418,33 @@ describe("Bibliography", () => {
       year: null,
       length: null,
       note: "",
+    });
+  });
+
+  test("user adds a series, counted in episodes and to watch", async () => {
+    const backend = fakeBackend();
+    fetchMock.mockImplementation(backend.handler);
+    const user = userEvent.setup();
+
+    renderApp("/bibliography");
+    await user.click(
+      await screen.findByRole("button", { name: "Nowa pozycja" }),
+    );
+    await user.selectOptions(screen.getByLabelText("Rodzaj"), "series");
+    await user.type(screen.getByLabelText("Tytuł"), "Ranczo");
+    await user.type(screen.getByLabelText("Twórca"), "Wojciech Adamczyk");
+    await user.type(screen.getByLabelText("Liczba odcinków"), "130");
+    await user.click(screen.getByRole("button", { name: "Dodaj pozycję" }));
+
+    const list = await screen.findByRole("list", { name: "Pozycje" });
+    expect(within(list).getByText("Ranczo")).toBeInTheDocument();
+    expect(within(list).getByText("Do obejrzenia")).toBeInTheDocument();
+    const created = backend.requests.find((r) => r.method === "POST");
+    expect(created?.body).toMatchObject({
+      kind: "series",
+      title: "Ranczo",
+      creator: "Wojciech Adamczyk",
+      length: 130,
     });
   });
 

@@ -33,7 +33,7 @@ import { Button } from "@/ui/Button";
 import { common } from "@/ui/classes";
 import { useRefreshOnFocus } from "@/useRefreshOnFocus";
 
-/** One film or book: its derived status, the actions its Attempts allow, and their history. */
+/** One film, series or book: its derived status, the actions its Attempts allow, and their history. */
 export default function BibliographyItemScreen() {
   const { id: rawId } = useLocalSearchParams<{ id: string }>();
   const id = Number(rawId);

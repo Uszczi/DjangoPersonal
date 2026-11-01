@@ -33,7 +33,7 @@ export const Route = createFileRoute("/bibliography/$itemId")({
   component: BibliographyItemPage,
 });
 
-/** One film or book: its derived status, the actions its Attempts allow, and their history. */
+/** One film, series or book: its derived status, the actions its Attempts allow, and their history. */
 function BibliographyItemPage() {
   const { itemId: rawItemId } = Route.useParams();
   const parsed = Number(rawItemId);

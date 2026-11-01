@@ -9,20 +9,36 @@ export type ItemStatus = BibliographyItemResponseStatusEnum;
 
 export const ITEM_KIND_LABELS: Record<ItemKind, string> = {
   film: "Film",
+  series: "Serial",
   book: "Książka",
 };
 
-/** What a BibliographyItem's length counts: pages for a book, minutes for a film. */
+/** The kind filter's labels: every item of a kind, e.g. `Seriale`. */
+export const ITEM_KIND_FILTER_LABELS: Record<ItemKind, string> = {
+  film: "Filmy",
+  series: "Seriale",
+  book: "Książki",
+};
+
+/** Who a BibliographyItem's creator is: a film's director, a series' creator, a book's author. */
+export const ITEM_CREATOR_LABELS: Record<ItemKind, string> = {
+  film: "Reżyser",
+  series: "Twórca",
+  book: "Autor",
+};
+
+/** What a BibliographyItem's length counts: pages for a book, minutes for a film, episodes for a series. */
 export const ITEM_LENGTH_LABELS: Record<ItemKind, string> = {
   film: "Czas trwania (min)",
+  series: "Liczba odcinków",
   book: "Liczba stron",
 };
 
-/** The UI label of a status; for `planned` it depends on the kind (to watch for a film, to read for a book). */
+/** The UI label of a status; for `planned` it depends on the kind (to watch for a film or series, to read for a book). */
 export function itemStatusLabel(status: ItemStatus, kind: ItemKind) {
   switch (status) {
     case "planned":
-      return kind === "film" ? "Do obejrzenia" : "Do przeczytania";
+      return kind === "book" ? "Do przeczytania" : "Do obejrzenia";
     case "in_progress":
       return "W trakcie";
     case "finished":
@@ -32,7 +48,7 @@ export function itemStatusLabel(status: ItemStatus, kind: ItemKind) {
   }
 }
 
-export const ITEM_KINDS: readonly ItemKind[] = ["film", "book"];
+export const ITEM_KINDS: readonly ItemKind[] = ["film", "series", "book"];
 
 export const ITEM_STATUSES: readonly ItemStatus[] = [
   "planned",
@@ -100,9 +116,10 @@ export function attemptDates({
   return "";
 }
 
-/** What an Attempt's progress counts: the page of a book, the minute of a film. */
+/** What an Attempt's progress counts: the page of a book, the minute of a film, the episode of a series. */
 export const ITEM_PROGRESS_LABELS: Record<ItemKind, string> = {
   film: "Minuta",
+  series: "Odcinek",
   book: "Strona",
 };
 
