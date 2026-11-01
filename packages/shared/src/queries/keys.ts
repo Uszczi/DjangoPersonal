@@ -53,6 +53,12 @@ export const walletKeys = {
 export const transactionKeys = {
   all: ["transactions"] as const,
   wallet: (walletId: number) => ["transactions", "wallet", walletId] as const,
+  /** Every cached month of a wallet. */
+  months: (walletId: number) =>
+    ["transactions", "wallet", walletId, "month"] as const,
+  /** One month (`yyyy-mm`) of a wallet's transactions. */
+  month: (walletId: number, month: string) =>
+    ["transactions", "wallet", walletId, "month", month] as const,
 };
 
 /** The Notatnik's Folders, listed flat. */

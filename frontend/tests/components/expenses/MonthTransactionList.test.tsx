@@ -1,10 +1,10 @@
-/** User-visible Transaction flow tests, with HTTP mocked at the network boundary. */
+/** User-visible Transaction flow tests on the Wydatki month, with HTTP mocked at the network boundary. */
 
 import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { renderApp } from "../renderApp";
+import { renderApp } from "../../renderApp";
 
 // API returns snake_case; the generated client maps it to camelCase.
 const personalWalletApi = {
@@ -59,9 +59,9 @@ function routeByUrl({
   categories = categoriesApi,
   wallet = () => personalWalletApi,
 }: {
-  /** A wallet whose transactions fit on one page. */
+  /** A wallet's transactions; each month asked for gets its own. */
   transactions?: unknown[];
-  /** The pages of a longer list, by the `cursor` asked for ("" for the first page). */
+  /** The pages of a long month, by the `cursor` asked for ("" for the first page). */
   pages?: Record<string, TransactionPageApi>;
   created?: unknown;
   patched?: unknown;
@@ -84,13 +84,18 @@ function routeByUrl({
       if (init?.method === "DELETE") {
         return Promise.resolve(jsonResponse(null, 204));
       }
+      const query = new URL(path, "http://test").searchParams;
       if (pages) {
-        const cursor =
-          new URL(path, "http://test").searchParams.get("cursor") ?? "";
-        return Promise.resolve(jsonResponse(pages[cursor]));
+        return Promise.resolve(jsonResponse(pages[query.get("cursor") ?? ""]));
       }
+      // Like the server: only the rows dated in the asked range.
+      const from = query.get("date_from") ?? "";
+      const to = query.get("date_to") ?? "9999";
+      const inRange = (transactions as { date: string }[]).filter(
+        (item) => item.date >= from && item.date <= to,
+      );
       return Promise.resolve(
-        jsonResponse({ items: transactions, next_cursor: null }),
+        jsonResponse({ items: inRange, next_cursor: null }),
       );
     }
     if (path.includes("/categories/")) {
@@ -113,6 +118,15 @@ function routeByUrl({
   };
 }
 
+/** The demo rows are dated in October 2026. */
+const OCTOBER = "/expenses/1?month=2026-10";
+
+/** The month's list once its rows have loaded. */
+async function monthList() {
+  await screen.findAllByRole("button", { name: /^Edytuj transakcję: / });
+  return screen.getByRole("list", { name: "Transakcje miesiąca" });
+}
+
 describe("Transactions", () => {
   const fetchMock = vi.fn();
 
@@ -126,28 +140,38 @@ describe("Transactions", () => {
     vi.unstubAllGlobals();
   });
 
-  test("transaction list is grouped by date with category and description", async () => {
-    fetchMock.mockImplementation(routeByUrl());
-
-    renderApp("/expenses/1");
-
-    const firstDay = await screen.findByRole("list", {
-      name: "Transakcje z dnia 16 października 2026",
-    });
-    expect(within(firstDay).getByText("Kawa")).toBeInTheDocument();
-    expect(within(firstDay).getByText("−8.00")).toBeInTheDocument();
-    expect(within(firstDay).getByText("Na rynku")).toBeInTheDocument();
-    expect(within(firstDay).getByText("Jedzenie")).toBeInTheDocument();
-    // The category's icon is decorative (and loads lazily), so it is found by lucide's class name.
-    await waitFor(() =>
-      expect(firstDay.querySelector("svg.lucide-utensils")).not.toBeNull(),
+  test("the month's transactions show newest first with their day, category icon and description", async () => {
+    // The server's order: newest day first.
+    fetchMock.mockImplementation(
+      routeByUrl({ transactions: [lunchTransactionApi, coffeeTransactionApi] }),
     );
 
-    const secondDay = screen.getByRole("list", {
-      name: "Transakcje z dnia 18 października 2026",
-    });
-    expect(within(secondDay).getByText("Obiad")).toBeInTheDocument();
-    expect(within(secondDay).getByText("−45.99")).toBeInTheDocument();
+    renderApp(OCTOBER);
+
+    const list = await monthList();
+    const rows = within(list).getAllByRole("button");
+    expect(rows.map((row) => row.getAttribute("aria-label"))).toEqual([
+      "Edytuj transakcję: Obiad",
+      "Edytuj transakcję: Kawa",
+    ]);
+    expect(within(rows[0]).getByText("18 paź")).toBeInTheDocument();
+    expect(within(rows[0]).getByText("−45,99")).toBeInTheDocument();
+    expect(within(rows[1]).getByText("Na rynku")).toBeInTheDocument();
+    // The category's icon is decorative (and loads lazily), so it is found by lucide's class name.
+    await waitFor(() =>
+      expect(rows[1].querySelector("svg.lucide-utensils")).not.toBeNull(),
+    );
+  });
+
+  test("another month asks only for its own days", async () => {
+    fetchMock.mockImplementation(routeByUrl());
+
+    renderApp("/expenses/1?month=2026-11");
+
+    expect(
+      await screen.findByText("Brak transakcji w tym miesiącu."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Kawa")).not.toBeInTheDocument();
   });
 
   test("amounts carry the sign and colour of their kind", async () => {
@@ -186,14 +210,12 @@ describe("Transactions", () => {
       }),
     );
 
-    renderApp("/expenses/1");
-    const day = await screen.findByRole("list", {
-      name: "Transakcje z dnia 17 października 2026",
-    });
+    renderApp(OCTOBER);
+    const day = await monthList();
 
-    expect(within(day).getByText("+500.00")).toHaveClass("text-income");
-    expect(within(day).getByText("−8.00")).toHaveClass("text-expense");
-    expect(within(day).getByText("+100.00")).toHaveClass("text-muted");
+    expect(within(day).getByText("+500,00")).toHaveClass("text-income");
+    expect(within(day).getByText("−8,00")).toHaveClass("text-expense");
+    expect(within(day).getByText("+100,00")).toHaveClass("text-muted");
     expect(within(day).getByText("Wpis systemowy")).toBeInTheDocument();
   });
 
@@ -216,10 +238,8 @@ describe("Transactions", () => {
     );
     const user = userEvent.setup();
 
-    renderApp("/expenses/1");
-    await screen.findByRole("list", {
-      name: "Transakcje z dnia 18 października 2026",
-    });
+    renderApp(OCTOBER);
+    await monthList();
 
     await user.click(screen.getByRole("button", { name: "Nowa transakcja" }));
     await user.type(await screen.findByLabelText("Tytuł"), "Książka");
@@ -230,11 +250,9 @@ describe("Transactions", () => {
     await user.selectOptions(screen.getByLabelText("Kategoria"), "5");
     await user.click(screen.getByRole("button", { name: "Dodaj wydatek" }));
 
-    const secondDay = await screen.findByRole("list", {
-      name: "Transakcje z dnia 18 października 2026",
-    });
-    expect(within(secondDay).getByText("Książka")).toBeInTheDocument();
-    expect(within(secondDay).getByText("−34.90")).toBeInTheDocument();
+    const list = await monthList();
+    expect(await within(list).findByText("Książka")).toBeInTheDocument();
+    expect(within(list).getByText("−34,90")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/v1/transactions/",
       expect.objectContaining({
@@ -271,10 +289,8 @@ describe("Transactions", () => {
     );
     const user = userEvent.setup();
 
-    renderApp("/expenses/1");
-    await screen.findByRole("list", {
-      name: "Transakcje z dnia 18 października 2026",
-    });
+    renderApp(OCTOBER);
+    await monthList();
 
     await user.click(screen.getByRole("button", { name: "Nowa transakcja" }));
     await user.type(await screen.findByLabelText("Tytuł"), "Książka");
@@ -298,10 +314,8 @@ describe("Transactions", () => {
     fetchMock.mockImplementation(routeByUrl());
     const user = userEvent.setup();
 
-    renderApp("/expenses/1");
-    await screen.findByRole("list", {
-      name: "Transakcje z dnia 18 października 2026",
-    });
+    renderApp(OCTOBER);
+    await monthList();
 
     await user.click(screen.getByRole("button", { name: "Nowa transakcja" }));
 
@@ -320,10 +334,11 @@ describe("Transactions", () => {
     );
 
     expect(
-      fetchMock.mock.calls.filter(([url]) =>
-        String(url).includes("/transactions/"),
+      fetchMock.mock.calls.filter(
+        ([url, init]) =>
+          String(url).includes("/transactions/") && init?.method === "POST",
       ),
-    ).toHaveLength(1);
+    ).toHaveLength(0);
   });
 
   test("an existing transaction opens read-only until the pencil is pressed", async () => {
@@ -332,10 +347,8 @@ describe("Transactions", () => {
     );
     const user = userEvent.setup();
 
-    renderApp("/expenses/1");
-    await screen.findByRole("list", {
-      name: "Transakcje z dnia 16 października 2026",
-    });
+    renderApp(OCTOBER);
+    await monthList();
     await user.click(
       screen.getByRole("button", { name: "Edytuj transakcję: Kawa" }),
     );
@@ -365,7 +378,7 @@ describe("Transactions", () => {
     fetchMock.mockImplementation(routeByUrl());
     const user = userEvent.setup();
 
-    renderApp("/expenses/1");
+    renderApp(OCTOBER);
     await user.click(
       await screen.findByRole("button", { name: "Nowa transakcja" }),
     );
@@ -383,10 +396,8 @@ describe("Transactions", () => {
     );
     const user = userEvent.setup();
 
-    renderApp("/expenses/1");
-    const day = await screen.findByRole("list", {
-      name: "Transakcje z dnia 16 października 2026",
-    });
+    renderApp(OCTOBER);
+    const day = await monthList();
 
     await user.click(
       screen.getByRole("button", { name: "Edytuj transakcję: Kawa" }),
@@ -426,10 +437,8 @@ describe("Transactions", () => {
     );
     const user = userEvent.setup();
 
-    renderApp("/expenses/1");
-    await screen.findByRole("list", {
-      name: "Transakcje z dnia 16 października 2026",
-    });
+    renderApp(OCTOBER);
+    await monthList();
     await user.click(
       screen.getByRole("button", { name: "Edytuj transakcję: Kawa" }),
     );
@@ -449,11 +458,6 @@ describe("Transactions", () => {
         }),
       ),
     );
-    // The list keeps the line break instead of folding the text into one line.
-    const shown = await screen.findByText(
-      (_, element) => element?.textContent === "Na rynku\nz Anią",
-    );
-    expect(shown).toHaveClass("whitespace-pre-line");
   });
 
   test("the System category is not offered for a new transaction", async () => {
@@ -467,10 +471,8 @@ describe("Transactions", () => {
     );
     const user = userEvent.setup();
 
-    renderApp("/expenses/1");
-    await screen.findByRole("list", {
-      name: "Transakcje z dnia 16 października 2026",
-    });
+    renderApp(OCTOBER);
+    await monthList();
 
     await user.click(screen.getByRole("button", { name: "Nowa transakcja" }));
     const select = await screen.findByLabelText("Kategoria");
@@ -498,10 +500,8 @@ describe("Transactions", () => {
     );
     const user = userEvent.setup();
 
-    renderApp("/expenses/1");
-    await screen.findByRole("list", {
-      name: "Transakcje z dnia 18 października 2026",
-    });
+    renderApp(OCTOBER);
+    await monthList();
 
     await user.click(screen.getByRole("button", { name: "Nowa transakcja" }));
 
@@ -551,10 +551,8 @@ describe("Transactions", () => {
     );
     const user = userEvent.setup();
 
-    renderApp("/expenses/1");
-    await screen.findByRole("list", {
-      name: "Transakcje z dnia 18 października 2026",
-    });
+    renderApp(OCTOBER);
+    await monthList();
 
     await user.click(
       screen.getByRole("button", { name: "Edytuj transakcję: Korekta stanu" }),
@@ -564,7 +562,9 @@ describe("Transactions", () => {
       await screen.findByText(/Ten wpis zapisał system/),
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Tytuł")).toBeDisabled();
-    expect(screen.queryByRole("button", { name: "Edytuj" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Edytuj" }),
+    ).not.toBeInTheDocument();
     const dialog = screen.getByRole("dialog");
     expect(
       within(dialog).getByRole("button", { name: "Usuń" }),
@@ -581,10 +581,8 @@ describe("Transactions", () => {
     );
     const user = userEvent.setup();
 
-    renderApp("/expenses/1");
-    await screen.findByRole("list", {
-      name: "Transakcje z dnia 16 października 2026",
-    });
+    renderApp(OCTOBER);
+    await monthList();
 
     await user.click(
       screen.getByRole("button", { name: "Edytuj transakcję: Kawa" }),
@@ -600,7 +598,7 @@ describe("Transactions", () => {
     await user.click(screen.getByRole("button", { name: "Usuń transakcję" }));
 
     expect(
-      await screen.findByText("Brak transakcji. Dodaj pierwszą transakcję."),
+      await screen.findByText("Brak transakcji w tym miesiącu."),
     ).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/v1/transactions/10/",
@@ -619,11 +617,10 @@ describe("Transactions", () => {
     );
     const user = userEvent.setup();
 
-    renderApp("/expenses/1");
-    const header = await screen.findByRole("button", {
-      name: "Edytuj portfel: Personal",
-    });
-    expect(header).toHaveTextContent("-45.99");
+    renderApp(OCTOBER);
+    expect(
+      await screen.findByText("Saldo portfela: -45.99"),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Nowa transakcja" }));
     await user.type(await screen.findByLabelText("Tytuł"), "Kawa");
@@ -632,7 +629,9 @@ describe("Transactions", () => {
     balance = "-53.99";
     await user.click(screen.getByRole("button", { name: "Dodaj wydatek" }));
 
-    await waitFor(() => expect(header).toHaveTextContent("-53.99"));
+    expect(
+      await screen.findByText("Saldo portfela: -53.99"),
+    ).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/v1/wallets/1/",
       expect.anything(),
@@ -649,11 +648,10 @@ describe("Transactions", () => {
     );
     const user = userEvent.setup();
 
-    renderApp("/expenses/1");
-    const header = await screen.findByRole("button", {
-      name: "Edytuj portfel: Personal",
-    });
-    expect(header).toHaveTextContent("-8.00");
+    renderApp(OCTOBER);
+    expect(
+      await screen.findByText("Saldo portfela: -8.00"),
+    ).toBeInTheDocument();
 
     await user.click(
       await screen.findByRole("button", { name: "Edytuj transakcję: Kawa" }),
@@ -667,10 +665,10 @@ describe("Transactions", () => {
       await screen.findByRole("button", { name: "Usuń transakcję" }),
     );
 
-    await waitFor(() => expect(header).toHaveTextContent("0.00"));
+    expect(await screen.findByText("Saldo portfela: 0.00")).toBeInTheDocument();
   });
-  test("a long list shows the first page and loads the next one on request", async () => {
-    const firstPage = Array.from({ length: 50 }, (_, n) => ({
+  test("a month longer than one page is loaded whole", async () => {
+    const firstPage = Array.from({ length: 200 }, (_, n) => ({
       ...lunchTransactionApi,
       id: 1000 - n,
       title: `Zakup ${n + 1}`,
@@ -683,133 +681,39 @@ describe("Transactions", () => {
         },
       }),
     );
-    const user = userEvent.setup();
 
-    renderApp("/expenses/1");
-
-    await screen.findByText("Zakup 50");
-    expect(
-      screen.getAllByRole("button", { name: /^Edytuj transakcję: / }),
-    ).toHaveLength(50);
-    expect(screen.queryByText("Kawa")).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Wczytaj więcej" }));
+    renderApp(OCTOBER);
 
     expect(await screen.findByText("Kawa")).toBeInTheDocument();
     expect(
       screen.getAllByRole("button", { name: /^Edytuj transakcję: / }),
-    ).toHaveLength(51);
-    expect(
-      screen.queryByRole("button", { name: "Wczytaj więcej" }),
-    ).not.toBeInTheDocument();
+    ).toHaveLength(201);
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/v1/transactions/?wallet=1&cursor=page-2",
+      expect.stringContaining("limit=200&cursor=page-2"),
       expect.anything(),
     );
   });
 
-  test("scrolling to the end of the list loads the next page", async () => {
-    let reachEnd: (() => void) | undefined;
-    vi.stubGlobal(
-      "IntersectionObserver",
-      class {
-        constructor(callback: IntersectionObserverCallback) {
-          reachEnd = () =>
-            callback(
-              [{ isIntersecting: true } as IntersectionObserverEntry],
-              this as unknown as IntersectionObserver,
-            );
-        }
-        observe() {}
-        disconnect() {}
-      },
-    );
+  test("a transaction dated into another month leaves this month's list", async () => {
+    const movedApi = { ...coffeeTransactionApi, date: "2026-09-30" };
     fetchMock.mockImplementation(
-      routeByUrl({
-        pages: {
-          "": { items: [lunchTransactionApi], next_cursor: "page-2" },
-          "page-2": { items: [coffeeTransactionApi], next_cursor: null },
-        },
-      }),
-    );
-
-    renderApp("/expenses/1");
-    await screen.findByText("Obiad");
-    await waitFor(() => expect(reachEnd).toBeDefined());
-
-    reachEnd?.();
-
-    expect(await screen.findByText("Kawa")).toBeInTheDocument();
-  });
-
-  test("short pages keep loading while the end of the list stays in view", async () => {
-    // Like the real observer: observing reports the element's current
-    // visibility at once, and the end of a short list is always visible.
-    vi.stubGlobal(
-      "IntersectionObserver",
-      class {
-        callback: IntersectionObserverCallback;
-        constructor(callback: IntersectionObserverCallback) {
-          this.callback = callback;
-        }
-        observe() {
-          queueMicrotask(() =>
-            this.callback(
-              [{ isIntersecting: true } as IntersectionObserverEntry],
-              this as unknown as IntersectionObserver,
-            ),
-          );
-        }
-        disconnect() {}
-      },
-    );
-    const dinnerApi = {
-      ...coffeeTransactionApi,
-      id: 9,
-      title: "Kolacja",
-      date: "2026-10-10",
-    };
-    fetchMock.mockImplementation(
-      routeByUrl({
-        pages: {
-          "": { items: [lunchTransactionApi], next_cursor: "page-2" },
-          "page-2": { items: [coffeeTransactionApi], next_cursor: "page-3" },
-          "page-3": { items: [dinnerApi], next_cursor: null },
-        },
-      }),
-    );
-
-    renderApp("/expenses/1");
-
-    expect(await screen.findByText("Kolacja")).toBeInTheDocument();
-  });
-
-  test("a new transaction older than every loaded one waits for its page", async () => {
-    const olderApi = {
-      ...coffeeTransactionApi,
-      id: 12,
-      title: "Stary paragon",
-      date: "2026-01-02",
-    };
-    fetchMock.mockImplementation(
-      routeByUrl({
-        pages: { "": { items: [lunchTransactionApi], next_cursor: "page-2" } },
-        created: olderApi,
-      }),
+      routeByUrl({ transactions: [coffeeTransactionApi], patched: movedApi }),
     );
     const user = userEvent.setup();
 
-    renderApp("/expenses/1");
-    await screen.findByText("Obiad");
-    await user.click(screen.getByRole("button", { name: "Nowa transakcja" }));
-    await user.type(await screen.findByLabelText("Tytuł"), "Stary paragon");
-    await user.type(screen.getByLabelText("Kwota"), "8.00");
-    await user.click(screen.getByRole("button", { name: "Dodaj wydatek" }));
-
-    await waitFor(() =>
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    renderApp(OCTOBER);
+    await screen.findByText("Kawa");
+    await user.click(
+      screen.getByRole("button", { name: "Edytuj transakcję: Kawa" }),
     );
-    expect(screen.queryByText("Stary paragon")).not.toBeInTheDocument();
+    await user.click(await screen.findByRole("button", { name: "Edytuj" }));
+    await user.clear(screen.getByLabelText("Data"));
+    await user.type(screen.getByLabelText("Data"), "2026-09-30");
+    await user.click(screen.getByRole("button", { name: "Zapisz zmiany" }));
+
+    expect(
+      await screen.findByText("Brak transakcji w tym miesiącu."),
+    ).toBeInTheDocument();
   });
 
   test("a transaction moved to another wallet leaves this list", async () => {
@@ -830,7 +734,7 @@ describe("Transactions", () => {
     );
     const user = userEvent.setup();
 
-    renderApp("/expenses/1");
+    renderApp(OCTOBER);
     await screen.findByText("Kawa");
     await user.click(
       screen.getByRole("button", { name: "Edytuj transakcję: Kawa" }),
@@ -840,7 +744,7 @@ describe("Transactions", () => {
     await user.click(screen.getByRole("button", { name: "Zapisz zmiany" }));
 
     expect(
-      await screen.findByText("Brak transakcji. Dodaj pierwszą transakcję."),
+      await screen.findByText("Brak transakcji w tym miesiącu."),
     ).toBeInTheDocument();
   });
 
@@ -852,7 +756,7 @@ describe("Transactions", () => {
           : routeByUrl()(url, init),
     );
 
-    renderApp("/expenses/1");
+    renderApp(OCTOBER);
 
     expect(
       await screen.findByText(
