@@ -199,6 +199,9 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: djangopersonal-prometheus
+    labels:
+      # Recreated when its config changes (deployment/config_hashes.sh).
+      - config-hash=${PROMETHEUS_CONFIG_HASH:-}
     restart: unless-stopped
     command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -215,6 +218,9 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: djangopersonal-grafana
+    labels:
+      # Recreated when its config changes (deployment/config_hashes.sh).
+      - config-hash=${GRAFANA_CONFIG_HASH:-}
     restart: unless-stopped
     ports:
       - "3001:3000"
@@ -234,6 +240,9 @@ services:
   loki:
     image: grafana/loki:2.9.4
     container_name: djangopersonal-loki
+    labels:
+      # Recreated when its config changes (deployment/config_hashes.sh).
+      - config-hash=${LOKI_CONFIG_HASH:-}
     restart: unless-stopped
     command: -config.file=/etc/loki/config.yml
     volumes:
@@ -244,6 +253,9 @@ services:
   tempo:
     image: grafana/tempo:2.6.0
     container_name: djangopersonal-tempo
+    labels:
+      # Recreated when its config changes (deployment/config_hashes.sh).
+      - config-hash=${TEMPO_CONFIG_HASH:-}
     restart: unless-stopped
     command: ["-config.file=/etc/tempo/config.yml"]
     ports:
@@ -256,6 +268,9 @@ services:
   alloy:
     image: grafana/alloy:latest
     container_name: djangopersonal-alloy
+    labels:
+      # Recreated when its config changes (deployment/config_hashes.sh).
+      - config-hash=${ALLOY_CONFIG_HASH:-}
     restart: unless-stopped
     command:
       - run

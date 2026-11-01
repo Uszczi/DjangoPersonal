@@ -152,7 +152,7 @@ deploy-build:
 
 # Start the deployment stack in the background.
 deploy-up:
-    {{compose}} up --detach
+    ./deployment/config_hashes.sh {{compose}} up --detach
 
 # Stop and remove the deployment stack.
 deploy-down:
@@ -188,7 +188,7 @@ deploy-backups:
 deploy-restore source:
     {{compose}} stop app mcp admin
     {{compose}} run --rm backup restore.sh {{source}} --yes
-    {{compose}} up --detach app mcp admin
+    ./deployment/config_hashes.sh {{compose}} up --detach app mcp admin
 
 # Run the full VPS deploy flow (build, migrate, nginx, up).
 deploy:
@@ -200,7 +200,7 @@ compose-local := compose + " -f deployment/docker-compose.local.yml"
 
 # Build images and start the whole stack locally, reverse proxy on :80.
 local-up:
-    {{compose-local}} up --detach --build
+    ./deployment/config_hashes.sh {{compose-local}} up --detach --build
 
 # Stop the local stack (keeps named volumes).
 local-down:

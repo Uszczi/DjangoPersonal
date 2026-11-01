@@ -38,6 +38,8 @@ DOMAIN=$(grep "^DOMAIN=" ./deployment/.env | tail -n 1 | cut -d= -f2-)
 sudo ./deployment/update_nginx.sh "$DOMAIN"
 
 echo "Running up"
+# Recreates the observability services whose config files changed.
+source ./deployment/config_hashes.sh
 "${COMPOSE[@]}" up --detach --wait app mcp admin
 "${COMPOSE[@]}" up --detach
 
