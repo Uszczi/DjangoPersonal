@@ -3,6 +3,9 @@ services:
     build:
       context: ..
       dockerfile: ./deployment/Dockerfile
+      # The commit shown on the Grafana "App (API)" dashboard (deploy.sh / justfile set it).
+      args:
+        APP_VERSION: ${APP_VERSION:-dev}
     container_name: djangopersonal-app
     restart: unless-stopped
     # Loopback only: the host nginx proxies to 127.0.0.1:8000, and uvicorn
@@ -47,6 +50,9 @@ services:
     build:
       context: ..
       dockerfile: ./deployment/Dockerfile
+      # The commit shown on the Grafana "App (API)" dashboard (deploy.sh / justfile set it).
+      args:
+        APP_VERSION: ${APP_VERSION:-dev}
     container_name: djangopersonal-mcp
     restart: unless-stopped
     # Loopback only, like `app`: it trusts X-Forwarded-For from any peer.
@@ -79,6 +85,9 @@ services:
     build:
       context: ..
       dockerfile: ./deployment/Dockerfile
+      # The commit shown on the Grafana "App (API)" dashboard (deploy.sh / justfile set it).
+      args:
+        APP_VERSION: ${APP_VERSION:-dev}
     container_name: djangopersonal-admin
     restart: unless-stopped
     ports:

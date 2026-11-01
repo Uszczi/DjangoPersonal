@@ -134,3 +134,42 @@ def test_malformed_json_is_a_bad_request(probe_client: ApiClient) -> None:
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response.json() == {'detail': 'Cannot parse request body'}
+
+
+def test_a_refused_body_is_logged_with_its_reason_but_not_its_value(
+    probe_client: ApiClient, caplog: pytest.LogCaptureFixture
+) -> None:
+    probe_client.post(f'{PROBE_PREFIX}/projects/', {'name': 'x' * 101})
+
+    [record] = [r for r in caplog.records if 'client_error' in r.getMessage()]
+    assert record.levelname == 'WARNING'
+    assert record.getMessage() == (
+        f'client_error status=422 method=POST path={PROBE_PREFIX}/projects/'
+        ' reason=body.payload.name: String should have at most 100 characters'
+    )
+    assert 'x' * 101 not in caplog.text
+
+
+def test_a_domain_error_is_logged_with_its_code_and_message(
+    probe_client: ApiClient, caplog: pytest.LogCaptureFixture
+) -> None:
+    probe_client.get(f'{PROBE_PREFIX}/missing/')
+
+    assert (
+        f'client_error status=404 method=GET path={PROBE_PREFIX}/missing/'
+        ' reason=not_found: Project not found.'
+    ) in caplog.text
+
+
+def test_an_unhandled_error_is_logged_on_one_line(
+    probe_client: ApiClient, caplog: pytest.LogCaptureFixture
+) -> None:
+    response = probe_client.post(f'{PROBE_PREFIX}/orphans/')
+
+    assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
+    [record] = [r for r in caplog.records if 'server_error' in r.getMessage()]
+    assert record.levelname == 'ERROR'
+    assert record.getMessage().startswith(
+        f'server_error status=500 method=POST path={PROBE_PREFIX}/orphans/ error=IntegrityError: '
+    )
+    assert '\n' not in record.getMessage()

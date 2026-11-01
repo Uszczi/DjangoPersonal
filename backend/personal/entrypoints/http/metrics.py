@@ -14,6 +14,7 @@ from prometheus_client import (
     CONTENT_TYPE_LATEST,
     CollectorRegistry,
     Counter,
+    Gauge,
     Histogram,
     generate_latest,
     multiprocess,
@@ -38,7 +39,17 @@ REQUEST_LATENCY = Histogram(
     ['method', 'route'],
 )
 
+#: Always 1; the labels carry the information. ``max`` keeps one series across
+#: workers (they all report the same build).
+BUILD_INFO = Gauge(
+    'app_build_info',
+    'The running build: commit, and the schema revision the code expects vs the database has.',
+    ['version', 'code_schema', 'db_schema'],
+    multiprocess_mode='max',
+)
+
 __all__ = [
+    'BUILD_INFO',
     'CONTENT_TYPE_LATEST',
     'MULTIPROCESS_MODE',
     'REQUEST_COUNT',

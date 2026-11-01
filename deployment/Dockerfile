@@ -20,6 +20,11 @@ RUN uv sync --no-dev --frozen --no-install-project
 # Application code (FastAPI app, MCP server, Alembic migrations).
 COPY backend/ ./
 
+# Last, since it changes with every commit: the build the app reports
+# (``app_build_info`` metric, startup log line).
+ARG APP_VERSION=dev
+ENV APP_VERSION=$APP_VERSION
+
 COPY deployment/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 

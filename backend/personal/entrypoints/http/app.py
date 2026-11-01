@@ -9,6 +9,7 @@ The OpenAPI schema is served at ``/api/v1/schema/`` (3.1) with no interactive
 docs.
 """
 
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
@@ -21,13 +22,17 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from personal import wiring
 from personal.entrypoints.http import ops
 from personal.entrypoints.http.errors import register_fastapi_error_handlers
+from personal.entrypoints.http.metrics import BUILD_INFO
 from personal.entrypoints.http.routers import router as api_router
 from personal.infra import tracing
+from personal.infra import schema
 from personal.infra.db import Database
 from personal.log_config import configure_logging
 from personal.settings import Settings
 
 API_PREFIX = '/api/v1'
+
+logger = logging.getLogger(__name__)
 
 # FastAPI documents a 422 on every operation; the published API documents
 # none. Keeping them would add models to the generated TypeScript client and status codes to
@@ -109,4 +114,25 @@ def create_served_app() -> FastAPI:
     settings = Settings()
     provider = tracing.tracer_provider(settings, tracing.API_SERVICE)
     tracing.install(provider)
-    return create_app(settings, provider)
+    app = create_app(settings, provider)
+    report_build(settings, app.state.database)
+    return app
+
+
+def report_build(settings: Settings, database: Database) -> None:
+    """Log and export which build runs and whether the database is migrated."""
+    code_schema = schema.code_revision()
+    db_schema = schema.database_revision(database.engine)
+    BUILD_INFO.labels(settings.app_version, code_schema, db_schema).set(1)
+    if code_schema != db_schema:
+        logger.warning(
+            'schema_mismatch version=%s code_schema=%s db_schema=%s'
+            ' (run `alembic upgrade head`)',
+            settings.app_version,
+            code_schema,
+            db_schema,
+        )
+    else:
+        logger.info(
+            'build version=%s schema=%s', settings.app_version, code_schema
+        )

@@ -3,9 +3,12 @@
 from http import HTTPStatus
 from pathlib import Path
 
+import pytest
 from prometheus_client import REGISTRY
 
-from personal.entrypoints.http.app import create_app
+from personal.entrypoints.http.app import create_app, report_build
+from personal.infra import schema
+from personal.infra.db import Database
 from personal.settings import Settings
 from tests.entrypoints.http.probe import PROBE_PREFIX
 from tests.harness import ApiClient, FastAPITransport
@@ -69,3 +72,16 @@ def test_requests_are_counted_by_route_template(probe_client: ApiClient) -> None
     ) is None
     assert metrics.status_code == HTTPStatus.OK
     assert 'app_http_request_duration_seconds_bucket' in metrics.text
+
+
+def test_the_build_and_a_schema_mismatch_are_reported(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    settings = Settings(sqlite_path=tmp_path / 'unmigrated.sqlite3', app_version='abc1234')
+
+    report_build(settings, Database(settings))
+
+    code = schema.code_revision()
+    labels = {'version': 'abc1234', 'code_schema': code, 'db_schema': schema.UNKNOWN}
+    assert REGISTRY.get_sample_value('app_build_info', labels) == 1
+    assert f'schema_mismatch version=abc1234 code_schema={code} db_schema=unknown' in caplog.text
