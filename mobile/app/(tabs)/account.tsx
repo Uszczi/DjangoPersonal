@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import { ScrollViewContainer } from "react-native-reorderable-list";
 
 import { api } from "@personal/shared/api";
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
@@ -46,52 +47,56 @@ export default function AccountScreen() {
   }
 
   return (
-    <ScrollView className={common.screen}>
-      <View className={card.section}>
-        <Text className={common.eyebrow}>KONTO</Text>
-        <Text className={common.pageTitle}>{user?.username}</Text>
-      </View>
-      <View className={card.section}>
-        <Text className={card.kicker}>MOTYW</Text>
-        <ChipGroup
-          options={themePreferences.map((value) => ({
-            value,
-            label: themePreferenceLabels[value],
-          }))}
-          value={themePreference}
-          onChange={(theme) => updateTheme.mutate(theme)}
-        />
-        {updateTheme.isError && (
-          <Text className={form.error}>
-            Nie udało się zapisać motywu. Spróbuj ponownie.
+    // The Tab bar settings drag their rows: a nested reorderable list needs
+    // this container instead of a ScrollView (no className, hence the View).
+    <View className={common.screen}>
+      <ScrollViewContainer>
+        <View className={card.section}>
+          <Text className={common.eyebrow}>KONTO</Text>
+          <Text className={common.pageTitle}>{user?.username}</Text>
+        </View>
+        <View className={card.section}>
+          <Text className={card.kicker}>MOTYW</Text>
+          <ChipGroup
+            options={themePreferences.map((value) => ({
+              value,
+              label: themePreferenceLabels[value],
+            }))}
+            value={themePreference}
+            onChange={(theme) => updateTheme.mutate(theme)}
+          />
+          {updateTheme.isError && (
+            <Text className={form.error}>
+              Nie udało się zapisać motywu. Spróbuj ponownie.
+            </Text>
+          )}
+          <Text className={form.hint}>
+            Zapisywany na koncie, wspólny dla wszystkich urządzeń.
           </Text>
-        )}
-        <Text className={form.hint}>
-          Zapisywany na koncie, wspólny dla wszystkich urządzeń.
-        </Text>
-      </View>
-      <TabBarSettings />
-      <View className="mx-4 mt-4 gap-3 rounded-lg border border-card-line bg-paper p-5 shadow-[0_8px_18px_rgba(29,55,57,0.06)]">
-        <View className="flex-row">
-          <Button
-            label="Wyloguj"
-            variant="secondary"
-            disabled={isDeleting}
-            onPress={logout}
-          />
         </View>
-        <View className="flex-row">
-          <Button
-            label="Usuń konto"
-            variant="danger"
-            isBusy={isDeleting}
-            onPress={() => void deleteAccount()}
-          />
+        <TabBarSettings />
+        <View className="mx-4 mt-4 gap-3 rounded-lg border border-card-line bg-paper p-5 shadow-[0_8px_18px_rgba(29,55,57,0.06)]">
+          <View className="flex-row">
+            <Button
+              label="Wyloguj"
+              variant="secondary"
+              disabled={isDeleting}
+              onPress={logout}
+            />
+          </View>
+          <View className="flex-row">
+            <Button
+              label="Usuń konto"
+              variant="danger"
+              isBusy={isDeleting}
+              onPress={() => void deleteAccount()}
+            />
+          </View>
+          {deleteError !== "" && (
+            <Text className={form.error}>{deleteError}</Text>
+          )}
         </View>
-        {deleteError !== "" && (
-          <Text className={form.error}>{deleteError}</Text>
-        )}
-      </View>
-    </ScrollView>
+      </ScrollViewContainer>
+    </View>
   );
 }

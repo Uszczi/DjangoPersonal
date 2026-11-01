@@ -1,14 +1,21 @@
 import { Stack, router, useLocalSearchParams } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   Text,
   TextInput,
   View,
 } from "react-native";
+import {
+  NestedReorderableList,
+  reorderItems,
+  ScrollViewContainer,
+  useReorderableDrag,
+  type ReorderableListReorderEvent,
+} from "react-native-reorderable-list";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import {
@@ -21,6 +28,7 @@ import {
 import { Button } from "@/ui/Button";
 import { ChipGroup } from "@/ui/ChipGroup";
 import { confirmDestructive } from "@/ui/confirm";
+import { useTheme } from "@/theme";
 import { common, form } from "@/ui/classes";
 
 /** A status being edited; `id` stays stable while statuses are renamed and reordered. */
@@ -33,8 +41,8 @@ function newStatus(name: string): StatusDraft {
 
 /**
  * Creates a Project, or edits one (`?projectId=`), like the web
- * ProjectEditorModal. Statuses are reordered with up/down buttons instead of
- * drag and drop.
+ * ProjectEditorModal. A status is dragged by its grip to another place, like
+ * the Tasks on the Project screen.
  */
 export default function ProjectEditorScreen() {
   const params = useLocalSearchParams<{ projectId?: string }>();
@@ -74,14 +82,9 @@ export default function ProjectEditorScreen() {
     );
   }
 
-  function moveStatus(index: number, offset: -1 | 1) {
-    setStatuses((current) => {
-      const target = index + offset;
-      if (target < 0 || target >= current.length) return current;
-      const next = [...current];
-      [next[index], next[target]] = [next[target], next[index]];
-      return next;
-    });
+  function moveStatus(from: number, to: number) {
+    if (from === to) return;
+    setStatuses((current) => reorderItems(current, from, to));
   }
 
   function removeStatus(id: number) {
@@ -163,8 +166,10 @@ export default function ProjectEditorScreen() {
       <Stack.Screen
         options={{ title: project ? "Edytuj projekt" : "Nowy projekt" }}
       />
-      <ScrollView
-        contentContainerClassName={form.content}
+      <ScrollViewContainer
+        // The nested reorderable list needs this container; a third-party
+        // view takes no className, so `form.content` is spelled out.
+        contentContainerStyle={{ gap: 8, padding: 20 }}
         keyboardShouldPersistTaps="handled"
       >
         <Text className={form.label}>Nazwa projektu</Text>
@@ -194,35 +199,23 @@ export default function ProjectEditorScreen() {
         />
 
         <Text className={form.label}>Statusy (w kolejności wyświetlania)</Text>
-        {statuses.map((status, index) => (
-          <View key={status.id} className="flex-row items-center gap-1.5">
-            <TextInput
-              className={`${form.input} flex-1`}
-              value={status.name}
-              onChangeText={(value) => updateStatus(status.id, value)}
-              accessibilityLabel={`Status ${index + 1}`}
-              editable={!isSaving}
+        <NestedReorderableList
+          data={statuses}
+          keyExtractor={(status) => String(status.id)}
+          onReorder={({ from, to }: ReorderableListReorderEvent) =>
+            moveStatus(from, to)
+          }
+          renderItem={({ item: status, index }) => (
+            <StatusRow
+              status={status}
+              index={index}
+              disabled={isSaving}
+              canRemove={statuses.length > 1}
+              onChange={(value) => updateStatus(status.id, value)}
+              onRemove={() => removeStatus(status.id)}
             />
-            <IconButton
-              label="↑"
-              accessibilityLabel={`Przesuń status ${index + 1} wyżej`}
-              disabled={isSaving || index === 0}
-              onPress={() => moveStatus(index, -1)}
-            />
-            <IconButton
-              label="↓"
-              accessibilityLabel={`Przesuń status ${index + 1} niżej`}
-              disabled={isSaving || index === statuses.length - 1}
-              onPress={() => moveStatus(index, 1)}
-            />
-            <IconButton
-              label="×"
-              accessibilityLabel={`Usuń status ${index + 1}`}
-              disabled={isSaving || statuses.length <= 1}
-              onPress={() => removeStatus(status.id)}
-            />
-          </View>
-        ))}
+          )}
+        />
         <View className="flex-row">
           <Button
             label="+ Dodaj status"
@@ -277,8 +270,61 @@ export default function ProjectEditorScreen() {
             />
           </View>
         )}
-      </ScrollView>
+      </ScrollViewContainer>
     </KeyboardAvoidingView>
+  );
+}
+
+/**
+ * One status being edited. The grip picks it up after a short press, so the
+ * name field keeps its taps and long presses (text selection).
+ */
+function StatusRow({
+  status,
+  index,
+  disabled,
+  canRemove,
+  onChange,
+  onRemove,
+}: {
+  status: StatusDraft;
+  index: number;
+  disabled: boolean;
+  canRemove: boolean;
+  onChange: (value: string) => void;
+  onRemove: () => void;
+}) {
+  const { colors } = useTheme();
+  const drag = useReorderableDrag();
+  return (
+    // A dragged row floats over its neighbours, so it needs its own fill.
+    <View className="flex-row items-center gap-1.5 bg-canvas py-1">
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Przenieś status ${index + 1}`}
+        accessibilityHint="Przytrzymaj i przeciągnij, aby zmienić kolejność"
+        hitSlop={8}
+        delayLongPress={150}
+        disabled={disabled}
+        onLongPress={drag}
+        className="h-10 w-7 items-center justify-center"
+      >
+        <Ionicons name="reorder-three" size={22} color={colors.muted} />
+      </Pressable>
+      <TextInput
+        className={`${form.input} flex-1`}
+        value={status.name}
+        onChangeText={onChange}
+        accessibilityLabel={`Status ${index + 1}`}
+        editable={!disabled}
+      />
+      <IconButton
+        label="×"
+        accessibilityLabel={`Usuń status ${index + 1}`}
+        disabled={disabled || !canRemove}
+        onPress={onRemove}
+      />
+    </View>
   );
 }
 

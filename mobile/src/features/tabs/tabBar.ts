@@ -144,8 +144,8 @@ type TabBarState = {
   hidden: TabName[];
   /** Replace the hidden tabs, dropping unknown ids and the pinned one. */
   setHidden: (hidden: unknown) => void;
-  /** Swap a tab with its neighbour; `offset` is -1 (earlier) or 1 (later). */
-  move: (name: TabName, offset: -1 | 1) => void;
+  /** Move the tab at index `from` to index `to` (a drag in the settings). */
+  move: (from: number, to: number) => void;
   reset: () => void;
 };
 
@@ -165,15 +165,15 @@ export const useTabBarStore = create<TabBarState>()(
           }
           return { hidden: next };
         }),
-      move: (name, offset) =>
+      move: (from, to) =>
         set((state) => {
-          const index = state.order.indexOf(name);
-          const target = index + offset;
-          if (index < 0 || target < 0 || target >= state.order.length) {
+          const last = state.order.length - 1;
+          if (from === to || from < 0 || from > last || to < 0 || to > last) {
             return state;
           }
           const order = [...state.order];
-          [order[index], order[target]] = [order[target], order[index]];
+          const [tab] = order.splice(from, 1);
+          order.splice(to, 0, tab);
           return { order };
         }),
       reset: () => set({ order: [...tabNames], hidden: [] }),

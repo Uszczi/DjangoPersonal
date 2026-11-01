@@ -73,7 +73,7 @@ export default function RootLayout() {
     );
   }
 
-  // The gesture root lets the Project screen drag Tasks to reorder them.
+  // The gesture root lets lists be reordered by dragging (Tasks, statuses, tabs).
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <PersistQueryClientProvider
