@@ -1,5 +1,16 @@
 apiVersion: 1
 
+# Loki and Tempo got fixed uids (the log <-> trace links point at them), but a
+# volume made before that holds them under random uids, and Grafana then fails
+# provisioning with "data source not found". Deleting them first (applied
+# before the inserts below) recreates them with these uids; dashboards look
+# datasources up by name, so they keep working.
+deleteDatasources:
+  - name: Loki
+    orgId: 1
+  - name: Tempo
+    orgId: 1
+
 datasources:
   - name: Prometheus
     type: prometheus
