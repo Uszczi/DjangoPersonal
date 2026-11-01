@@ -83,6 +83,7 @@ just deploy-restore SOURCE  # replace the DB: latest, <dir>/<file>.dump or offsi
 just deploy           # full VPS flow: ./deployment/deploy.sh
 just local-up         # whole stack locally behind a throwaway nginx on :80
 just local-down / local-status / local-logs / local-migrate / local-seed
+just local-createsuperuser NAME  # staff account on the local stack (admin panel)
 just local-reset      # wipe local stack INCLUDING volumes (destroys the DB)
 ```
 

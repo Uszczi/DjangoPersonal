@@ -213,6 +213,10 @@ local-logs service="":
 local-migrate:
     {{compose-local}} run --rm app alembic upgrade head
 
+# Create or promote a staff account for the local stack's admin panel.
+local-createsuperuser username:
+    {{compose-local}} run --rm app python -m personal.entrypoints.admin.create_superuser {{username}}
+
 # Seed the local stack's database with demo data (refuses if it is not empty).
 # The image has no dev dependencies, so the throwaway container installs factory-boy first.
 local-seed:
