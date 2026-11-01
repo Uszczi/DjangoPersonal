@@ -99,7 +99,8 @@ class ListTransactions:
     """One page of the transactions recorded against a wallet, newest first.
 
     Keyset-paged on ``(date, id)``: rows added or removed between requests
-    never shift a later page, so nothing is skipped or repeated.
+    never shift a later page, so nothing is skipped or repeated. An optional
+    inclusive date range (a month, for the Wydatki dashboard) narrows the list.
     """
 
     def __init__(
@@ -113,16 +114,29 @@ class ListTransactions:
         self.user = user
 
     def execute(
-        self, wallet_id: int, *, limit: int = DEFAULT_PAGE_SIZE, cursor: str | None = None
+        self,
+        wallet_id: int,
+        *,
+        limit: int = DEFAULT_PAGE_SIZE,
+        cursor: str | None = None,
+        date_from: date | None = None,
+        date_to: date | None = None,
     ) -> TransactionPage:
         if not 1 <= limit <= MAX_PAGE_SIZE:
             raise DomainError(f'Limit must be between 1 and {MAX_PAGE_SIZE}.')
+        if date_from is not None and date_to is not None and date_from > date_to:
+            raise DomainError('date_from must not be after date_to.')
         after = decode_cursor(cursor) if cursor is not None else None
         if self.wallets.find(wallet_id, user=self.user) is None:
             raise NotFound('Wallet not found.')
         # One row more than asked tells whether another page exists.
         rows = self.transactions.list_for_wallet(
-            wallet_id, user=self.user, limit=limit + 1, after=after
+            wallet_id,
+            user=self.user,
+            limit=limit + 1,
+            after=after,
+            date_from=date_from,
+            date_to=date_to,
         )
         items = rows[:limit]
         next_cursor = encode_cursor(items[-1]) if len(rows) > limit else None

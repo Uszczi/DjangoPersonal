@@ -58,6 +58,27 @@ def test_list_transactions_is_scoped_to_wallet_and_newest_first(
     assert listing['next_cursor'] is None
 
 
+def test_list_transactions_narrows_to_a_date_range(
+    post_json: Any, api_client: Any
+) -> None:
+    wallet_id = post_json('/api/v1/wallets/', {'name': 'Personal'}).json()['id']
+    for title, day in [('September', '2026-09-30'), ('October', '2026-10-15')]:
+        post_json(
+            '/api/v1/transactions/',
+            {'title': title, 'amount': '10.00', 'date': day, 'wallet': wallet_id},
+        )
+    url = f'/api/v1/transactions/?wallet={wallet_id}'
+
+    month = api_client.get(url + '&date_from=2026-10-01&date_to=2026-10-31').json()
+    backwards = api_client.get(url + '&date_from=2026-10-31&date_to=2026-10-01')
+
+    assert [t['title'] for t in month['items']] == ['October']
+    assert backwards.status_code == HTTPStatus.BAD_REQUEST
+    assert api_client.get(url + '&date_from=nonsense').status_code == (
+        HTTPStatus.UNPROCESSABLE_ENTITY
+    )
+
+
 def test_list_transactions_pages_through_same_date_ties_without_gaps(
     api_client: Any, api_user: Any
 ) -> None:

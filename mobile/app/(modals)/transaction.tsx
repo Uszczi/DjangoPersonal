@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
@@ -12,9 +13,9 @@ import {
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { useCategories } from "@personal/shared/queries/categories";
 import {
+  findCachedTransaction,
   useDeleteTransaction,
   useSaveTransaction,
-  useWalletTransactions,
   type TransactionInput,
 } from "@personal/shared/queries/transactions";
 import { useWallets } from "@personal/shared/queries/wallets";
@@ -42,7 +43,7 @@ function validateAmount(raw: string): string {
 
 /**
  * Adds a Transaction to `?walletId=`, or edits one (`&transactionId=`) of
- * that Wallet's loaded pages, like the web TransactionEditorModal.
+ * that Wallet's loaded months, like the web TransactionEditorModal.
  */
 export default function TransactionEditorScreen() {
   const params = useLocalSearchParams<{
@@ -54,17 +55,17 @@ export default function TransactionEditorScreen() {
     ? Number(params.transactionId)
     : null;
 
-  const { data: loaded = [] } = useWalletTransactions(
-    transactionId === null ? null : walletId,
-  );
+  const queryClient = useQueryClient();
   const saveTransaction = useSaveTransaction();
   const deleteTransaction = useDeleteTransaction();
   const { data: wallets = [] } = useWallets();
   const { data: categories = [] } = useCategories();
-  const transaction =
+  // Opened from a row of the Wydatki list, so its month is in the cache.
+  const [transaction] = useState(() =>
     transactionId === null
       ? null
-      : (loaded.find((item) => item.id === transactionId) ?? null);
+      : (findCachedTransaction(queryClient, walletId, transactionId) ?? null),
+  );
 
   const [title, setTitle] = useState(transaction?.title ?? "");
   const [amount, setAmount] = useState(transaction?.amount ?? "");

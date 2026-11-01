@@ -90,3 +90,21 @@ def test_find_reads_its_kind_in_one_query(session: Session, user: User) -> None:
         event.remove(session.bind, 'before_cursor_execute', record)
 
     assert len([s for s in statements if s.startswith('SELECT')]) == 1
+
+
+def test_a_date_range_keeps_both_ends(session: Session, user: User) -> None:
+    transactions = TransactionRepository(session)
+    wallet = WalletRepository(session).save(Wallet(user_id=user.id, name='Cash'))
+    for title, day in [
+        ('before', date(2026, 9, 30)),
+        ('first', date(2026, 10, 1)),
+        ('last', date(2026, 10, 31)),
+        ('after', date(2026, 11, 1)),
+    ]:
+        _record(transactions, user, wallet, title, day)
+
+    listed = transactions.list_for_wallet(
+        wallet.id, user=user, date_from=date(2026, 10, 1), date_to=date(2026, 10, 31)
+    )
+
+    assert [t.title for t in listed] == ['last', 'first']

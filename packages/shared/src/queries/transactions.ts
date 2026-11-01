@@ -1,22 +1,23 @@
 /**
- * A wallet's transactions as server state: a keyset-paged infinite query plus
- * the create/update/delete mutations that keep its cached pages in step.
+ * A wallet's transactions as server state, a month at a time (the Wydatki
+ * dashboard), plus the create/update/delete mutations that keep the cached
+ * months in step.
  */
 import {
-  useInfiniteQuery,
   useMutation,
+  useQuery,
   useQueryClient,
-  type InfiniteData,
   type QueryClient,
 } from "@tanstack/react-query";
 
 import { api } from "../api";
 import {
-  parseDate,
-  type TransactionPageResponse,
-  type TransactionResponse,
-} from "../generated/api";
-import { compareNewestFirst, withPlaced } from "../transactionList";
+  monthBounds,
+  monthKeyOf,
+  type MonthKey,
+} from "../expenseMonth";
+import { parseDate, type TransactionResponse } from "../generated/api";
+import { compareNewestFirst } from "../transactionList";
 import { transactionKeys } from "./keys";
 import { refreshWallets } from "./wallets";
 
@@ -34,82 +35,83 @@ export function toTransactionRequest(input: TransactionInput) {
   return { ...input, date: parseDate(input.date) };
 }
 
-type Pages = InfiniteData<TransactionPageResponse, string | null>;
+/** The server's largest page: a month almost always fits in one. */
+const MONTH_PAGE_SIZE = 200;
 
-function flatten(data: Pages) {
-  return data.pages.flatMap((page) => page.items);
+async function fetchMonth(
+  walletId: number,
+  month: MonthKey,
+  signal: AbortSignal,
+): Promise<TransactionResponse[]> {
+  const { first, last } = monthBounds(month);
+  const items: TransactionResponse[] = [];
+  let cursor: string | undefined;
+  do {
+    const page = await api.transactionsList(
+      {
+        wallet: walletId,
+        dateFrom: first,
+        dateTo: last,
+        limit: MONTH_PAGE_SIZE,
+        cursor,
+      },
+      { signal },
+    );
+    items.push(...page.items);
+    cursor = page.nextCursor ?? undefined;
+  } while (cursor);
+  return items;
 }
 
-/**
- * The wallet's transactions, newest first, a page (50 by default) at a time;
- * `null` waits for a wallet.
- */
-export function useWalletTransactions(walletId: number | null) {
-  return useInfiniteQuery({
-    queryKey: transactionKeys.wallet(walletId ?? 0),
-    queryFn: ({ pageParam, signal }) =>
-      api.transactionsList(
-        { wallet: walletId ?? 0, cursor: pageParam ?? undefined },
-        { signal },
-      ),
-    initialPageParam: null as string | null,
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+/** One month (`yyyy-mm`) of the wallet's transactions, newest first; `null` waits for a wallet. */
+export function useMonthTransactions(walletId: number | null, month: MonthKey) {
+  return useQuery({
+    queryKey: transactionKeys.month(walletId ?? 0, month),
+    queryFn: ({ signal }) => fetchMonth(walletId ?? 0, month, signal),
     enabled: walletId !== null,
-    select: flatten,
   });
-}
-
-function without(data: Pages, id: number): Pages {
-  return {
-    ...data,
-    pages: data.pages.map((page) => ({
-      ...page,
-      items: page.items.filter((item) => item.id !== id),
-    })),
-  };
 }
 
 /**
- * Put a transaction where the server would list it, among the pages already
- * loaded. One that sorts after the last loaded row while more pages exist is
- * left out: its page has not been fetched yet, and the keyset cursor (a key,
- * not an offset) brings it in with that page, with no gap or duplicate.
+ * A transaction of the wallet from its cached months, for an editor opened
+ * from the list (the row was on screen, so its month is cached).
  */
-function placed(data: Pages, transaction: TransactionResponse): Pages {
-  const pages = without(data, transaction.id).pages;
-  let target = pages.findIndex((page) => {
-    const last = page.items[page.items.length - 1];
-    return last !== undefined && compareNewestFirst(transaction, last) < 0;
-  });
-  if (target === -1) {
-    // Older than every loaded row: it belongs at the very end, if that is loaded.
-    const lastPage = pages[pages.length - 1];
-    if (!lastPage || lastPage.nextCursor) return { ...data, pages };
-    target = pages.length - 1;
-  }
-  return {
-    ...data,
-    pages: pages.map((page, n) =>
-      n === target
-        ? { ...page, items: withPlaced(page.items, transaction, false) }
-        : page,
-    ),
-  };
-}
-
-function updateWalletPages(
+export function findCachedTransaction(
   queryClient: QueryClient,
   walletId: number,
-  update: (data: Pages) => Pages,
+  transactionId: number,
+): TransactionResponse | undefined {
+  for (const [, items] of queryClient.getQueriesData<TransactionResponse[]>({
+    queryKey: transactionKeys.months(walletId),
+  })) {
+    const found = items?.find((item) => item.id === transactionId);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+/** Rewrite every cached month of a wallet; `update` gets the month's key too. */
+function updateMonths(
+  queryClient: QueryClient,
+  walletId: number,
+  update: (items: TransactionResponse[], month: MonthKey) => TransactionResponse[],
 ) {
-  queryClient.setQueryData<Pages>(transactionKeys.wallet(walletId), (data) =>
-    data ? update(data) : data,
-  );
+  for (const [key, items] of queryClient.getQueriesData<TransactionResponse[]>({
+    queryKey: transactionKeys.months(walletId),
+  })) {
+    if (!items) continue;
+    queryClient.setQueryData(key, update(items, key[4] as MonthKey));
+  }
+}
+
+function without(items: TransactionResponse[], id: number) {
+  return items.filter((item) => item.id !== id);
 }
 
 /**
  * Create (no `transaction`) or update a transaction. The server's answer is
- * written straight into the cached pages, so the list changes without a
+ * written straight into the cached months (taken out of the month it left,
+ * put into the month it is dated in), so the dashboard changes without a
  * refetch; the wallets it touches are refreshed for their balance and count.
  */
 export function useSaveTransaction() {
@@ -132,13 +134,15 @@ export function useSaveTransaction() {
           }),
     onSuccess: (saved, { transaction }) => {
       if (transaction && transaction.walletId !== saved.walletId) {
-        updateWalletPages(queryClient, transaction.walletId, (data) =>
-          without(data, saved.id),
+        updateMonths(queryClient, transaction.walletId, (items) =>
+          without(items, saved.id),
         );
       }
-      updateWalletPages(queryClient, saved.walletId, (data) =>
-        placed(data, saved),
-      );
+      updateMonths(queryClient, saved.walletId, (items, month) => {
+        const rest = without(items, saved.id);
+        if (monthKeyOf(saved.date) !== month) return rest;
+        return [...rest, saved].sort(compareNewestFirst);
+      });
       void refreshWallets(
         queryClient,
         transaction ? [transaction.walletId, saved.walletId] : [saved.walletId],
@@ -153,8 +157,8 @@ export function useDeleteTransaction() {
     mutationFn: (transaction: TransactionResponse) =>
       api.transactionsDestroy({ id: transaction.id }),
     onSuccess: (_, transaction) => {
-      updateWalletPages(queryClient, transaction.walletId, (data) =>
-        without(data, transaction.id),
+      updateMonths(queryClient, transaction.walletId, (items) =>
+        without(items, transaction.id),
       );
       void refreshWallets(queryClient, [transaction.walletId]);
     },

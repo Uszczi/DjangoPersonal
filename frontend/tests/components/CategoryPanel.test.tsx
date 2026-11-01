@@ -44,14 +44,21 @@ function jsonResponse(data: unknown, status = 200) {
 }
 
 /**
- * The panel mounts only after the wallets finish loading: wallets, then categories.
- * No wallets, so no wallet view joins in with its own transaction/category fetches.
+ * The panel opens only after the wallets finish loading: wallets, then categories.
+ * No wallets, so no wallet month joins in with its own transaction/category fetches.
  */
 function mockInitial(categories: unknown[]) {
   return {
     wallets: jsonResponse([]),
     categories: jsonResponse(categories),
   };
+}
+
+/** The Category manager lives in a drawer opened from the Wydatki page. */
+async function openCategories() {
+  await userEvent.click(
+    await screen.findByRole("button", { name: "Zarządzaj kategoriami" }),
+  );
 }
 
 describe("Categories", () => {
@@ -74,8 +81,11 @@ describe("Categories", () => {
       .mockResolvedValueOnce(initial.categories);
 
     renderApp("/expenses");
+    await openCategories();
 
-    const list = await screen.findByRole("list", { name: "Kategorie wydatków" });
+    const list = await screen.findByRole("list", {
+      name: "Kategorie wydatków",
+    });
     expect(within(list).getByText("Jedzenie")).toBeInTheDocument();
     expect(within(list).getByText("Transport")).toBeInTheDocument();
   });
@@ -99,8 +109,11 @@ describe("Categories", () => {
       .mockResolvedValueOnce(initial.categories);
 
     renderApp("/expenses");
+    await openCategories();
 
-    const list = await screen.findByRole("list", { name: "Kategorie wydatków" });
+    const list = await screen.findByRole("list", {
+      name: "Kategorie wydatków",
+    });
     expect(within(list).getAllByRole("listitem")).toHaveLength(10);
     expect(within(list).getByText("Jedzenie")).toBeInTheDocument();
     expect(within(list).getByText("Inne")).toBeInTheDocument();
@@ -113,8 +126,11 @@ describe("Categories", () => {
       .mockResolvedValueOnce(initial.categories);
 
     renderApp("/expenses");
+    await openCategories();
 
-    const list = await screen.findByRole("list", { name: "Kategorie wydatków" });
+    const list = await screen.findByRole("list", {
+      name: "Kategorie wydatków",
+    });
     expect(within(list).getByText("Jedzenie")).toBeInTheDocument();
     expect(within(list).queryByText("System")).not.toBeInTheDocument();
     expect(within(list).getAllByRole("listitem")).toHaveLength(1);
@@ -126,12 +142,18 @@ describe("Categories", () => {
       .mockResolvedValueOnce(initial.wallets)
       .mockResolvedValueOnce(initial.categories)
       .mockResolvedValueOnce(
-        jsonResponse({ id: 9, name: "Rachunki", icon: "tag", kind: "expense" }, 201),
+        jsonResponse(
+          { id: 9, name: "Rachunki", icon: "tag", kind: "expense" },
+          201,
+        ),
       );
     const user = userEvent.setup();
 
     renderApp("/expenses");
-    const list = await screen.findByRole("list", { name: "Kategorie wydatków" });
+    await openCategories();
+    const list = await screen.findByRole("list", {
+      name: "Kategorie wydatków",
+    });
 
     await user.type(screen.getByLabelText("Nowa kategoria"), "  Rachunki  ");
     await user.click(screen.getByRole("button", { name: "Dodaj" }));
@@ -142,7 +164,11 @@ describe("Categories", () => {
       "/api/v1/categories/",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ name: "Rachunki", icon: "tag", kind: "expense" }),
+        body: JSON.stringify({
+          name: "Rachunki",
+          icon: "tag",
+          kind: "expense",
+        }),
       }),
     );
   });
@@ -153,11 +179,15 @@ describe("Categories", () => {
       .mockResolvedValueOnce(initial.wallets)
       .mockResolvedValueOnce(initial.categories)
       .mockResolvedValueOnce(
-        jsonResponse({ id: 5, name: "Prezenty", icon: "tag", kind: "income" }, 201),
+        jsonResponse(
+          { id: 5, name: "Prezenty", icon: "tag", kind: "income" },
+          201,
+        ),
       );
     const user = userEvent.setup();
 
     renderApp("/expenses");
+    await openCategories();
     await screen.findByRole("list", { name: "Kategorie przychodów" });
 
     await user.type(
@@ -195,6 +225,7 @@ describe("Categories", () => {
     const user = userEvent.setup();
 
     renderApp("/expenses");
+    await openCategories();
     await screen.findByRole("list", { name: "Kategorie wydatków" });
 
     await user.type(screen.getByLabelText("Nowa kategoria"), "jedzenie");
@@ -211,12 +242,20 @@ describe("Categories", () => {
       .mockResolvedValueOnce(initial.wallets)
       .mockResolvedValueOnce(initial.categories)
       .mockResolvedValueOnce(
-        jsonResponse({ id: 1, name: "Żywność", icon: "utensils", kind: "expense" }),
+        jsonResponse({
+          id: 1,
+          name: "Żywność",
+          icon: "utensils",
+          kind: "expense",
+        }),
       );
     const user = userEvent.setup();
 
     renderApp("/expenses");
-    const list = await screen.findByRole("list", { name: "Kategorie wydatków" });
+    await openCategories();
+    const list = await screen.findByRole("list", {
+      name: "Kategorie wydatków",
+    });
 
     await user.click(
       await screen.findByRole("button", {
@@ -250,6 +289,7 @@ describe("Categories", () => {
     const user = userEvent.setup();
 
     renderApp("/expenses");
+    await openCategories();
     await screen.findByRole("list", { name: "Kategorie wydatków" });
 
     await user.click(
@@ -279,11 +319,15 @@ describe("Categories", () => {
       .mockResolvedValueOnce(initial.wallets)
       .mockResolvedValueOnce(initial.categories)
       .mockResolvedValueOnce(
-        jsonResponse({ id: 9, name: "Kawa", icon: "coffee", kind: "expense" }, 201),
+        jsonResponse(
+          { id: 9, name: "Kawa", icon: "coffee", kind: "expense" },
+          201,
+        ),
       );
     const user = userEvent.setup();
 
     renderApp("/expenses");
+    await openCategories();
     await screen.findByRole("list", { name: "Kategorie wydatków" });
 
     const trigger = screen.getByRole("button", {
@@ -329,6 +373,7 @@ describe("Categories", () => {
     const user = userEvent.setup();
 
     renderApp("/expenses");
+    await openCategories();
     await screen.findByRole("list", { name: "Kategorie wydatków" });
     await user.click(
       screen.getByRole("button", { name: "Ikona kategorii: Etykieta" }),
@@ -365,6 +410,7 @@ describe("Categories", () => {
     const user = userEvent.setup();
 
     renderApp("/expenses");
+    await openCategories();
     await screen.findByRole("list", { name: "Kategorie wydatków" });
     await user.type(screen.getByLabelText("Nowa kategoria"), "Rakiety");
     await user.click(
@@ -390,6 +436,7 @@ describe("Categories", () => {
     const user = userEvent.setup();
 
     renderApp("/expenses");
+    await openCategories();
     await user.click(
       await screen.findByRole("button", {
         name: "Zmień nazwę kategorii: Jedzenie",
@@ -422,6 +469,7 @@ describe("Categories", () => {
     const user = userEvent.setup();
 
     renderApp("/expenses");
+    await openCategories();
     await user.click(
       await screen.findByRole("button", {
         name: "Zmień nazwę kategorii: Jedzenie",

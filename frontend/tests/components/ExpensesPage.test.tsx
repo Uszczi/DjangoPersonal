@@ -40,6 +40,7 @@ function routeByUrl({
   written,
   walletsStatus = 200,
   transactions = () => [],
+  categories = [],
 }: {
   wallets?: unknown[];
   /** The body answered to a wallet POST/PATCH. */
@@ -47,6 +48,7 @@ function routeByUrl({
   walletsStatus?: number;
   /** The transaction list, asked for on every request (so it can change mid-test). */
   transactions?: () => unknown[];
+  categories?: unknown[];
 } = {}) {
   return (
     url: string | URL | Request,
@@ -74,12 +76,13 @@ function routeByUrl({
         jsonResponse({ items: transactions(), next_cursor: null }),
       );
     }
-    if (path.includes("/categories/")) return Promise.resolve(jsonResponse([]));
+    if (path.includes("/categories/"))
+      return Promise.resolve(jsonResponse(categories));
     return Promise.resolve(jsonResponse({ detail: "Not found" }, 404));
   };
 }
 
-/** The wallet switcher: one link per wallet, the shown one marked current. */
+/** The wallet list: one link per wallet (name, count, balance), the shown one marked current. */
 function switcher() {
   return screen.getByRole("navigation", { name: "Wybierz portfel" });
 }
@@ -108,7 +111,7 @@ describe("Wallets", () => {
       await screen.findByRole("region", { name: "Portfel: Business" }),
     ).toBeInTheDocument();
     expect(
-      within(switcher()).getByRole("link", { name: "Business" }),
+      within(switcher()).getByRole("link", { name: /^Business/ }),
     ).toHaveAttribute("aria-current", "page");
     expect(
       screen.queryByRole("list", { name: "Portfele" }),
@@ -125,7 +128,7 @@ describe("Wallets", () => {
     await screen.findByRole("region", { name: "Portfel: Business" });
 
     await user.click(
-      within(switcher()).getByRole("link", { name: "Personal" }),
+      within(switcher()).getByRole("link", { name: /^Personal/ }),
     );
     await screen.findByRole("region", { name: "Portfel: Personal" });
     expect(useWalletSelectionStore.getState().selectedWalletId).toBe(1);
@@ -199,7 +202,9 @@ describe("Wallets", () => {
     const shown = await screen.findByRole("region", {
       name: "Portfel: Personal",
     });
-    expect(within(shown).getByText("250.00")).toBeInTheDocument();
+    expect(
+      within(shown).getByText("Saldo portfela: 250.00"),
+    ).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/v1/wallets/",
       expect.objectContaining({
@@ -276,7 +281,7 @@ describe("Wallets", () => {
 
     renderApp("/expenses");
     expect(
-      await screen.findByText("Brak transakcji. Dodaj pierwszą transakcję."),
+      await screen.findByText("Brak transakcji w tym miesiącu."),
     ).toBeInTheDocument();
 
     await user.click(
@@ -304,7 +309,7 @@ describe("Wallets", () => {
       await screen.findByRole("button", { name: "Edytuj portfel: Personal" }),
     );
     await user.click(await screen.findByRole("button", { name: "Edytuj" }));
-    await screen.findByText("Brak transakcji. Dodaj pierwszą transakcję.");
+    await screen.findByText("Brak transakcji w tym miesiącu.");
     const transactionLoads = () =>
       fetchMock.mock.calls.filter(([url]) =>
         String(url).includes("/transactions/"),
@@ -559,11 +564,11 @@ describe("Wallets", () => {
 
     const links = within(switcher()).getAllByRole("link");
     expect(links.map((link) => link.textContent)).toEqual([
-      "Personal",
-      "Business",
+      expect.stringMatching(/^Personal/),
+      expect.stringMatching(/^Business/),
     ]);
     await user.click(
-      within(switcher()).getByRole("link", { name: "Business" }),
+      within(switcher()).getByRole("link", { name: /^Business/ }),
     );
 
     await waitFor(() =>
@@ -595,5 +600,145 @@ describe("Wallets", () => {
     await waitFor(() =>
       expect(router.state.location.pathname).toBe("/expenses"),
     );
+  });
+});
+
+describe("The wallet's month", () => {
+  const fetchMock = vi.fn();
+
+  const food = {
+    id: 7,
+    name: "Jedzenie",
+    icon: "utensils",
+    is_system: false,
+    kind: "expense",
+  };
+  const salary = {
+    id: 8,
+    name: "Wynagrodzenie",
+    icon: "banknote",
+    is_system: false,
+    kind: "income",
+  };
+
+  function transaction(
+    id: number,
+    title: string,
+    amount: string,
+    date: string,
+    category: typeof food | null,
+  ) {
+    return {
+      id,
+      title,
+      amount,
+      date,
+      description: "",
+      category_id: category?.id ?? null,
+      wallet_id: 1,
+      kind: category?.kind ?? "expense",
+    };
+  }
+
+  const october = [
+    transaction(3, "Pensja", "5000.00", "2026-10-24", salary),
+    transaction(2, "Obiad", "40.10", "2026-10-24", food),
+    transaction(1, "Bilet", "9.90", "2026-10-02", null),
+  ];
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    vi.stubGlobal("fetch", fetchMock);
+    fetchMock.mockImplementation(
+      routeByUrl({ transactions: () => october, categories: [food, salary] }),
+    );
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  function transactionList() {
+    return screen.getByRole("list", { name: "Transakcje miesiąca" });
+  }
+
+  test("the month from the address is loaded and summed up", async () => {
+    renderApp("/expenses?month=2026-10");
+
+    expect(await screen.findByText("Październik 2026")).toBeInTheDocument();
+    await screen.findByText("Obiad");
+    expect(
+      within(screen.getByRole("region", { name: "Wydatki" })).getByText(
+        "50,00",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("region", { name: "Przychody" })).getByText(
+        "5000,00",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("region", { name: "Bilans" })).getByText(
+        "+4950,00",
+      ),
+    ).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("date_from=2026-10-01&date_to=2026-10-31"),
+      expect.anything(),
+    );
+    const breakdown = screen.getByRole("region", { name: "Na co poszło" });
+    expect(
+      within(breakdown)
+        .getAllByRole("button")
+        .map((button) => button.getAttribute("aria-label")),
+    ).toEqual(["Jedzenie: 40,10 zł", "Bez kategorii: 9,90 zł"]);
+  });
+
+  test("the arrows move to another month and keep it in the address", async () => {
+    const user = userEvent.setup();
+    const { router } = renderApp("/expenses?month=2026-10");
+    await screen.findByText("Październik 2026");
+
+    await user.click(screen.getByRole("button", { name: "Poprzedni miesiąc" }));
+
+    expect(await screen.findByText("Wrzesień 2026")).toBeInTheDocument();
+    expect(router.state.location.search).toEqual({ month: "2026-09" });
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("date_from=2026-09-01&date_to=2026-09-30"),
+      expect.anything(),
+    );
+  });
+
+  test("a day in the calendar narrows the list until its filter is removed", async () => {
+    const user = userEvent.setup();
+    renderApp("/expenses?month=2026-10");
+    await screen.findByText("Obiad");
+
+    await user.click(
+      screen.getByRole("button", { name: "24 października: wydano 40,10 zł" }),
+    );
+
+    expect(within(transactionList()).queryByText("Bilet")).toBeNull();
+    expect(within(transactionList()).getByText("Pensja")).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: "Usuń filtr: 24 paź" }),
+    );
+    expect(within(transactionList()).getByText("Bilet")).toBeInTheDocument();
+  });
+
+  test("a category in Na co poszło narrows the list to its Expenses", async () => {
+    const user = userEvent.setup();
+    renderApp("/expenses?month=2026-10");
+    await screen.findByText("Obiad");
+
+    await user.click(
+      screen.getByRole("button", { name: "Bez kategorii: 9,90 zł" }),
+    );
+
+    const titles = within(transactionList())
+      .getAllByRole("button")
+      .map((row) => row.getAttribute("aria-label"));
+    expect(titles).toEqual(["Edytuj transakcję: Bilet"]);
   });
 });

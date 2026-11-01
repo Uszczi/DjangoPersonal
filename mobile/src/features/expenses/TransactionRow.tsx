@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 
 import { DEFAULT_CATEGORY_ICON } from "@personal/shared/categoryIcons";
+import { formatCents, signedCents } from "@personal/shared/expenseMonth";
 import type {
   CategoryResponse,
   TransactionResponse,
@@ -11,23 +12,24 @@ import { useTheme } from "@/theme";
 import { common } from "@/ui/classes";
 import { NamedIcon } from "@/ui/NamedIcon";
 
+const shortDay = new Intl.DateTimeFormat("pl-PL", {
+  day: "numeric",
+  month: "short",
+});
+
 type TransactionRowProps = {
   transaction: TransactionResponse;
   /** The transaction's category, when it has one. */
   category: CategoryResponse | undefined;
 };
 
-/** One transaction: title, description and category, with a signed amount; a tap edits it. */
+/** One transaction: title, day, description and category, with a signed amount; a tap edits it. */
 export function TransactionRow({ transaction, category }: TransactionRowProps) {
   const { colors } = useTheme();
   // A system entry (no kind) carries its own sign; others are signed by kind.
   const isSystem = transaction.kind === null;
   const income = transaction.kind === "income";
-  const amountText = isSystem
-    ? `${transaction.amount.startsWith("-") ? "−" : "+"}${transaction.amount.replace(/^-/, "")}`
-    : income
-      ? `+${transaction.amount}`
-      : `−${transaction.amount}`;
+  const amountText = formatCents(signedCents(transaction), { sign: true });
   const amountClass = isSystem
     ? "font-utility text-sm font-semibold text-muted tabular-nums"
     : income
@@ -57,19 +59,25 @@ export function TransactionRow({ transaction, category }: TransactionRowProps) {
             {transaction.description}
           </Text>
         )}
-        {isSystem ? (
-          <Text className={common.muted}>Wpis systemowy</Text>
-        ) : category ? (
-          <View className="flex-row items-center gap-1">
-            <NamedIcon
-              name={category.icon}
-              fallback={DEFAULT_CATEGORY_ICON}
-              size={14}
-              color={colors.muted}
-            />
-            <Text className={common.muted}>{category.name}</Text>
-          </View>
-        ) : null}
+        <View className="flex-row items-center gap-1">
+          <Text className={common.muted}>
+            {shortDay.format(transaction.date)}
+            {isSystem || category ? " · " : ""}
+          </Text>
+          {isSystem ? (
+            <Text className={common.muted}>Wpis systemowy</Text>
+          ) : category ? (
+            <>
+              <NamedIcon
+                name={category.icon}
+                fallback={DEFAULT_CATEGORY_ICON}
+                size={14}
+                color={colors.muted}
+              />
+              <Text className={common.muted}>{category.name}</Text>
+            </>
+          ) : null}
+        </View>
       </View>
       <Text className={amountClass}>{amountText}</Text>
     </Pressable>
