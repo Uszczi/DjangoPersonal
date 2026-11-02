@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Settings } from "lucide-react";
 
 import { CounterList } from "@/components/counters/CounterList";
+import { CountersCalendar } from "@/components/counters/CountersCalendar";
 import { CounterEditorModal } from "@/components/modals/CounterEditorModal";
 import { CounterSettingsModal } from "@/components/modals/CounterSettingsModal";
 import {
@@ -30,6 +31,7 @@ function CountersPage() {
   const saveEntry = useSaveCounterEntry();
   const navigate = useNavigate();
   const viewMode = useCounterViewStore((state) => state.mode);
+  const calendar = useCounterViewStore((state) => state.calendar);
 
   function addOne(counter: CounterResponse) {
     saveEntry.mutate({
@@ -81,12 +83,17 @@ function CountersPage() {
       {counters.length === 0 ? (
         <EmptyState eyebrow="BRAK LICZNIKÓW" title="Utwórz pierwszy licznik" />
       ) : (
-        <CounterList
-          counters={counters}
-          viewMode={viewMode}
-          onOpen={openCounter}
-          onAddOne={addOne}
-        />
+        <>
+          {calendar !== "hidden" && (
+            <CountersCalendar counters={counters} mode={calendar} />
+          )}
+          <CounterList
+            counters={counters}
+            viewMode={viewMode}
+            onOpen={openCounter}
+            onAddOne={addOne}
+          />
+        </>
       )}
     </>
   );

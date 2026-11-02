@@ -6,6 +6,7 @@
 import {
   queryOptions,
   useMutation,
+  useQueries,
   useQuery,
   useQueryClient,
   type QueryClient,
@@ -63,6 +64,24 @@ export function useCounterEntries(counterId: number | null) {
   return useQuery({
     ...counterEntriesQuery(counterId ?? 0),
     enabled: counterId !== null,
+  });
+}
+
+/**
+ * The entries of every Counter in `counterIds`, by Counter id; a Counter
+ * whose entries have not loaded yet is missing. Shares each Counter's cache
+ * with `useCounterEntries`.
+ */
+export function useEveryCounterEntries(counterIds: number[]) {
+  return useQueries({
+    queries: counterIds.map((id) => counterEntriesQuery(id)),
+    combine: (results) => {
+      const byCounter = new Map<number, CounterEntryResponse[]>();
+      results.forEach((result, index) => {
+        if (result.data) byCounter.set(counterIds[index], result.data);
+      });
+      return byCounter;
+    },
   });
 }
 

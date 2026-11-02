@@ -1,4 +1,8 @@
-import type { CounterTileValue, CounterViewMode } from "./stores/counterView";
+import type {
+  CounterCalendarMode,
+  CounterTileValue,
+  CounterViewMode,
+} from "./stores/counterView";
 
 const entryTimeFormatter = new Intl.DateTimeFormat("pl-PL", {
   day: "numeric",
@@ -58,6 +62,13 @@ export const COUNTER_VIEW_MODE_LABELS: Record<CounterViewMode, string> = {
   rows: "Wiersze",
   tiles: "Kafelki",
 };
+
+export const COUNTER_CALENDAR_MODE_LABELS: Record<CounterCalendarMode, string> =
+  {
+    grid: "Siatka",
+    matrix: "Macierz",
+    hidden: "Ukryty",
+  };
 
 export const COUNTER_TILE_VALUE_LABELS: Record<CounterTileValue, string> = {
   total: "Suma",

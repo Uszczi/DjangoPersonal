@@ -27,10 +27,11 @@ import { Button } from "@/ui/Button";
 import { ColorDot } from "@/ui/ColorDot";
 import { ScreenHeader } from "@/ui/ScreenHeader";
 import { Sheet, SheetItem } from "@/ui/Sheet";
+import { CounterCalendar } from "@/features/counters/CounterCalendar";
 import { plusOneEntry } from "@/features/counters/plusOne";
 import { common } from "@/ui/classes";
 
-/** One Counter: its total, quick +1, and the entries to add, edit and delete. */
+/** One Counter: its total, quick +1, a month calendar, and the entries to add, edit and delete. */
 export default function CounterScreen() {
   const { id: rawId } = useLocalSearchParams<{ id: string }>();
   const id = Number(rawId);
@@ -160,6 +161,7 @@ export default function CounterScreen() {
               {errorMessage !== "" && (
                 <Text className="mt-2 text-danger">{errorMessage}</Text>
               )}
+              {entries !== null && <CounterCalendar entries={entries} />}
               {entries !== null && entries.length > 0 && (
                 <Text className="mt-5 font-utility text-[11px] font-semibold tracking-[0.9px] text-muted">
                   Wpisy
