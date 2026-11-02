@@ -557,6 +557,138 @@ describe("Counters", () => {
     ).toHaveAttribute("data-marked", "true");
   });
 
+  test("the list's calendar shows every counter's days, and a day opens its sums", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 9, 24, 9, 5));
+    fetchMock.mockImplementation(
+      fakeBackend({
+        counters: [
+          coffee,
+          { id: 2, name: "Woda", created_at: coffee.created_at },
+        ],
+        entries: [
+          {
+            id: 10,
+            counter_id: 1,
+            value: 2,
+            occurred_at: new Date(2026, 9, 20, 8).toISOString(),
+            note: "",
+          },
+          {
+            id: 11,
+            counter_id: 1,
+            value: 1,
+            occurred_at: new Date(2026, 9, 20, 18).toISOString(),
+            note: "",
+          },
+          {
+            id: 12,
+            counter_id: 2,
+            value: 5,
+            occurred_at: new Date(2026, 9, 20, 12).toISOString(),
+            note: "",
+          },
+          {
+            id: 13,
+            counter_id: 2,
+            value: 1,
+            occurred_at: new Date(2026, 9, 21, 12).toISOString(),
+            note: "",
+          },
+        ],
+      }),
+    );
+    const user = userEvent.setup();
+
+    renderApp("/counters");
+    const calendar = await screen.findByRole("region", {
+      name: "Kalendarz liczników",
+    });
+    const day20 = await within(calendar).findByRole("button", {
+      name: "20 października: Kawa, Woda",
+    });
+    expect(
+      within(calendar).getByRole("button", {
+        name: "22 października: brak wpisów",
+      }),
+    ).toBeDisabled();
+
+    await user.click(day20);
+    const details = within(calendar).getByRole("region", {
+      name: "20 października",
+    });
+    expect(within(details).getByText("2 wpisy")).toBeInTheDocument();
+    expect(within(details).getByText("3")).toBeInTheDocument();
+    expect(within(details).getByText("5")).toBeInTheDocument();
+
+    // The legend hides a counter from the calendar.
+    const legend = within(calendar).getByRole("group", {
+      name: "Liczniki w kalendarzu",
+    });
+    await user.click(within(legend).getByRole("button", { name: "Woda" }));
+    expect(
+      within(calendar).getByRole("button", {
+        name: "21 października: brak wpisów",
+      }),
+    ).toBeDisabled();
+  });
+
+  test("user can show the list's calendar as a matrix or hide it, and the choice is remembered", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 9, 24, 9, 5));
+    fetchMock.mockImplementation(
+      fakeBackend({
+        counters: [coffee],
+        entries: [
+          {
+            id: 10,
+            counter_id: 1,
+            value: 2,
+            occurred_at: new Date(2026, 9, 20, 8).toISOString(),
+            note: "",
+          },
+        ],
+      }),
+    );
+    const user = userEvent.setup();
+
+    renderApp("/counters");
+    await user.click(
+      await screen.findByRole("button", { name: "Ustawienia liczników" }),
+    );
+    const dialog = await screen.findByRole("dialog", {
+      name: "Ustawienia liczników",
+    });
+    const modes = within(dialog).getByRole("group", {
+      name: "Kalendarz liczników",
+    });
+    expect(
+      within(modes).getByRole("button", { name: "Siatka" }),
+    ).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(within(modes).getByRole("button", { name: "Macierz" }));
+    const calendar = screen.getByRole("region", {
+      name: "Kalendarz liczników",
+    });
+    expect(
+      await within(calendar).findByRole("img", {
+        name: "Kawa, 20 października: 1 wpis, suma 2",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(calendar).getByRole("rowheader", { name: "Kawa" }),
+    ).toBeInTheDocument();
+
+    await user.click(within(modes).getByRole("button", { name: "Ukryty" }));
+    expect(
+      screen.queryByRole("region", { name: "Kalendarz liczników" }),
+    ).not.toBeInTheDocument();
+    expect(
+      JSON.parse(window.localStorage.getItem("countersView") ?? "{}").state
+        .calendar,
+    ).toBe("hidden");
+  });
+
   test("a new entry defaults to now, and an empty time is refused", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date(2026, 9, 24, 9, 5));

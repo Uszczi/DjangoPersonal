@@ -1,9 +1,11 @@
 import { Button, Modal, ModalFooter, ToggleGroup } from "@/design-system";
 import {
+  COUNTER_CALENDAR_MODE_LABELS,
   COUNTER_TILE_VALUE_LABELS,
   COUNTER_VIEW_MODE_LABELS,
 } from "@personal/shared/counterFormat";
 import {
+  COUNTER_CALENDAR_MODES,
   COUNTER_TILE_VALUES,
   COUNTER_VIEW_MODES,
   useCounterViewStore,
@@ -18,6 +20,8 @@ export function CounterSettingsModal({ onClose }: { onClose: () => void }) {
   const setViewMode = useCounterViewStore((state) => state.setMode);
   const tileValue = useCounterViewStore((state) => state.tileValue);
   const setTileValue = useCounterViewStore((state) => state.setTileValue);
+  const calendar = useCounterViewStore((state) => state.calendar);
+  const setCalendar = useCounterViewStore((state) => state.setCalendar);
 
   return (
     <Modal
@@ -48,6 +52,14 @@ export function CounterSettingsModal({ onClose }: { onClose: () => void }) {
           />
         </>
       )}
+      <p className={sectionLabel}>Kalendarz</p>
+      <ToggleGroup
+        label="Kalendarz liczników"
+        options={COUNTER_CALENDAR_MODES}
+        labels={COUNTER_CALENDAR_MODE_LABELS}
+        value={calendar}
+        onChange={setCalendar}
+      />
       <p className="m-0 mt-4 text-[12px] text-muted">
         Zapisywane na tym urządzeniu.
       </p>

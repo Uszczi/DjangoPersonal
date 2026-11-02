@@ -21,13 +21,14 @@ import { Fab } from "@/ui/Fab";
 import { LogoMark } from "@/ui/LogoMark";
 import { ScreenHeader } from "@/ui/ScreenHeader";
 import { CounterSettingsSheet } from "@/features/counters/CounterSettingsSheet";
+import { CountersCalendar } from "@/features/counters/CountersCalendar";
 import { plusOneEntry } from "@/features/counters/plusOne";
 
 function openCounter(counter: CounterResponse) {
   router.push({ pathname: "/counters/[id]", params: { id: counter.id } });
 }
 
-/** The Liczniki tab: the user's Counters as a list or as tiles, each with a +1. */
+/** The Liczniki tab: a calendar of every Counter, then the Counters as a list or as tiles, each with a +1. */
 export default function CountersScreen() {
   const { data: counters = [], isPending, isError, refetch } = useCounters();
   const saveEntry = useSaveCounterEntry();
@@ -35,6 +36,7 @@ export default function CountersScreen() {
   const [actionError, setActionError] = useState("");
   const viewMode = useCounterViewStore((state) => state.mode);
   const tileValue = useCounterViewStore((state) => state.tileValue);
+  const calendar = useCounterViewStore((state) => state.calendar);
   const isTiles = viewMode === "tiles";
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const pageError = isError ? COUNTERS_LOAD_ERROR : "";
@@ -97,6 +99,14 @@ export default function CountersScreen() {
               refreshing={isRefreshing || isPending}
               onRefresh={() => void refresh()}
             />
+          }
+          ListHeaderComponent={
+            calendar !== "hidden" && counters.length > 0 ? (
+              // Tiles already pad the list's sides; rows do not.
+              <View className={isTiles ? undefined : "px-4"}>
+                <CountersCalendar counters={counters} mode={calendar} />
+              </View>
+            ) : undefined
           }
           ListEmptyComponent={
             !isPending && pageError === "" ? (
