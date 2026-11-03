@@ -200,6 +200,9 @@ export default function ProjectEditorScreen() {
 
         <Text className={form.label}>Statusy (w kolejności wyświetlania)</Text>
         <NestedReorderableList
+          // The outer ScrollViewContainer scrolls; a scrolling FlatList inside it
+          // is the nested-VirtualizedList warning.
+          scrollEnabled={false}
           data={statuses}
           keyExtractor={(status) => String(status.id)}
           onReorder={({ from, to }: ReorderableListReorderEvent) =>

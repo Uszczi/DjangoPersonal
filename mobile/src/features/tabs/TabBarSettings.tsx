@@ -47,6 +47,9 @@ export function TabBarSettings() {
     <View className={card.section}>
       <Text className={card.kicker}>PASEK KART</Text>
       <NestedReorderableList
+        // The outer ScrollViewContainer scrolls; a scrolling FlatList inside it
+        // is the nested-VirtualizedList warning.
+        scrollEnabled={false}
         data={order}
         keyExtractor={(name) => name}
         onReorder={({ from, to }: ReorderableListReorderEvent) =>

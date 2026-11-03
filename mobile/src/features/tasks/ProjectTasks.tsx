@@ -230,6 +230,9 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
           </Text>
         )}
         <NestedReorderableList
+          // The outer ScrollViewContainer scrolls; a scrolling FlatList inside it
+          // is the nested-VirtualizedList warning.
+          scrollEnabled={false}
           data={rows}
           keyExtractor={rowKey}
           onReorder={({ from, to }: ReorderableListReorderEvent) =>
