@@ -23,6 +23,7 @@ import {
   useToggleTaskStatus,
 } from "@personal/shared/queries/tasks";
 import { useStartTimer } from "@personal/shared/queries/timer";
+import { useCollapsedStatuses } from "@personal/shared/useCollapsedStatuses";
 
 import { Fab } from "@/ui/Fab";
 import { useTaskListSettingsStore } from "@personal/shared/stores/taskListSettings";
@@ -128,18 +129,8 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
   const [actionError, setActionError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [collapsedStatuses, setCollapsedStatuses] = useState<
-    ReadonlySet<string>
-  >(new Set());
-
-  function toggleSection(status: string) {
-    setCollapsedStatuses((current) => {
-      const next = new Set(current);
-      if (next.has(status)) next.delete(status);
-      else next.add(status);
-      return next;
-    });
-  }
+  const { collapsed: collapsedStatuses, toggle: toggleSection } =
+    useCollapsedStatuses(project?.terminalStatus);
 
   async function refresh() {
     setIsRefreshing(true);
