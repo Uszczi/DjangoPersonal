@@ -18,6 +18,7 @@ import { useCounterViewStore } from "@personal/shared/stores/counterView";
 import { queryClient } from "@/queryClient";
 import { TabBarSync } from "@/features/tabs/TabBarSync";
 import { useTabBarStore } from "@/features/tabs/tabBar";
+import { TimerNotificationSync } from "@/features/time/TimerNotificationSync";
 import { useTaskListSettingsStore } from "@personal/shared/stores/taskListSettings";
 import { useTaskProjectStore } from "@/features/tasks/taskProject";
 import {
@@ -82,6 +83,7 @@ export default function RootLayout() {
       >
         <AccountThemeSync />
         <TabBarSync />
+        <TimerNotificationSync />
         <StatusBar style="light" />
         <Stack
           screenOptions={{
