@@ -200,13 +200,20 @@ describe("Time tracking", () => {
     expect(within(manualEntrySection).getByLabelText("Projekt")).toHaveValue(
       "2",
     );
+    // Opening each title field lists only the chosen project's tasks.
+    await user.click(within(timerSection).getByLabelText("Zadanie"));
     expect(
-      within(timerSection).queryByRole("option", { name: "Prepare outline" }),
+      screen.getByRole("option", { name: "Plan release" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("option", { name: "Prepare outline" }),
     ).not.toBeInTheDocument();
+    await user.click(within(manualEntrySection).getByLabelText("Zadanie"));
     expect(
-      within(manualEntrySection).queryByRole("option", {
-        name: "Prepare outline",
-      }),
+      screen.getByRole("option", { name: "Plan release" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("option", { name: "Prepare outline" }),
     ).not.toBeInTheDocument();
 
     await user.type(
@@ -281,7 +288,7 @@ describe("Time tracking", () => {
     );
   });
 
-  test("the start form suggests titles of past entries matching what is typed", async () => {
+  test("the timer and manual entry forms suggest titles of past entries", async () => {
     fetchMock.mockImplementation((input: RequestInfo | URL) => {
       const url = requestUrl(input);
       if (url === "/api/v1/projects/")
@@ -310,16 +317,34 @@ describe("Time tracking", () => {
     });
     await user.type(within(timerSection).getByLabelText("Zadanie"), "Wee");
 
-    const suggested = () =>
-      [...timerSection.querySelectorAll("datalist option")].map(
-        (option) => (option as HTMLOptionElement).value,
-      );
-    await waitFor(() =>
-      expect(suggested()).toEqual(["Weekly report", "Prepare outline"]),
-    );
+    // The open list is portalled to <body>; only one is open at a time.
+    const suggested = () => {
+      const list = screen.queryByRole("listbox");
+      return list
+        ? within(list)
+            .getAllByRole("option")
+            .map((option) => option.textContent)
+        : [];
+    };
+    await waitFor(() => expect(suggested()).toEqual(["Weekly report"]));
     expect(titlesMock).toHaveBeenCalledWith(
       "/api/v1/time-entries/titles/?search=Wee",
     );
+
+    await user.click(screen.getByRole("option", { name: "Weekly report" }));
+    expect(within(timerSection).getByLabelText("Zadanie")).toHaveValue(
+      "Weekly report",
+    );
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+
+    const manualEntrySection = screen.getByRole("region", {
+      name: "Dodaj wpis ręcznie",
+    });
+    await user.type(
+      within(manualEntrySection).getByLabelText("Zadanie"),
+      "Wee",
+    );
+    await waitFor(() => expect(suggested()).toEqual(["Weekly report"]));
   });
 
   test("the running timer ticks every second", async () => {
@@ -591,9 +616,10 @@ describe("Time tracking", () => {
       "Bez projektu",
     );
 
-    const suggestions = [
-      ...timerSection.querySelectorAll("datalist option"),
-    ].map((option) => option.getAttribute("value"));
+    await user.click(within(timerSection).getByLabelText("Zadanie"));
+    const suggestions = within(screen.getByRole("listbox"))
+      .getAllByRole("option")
+      .map((option) => option.textContent);
     expect(suggestions).toEqual(["Prepare outline", "Plan release"]);
 
     await user.type(

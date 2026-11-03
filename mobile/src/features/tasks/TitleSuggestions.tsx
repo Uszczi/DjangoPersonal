@@ -1,13 +1,12 @@
 import { ScrollView } from "react-native";
 
 import type { TaskResponse } from "@personal/shared/generated/api";
+import { useTimeEntryTitles } from "@personal/shared/queries/timer";
 
 import { ChipGroup } from "@/ui/ChipGroup";
 
 type TitleSuggestionsProps = {
   tasks: TaskResponse[];
-  /** Titles of past time entries, offered before the tasks'. */
-  pastTitles?: string[];
   /** What is typed so far; narrows the suggestions. */
   query: string;
   onPick: (title: string) => void;
@@ -17,16 +16,18 @@ type TitleSuggestionsProps = {
 const MAX_SUGGESTIONS = 12;
 
 /**
- * Titles to pick instead of typing, standing in for the web's
- * `<datalist>`. A time entry is matched to a Task by its title.
+ * Titles to pick instead of typing: past time entries' first, then the
+ * tasks'. Stands in for the web's `<datalist>`. A time entry is matched to
+ * a Task by its title.
  */
 export function TitleSuggestions({
   tasks,
-  pastTitles = [],
   query,
   onPick,
   disabled,
 }: TitleSuggestionsProps) {
+  const { data: past = [] } = useTimeEntryTitles(query);
+  const pastTitles = past.map((item) => item.title);
   const needle = query.trim().toLocaleLowerCase();
   const titles = [
     ...new Set([...pastTitles, ...tasks.map((task) => task.title)]),
