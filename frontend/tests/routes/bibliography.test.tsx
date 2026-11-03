@@ -299,7 +299,8 @@ describe("Bibliography", () => {
       expect(
         within(list).getByText(`Bolesław Prus · 1890 · ${day}`),
       ).toBeInTheDocument();
-      expect(within(list).getByText("Ukończone")).toBeInTheDocument();
+      // Finished is the usual case, so its pill is left out of the lists.
+      expect(within(list).queryByText("Ukończone")).not.toBeInTheDocument();
     }
     expect(
       JSON.parse(window.localStorage.getItem("bibliographyView") ?? "{}").state,

@@ -5,7 +5,7 @@ import {
   ITEM_KIND_LABELS,
   attemptDates,
   itemByline,
-  itemStatusLabel,
+  rowStatusLabel,
 } from "@personal/shared/bibliographyFormat";
 import type { YearRow } from "@personal/shared/bibliographyYears";
 
@@ -15,6 +15,10 @@ import { common } from "@/ui/classes";
 export function ItemRow({ row: { item, attempt } }: { row: YearRow }) {
   const byline = itemByline(item);
   const dates = attempt ? attemptDates(attempt) : "";
+  const statusLabel = rowStatusLabel(
+    attempt?.outcome ?? item.status,
+    item.kind,
+  );
   return (
     <Pressable
       className={common.row}
@@ -35,9 +39,11 @@ export function ItemRow({ row: { item, attempt } }: { row: YearRow }) {
         </Text>
       </View>
       {/* The web's status pill. */}
-      <Text className="rounded-full border border-row-line px-2.5 py-1 text-xs text-ink-soft">
-        {itemStatusLabel(attempt?.outcome ?? item.status, item.kind)}
-      </Text>
+      {statusLabel && (
+        <Text className="rounded-full border border-row-line px-2.5 py-1 text-xs text-ink-soft">
+          {statusLabel}
+        </Text>
+      )}
     </Pressable>
   );
 }
