@@ -5,10 +5,7 @@ import type {
   ProjectResponse,
   TaskResponse,
 } from "@personal/shared/generated/api";
-import {
-  useStartTimer,
-  useTimeEntryTitles,
-} from "@personal/shared/queries/timer";
+import { useStartTimer } from "@personal/shared/queries/timer";
 import { timerLimitOptions } from "@personal/shared/timerLimit";
 import { Button, Select } from "@/design-system";
 import { askForTimerNotifications } from "@/lib/timerNotification";
@@ -34,21 +31,17 @@ export function StartTimerForm({
   const [limit, setLimit] = useState("");
   const [error, setError] = useState("");
 
-  const { data: pastTitles = [] } = useTimeEntryTitles(form.title);
-
   const projectId = form.projectId || defaultProjectId;
-  // Past entries' titles matching what is typed come first, then the
-  // project's tasks (every task's title without a project).
+  // Without a project the timer still runs on its title; suggest every task's title.
   const suggestions = [
-    ...new Set([
-      ...pastTitles.map((past) => past.title),
-      ...tasks
+    ...new Set(
+      tasks
         .filter(
           (task) =>
             projectId === NO_PROJECT || task.projectId === Number(projectId),
         )
         .map((task) => task.title),
-    ]),
+    ),
   ];
 
   async function submit(event: FormEvent<HTMLFormElement>) {
