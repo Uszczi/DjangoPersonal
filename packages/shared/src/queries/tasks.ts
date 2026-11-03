@@ -96,10 +96,15 @@ function placeTask(
       tasks.filter((item) => item.id !== saved.id),
     );
   }
-  updateProjectTasks(queryClient, saved.projectId, (tasks) => [
-    ...tasks.filter((item) => item.id !== saved.id),
-    saved,
-  ]);
+  // At the server's position, its neighbours renumbered the way the server
+  // does it (a Task just marked done leads the done list).
+  updateProjectTasks(queryClient, saved.projectId, (tasks) =>
+    moveTaskInList(
+      [...tasks.filter((item) => item.id !== saved.id), saved],
+      saved,
+      saved.position ?? Number.MAX_SAFE_INTEGER,
+    ),
+  );
   // The timer's picker lists every Task by title; let it refetch when next shown.
   void queryClient.invalidateQueries({ queryKey: taskKeys.everything });
 }

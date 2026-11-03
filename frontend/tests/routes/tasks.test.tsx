@@ -679,6 +679,7 @@ describe("Projects", () => {
           description: "",
           project_id: 2,
           status: "Zrobione",
+          position: 0,
         }),
       )
       .mockResolvedValueOnce(
@@ -719,7 +720,8 @@ describe("Projects", () => {
     const reopenButton = await screen.findByRole("button", {
       name: "Otwórz zadanie: Prepare outline",
     });
-    expect(listedTaskTitles()).toEqual(["Completed note", "Prepare outline"]);
+    // The server puts a Task just marked done first in the done list.
+    expect(listedTaskTitles()).toEqual(["Prepare outline", "Completed note"]);
     expect(reopenButton).toHaveClass("bg-done");
     await user.click(reopenButton);
 
