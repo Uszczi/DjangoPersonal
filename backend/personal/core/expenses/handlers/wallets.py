@@ -106,6 +106,8 @@ class CreateWallet:
             icon=data.icon,
         )
         created = _save(self.wallets, wallet)
+        # A new wallet joins the end of the user's order.
+        self.wallets.reorder(created, index=None)
         if data.initial_balance:
             self._record_opening_balance(created, data.initial_balance)
         # Re-read so the response carries the annotated count and balance the
@@ -176,6 +178,8 @@ class UpdateWallet:
         if 'icon' in data.model_fields_set:
             wallet.icon = data.icon
         saved = _save(self.wallets, wallet)
+        if data.position is not None:
+            self.wallets.reorder(saved, index=data.position)
 
         if data.current_balance is not None:
             current = self.wallets.balance(saved.id, user=self.user)

@@ -185,6 +185,13 @@ export default function ExpensesScreen() {
                 variant="secondary"
                 onPress={() => router.push("/wallet")}
               />
+              {wallets.length > 1 && (
+                <Button
+                  label="Kolejność"
+                  variant="secondary"
+                  onPress={() => router.push("/wallet-order")}
+                />
+              )}
             </View>
             {wallet && (
               <>

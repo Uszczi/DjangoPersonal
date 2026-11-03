@@ -1,10 +1,20 @@
+import { closestCenter, DndContext, type DragEndEvent } from "@dnd-kit/core";
+import {
+  rectSortingStrategy,
+  SortableContext,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Link } from "@tanstack/react-router";
 import { Settings2 } from "lucide-react";
 
+import { DragHandle } from "@/design-system";
 import { WalletCreateModal } from "@/components/modals/WalletCreateModal";
 import { WalletMark } from "@/components/WalletMark";
+import { useSortSensors } from "@/lib/useSortSensors";
 import { formatCents, toCents } from "@personal/shared/expenseMonth";
 import type { WalletResponse } from "@personal/shared/generated/api";
+import { useMoveWallet } from "@personal/shared/queries/wallets";
 import { ShowModal } from "@/stores/modal";
 
 type WalletSidebarProps = {
@@ -23,6 +33,16 @@ export function WalletSidebar({
   activeWalletId,
   onManageCategories,
 }: WalletSidebarProps) {
+  const moveWallet = useMoveWallet();
+  const sensors = useSortSensors();
+
+  function handleDragEnd({ active, over }: DragEndEvent) {
+    if (!over || active.id === over.id) return;
+    const position = wallets.findIndex((wallet) => wallet.id === over.id);
+    if (position === -1) return;
+    moveWallet.mutate({ id: Number(active.id), position });
+  }
+
   const total = wallets.reduce(
     (sum, wallet) => sum + toCents(wallet.balance ?? "0"),
     0,
@@ -43,31 +63,24 @@ export function WalletSidebar({
         aria-label="Wybierz portfel"
         className="flex gap-2 lg:flex-col lg:gap-1"
       >
-        {wallets.map((wallet) => (
-          <Link
-            key={wallet.id}
-            to="/expenses/$walletId"
-            params={{ walletId: String(wallet.id) }}
-            search={(prev) => ({ month: prev.month })}
-            aria-current={wallet.id === activeWalletId ? "page" : undefined}
-            className="flex shrink-0 items-center gap-3 rounded-lg px-3 py-3 text-left no-underline transition-colors hover:bg-wash aria-[current]:bg-paper aria-[current]:ring-1 aria-[current]:ring-card-line lg:shrink"
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={wallets.map((wallet) => wallet.id)}
+            strategy={rectSortingStrategy}
           >
-            <span className="grid size-9 shrink-0 place-items-center rounded-full bg-icon-wash">
-              <WalletMark wallet={wallet} />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold text-ink">
-                {wallet.name}
-              </span>
-              <span className="block font-utility text-[12px] text-muted">
-                {wallet.transactionCount} transakcji
-              </span>
-            </span>
-            <span className="font-utility text-[13px] font-semibold text-ink-soft">
-              {formatCents(toCents(wallet.balance ?? "0"))}
-            </span>
-          </Link>
-        ))}
+            {wallets.map((wallet) => (
+              <SortableWallet
+                key={wallet.id}
+                wallet={wallet}
+                isActive={wallet.id === activeWalletId}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
       </nav>
       <button
         type="button"
@@ -85,5 +98,64 @@ export function WalletSidebar({
         Zarządzaj kategoriami
       </button>
     </aside>
+  );
+}
+
+/** One wallet's link, with a handle to drag it elsewhere in the list. */
+function SortableWallet({
+  wallet,
+  isActive,
+}: {
+  wallet: WalletResponse;
+  isActive: boolean;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: wallet.id });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+      }}
+      className="flex shrink-0 items-center lg:shrink"
+    >
+      <DragHandle
+        aria-label={`Przeciągnij portfel: ${wallet.name}`}
+        className="mx-1"
+        {...attributes}
+        {...listeners}
+      />
+      <Link
+        to="/expenses/$walletId"
+        params={{ walletId: String(wallet.id) }}
+        search={(prev) => ({ month: prev.month })}
+        aria-current={isActive ? "page" : undefined}
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-3 text-left no-underline transition-colors hover:bg-wash aria-[current]:bg-paper aria-[current]:ring-1 aria-[current]:ring-card-line"
+      >
+        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-icon-wash">
+          <WalletMark wallet={wallet} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-semibold text-ink">
+            {wallet.name}
+          </span>
+          <span className="block font-utility text-[12px] text-muted">
+            {wallet.transactionCount} transakcji
+          </span>
+        </span>
+        <span className="font-utility text-[13px] font-semibold text-ink-soft">
+          {formatCents(toCents(wallet.balance ?? "0"))}
+        </span>
+      </Link>
+    </div>
   );
 }

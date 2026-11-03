@@ -129,3 +129,18 @@ def test_wallet_icon_must_be_an_icon_name(post_json: Any) -> None:
     for icon in ['', 'Wallet', 'piggy bank', 'x' * 65]:
         response = post_json('/api/v1/wallets/', {'name': f'Bad {icon}', 'icon': icon})
         assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, icon
+
+
+def test_wallets_can_be_reordered(post_json: Any, patch_json: Any, api_client: Any) -> None:
+    first = post_json('/api/v1/wallets/', {'name': 'Zeta'}).json()
+    second = post_json('/api/v1/wallets/', {'name': 'Alpha'}).json()
+    # A new wallet joins the end, whatever its name.
+    assert [w['name'] for w in api_client.get('/api/v1/wallets/').json()] == ['Zeta', 'Alpha']
+
+    response = patch_json(f"/api/v1/wallets/{second['id']}/", {'position': 0})
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()['position'] == 0
+    listed = api_client.get('/api/v1/wallets/').json()
+    assert [(w['id'], w['position']) for w in listed] == [(second['id'], 0), (first['id'], 1)]
+

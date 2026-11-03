@@ -139,6 +139,52 @@ describe("Wallets", () => {
     ).toBeInTheDocument();
   });
 
+  test("user can drag a wallet to another place in the list", async () => {
+    fetchMock.mockImplementation(
+      routeByUrl({
+        wallets: [businessWalletApi, personalWalletApi],
+        written: { ...businessWalletApi, position: 1 },
+      }),
+    );
+    // jsdom has no layout: Business sits at y=0, Personal 100px below.
+    const tops: Record<string, number> = { Business: 0, Personal: 100 };
+    const rect = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockImplementation(function (this: HTMLElement) {
+        const label = this.querySelector("[aria-label^='Przeciągnij portfel']")
+          ?.getAttribute("aria-label")
+          ?.replace("Przeciągnij portfel: ", "");
+        const top = label === undefined ? undefined : tops[label];
+        return DOMRect.fromRect({
+          x: 0,
+          y: top ?? 0,
+          width: 300,
+          height: top === undefined ? 0 : 40,
+        });
+      });
+    const user = userEvent.setup();
+
+    renderApp("/expenses");
+    const handle = await screen.findByRole("button", {
+      name: "Przeciągnij portfel: Business",
+    });
+    handle.focus();
+    await user.keyboard("[Space]");
+    await user.keyboard("[ArrowDown]");
+    await user.keyboard("[Space]");
+    rect.mockRestore();
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/v1/wallets/2/",
+        expect.objectContaining({
+          method: "PATCH",
+          body: JSON.stringify({ position: 1 }),
+        }),
+      ),
+    );
+  });
+
   test("user can create a wallet and it becomes the shown wallet", async () => {
     fetchMock.mockImplementation(
       routeByUrl({
