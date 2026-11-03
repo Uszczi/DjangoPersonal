@@ -7,21 +7,30 @@ import type {
 } from "@personal/shared/generated/api";
 import { useAddManualEntry } from "@personal/shared/queries/timer";
 import { todayKey } from "@personal/shared/timeFormat";
-import { Button, TextInput } from "@/design-system";
+import {
+  Button,
+  ErrorAlert,
+  Field,
+  Modal,
+  ModalFooter,
+  TextInput,
+} from "@/design-system";
 
 import { parseEntryForm } from "./entries";
 import { ProjectSelect } from "./ProjectSelect";
 import { TaskTitleInput } from "./TaskTitleInput";
-import { FormLabel, TimerPanel } from "./TimerPanel";
 
-export function ManualEntryPanel({
+/** Logs time that was not tracked with the timer: a day, a title and minutes. */
+export function ManualEntryModal({
   projects,
   tasks,
   defaultProjectId,
+  onClose: close,
 }: {
   projects: ProjectResponse[];
   tasks: TaskResponse[];
   defaultProjectId: string;
+  onClose: () => void;
 }) {
   const addManualEntry = useAddManualEntry();
   const [form, setForm] = useState({
@@ -47,21 +56,22 @@ export function ManualEntryPanel({
     setError("");
     try {
       await addManualEntry.mutateAsync(parsed.input);
-      setForm((current) => ({
-        date: todayKey(),
-        projectId: current.projectId,
-        title: "",
-        minutes: "",
-      }));
+      close();
     } catch (caught) {
       setError(await apiErrorMessage(caught));
     }
   }
 
   return (
-    <TimerPanel title="Dodaj wpis ręcznie" headingId="manual-entry-heading">
-      <form className="flex flex-col gap-4" onSubmit={submit}>
-        <FormLabel text="Data">
+    <Modal
+      kicker="NOWY WPIS"
+      title="Dodaj wpis ręcznie"
+      titleId="manual-entry-title"
+      onClose={close}
+      size="lg"
+    >
+      <form onSubmit={submit}>
+        <Field label="Data">
           <TextInput
             type="date"
             value={form.date}
@@ -70,8 +80,8 @@ export function ManualEntryPanel({
             }
             required
           />
-        </FormLabel>
-        <FormLabel text="Projekt">
+        </Field>
+        <Field label="Projekt">
           <ProjectSelect
             projects={projects}
             value={projectId}
@@ -79,15 +89,15 @@ export function ManualEntryPanel({
               setForm((current) => ({ ...current, projectId: id, title: "" }))
             }
           />
-        </FormLabel>
-        <FormLabel text="Zadanie">
+        </Field>
+        <Field label="Zadanie">
           <TaskTitleInput
             suggestions={suggestions}
             value={form.title}
             onChange={(title) => setForm((current) => ({ ...current, title }))}
           />
-        </FormLabel>
-        <FormLabel text="Czas (minuty)">
+        </Field>
+        <Field label="Czas (minuty)">
           <TextInput
             type="number"
             min={1}
@@ -101,16 +111,21 @@ export function ManualEntryPanel({
             }
             required
           />
-        </FormLabel>
-        <Button variant="primary" type="submit">
-          Dodaj wpis
-        </Button>
+        </Field>
+        {error && <ErrorAlert>{error}</ErrorAlert>}
+        <ModalFooter>
+          <Button variant="secondary" onClick={close}>
+            Anuluj
+          </Button>
+          <Button
+            variant="primary"
+            type="submit"
+            disabled={addManualEntry.isPending}
+          >
+            Dodaj wpis
+          </Button>
+        </ModalFooter>
       </form>
-      {error && (
-        <p className="mt-4 text-[13px] text-danger" role="alert">
-          {error}
-        </p>
-      )}
-    </TimerPanel>
+    </Modal>
   );
 }

@@ -6,14 +6,26 @@ import { useProjects } from "@personal/shared/queries/projects";
 import { useAllTasks } from "@personal/shared/queries/tasks";
 import { useTimeEntries, useTimer } from "@personal/shared/queries/timer";
 
-import { RecentEntries } from "@/features/time/RecentEntries";
+import { TimeLog } from "@/features/time/TimeLog";
 import { TimerCard } from "@/features/time/TimerCard";
-import { TimeSummary } from "@/features/time/TimeSummary";
+import { TimeStats } from "@/features/time/TimeStats";
+import { WeekStrip } from "@/features/time/WeekStrip";
 import { common } from "@/ui/classes";
 import { Button } from "@/ui/Button";
+import { ChipGroup } from "@/ui/ChipGroup";
+
+type TimeView = "log" | "stats";
+
+const VIEWS: { value: TimeView; label: string }[] = [
+  { value: "log", label: "Dziennik" },
+  { value: "stats", label: "Statystyki" },
+];
 import { useRefreshOnFocus } from "@/useRefreshOnFocus";
 
-/** The web Timer page: the running timer, recent entries and the time summary. */
+/**
+ * The web Czas page: the Dziennik (the running timer, the last seven days and
+ * the entries by day) or the Statystyki.
+ */
 export default function TimeScreen() {
   const { data: projects = [], refetch: refetchProjects } = useProjects();
   const timer = useTimer();
@@ -33,6 +45,7 @@ export default function TimeScreen() {
 
   const [nowTick, setNowTick] = useState(() => Date.now());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [view, setView] = useState<TimeView>("log");
 
   const { refetch: refetchTimer } = timer;
   const { refetch: refetchEntries } = entriesQuery;
@@ -94,25 +107,38 @@ export default function TimeScreen() {
         />
       }
     >
-      <TimerCard
-        runningEntry={runningEntry}
-        serverOffset={serverOffset}
-        nowTick={nowTick}
-        projects={projects}
-        tasks={tasks}
-        taskTitles={taskTitles}
-        onStarted={() => setNowTick(Date.now())}
-      />
-      <RecentEntries
-        entries={stoppedEntries}
-        nowTick={nowTick}
-        taskTitles={taskTitles}
-      />
-      <TimeSummary
-        entries={stoppedEntries}
-        nowTick={nowTick}
-        taskTitles={taskTitles}
-      />
+      <View className="mx-4 mt-4">
+        <ChipGroup options={VIEWS} value={view} onChange={setView} />
+      </View>
+      {view === "stats" ? (
+        <TimeStats
+          entries={stoppedEntries}
+          tasks={tasks}
+          projects={projects}
+          nowTick={nowTick}
+        />
+      ) : (
+        <>
+          <TimerCard
+            runningEntry={runningEntry}
+            serverOffset={serverOffset}
+            nowTick={nowTick}
+            projects={projects}
+            tasks={tasks}
+            taskTitles={taskTitles}
+            onStarted={() => setNowTick(Date.now())}
+          />
+          <WeekStrip entries={stoppedEntries} nowTick={nowTick} />
+          <TimeLog
+            entries={stoppedEntries}
+            nowTick={nowTick}
+            tasks={tasks}
+            projects={projects}
+            taskTitles={taskTitles}
+            onStarted={() => setNowTick(Date.now())}
+          />
+        </>
+      )}
     </ScrollView>
   );
 }

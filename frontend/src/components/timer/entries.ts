@@ -1,16 +1,6 @@
-import type { TimeEntryResponse } from "@personal/shared/generated/api";
-
 export type TaskTitles = Map<number, string>;
 
-/** What a Time entry is called: its own title, else its Task's, else a placeholder. */
-export function entryTitle(
-  entry: TimeEntryResponse,
-  taskTitles: TaskTitles,
-): string {
-  if (entry.title) return entry.title;
-  if (entry.taskId == null) return "Bez tytułu";
-  return taskTitles.get(entry.taskId) ?? `Zadanie #${entry.taskId}`;
-}
+export { entryTitle } from "@personal/shared/timeLog";
 
 export type EntryFormValues = { date: string; title: string; minutes: string };
 

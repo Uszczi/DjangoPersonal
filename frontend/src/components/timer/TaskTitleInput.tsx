@@ -27,10 +27,12 @@ export function TaskTitleInput({
   suggestions,
   value,
   onChange,
+  placeholder,
 }: {
   suggestions: string[];
   value: string;
   onChange: (value: string) => void;
+  placeholder?: string;
 }) {
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -109,6 +111,7 @@ export function TaskTitleInput({
         }
         autoComplete="off"
         value={value}
+        placeholder={placeholder}
         onChange={(event) => {
           onChange(event.target.value);
           setIsOpen(true);
