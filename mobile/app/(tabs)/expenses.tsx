@@ -192,6 +192,7 @@ export default function ExpensesScreen() {
                 <MonthTotals
                   summary={summary}
                   previousExpenseCents={previousSummary?.expenseCents}
+                  walletBalance={wallet.balance}
                 />
                 <MonthCalendar
                   month={month}

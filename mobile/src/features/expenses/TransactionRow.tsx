@@ -9,7 +9,6 @@ import type {
 } from "@personal/shared/generated/api";
 
 import { useTheme } from "@/theme";
-import { common } from "@/ui/classes";
 import { NamedIcon } from "@/ui/NamedIcon";
 
 const shortDay = new Intl.DateTimeFormat("pl-PL", {
@@ -23,7 +22,7 @@ type TransactionRowProps = {
   category: CategoryResponse | undefined;
 };
 
-/** One transaction: title, day, description and category, with a signed amount; a tap edits it. */
+/** One transaction, like the web: the day, its category mark, the title and a signed amount; a tap edits it. */
 export function TransactionRow({ transaction, category }: TransactionRowProps) {
   const { colors } = useTheme();
   // A system entry (no kind) carries its own sign; others are signed by kind.
@@ -31,13 +30,12 @@ export function TransactionRow({ transaction, category }: TransactionRowProps) {
   const income = transaction.kind === "income";
   const amountText = formatCents(signedCents(transaction), { sign: true });
   const amountClass = isSystem
-    ? "font-utility text-sm font-semibold text-muted tabular-nums"
+    ? "font-utility text-[13px] font-semibold text-muted tabular-nums"
     : income
-      ? "font-utility text-sm font-semibold text-income tabular-nums"
-      : "font-utility text-sm font-semibold text-expense tabular-nums";
+      ? "font-utility text-[13px] font-semibold text-income tabular-nums"
+      : "font-utility text-[13px] font-semibold text-expense tabular-nums";
   return (
     <Pressable
-      className={common.row}
       accessibilityRole="button"
       accessibilityLabel={`Edytuj transakcję: ${transaction.title}`}
       onPress={() =>
@@ -49,35 +47,34 @@ export function TransactionRow({ transaction, category }: TransactionRowProps) {
           },
         })
       }
+      className="mx-4 min-h-[62px] flex-row items-center gap-2 border-b border-row-line px-[3px] py-2.5 active:bg-wash"
     >
-      <View className="flex-1 gap-0.5">
-        <Text className="text-sm font-medium text-ink">
+      <Text className="w-12 shrink-0 font-utility text-[12px] text-muted">
+        {shortDay.format(transaction.date)}
+      </Text>
+      <View className="size-7 shrink-0 items-center justify-center rounded-full bg-icon-wash">
+        {category && (
+          <NamedIcon
+            name={category.icon}
+            fallback={DEFAULT_CATEGORY_ICON}
+            size={14}
+            color={colors.icon}
+          />
+        )}
+      </View>
+      <View className="min-w-0 flex-1">
+        <Text className="text-sm text-ink" numberOfLines={1}>
           {transaction.title}
         </Text>
-        {transaction.description !== "" && (
-          <Text className={common.muted} numberOfLines={2}>
-            {transaction.description}
-          </Text>
+        {isSystem ? (
+          <Text className="text-[11px] text-muted">Wpis systemowy</Text>
+        ) : (
+          transaction.description !== "" && (
+            <Text className="text-[11px] text-muted" numberOfLines={1}>
+              {transaction.description}
+            </Text>
+          )
         )}
-        <View className="flex-row items-center gap-1">
-          <Text className={common.muted}>
-            {shortDay.format(transaction.date)}
-            {isSystem || category ? " · " : ""}
-          </Text>
-          {isSystem ? (
-            <Text className={common.muted}>Wpis systemowy</Text>
-          ) : category ? (
-            <>
-              <NamedIcon
-                name={category.icon}
-                fallback={DEFAULT_CATEGORY_ICON}
-                size={14}
-                color={colors.muted}
-              />
-              <Text className={common.muted}>{category.name}</Text>
-            </>
-          ) : null}
-        </View>
       </View>
       <Text className={amountClass}>{amountText}</Text>
     </Pressable>

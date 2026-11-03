@@ -10,6 +10,8 @@ type MonthTotalsProps = {
   summary: MonthSummary;
   /** Spent in the month before, for the change against it. */
   previousExpenseCents: number | undefined;
+  /** The wallet's balance, shown under the difference tile like the web. */
+  walletBalance: string | undefined;
 };
 
 const TILE = "flex-1 rounded-lg border border-card-line bg-paper px-3 py-3";
@@ -20,6 +22,7 @@ const LABEL =
 export function MonthTotals({
   summary,
   previousExpenseCents,
+  walletBalance,
 }: MonthTotalsProps) {
   const change =
     previousExpenseCents === undefined
@@ -73,6 +76,11 @@ export function MonthTotals({
         >
           {formatCents(summary.netCents, { sign: true })}
         </Text>
+        {walletBalance !== undefined && (
+          <Text className="mt-0.5 text-[10px] text-muted">
+            Saldo portfela: {walletBalance}
+          </Text>
+        )}
       </View>
     </View>
   );

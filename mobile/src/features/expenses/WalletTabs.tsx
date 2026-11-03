@@ -1,5 +1,6 @@
-import { Pressable, ScrollView, Text } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
+import { formatCents, toCents } from "@personal/shared/expenseMonth";
 import type { WalletResponse } from "@personal/shared/generated/api";
 
 import { WalletMark } from "@/features/expenses/WalletMark";
@@ -10,7 +11,10 @@ type WalletTabsProps = {
   onSelect: (walletId: number) => void;
 };
 
-/** A horizontal row of wallet tabs; the shown wallet is filled in. */
+/**
+ * A horizontal row of wallet cards, like the web's wallet sidebar: each shows
+ * its mark, name, transaction count and balance; the shown wallet is filled in.
+ */
 export function WalletTabs({ wallets, selectedId, onSelect }: WalletTabsProps) {
   return (
     <ScrollView
@@ -28,19 +32,26 @@ export function WalletTabs({ wallets, selectedId, onSelect }: WalletTabsProps) {
             onPress={() => onSelect(wallet.id)}
             className={
               isActive
-                ? "flex-row items-center gap-1.5 rounded-[5px] border border-deep-ink bg-deep-ink px-3.5 py-2"
-                : "flex-row items-center gap-1.5 rounded-[5px] border border-control-border px-3.5 py-2"
+                ? "flex-row items-center gap-2.5 rounded-lg border border-card-line bg-paper px-3 py-2.5"
+                : "flex-row items-center gap-2.5 rounded-lg border border-transparent px-3 py-2.5 active:bg-wash"
             }
           >
-            <WalletMark wallet={wallet} size={16} />
-            <Text
-              className={
-                isActive
-                  ? "text-[13px] font-semibold text-on-signal"
-                  : "text-[13px] font-semibold text-ink-soft"
-              }
-            >
-              {wallet.name}
+            <View className="size-9 items-center justify-center rounded-full bg-icon-wash">
+              <WalletMark wallet={wallet} size={18} />
+            </View>
+            <View className="max-w-36">
+              <Text
+                className="text-sm font-semibold text-ink"
+                numberOfLines={1}
+              >
+                {wallet.name}
+              </Text>
+              <Text className="font-utility text-[11px] text-muted">
+                {wallet.transactionCount} transakcji
+              </Text>
+            </View>
+            <Text className="font-utility text-[13px] font-semibold text-ink-soft tabular-nums">
+              {formatCents(toCents(wallet.balance ?? "0"))}
             </Text>
           </Pressable>
         );
