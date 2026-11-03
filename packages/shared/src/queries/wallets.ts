@@ -56,11 +56,6 @@ export function validSelection(
   return wallets[0]?.id ?? null;
 }
 
-/** Mirror the server's `ordering = ['normalized_name']` for inserts. */
-function sortKey(name: string) {
-  return name.trim().toLocaleLowerCase();
-}
-
 export const walletsQuery = queryOptions({
   queryKey: walletKeys.all,
   queryFn: ({ signal }) => api.walletsList({ signal }),
@@ -112,15 +107,11 @@ export function useCreateWallet() {
         },
       }),
     onSuccess: (created) => {
-      queryClient.setQueryData(walletsQuery.queryKey, (list) => {
-        if (!list) return list;
-        const insertAt = list.findIndex(
-          (item) => sortKey(item.name) > sortKey(created.name),
-        );
-        const wallets = [...list];
-        wallets.splice(insertAt === -1 ? wallets.length : insertAt, 0, created);
-        return wallets;
-      });
+      // The server puts a new Wallet last.
+      queryClient.setQueryData(
+        walletsQuery.queryKey,
+        (list) => list && [...list, created],
+      );
       useWalletSelectionStore.getState().selectWallet(created.id);
     },
   });
@@ -156,6 +147,40 @@ export function useUpdateWallet() {
         });
       }
     },
+  });
+}
+
+/** `wallets` with the one of id `id` moved to index `position`. */
+export function moveWalletInList(
+  wallets: WalletResponse[],
+  id: number,
+  position: number,
+): WalletResponse[] {
+  const moving = wallets.find((wallet) => wallet.id === id);
+  if (!moving) return wallets;
+  const rest = wallets.filter((wallet) => wallet.id !== id);
+  rest.splice(Math.max(0, Math.min(position, rest.length)), 0, moving);
+  return rest.map((wallet, index) => ({ ...wallet, position: index }));
+}
+
+/**
+ * Move a Wallet to `position` in the user's order. The cached list moves at
+ * once and is reloaded either way, so a refused move snaps back.
+ */
+export function useMoveWallet() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, position }: { id: number; position: number }) =>
+      api.walletsPartialUpdate({ id, patchedWalletRequest: { position } }),
+    onMutate: async ({ id, position }) => {
+      await queryClient.cancelQueries({ queryKey: walletKeys.all });
+      queryClient.setQueryData(
+        walletsQuery.queryKey,
+        (list) => list && moveWalletInList(list, id, position),
+      );
+    },
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: walletKeys.all }),
   });
 }
 

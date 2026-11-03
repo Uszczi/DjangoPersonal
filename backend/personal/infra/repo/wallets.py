@@ -54,7 +54,7 @@ class WalletRepository:
     def _with_details(self, *conditions: ColumnElement[bool]) -> list[WalletModel]:
         query = _ledger(
             select(WalletModel, func.count(TransactionModel.id), _BALANCE).where(*conditions)
-        ).order_by(WalletModel.normalized_name)
+        ).order_by(WalletModel.position, WalletModel.normalized_name)
         wallets = []
         for wallet, count, balance in self.session.execute(query):
             wallet.transaction_count = count
@@ -63,7 +63,7 @@ class WalletRepository:
         return wallets
 
     def list_all(self, *, user: User) -> list[WalletModel]:
-        """Every wallet for ``user``, alphabetically, with count and balance."""
+        """Every wallet for ``user`` in the user's order (then by name), with count and balance."""
         return self._with_details(WalletModel.user_id == user.id)
 
     def find(self, wallet_id: int, *, user: User) -> WalletModel | None:
@@ -93,6 +93,28 @@ class WalletRepository:
         """Persist a new or existing wallet, or fail on a name clash."""
         self.session.add(wallet)
         flush(self.session, on_conflict=DuplicateWalletName)
+        return wallet
+
+    def reorder(self, wallet: WalletModel, *, index: int | None) -> WalletModel:
+        """Move ``wallet`` to ``index`` among the user's other wallets.
+
+        ``index`` is clamped to the range and ``None`` appends at the end.
+        Every wallet is renumbered to a gapless ``0..n-1``, so ordering stays
+        predictable after any move.
+        """
+        query = (
+            select(WalletModel)
+            .where(WalletModel.user_id == wallet.user_id)
+            .order_by(WalletModel.position, WalletModel.normalized_name)
+        )
+        if wallet.id is not None:
+            query = query.where(WalletModel.id != wallet.id)
+        siblings = list(self.session.scalars(query))
+        target = len(siblings) if index is None else max(0, min(int(index), len(siblings)))
+        siblings.insert(target, wallet)
+        for position, sibling in enumerate(siblings):
+            sibling.position = position
+        self.session.flush()
         return wallet
 
     def delete(self, wallet: WalletModel) -> None:

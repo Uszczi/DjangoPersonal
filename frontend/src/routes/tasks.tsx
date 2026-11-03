@@ -40,6 +40,7 @@ import {
   initialNewTaskStatus,
   useNewTaskStatusStore,
 } from "@personal/shared/stores/newTaskStatus";
+import { useCollapsedStatuses } from "@personal/shared/useCollapsedStatuses";
 
 export const Route = createFileRoute("/tasks")({
   validateSearch: validateProjectSearch,
@@ -71,30 +72,11 @@ function TasksPage() {
     isError: isTasksError,
   } = useProjectTasks(selectedProject);
   const [isProjectsDrawerOpen, setProjectsDrawerOpen] = useState(false);
-  const [collapsedStatuses, setCollapsedStatuses] = useState<
-    ReadonlySet<string>
-  >(new Set());
-
-  function expandStatus(status: string) {
-    setCollapsedStatuses((current) => {
-      if (!current.has(status)) return current;
-      const next = new Set(current);
-      next.delete(status);
-      return next;
-    });
-  }
-
-  function toggleStatusSection(status: string) {
-    setCollapsedStatuses((current) => {
-      const next = new Set(current);
-      if (next.has(status)) {
-        next.delete(status);
-      } else {
-        next.add(status);
-      }
-      return next;
-    });
-  }
+  const {
+    collapsed: collapsedStatuses,
+    toggle: toggleStatusSection,
+    expand: expandStatus,
+  } = useCollapsedStatuses(selectedProject?.terminalStatus);
 
   function openTaskForm() {
     const defaultStatus = selectedProject

@@ -154,3 +154,20 @@ def test_wallet_balance_adds_income_and_subtracts_expenses(session: Session, use
         )
 
     assert wallets.balance(wallet.id, user=user) == Decimal('520.00')
+
+
+def test_wallets_list_in_the_users_order_then_by_name(session: Session, user: User) -> None:
+    wallets = WalletRepository(session)
+    # Wallets from before ordering all sit at 0, so they list alphabetically.
+    cash = wallets.save(Wallet(user=user, name='Cash'))
+    bank = wallets.save(Wallet(user=user, name='Bank'))
+    savings = wallets.save(Wallet(user=user, name='Savings'))
+    assert [w.name for w in wallets.list_all(user=user)] == ['Bank', 'Cash', 'Savings']
+
+    wallets.reorder(savings, index=0)
+    assert [w.name for w in wallets.list_all(user=user)] == ['Savings', 'Bank', 'Cash']
+    assert [w.position for w in wallets.list_all(user=user)] == [0, 1, 2]
+
+    wallets.reorder(bank, index=99)
+    assert [w.name for w in wallets.list_all(user=user)] == ['Savings', 'Cash', 'Bank']
+    assert cash.position == 1

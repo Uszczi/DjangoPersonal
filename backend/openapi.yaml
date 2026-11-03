@@ -2859,6 +2859,11 @@ components:
             title: Amount
           - type: 'null'
           title: Current Balance
+        position:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Position
       type: object
       title: PatchedWalletRequest
     PatchedWhiteboardRequest:
@@ -3423,6 +3428,11 @@ components:
           - type: string
           - type: 'null'
           title: Icon
+        position:
+          type: integer
+          title: Position
+          default: 0
+          readOnly: true
         transaction_count:
           type: integer
           title: Transaction Count

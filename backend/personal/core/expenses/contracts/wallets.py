@@ -25,7 +25,7 @@ class _WalletPayload(BaseModel):
         return value
 
     @field_validator(
-        'name', 'color', 'initial_balance', 'current_balance', check_fields=False
+        'name', 'color', 'initial_balance', 'current_balance', 'position', check_fields=False
     )
     @classmethod
     def reject_null(cls, value: object) -> object:
@@ -61,6 +61,8 @@ class PatchedWalletRequest(_WalletPayload):
     #: An explicit ``null`` removes the icon; leaving it out keeps it.
     icon: IconName | None = None
     current_balance: Amount | None = None
+    #: Moves the wallet to this index in the user's order.
+    position: int | None = None
 
 
 class WalletResponse(BaseModel):
@@ -68,6 +70,7 @@ class WalletResponse(BaseModel):
     name: str
     color: str
     icon: str | None = None
+    position: int = Field(default=0, json_schema_extra={'readOnly': True})
     transaction_count: int = Field(
         default=0, json_schema_extra={'readOnly': True}
     )

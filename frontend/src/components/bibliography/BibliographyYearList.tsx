@@ -10,7 +10,7 @@ import {
   ITEM_KIND_LABELS,
   attemptDates,
   itemByline,
-  itemStatusLabel,
+  rowStatusLabel,
 } from "@personal/shared/bibliographyFormat";
 import type { YearGroup, YearRow } from "@personal/shared/bibliographyYears";
 import type { BibliographyItemResponse } from "@personal/shared/generated/api";
@@ -157,6 +157,10 @@ function Rows({
     <ul className="flex flex-col" aria-label={label}>
       {rows.map(({ item, attempt }) => {
         const byline = itemByline(item);
+        const statusLabel = rowStatusLabel(
+          attempt?.outcome ?? "planned",
+          item.kind,
+        );
         const dates = attempt ? attemptDates(attempt) : "";
         return (
           <ListRow key={attempt ? `a${attempt.id}` : `i${item.id}`}>
@@ -177,9 +181,11 @@ function Rows({
               <span className="mr-2 font-utility text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
                 {ITEM_KIND_LABELS[item.kind]}
               </span>
-              <span className="rounded-full border border-row-line px-2 py-0.5 text-[12px] text-ink-soft">
-                {itemStatusLabel(attempt?.outcome ?? "planned", item.kind)}
-              </span>
+              {statusLabel && (
+                <span className="rounded-full border border-row-line px-2 py-0.5 text-[12px] text-ink-soft">
+                  {statusLabel}
+                </span>
+              )}
             </>
           </ListRow>
         );

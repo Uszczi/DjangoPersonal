@@ -104,13 +104,16 @@ class CreateTask:
             if data.position is not None
             else self.tasks.next_position(project=project, status=status)
         )
-        return self.tasks.create(
+        task = self.tasks.create(
             title=data.title,
             description=data.description,
             project=project,
             status=status,
             position=position,
         )
+        if data.position is None and project.is_terminal(status):
+            self.tasks.reorder(task, index=0)
+        return task
 
 
 class UpdateTask:
@@ -147,7 +150,10 @@ class UpdateTask:
         project_changed = task.project.id != old_project_id
         status_changed = task.status != old_status
 
-        if provided_position is not None or project_changed or status_changed:
+        if provided_position is None and status_changed and task.is_done:
+            # The most recently finished Tasks lead their done list.
+            self.tasks.reorder(task, index=0)
+        elif provided_position is not None or project_changed or status_changed:
             self.tasks.reorder(task, index=provided_position)
 
         return self.tasks.save(task)

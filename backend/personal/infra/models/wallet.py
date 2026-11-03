@@ -33,6 +33,8 @@ class Wallet(Base):
     )
     #: An optional lucide icon name, shown instead of the colour dot.
     icon: Mapped[str | None] = mapped_column(String(64), default=None)
+    #: Order among the user's wallets, set by dragging them in the clients.
+    position: Mapped[int] = mapped_column(default=0, server_default='0')
 
     user: Mapped[User] = relationship()
 

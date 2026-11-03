@@ -48,6 +48,11 @@ export function itemStatusLabel(status: ItemStatus, kind: ItemKind) {
   }
 }
 
+/** A list row's status pill, or `null` for a finished one: finished is the usual case, so the lists leave it out. */
+export function rowStatusLabel(status: ItemStatus, kind: ItemKind) {
+  return status === "finished" ? null : itemStatusLabel(status, kind);
+}
+
 export const ITEM_KINDS: readonly ItemKind[] = ["film", "series", "book"];
 
 export const ITEM_STATUSES: readonly ItemStatus[] = [

@@ -96,6 +96,19 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
+/** Opens a status section; the terminal one starts collapsed. */
+async function expandStatus(
+  user: ReturnType<typeof userEvent.setup>,
+  status: string,
+) {
+  await user.click(
+    await screen.findByRole("button", {
+      name: new RegExp(`^${status}`),
+      expanded: false,
+    }),
+  );
+}
+
 describe("Projects", () => {
   const fetchMock = vi.fn();
 
@@ -341,6 +354,7 @@ describe("Projects", () => {
     const user = userEvent.setup();
 
     renderApp("/tasks?project=2");
+    await expandStatus(user, "Zrobione");
     const handle = await screen.findByRole("button", {
       name: "Przeciągnij zadanie: Prepare outline",
     });
@@ -449,6 +463,11 @@ describe("Projects", () => {
       "/api/v1/tasks/?project=1",
     ]);
     const openList = screen.getByRole("list", { name: "Todo" });
+    // Finished Tasks start folded away.
+    expect(
+      screen.queryByRole("list", { name: "Zrobione" }),
+    ).not.toBeInTheDocument();
+    await expandStatus(userEvent.setup(), "Zrobione");
     const doneList = screen.getByRole("list", { name: "Zrobione" });
 
     expect(
@@ -609,12 +628,14 @@ describe("Projects", () => {
     await user.type(screen.getByLabelText("Tytuł zadania"), "Already shipped");
     await user.selectOptions(screen.getByLabelText("Status"), "Zrobione");
     await user.click(screen.getByRole("button", { name: "Utwórz zadanie" }));
-    expect(await screen.findByText("Already shipped")).toBeInTheDocument();
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(4));
 
     await user.click(
       screen.getAllByRole("button", { name: "Nowe zadanie" })[0],
     );
     expect(screen.getByLabelText("Status")).toHaveValue("Zrobione");
+    // Opening the form unfolds the status the new task lands in.
+    expect(screen.getByText("Already shipped")).toBeInTheDocument();
   });
 
   test("user can complete and reopen a task", async () => {
@@ -658,6 +679,7 @@ describe("Projects", () => {
           description: "",
           project_id: 2,
           status: "Zrobione",
+          position: 0,
         }),
       )
       .mockResolvedValueOnce(
@@ -676,6 +698,7 @@ describe("Projects", () => {
     await user.click(screen.getByRole("link", { name: "Planning" }));
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
     await screen.findByText("Prepare outline");
+    await expandStatus(user, "Zrobione");
     const openList = screen.getByRole("list", { name: "Todo" });
     const doneList = screen.getByRole("list", { name: "Zrobione" });
     const listedTaskTitles = () =>
@@ -697,7 +720,8 @@ describe("Projects", () => {
     const reopenButton = await screen.findByRole("button", {
       name: "Otwórz zadanie: Prepare outline",
     });
-    expect(listedTaskTitles()).toEqual(["Completed note", "Prepare outline"]);
+    // The server puts a Task just marked done first in the done list.
+    expect(listedTaskTitles()).toEqual(["Prepare outline", "Completed note"]);
     expect(reopenButton).toHaveClass("bg-done");
     await user.click(reopenButton);
 

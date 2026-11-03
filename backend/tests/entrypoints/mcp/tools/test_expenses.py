@@ -64,3 +64,12 @@ def test_category_kind(mcp_user: User) -> None:
     )
     assert earned['kind'] == 'income'
     assert call('get_wallet', wallet_id=wallet['id'])['balance'] == '5000.00'
+
+
+def test_update_wallet_moves_it_in_the_order(mcp_user: User) -> None:
+    call('create_wallet', name='Konto')
+    savings = call('create_wallet', name='Oszczędności')
+
+    call('update_wallet', wallet_id=savings['id'], position=0)
+
+    assert [w['name'] for w in call('list_wallets')] == ['Oszczędności', 'Konto']

@@ -35,6 +35,7 @@ const modalScreens = [
   ["task", "Zadanie"],
   ["time-entry", "Wpis czasu"],
   ["wallet", "Portfel"],
+  ["wallet-order", "Kolejność portfeli"],
   ["transaction", "Transakcja"],
   ["category", "Kategoria"],
   ["counter", "Licznik"],

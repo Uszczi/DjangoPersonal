@@ -72,11 +72,14 @@ def update_wallet(
     icon: str | None = None,
     remove_icon: bool = False,
     current_balance: str | None = None,
+    position: int | None = None,
 ) -> dict[str, Any]:
     """Update a wallet (partial). ``current_balance`` (decimal string) sets the
     balance by recording the difference as a System transaction; ``remove_icon``
-    clears the icon."""
-    fields = provided(name=name, color=color, icon=icon, current_balance=current_balance)
+    clears the icon; ``position`` moves it to that index in the wallet order."""
+    fields = provided(
+        name=name, color=color, icon=icon, current_balance=current_balance, position=position
+    )
     if remove_icon:
         fields['icon'] = None
     payload = PatchedWalletRequest.model_validate(fields)

@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { Tabs, router } from "expo-router";
 import { useCallback, useState } from "react";
 import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 
@@ -19,6 +19,7 @@ import { useWalletSelectionStore } from "@personal/shared/stores/walletSelection
 import { TRANSACTIONS_LOAD_ERROR } from "@personal/shared/transactionList";
 
 import { CategoryBreakdown } from "@/features/expenses/CategoryBreakdown";
+import { ExpensesSettingsSheet } from "@/features/expenses/ExpensesSettingsSheet";
 import { MonthCalendar } from "@/features/expenses/MonthCalendar";
 import { MonthSwitcher } from "@/features/expenses/MonthSwitcher";
 import { MonthTotals } from "@/features/expenses/MonthTotals";
@@ -28,6 +29,8 @@ import { WalletTabs } from "@/features/expenses/WalletTabs";
 import { common } from "@/ui/classes";
 import { Button } from "@/ui/Button";
 import { Fab } from "@/ui/Fab";
+import { LogoMark } from "@/ui/LogoMark";
+import { ScreenHeader } from "@/ui/ScreenHeader";
 import { useRefreshOnFocus } from "@/useRefreshOnFocus";
 
 const filterDay = new Intl.DateTimeFormat("pl-PL", {
@@ -52,6 +55,7 @@ export default function ExpensesScreen() {
   const selectWallet = useWalletSelectionStore((state) => state.selectWallet);
   const { data: categories = [], refetch: refetchCategories } = useCategories();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [month, setMonth] = useState<MonthKey>(() => monthKeyOf(new Date()));
   const [day, setDay] = useState<number | null>(null);
   // `undefined`: every Category; `null`: the uncategorised Expenses.
@@ -139,6 +143,23 @@ export default function ExpensesScreen() {
 
   return (
     <View className={common.screen}>
+      <Tabs.Screen
+        options={{
+          header: () => (
+            <ScreenHeader
+              left={<LogoMark />}
+              title="Wydatki"
+              actions={[
+                {
+                  icon: "settings-outline",
+                  accessibilityLabel: "Ustawienia wydatków",
+                  onPress: () => setIsSettingsOpen(true),
+                },
+              ]}
+            />
+          ),
+        }}
+      />
       <FlatList
         data={shown}
         keyExtractor={(transaction) => String(transaction.id)}
@@ -179,13 +200,16 @@ export default function ExpensesScreen() {
                 </Text>
               )
             )}
-            <View className="mx-4 mt-3 flex-row gap-3">
-              <Button
-                label="+ Nowy portfel"
-                variant="secondary"
-                onPress={() => router.push("/wallet")}
-              />
-            </View>
+            {/* The first wallet; later ones are added from the settings. */}
+            {wallets.length === 0 && !isLoading && pageError === "" && (
+              <View className="mx-4 flex-row">
+                <Button
+                  label="+ Nowy portfel"
+                  variant="secondary"
+                  onPress={() => router.push("/wallet")}
+                />
+              </View>
+            )}
             {wallet && (
               <>
                 <MonthSwitcher month={month} onChange={showMonth} />
@@ -262,6 +286,13 @@ export default function ExpensesScreen() {
               params: { walletId: wallet.id },
             })
           }
+        />
+      )}
+      {isSettingsOpen && (
+        <ExpensesSettingsSheet
+          wallet={wallet}
+          walletCount={wallets.length}
+          onClose={() => setIsSettingsOpen(false)}
         />
       )}
     </View>
