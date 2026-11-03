@@ -9,7 +9,13 @@ import { useAuthStore } from "@personal/shared/stores/auth";
 
 /** One identifier, so a new limit replaces the old notification. */
 const NOTIFICATION_ID = "timer-limit";
-const CHANNEL_ID = "timer";
+/**
+ * Android fixes a channel's sound and vibration when it is created, so a
+ * change to them needs a new id; the old ones are deleted.
+ */
+const CHANNEL_ID = "timer-end";
+const OLD_CHANNEL_IDS = ["timer", "timer-alarm"];
+const VIBRATION = [0, 500, 250, 500, 250, 500];
 
 // Show the notification even when the app is open.
 Notifications.setNotificationHandler({
@@ -24,9 +30,18 @@ Notifications.setNotificationHandler({
 /** Asks once; Android 13+ needs the channel before it shows the prompt. */
 async function canNotify(): Promise<boolean> {
   if (Platform.OS === "android") {
+    await Promise.all(
+      OLD_CHANNEL_IDS.map((id) =>
+        Notifications.deleteNotificationChannelAsync(id),
+      ),
+    );
+    // The notification stream follows the ringer: sound normally, only the
+    // vibration in vibrate mode.
     await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
-      name: "Timer",
-      importance: Notifications.AndroidImportance.HIGH,
+      name: "Koniec timera",
+      importance: Notifications.AndroidImportance.MAX,
+      enableVibrate: true,
+      vibrationPattern: VIBRATION,
     });
   }
   const current = await Notifications.getPermissionsAsync();
@@ -76,6 +91,8 @@ export function TimerNotificationSync(): null {
           title: "Czas minął",
           body: entryTitle || taskTitle || "Timer zakończył się.",
           sound: true,
+          vibrate: VIBRATION,
+          priority: Notifications.AndroidNotificationPriority.MAX,
         },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DATE,
