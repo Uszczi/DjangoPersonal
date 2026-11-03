@@ -113,24 +113,32 @@ describe("Time tracking", () => {
     await user.click(screen.getByRole("link", { name: "Czas" }));
 
     expect(
-      await screen.findByRole("heading", { name: "Timer" }),
+      await screen.findByRole("heading", { name: "Czas" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Dziennik" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(
+      screen.getByRole("link", { name: "Statystyki" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(
-        "Brak aktywnego timera. Wybierz projekt i zadanie, aby go uruchomić.",
+      within(screen.getByRole("region", { name: "Bieżący timer" })).getByRole(
+        "button",
+        { name: "Rozpocznij timer" },
       ),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Dodaj wpis ręcznie" }),
+      screen.getByRole("region", { name: "Ostatnie 7 dni" }),
+    ).toHaveTextContent("0 min");
+    expect(
+      screen.getByText(
+        "Nie ma jeszcze wpisów. Uruchom timer albo dodaj wpis ręcznie.",
+      ),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Ostatnie wpisy" }),
+      screen.getByRole("button", { name: "Wpis ręczny" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Brak wpisów na dziś.")).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "Suma czasu" }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Dziś łącznie")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenNthCalledWith(
       3,
       "/api/v1/timer/",
@@ -148,7 +156,7 @@ describe("Time tracking", () => {
     );
   });
 
-  test("the URL project preselects both forms and starts one of its tasks", async () => {
+  test("the URL project preselects the timer and the manual entry and starts one of its tasks", async () => {
     const planning = {
       id: 2,
       name: "Planning",
@@ -192,14 +200,8 @@ describe("Time tracking", () => {
     const timerSection = await screen.findByRole("region", {
       name: "Bieżący timer",
     });
-    const manualEntrySection = await screen.findByRole("region", {
-      name: "Dodaj wpis ręcznie",
-    });
 
     expect(within(timerSection).getByLabelText("Projekt")).toHaveValue("2");
-    expect(within(manualEntrySection).getByLabelText("Projekt")).toHaveValue(
-      "2",
-    );
     // Opening each title field lists only the chosen project's tasks.
     await user.click(within(timerSection).getByLabelText("Zadanie"));
     expect(
@@ -208,13 +210,22 @@ describe("Time tracking", () => {
     expect(
       screen.queryByRole("option", { name: "Prepare outline" }),
     ).not.toBeInTheDocument();
-    await user.click(within(manualEntrySection).getByLabelText("Zadanie"));
+
+    await user.click(screen.getByRole("button", { name: "Wpis ręczny" }));
+    const manualEntry = screen.getByRole("dialog", {
+      name: "Dodaj wpis ręcznie",
+    });
+    expect(within(manualEntry).getByLabelText("Projekt")).toHaveValue("2");
+    await user.click(within(manualEntry).getByLabelText("Zadanie"));
     expect(
       screen.getByRole("option", { name: "Plan release" }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("option", { name: "Prepare outline" }),
     ).not.toBeInTheDocument();
+    await user.click(
+      within(manualEntry).getByRole("button", { name: "Anuluj" }),
+    );
 
     await user.type(
       within(timerSection).getByLabelText("Zadanie"),
@@ -224,7 +235,9 @@ describe("Time tracking", () => {
       within(timerSection).getByRole("button", { name: "Rozpocznij timer" }),
     );
 
-    expect(await screen.findByText("TIMER AKTYWNY")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: "Zatrzymaj timer" }),
+    ).toBeInTheDocument();
     expect(fetchMock).toHaveBeenLastCalledWith(
       "/api/v1/timer/start/",
       expect.objectContaining({
@@ -261,10 +274,11 @@ describe("Time tracking", () => {
     );
 
     expect(
-      await screen.findByRole("heading", { name: "Timer" }),
+      await screen.findByRole("heading", { name: "Czas" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("TIMER AKTYWNY")).toBeInTheDocument();
-    expect(screen.getAllByText("Prepare outline").length).toBeGreaterThan(0);
+    expect(
+      screen.getByRole("region", { name: "Bieżący timer" }),
+    ).toHaveTextContent("Prepare outline");
     expect(fetchMock).toHaveBeenNthCalledWith(
       3,
       "/api/v1/timer/start/",
@@ -277,11 +291,15 @@ describe("Time tracking", () => {
     await user.click(screen.getByRole("button", { name: "Zatrzymaj timer" }));
 
     expect(
-      await screen.findByText(
-        "Brak aktywnego timera. Wybierz projekt i zadanie, aby go uruchomić.",
-      ),
+      await screen.findByRole("button", { name: "Rozpocznij timer" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("30 MIN")).toBeInTheDocument();
+    expect(
+      (
+        await screen.findByRole("button", {
+          name: "Edytuj wpis: Prepare outline",
+        })
+      ).closest("li"),
+    ).toHaveTextContent("30 min");
     expect(fetchMock).toHaveBeenLastCalledWith(
       "/api/v1/time-entries/",
       expect.objectContaining({ method: "GET" }),
@@ -337,13 +355,11 @@ describe("Time tracking", () => {
     );
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
 
-    const manualEntrySection = screen.getByRole("region", {
+    await user.click(screen.getByRole("button", { name: "Wpis ręczny" }));
+    const manualEntry = screen.getByRole("dialog", {
       name: "Dodaj wpis ręcznie",
     });
-    await user.type(
-      within(manualEntrySection).getByLabelText("Zadanie"),
-      "Wee",
-    );
+    await user.type(within(manualEntry).getByLabelText("Zadanie"), "Wee");
     await waitFor(() => expect(suggested()).toEqual(["Weekly report"]));
   });
 
@@ -381,7 +397,7 @@ describe("Time tracking", () => {
     }
   });
 
-  test("user can add a manual entry and sees it in today’s list and summary", async () => {
+  test("user can add a manual entry and sees it under today with the day’s total", async () => {
     const created = entryPayload(6, daysAgoKey(0), "08:00:00", "08:45:00");
     fetchMock
       .mockResolvedValueOnce(jsonResponse([inbox]))
@@ -397,30 +413,29 @@ describe("Time tracking", () => {
     renderApp("/tasks");
     await screen.findByText("Prepare outline");
     await user.click(screen.getByRole("link", { name: "Czas" }));
-    await screen.findByRole("heading", { name: "Dodaj wpis ręcznie" });
-
-    const manualEntrySection = screen.getByRole("region", {
-      name: "Dodaj wpis ręcznie",
-    });
-    await user.type(
-      within(manualEntrySection).getByLabelText("Zadanie"),
-      task.title,
+    await user.click(
+      await screen.findByRole("button", { name: "Wpis ręczny" }),
     );
-    await user.type(
-      within(manualEntrySection).getByLabelText("Czas (minuty)"),
-      "45",
-    );
-    await user.click(screen.getByRole("button", { name: "Dodaj wpis" }));
 
-    expect(await screen.findByText("45 MIN")).toBeInTheDocument();
-    const summaryHeading = screen.getByRole("heading", { name: "Suma czasu" });
-    const summarySection = summaryHeading.closest("section");
-    if (!summarySection) throw new Error("summary section not found");
+    const dialog = screen.getByRole("dialog", { name: "Dodaj wpis ręcznie" });
+    await user.type(within(dialog).getByLabelText("Zadanie"), task.title);
+    await user.type(within(dialog).getByLabelText("Czas (minuty)"), "45");
+    await user.click(
+      within(dialog).getByRole("button", { name: "Dodaj wpis" }),
+    );
+
+    const today = await screen.findByRole("region", { name: /^Dziś · / });
     expect(
-      within(summarySection as HTMLElement).getByText("45 min", {
-        selector: "p.font-display",
+      within(today).getByRole("button", {
+        name: "Edytuj wpis: Prepare outline",
       }),
     ).toBeInTheDocument();
+    // The day's total and the entry's own length.
+    expect(within(today).getAllByText("45 min")).toHaveLength(2);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: "Ostatnie 7 dni" }),
+    ).toHaveTextContent("45 min");
     expect(fetchMock).toHaveBeenNthCalledWith(
       6,
       "/api/v1/time-entries/",
@@ -453,7 +468,7 @@ describe("Time tracking", () => {
     renderApp("/tasks");
     await screen.findByText("Prepare outline");
     await user.click(screen.getByRole("link", { name: "Czas" }));
-    await screen.findByText("45 MIN");
+    await screen.findByRole("button", { name: "Edytuj wpis: Prepare outline" });
 
     await user.click(
       screen.getByRole("button", { name: "Edytuj wpis: Prepare outline" }),
@@ -466,7 +481,13 @@ describe("Time tracking", () => {
       within(dialog).getByRole("button", { name: "Zapisz zmiany" }),
     );
 
-    expect(await screen.findByText("1 H")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen
+          .getByRole("button", { name: "Edytuj wpis: Prepare outline" })
+          .closest("li"),
+      ).toHaveTextContent("1 h"),
+    );
     expect(fetchMock).toHaveBeenNthCalledWith(
       6,
       `/api/v1/time-entries/${original.id}/`,
@@ -488,7 +509,9 @@ describe("Time tracking", () => {
       within(screen.getByRole("dialog")).getByRole("button", { name: "Usuń" }),
     );
 
-    await screen.findByText("Brak wpisów na dziś.");
+    await screen.findByText(
+      "Nie ma jeszcze wpisów. Uruchom timer albo dodaj wpis ręcznie.",
+    );
     expect(fetchMock).toHaveBeenNthCalledWith(
       8,
       `/api/v1/time-entries/${original.id}/`,
@@ -516,7 +539,7 @@ describe("Time tracking", () => {
     renderApp("/tasks");
     await screen.findByText("Prepare outline");
     await user.click(screen.getByRole("link", { name: "Czas" }));
-    await screen.findByText("TIMER AKTYWNY");
+    await screen.findByRole("button", { name: "Zatrzymaj timer" });
 
     expect(
       screen.queryByRole("button", { name: "Edytuj wpis: Prepare outline" }),
@@ -525,11 +548,13 @@ describe("Time tracking", () => {
     await user.click(screen.getByRole("button", { name: "Odrzuć timer" }));
 
     expect(
-      await screen.findByText(
-        "Brak aktywnego timera. Wybierz projekt i zadanie, aby go uruchomić.",
+      await screen.findByRole("button", { name: "Rozpocznij timer" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Nie ma jeszcze wpisów. Uruchom timer albo dodaj wpis ręcznie.",
       ),
     ).toBeInTheDocument();
-    expect(screen.getByText("Brak wpisów na dziś.")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenNthCalledWith(
       6,
       `/api/v1/time-entries/${runningEntry.id}/`,
@@ -537,7 +562,7 @@ describe("Time tracking", () => {
     );
   });
 
-  test("summary shows today, per-task, and seven-day totals", async () => {
+  test("the Dziennik groups entries by day with totals and the last seven days", async () => {
     const todayFirst = entryPayload(6, daysAgoKey(0), "08:00:00", "08:30:00");
     const todaySecond = entryPayload(7, daysAgoKey(0), "10:00:00", "10:45:00");
     const yesterday = entryPayload(8, daysAgoKey(1), "09:00:00", "10:30:00");
@@ -553,18 +578,171 @@ describe("Time tracking", () => {
     await screen.findByText("Prepare outline");
     await user.click(screen.getByRole("link", { name: "Czas" }));
 
-    const summary = await screen.findByRole("heading", { name: "Suma czasu" });
-    const summarySection = summary.closest("section");
-    if (!summarySection) throw new Error("summary section not found");
-    const withinSummary = within(summarySection as HTMLElement);
+    const today = await screen.findByRole("region", { name: /^Dziś · / });
+    expect(today).toHaveTextContent("1 h 15 min");
+    expect(
+      within(today).getAllByRole("button", { name: /^Edytuj wpis:/ }),
+    ).toHaveLength(2);
+    expect(within(today).getAllByText("Inbox")).toHaveLength(2);
+    const before = screen.getByRole("region", { name: /^Wczoraj · / });
+    expect(within(before).getAllByText("1 h 30 min")).toHaveLength(2);
+    const week = screen.getByRole("region", { name: "Ostatnie 7 dni" });
+    expect(week).toHaveTextContent("2 h 45 min");
+    expect(week).toHaveTextContent(`${daysAgoKey(1)}: 1 h 30 min`);
+  });
+
+  test("older days stay hidden until the user asks for them", async () => {
+    const recent = entryPayload(6, daysAgoKey(2), "08:00:00", "08:30:00");
+    const old = {
+      ...entryPayload(7, daysAgoKey(20), "08:00:00", "09:00:00"),
+      task_id: null,
+      title: "Old work",
+    };
+    fetchMock.mockImplementation((input: RequestInfo | URL) => {
+      const url = requestUrl(input);
+      if (url === "/api/v1/projects/")
+        return Promise.resolve(jsonResponse([inbox]));
+      if (url === "/api/v1/timer/") return Promise.resolve(timerResponse(null));
+      if (url === "/api/v1/time-entries/")
+        return Promise.resolve(jsonResponse([recent, old]));
+      if (url === "/api/v1/tasks/?all=true")
+        return Promise.resolve(jsonResponse([task]));
+      return Promise.reject(new Error(`Unexpected request: ${url}`));
+    });
+    const user = userEvent.setup();
+
+    renderApp("/timer");
+    await screen.findByRole("button", { name: "Edytuj wpis: Prepare outline" });
+    expect(
+      screen.queryByRole("button", { name: "Edytuj wpis: Old work" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Pokaż starsze" }));
 
     expect(
-      withinSummary.getByText("1 h 15 min", { selector: "p.font-display" }),
+      screen.getByRole("button", { name: "Edytuj wpis: Old work" }),
     ).toBeInTheDocument();
-    expect(withinSummary.getAllByText("1 h 15 min")).toHaveLength(3);
-    expect(withinSummary.getByText("Prepare outline")).toBeInTheDocument();
-    expect(withinSummary.getByText(daysAgoKey(1))).toBeInTheDocument();
-    expect(withinSummary.getByText("1 h 30 min")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Pokaż starsze" }),
+    ).not.toBeInTheDocument();
+  });
+
+  test("resuming restarts a Task's entry on the Task and a titled one on its title", async () => {
+    const onTask = entryPayload(6, daysAgoKey(0), "08:00:00", "08:30:00");
+    const titled = {
+      ...entryPayload(7, daysAgoKey(0), "09:00:00", "09:20:00"),
+      task_id: null,
+      title: "Code review",
+    };
+    const running = {
+      id: 9,
+      task_id: null,
+      title: "Code review",
+      start: `${daysAgoKey(0)}T12:00:00Z`,
+      end: null,
+    };
+    fetchMock.mockImplementation((input: RequestInfo | URL) => {
+      const url = requestUrl(input);
+      if (url === "/api/v1/projects/")
+        return Promise.resolve(jsonResponse([inbox]));
+      if (url === "/api/v1/timer/") return Promise.resolve(timerResponse(null));
+      if (url === "/api/v1/time-entries/")
+        return Promise.resolve(jsonResponse([onTask, titled]));
+      if (url === "/api/v1/tasks/?all=true")
+        return Promise.resolve(jsonResponse([task]));
+      if (url === "/api/v1/timer/start/")
+        return Promise.resolve(timerResponse(running));
+      return Promise.reject(new Error(`Unexpected request: ${url}`));
+    });
+    const user = userEvent.setup();
+
+    renderApp("/timer");
+    await user.click(
+      await screen.findByRole("button", { name: "Wznów: Prepare outline" }),
+    );
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "/api/v1/timer/start/",
+      expect.objectContaining({ body: JSON.stringify({ task: task.id }) }),
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "Wznów: Code review" }),
+    );
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "/api/v1/timer/start/",
+      expect.objectContaining({
+        body: JSON.stringify({ title: "Code review" }),
+      }),
+    );
+    expect(
+      await screen.findByRole("button", { name: "Zatrzymaj timer" }),
+    ).toBeInTheDocument();
+  });
+
+  test("Statystyki show the month's total and the split by project", async () => {
+    const planning = {
+      id: 2,
+      name: "Planning",
+      description: "",
+      is_inbox: false,
+      project_statuses: ["Todo"],
+      terminal_status: "Todo",
+    };
+    const planningTask = {
+      ...task,
+      id: 8,
+      title: "Plan release",
+      project_id: planning.id,
+    };
+    const first = entryPayload(6, daysAgoKey(0), "08:00:00", "09:00:00");
+    const second = {
+      ...entryPayload(7, daysAgoKey(0), "10:00:00", "10:30:00"),
+      task_id: planningTask.id,
+    };
+    const loose = {
+      ...entryPayload(8, daysAgoKey(0), "11:00:00", "11:15:00"),
+      task_id: null,
+      title: "Email",
+    };
+    fetchMock.mockImplementation((input: RequestInfo | URL) => {
+      const url = requestUrl(input);
+      if (url === "/api/v1/projects/")
+        return Promise.resolve(jsonResponse([inbox, planning]));
+      if (url === "/api/v1/timer/") return Promise.resolve(timerResponse(null));
+      if (url === "/api/v1/time-entries/")
+        return Promise.resolve(jsonResponse([first, second, loose]));
+      if (url === "/api/v1/tasks/?all=true")
+        return Promise.resolve(jsonResponse([task, planningTask]));
+      return Promise.reject(new Error(`Unexpected request: ${url}`));
+    });
+    const user = userEvent.setup();
+
+    renderApp("/timer");
+    await user.click(await screen.findByRole("link", { name: "Statystyki" }));
+
+    expect(
+      await screen.findByRole("button", { name: "Miesiąc" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("Łącznie").parentElement).toHaveTextContent(
+      "1 h 45 min",
+    );
+    const byProject = screen.getByRole("region", { name: "Według projektu" });
+    expect(byProject).toHaveTextContent("Inbox1 h · 57%");
+    expect(byProject).toHaveTextContent("Planning30 min · 29%");
+    expect(byProject).toHaveTextContent("Bez projektu15 min · 14%");
+    expect(
+      screen.getByRole("region", { name: "Najwięcej czasu na" }),
+    ).toHaveTextContent("Prepare outline");
+    expect(
+      screen.queryByRole("region", { name: "Bieżący timer" }),
+    ).not.toBeInTheDocument();
+
+    // Back a year: nothing was logged then.
+    await user.click(screen.getByRole("button", { name: "Rok" }));
+    await user.click(screen.getByRole("button", { name: "Poprzedni okres" }));
+    expect(
+      screen.getAllByText("Brak wpisów w tym okresie.").length,
+    ).toBeGreaterThan(0);
   });
 
   test("user can start a timer without a project and gets every project’s titles as suggestions", async () => {
@@ -630,7 +808,9 @@ describe("Time tracking", () => {
       within(timerSection).getByRole("button", { name: "Rozpocznij timer" }),
     );
 
-    expect(await screen.findByText("TIMER AKTYWNY")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: "Zatrzymaj timer" }),
+    ).toBeInTheDocument();
     expect(fetchMock).toHaveBeenLastCalledWith(
       "/api/v1/timer/start/",
       expect.objectContaining({
@@ -669,14 +849,6 @@ describe("Time tracking", () => {
     });
     const user = userEvent.setup();
 
-    const arc = vi.fn();
-    const fakeContext = new Proxy({ arc } as Record<string | symbol, unknown>, {
-      get: (target, key) => (key in target ? target[key] : vi.fn()),
-      set: () => true,
-    });
-    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(
-      fakeContext as unknown as CanvasRenderingContext2D,
-    );
     const requestPermission = vi.fn().mockResolvedValue("granted");
     vi.stubGlobal(
       "Notification",
@@ -702,15 +874,6 @@ describe("Time tracking", () => {
     expect(await screen.findByText("0:25:00")).toBeInTheDocument();
     expect(screen.getByText(/^Pozostało · zatrzyma się o/)).toBeInTheDocument();
     expect(requestPermission).toHaveBeenCalledOnce();
-    // The countdown dial is drawn, with the wedge spanning the whole limit.
-    expect(timerSection.querySelector("canvas")).toBeInTheDocument();
-    expect(arc).toHaveBeenCalledWith(
-      expect.any(Number),
-      expect.any(Number),
-      expect.any(Number),
-      -Math.PI / 2,
-      (3 * Math.PI) / 2,
-    );
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/v1/timer/start/",
       expect.objectContaining({
@@ -771,9 +934,7 @@ describe("Time tracking", () => {
 
       await vi.waitFor(() =>
         expect(
-          screen.getByText(
-            "Brak aktywnego timera. Wybierz projekt i zadanie, aby go uruchomić.",
-          ),
+          screen.getByRole("button", { name: "Rozpocznij timer" }),
         ).toBeInTheDocument(),
       );
       expect(screen.getByRole("status")).toHaveTextContent(
@@ -838,9 +999,7 @@ describe("Time tracking", () => {
 
       await vi.waitFor(() =>
         expect(
-          screen.getByText(
-            "Brak aktywnego timera. Wybierz projekt i zadanie, aby go uruchomić.",
-          ),
+          screen.getByRole("button", { name: "Rozpocznij timer" }),
         ).toBeInTheDocument(),
       );
       expect(screen.queryByRole("status")).not.toBeInTheDocument();

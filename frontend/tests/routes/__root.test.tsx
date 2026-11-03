@@ -187,7 +187,7 @@ describe("Routing", () => {
     expect(router.state.location.pathname).toBe("/tasks");
 
     await user.click(screen.getByRole("link", { name: "Czas" }));
-    await screen.findByRole("heading", { name: "Timer" });
+    await screen.findByRole("heading", { name: "Czas" });
     expect(router.state.location.pathname).toBe("/timer");
   });
 
@@ -218,7 +218,7 @@ describe("Routing", () => {
       expect(router.state.location.search).toMatchObject({ project: 2 }),
     );
     await user.click(screen.getByRole("link", { name: "Czas" }));
-    await screen.findByRole("heading", { name: "Timer" });
+    await screen.findByRole("heading", { name: "Czas" });
     expect(router.state.location.pathname).toBe("/timer");
 
     await act(async () => {
