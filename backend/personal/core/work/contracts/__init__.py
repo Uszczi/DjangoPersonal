@@ -19,6 +19,7 @@ from .time_entries import (
     PatchedTimeEntryRequest,
     TimeEntryCreateRequest,
     TimeEntryResponse,
+    TimeEntryTitleResponse,
 )
 from .timer import TimerResponse, TimerStartRequest
 
@@ -36,6 +37,7 @@ __all__ = [
     'TaskResponse',
     'TimeEntryCreateRequest',
     'TimeEntryResponse',
+    'TimeEntryTitleResponse',
     'TimerResponse',
     'TimerStartRequest',
 ]

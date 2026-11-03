@@ -17,6 +17,7 @@ from personal.infra.repo import (
     TaskHasTimeEntries,
     TaskRepository,
     TimeEntryRepository,
+    UserRepository,
 )
 from tests.helpers import count_rows
 
@@ -96,3 +97,28 @@ def test_closing_an_entry_only_sets_its_end(session: Session, user: User) -> Non
     assert entry.end == began + timedelta(minutes=5) and entry.title == 't'
     entries.delete(entry)
     assert entries.find(entry.id, user=user) is None
+
+
+def test_titles_are_distinct_last_used_first_and_fall_back_to_the_task(
+    session: Session, user: User
+) -> None:
+    entries = TimeEntryRepository(session)
+    task = TaskRepository(session).create(
+        title='Release notes',
+        description='',
+        project=ProjectRepository(session).get_inbox(user=user),
+        status='Todo',
+    )
+    began = datetime(2026, 10, 20, 9, 0, tzinfo=UTC)
+    entries.create(user=user, title='Mail', start=began, end=began)
+    entries.create(user=user, task=task, start=began + timedelta(hours=1))
+    entries.create(user=user, title='Mail', start=began + timedelta(hours=2))
+    entries.create(user=user, task=task, title='Own title', start=began - timedelta(hours=1))
+    other = UserRepository(session).create(username='someone-else', password_hash='hash')
+    entries.create(user=other, title='Not mine', start=began + timedelta(hours=3))
+
+    assert entries.titles(user=user) == [
+        ('Mail', began + timedelta(hours=2)),
+        ('Release notes', began + timedelta(hours=1)),
+        ('Own title', began - timedelta(hours=1)),
+    ]

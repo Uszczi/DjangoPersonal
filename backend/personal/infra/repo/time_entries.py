@@ -2,7 +2,7 @@ from collections.abc import Sequence
 from datetime import date as datetime_date
 from datetime import datetime, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from personal.infra.models import Task as TaskModel
@@ -31,6 +31,24 @@ class TimeEntryRepository:
                 TimeEntryModel.start >= start, TimeEntryModel.start < start + timedelta(days=1)
             )
         return list(self.session.scalars(query.order_by(*_NEWEST_FIRST)))
+
+    def titles(self, *, user: User) -> Sequence[tuple[str, datetime]]:
+        """Every distinct title the user's entries were recorded under, last used first.
+
+        An entry on a Task without its own title counts under the Task's title.
+        Each title comes with when an entry under it last started.
+        """
+        title = func.coalesce(func.nullif(TimeEntryModel.title, ''), TaskModel.title)
+        last_used = func.max(TimeEntryModel.start)
+        query = (
+            select(title, last_used)
+            .select_from(TimeEntryModel)
+            .outerjoin(TaskModel, TimeEntryModel.task_id == TaskModel.id)
+            .where(TimeEntryModel.user_id == user.id, title.is_not(None), title != '')
+            .group_by(title)
+            .order_by(last_used.desc(), title)
+        )
+        return [(name, used) for name, used in self.session.execute(query)]
 
     def find(self, entry_id: int, *, user: User) -> TimeEntryModel | None:
         query = select(TimeEntryModel).where(

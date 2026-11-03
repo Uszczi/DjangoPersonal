@@ -44,6 +44,8 @@ export const taskCommentKeys = {
 export const timerKeys = {
   timer: ["timer"] as const,
   entries: ["timeEntries"] as const,
+  /** Past entries' titles matching a search; under `entries`, so new entries refresh them. */
+  titles: (search: string) => ["timeEntries", "titles", search] as const,
 };
 
 export const walletKeys = {

@@ -600,6 +600,44 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TimeEntryResponse'
+  /api/v1/time-entries/titles/:
+    get:
+      tags:
+      - personal
+      summary: List Time Entry Titles
+      description: Titles of past entries matching ``search``, to suggest when naming
+        a new one.
+      operationId: time_entries_titles
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: search
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 200
+          default: ''
+          title: Search
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 50
+          minimum: 1
+          default: 10
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimeEntryTitleResponse'
+                title: Response Time Entries Titles
   /api/v1/time-entries/{id}/:
     patch:
       tags:
@@ -3136,6 +3174,24 @@ components:
       - title
       - start
       title: TimeEntryResponse
+    TimeEntryTitleResponse:
+      properties:
+        title:
+          type: string
+          title: Title
+          readOnly: true
+        last_used:
+          type: string
+          format: date-time
+          title: Last Used
+          readOnly: true
+      type: object
+      required:
+      - title
+      - last_used
+      title: TimeEntryTitleResponse
+      description: A title past entries were recorded under, offered when naming a
+        new one.
     TimerResponse:
       properties:
         entry:

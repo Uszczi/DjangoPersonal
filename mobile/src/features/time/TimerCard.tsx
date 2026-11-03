@@ -13,6 +13,7 @@ import {
   useRefreshTimer,
   useStartTimer,
   useStopTimer,
+  useTimeEntryTitles,
 } from "@personal/shared/queries/timer";
 import { formatClock, formatElapsed } from "@personal/shared/timeFormat";
 import { timerLimitOptions, timerRemaining } from "@personal/shared/timerLimit";
@@ -59,6 +60,7 @@ export function TimerCard({
   /** Minutes, or 0 for a timer that runs until stopped. */
   const [startLimit, setStartLimit] = useState(0);
   const [startError, setStartError] = useState("");
+  const { data: pastTitles = [] } = useTimeEntryTitles(startTitle);
   const [actionError, setActionError] = useState("");
   const [isBusy, setIsBusy] = useState(false);
 
@@ -186,6 +188,7 @@ export function TimerCard({
           />
           <TitleSuggestions
             tasks={startTasks}
+            pastTitles={pastTitles.map((past) => past.title)}
             query={startTitle}
             onPick={setStartTitle}
           />

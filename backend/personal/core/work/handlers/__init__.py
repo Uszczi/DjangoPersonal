@@ -33,15 +33,18 @@ from .projects import (
 )
 from .tasks import CreateTask, DeleteTask, ListTasks, UpdateTask
 from .time_entries import (
+    DEFAULT_TITLE_SUGGESTIONS,
     CreateTimeEntry,
     DeleteTimeEntry,
     ListTimeEntries,
+    SuggestTimeEntryTitles,
     UpdateTimeEntry,
 )
 from .timer import GetRunningEntry, StartTimer, StopTimer
 
 __all__ = [
     'AddCommentAttachment',
+    'DEFAULT_TITLE_SUGGESTIONS',
     'CreateTaskComment',
     'DeleteCommentAttachment',
     'DeleteTaskComment',
@@ -64,6 +67,7 @@ __all__ = [
     'ReplaceProject',
     'StartTimer',
     'StopTimer',
+    'SuggestTimeEntryTitles',
     'UpdateProject',
     'UpdateTask',
     'UpdateTimeEntry',
