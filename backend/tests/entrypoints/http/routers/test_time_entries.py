@@ -129,3 +129,22 @@ def test_time_entry_endpoints_reject_unknown_tasks(post_json: Any, fixed_clock: 
 
     assert manual.status_code == HTTPStatus.BAD_REQUEST
     assert start.status_code == HTTPStatus.BAD_REQUEST
+
+
+def test_titles_suggest_past_entries_matching_the_search(
+    api_client: Any, post_json: Any, fixed_clock: Any
+) -> None:
+    task = create_task(post_json, title='Outline the release')
+    post_json('/api/v1/time-entries/', {'task': task['id'], 'date': '2026-10-12', 'duration_minutes': 30})
+    post_json('/api/v1/time-entries/', {'title': 'Weekly report', 'date': '2026-10-13', 'duration_minutes': 15})
+
+    response = api_client.get('/api/v1/time-entries/titles/?search=re')
+
+    assert response.status_code == HTTPStatus.OK
+    assert [item['title'] for item in response.json()] == ['Weekly report', 'Outline the release']
+    assert datetime.fromisoformat(response.json()[0]['last_used']) == datetime(
+        2026, 10, 13, tzinfo=timezone.utc
+    )
+    assert api_client.get('/api/v1/time-entries/titles/?limit=0').status_code == (
+        HTTPStatus.UNPROCESSABLE_ENTITY
+    )

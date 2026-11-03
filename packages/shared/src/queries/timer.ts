@@ -4,6 +4,7 @@
  * a manual entry is recorded, so the client does not guess.
  */
 import {
+  keepPreviousData,
   queryOptions,
   useMutation,
   useQuery,
@@ -13,6 +14,7 @@ import {
 import { useCallback } from "react";
 
 import { api } from "../api";
+import { useDebouncedValue } from "../useDebouncedValue";
 import type {
   TimeEntryResponse,
   TimerResponse,
@@ -54,6 +56,26 @@ export const timeEntriesQuery = queryOptions({
   queryKey: timerKeys.entries,
   queryFn: ({ signal }) => api.timeEntriesList({}, { signal }),
 });
+
+/** Past entries' titles matching `search`, prefix matches and the most recently used first. */
+export function timeEntryTitlesQuery(search: string) {
+  return queryOptions({
+    queryKey: timerKeys.titles(search),
+    queryFn: ({ signal }) => api.timeEntriesTitles({ search }, { signal }),
+  });
+}
+
+/**
+ * Titles to suggest while the user types one: asked of the server once the
+ * typing pauses, keeping the last answer on screen meanwhile.
+ */
+export function useTimeEntryTitles(search: string) {
+  const debounced = useDebouncedValue(search.trim(), 250);
+  return useQuery({
+    ...timeEntryTitlesQuery(debounced),
+    placeholderData: keepPreviousData,
+  });
+}
 
 export function useTimer() {
   return useQuery(timerQuery);

@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from datetime import date as datetime_date
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from personal.core.shared.errors import DomainError, NotFound
 from personal.core.work import clock
@@ -38,6 +38,35 @@ class ListTimeEntries:
     ) -> Sequence[TimeEntryModel]:
         settle_expired_timer(self.time_entries, self.user)
         return self.time_entries.list(task_id=task_id, day=day, user=self.user)
+
+
+#: How many titles :class:`SuggestTimeEntryTitles` returns unless asked otherwise.
+DEFAULT_TITLE_SUGGESTIONS = 10
+
+
+class SuggestTimeEntryTitles:
+    """Titles of the user's past entries that match what they are typing.
+
+    Matching ignores case (Unicode-aware, so "Łódź" matches "łó") and looks
+    anywhere in the title. Titles that start with the search come first; within
+    each group the most recently used come first. An empty search returns the
+    most recently used titles.
+    """
+    def __init__(self, time_entries: TimeEntryRepository, user: User):
+        self.time_entries = time_entries
+        self.user = user
+
+    def execute(
+        self, search: str = '', limit: int = DEFAULT_TITLE_SUGGESTIONS
+    ) -> Sequence[tuple[str, datetime]]:
+        # The database's case folding is ASCII-only on SQLite, so match here;
+        # one user's distinct titles are few.
+        needle = search.strip().casefold()
+        titles = self.time_entries.titles(user=self.user)
+        if needle:
+            matching = [item for item in titles if needle in item[0].casefold()]
+            titles = sorted(matching, key=lambda item: not item[0].casefold().startswith(needle))
+        return titles[:limit]
 
 
 class CreateTimeEntry:

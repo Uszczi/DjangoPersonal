@@ -1,12 +1,14 @@
 from datetime import date as datetime_date
+from typing import Annotated
 
-from fastapi import APIRouter, Response, status
+from fastapi import APIRouter, Query, Response, status
 
 from personal.core.work import handlers
 from personal.core.work.contracts import (
     PatchedTimeEntryRequest,
     TimeEntryCreateRequest,
     TimeEntryResponse,
+    TimeEntryTitleResponse,
 )
 from personal.entrypoints.http.deps import CurrentUser, TaskRepositoryDep, TimeEntryRepositoryDep
 
@@ -22,6 +24,18 @@ def list_time_entries(
 ) -> list[TimeEntryResponse]:
     found = handlers.ListTimeEntries(time_entries, user).execute(task_id=task, day=date)
     return [TimeEntryResponse.model_validate(entry) for entry in found]
+
+
+@router.get('/time-entries/titles/', operation_id='time_entries_titles')
+def list_time_entry_titles(
+    user: CurrentUser,
+    time_entries: TimeEntryRepositoryDep,
+    search: Annotated[str, Query(max_length=200)] = '',
+    limit: Annotated[int, Query(ge=1, le=50)] = handlers.DEFAULT_TITLE_SUGGESTIONS,
+) -> list[TimeEntryTitleResponse]:
+    """Titles of past entries matching ``search``, to suggest when naming a new one."""
+    found = handlers.SuggestTimeEntryTitles(time_entries, user).execute(search=search, limit=limit)
+    return [TimeEntryTitleResponse(title=title, last_used=used) for title, used in found]
 
 
 @router.post(

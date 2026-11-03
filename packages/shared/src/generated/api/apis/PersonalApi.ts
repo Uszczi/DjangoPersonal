@@ -240,6 +240,11 @@ import {
     TimeEntryResponseToJSON,
 } from '../models/TimeEntryResponse';
 import {
+    type TimeEntryTitleResponse,
+    TimeEntryTitleResponseFromJSON,
+    TimeEntryTitleResponseToJSON,
+} from '../models/TimeEntryTitleResponse';
+import {
     type TimerResponse,
     TimerResponseFromJSON,
     TimerResponseToJSON,
@@ -757,6 +762,17 @@ export interface TimeEntriesPartialUpdateRequest {
      *
      */
     patchedTimeEntryRequest: PatchedTimeEntryRequest;
+}
+
+export interface TimeEntriesTitlesRequest {
+    /**
+     *
+     */
+    search?: string;
+    /**
+     *
+     */
+    limit?: number;
 }
 
 export interface TimerStartOperationRequest {
@@ -4251,6 +4267,61 @@ export class PersonalApi extends runtime.BaseAPI {
      */
     async timeEntriesPartialUpdate(requestParameters: TimeEntriesPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TimeEntryResponse> {
         const response = await this.timeEntriesPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for timeEntriesTitles without sending the request
+     */
+    async timeEntriesTitlesRequestOpts(requestParameters: TimeEntriesTitlesRequest): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        if (requestParameters['search'] != null) {
+            queryParameters['search'] = requestParameters['search'];
+        }
+
+        if (requestParameters['limit'] != null) {
+            queryParameters['limit'] = requestParameters['limit'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/time-entries/titles/`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Titles of past entries matching ``search``, to suggest when naming a new one.
+     * List Time Entry Titles
+     */
+    async timeEntriesTitlesRaw(requestParameters: TimeEntriesTitlesRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<TimeEntryTitleResponse>>> {
+        const requestOptions = await this.timeEntriesTitlesRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(TimeEntryTitleResponseFromJSON));
+    }
+
+    /**
+     * Titles of past entries matching ``search``, to suggest when naming a new one.
+     * List Time Entry Titles
+     */
+    async timeEntriesTitles(requestParameters: TimeEntriesTitlesRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<TimeEntryTitleResponse>> {
+        const response = await this.timeEntriesTitlesRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

@@ -48,6 +48,7 @@ export * from './TaskCreateRequest';
 export * from './TaskResponse';
 export * from './TimeEntryCreateRequest';
 export * from './TimeEntryResponse';
+export * from './TimeEntryTitleResponse';
 export * from './TimerResponse';
 export * from './TimerStartRequest';
 export * from './TransactionPageResponse';

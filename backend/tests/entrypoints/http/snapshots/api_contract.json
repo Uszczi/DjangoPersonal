@@ -472,6 +472,14 @@
     ]
   },
   {
+    "method": "GET",
+    "path": "/api/v1/time-entries/titles/",
+    "operation_id": "time_entries_titles",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
     "method": "DELETE",
     "path": "/api/v1/time-entries/{id}/",
     "operation_id": "time_entries_destroy",

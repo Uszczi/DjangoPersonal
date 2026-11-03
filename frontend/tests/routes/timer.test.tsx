@@ -5,6 +5,7 @@ import {
   cleanup,
   fireEvent,
   screen,
+  waitFor,
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -67,12 +68,28 @@ function entryPayload(
   };
 }
 
+function requestUrl(input: RequestInfo | URL) {
+  return typeof input === "string"
+    ? input
+    : input instanceof URL
+      ? input.toString()
+      : input.url;
+}
+
 describe("Time tracking", () => {
   const fetchMock = vi.fn();
+  /** The start form's title suggestions, kept apart so the other requests keep their order. */
+  const titlesMock = vi.fn();
 
   beforeEach(() => {
     fetchMock.mockReset();
-    vi.stubGlobal("fetch", fetchMock);
+    titlesMock.mockReset();
+    titlesMock.mockImplementation(() => Promise.resolve(jsonResponse([])));
+    vi.stubGlobal("fetch", (input: RequestInfo | URL, init?: RequestInit) =>
+      requestUrl(input).startsWith("/api/v1/time-entries/titles/")
+        ? titlesMock(requestUrl(input))
+        : fetchMock(input, init),
+    );
   });
 
   afterEach(() => {
@@ -261,6 +278,47 @@ describe("Time tracking", () => {
     expect(fetchMock).toHaveBeenLastCalledWith(
       "/api/v1/time-entries/",
       expect.objectContaining({ method: "GET" }),
+    );
+  });
+
+  test("the start form suggests titles of past entries matching what is typed", async () => {
+    fetchMock.mockImplementation((input: RequestInfo | URL) => {
+      const url = requestUrl(input);
+      if (url === "/api/v1/projects/")
+        return Promise.resolve(jsonResponse([inbox]));
+      if (url === "/api/v1/timer/") return Promise.resolve(timerResponse(null));
+      if (url === "/api/v1/time-entries/")
+        return Promise.resolve(jsonResponse([]));
+      if (url === "/api/v1/tasks/?all=true")
+        return Promise.resolve(jsonResponse([task]));
+      return Promise.reject(new Error(`Unexpected request: ${url}`));
+    });
+    titlesMock.mockImplementation((url: string) =>
+      Promise.resolve(
+        jsonResponse(
+          url.includes("search=Wee")
+            ? [{ title: "Weekly report", last_used: "2026-10-14T09:00:00Z" }]
+            : [],
+        ),
+      ),
+    );
+    const user = userEvent.setup();
+
+    renderApp("/timer");
+    const timerSection = await screen.findByRole("region", {
+      name: "Bieżący timer",
+    });
+    await user.type(within(timerSection).getByLabelText("Zadanie"), "Wee");
+
+    const suggested = () =>
+      [...timerSection.querySelectorAll("datalist option")].map(
+        (option) => (option as HTMLOptionElement).value,
+      );
+    await waitFor(() =>
+      expect(suggested()).toEqual(["Weekly report", "Prepare outline"]),
+    );
+    expect(titlesMock).toHaveBeenCalledWith(
+      "/api/v1/time-entries/titles/?search=Wee",
     );
   });
 

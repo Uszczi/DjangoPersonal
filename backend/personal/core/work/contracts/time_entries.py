@@ -39,3 +39,10 @@ class TimeEntryResponse(BaseModel):
     start: datetime
     end: datetime | None = None
     planned_end: datetime | None = Field(default=None, json_schema_extra={'readOnly': True})
+
+class TimeEntryTitleResponse(BaseModel):
+    """A title past entries were recorded under, offered when naming a new one."""
+
+    title: str = Field(..., json_schema_extra={'readOnly': True})
+    #: When an entry under this title last started.
+    last_used: datetime = Field(..., json_schema_extra={'readOnly': True})
