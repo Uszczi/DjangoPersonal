@@ -127,6 +127,9 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
   const showTimerButton = useTaskListSettingsStore(
     (state) => state.showTimerButton,
   );
+  const showDragHandle = useTaskListSettingsStore(
+    (state) => state.showDragHandle,
+  );
   const [actionError, setActionError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -288,6 +291,7 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
                 onStartTimer={
                   showTimerButton ? () => void startTimer(task) : undefined
                 }
+                showDragHandle={showDragHandle}
               />
             );
           }}
@@ -307,7 +311,7 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
 
 /**
  * One Task in a reorderable section. A long press anywhere on the row, or a
- * shorter one on the grip, picks it up; taps still open it, tick it off or
+ * shorter one on the grip (unless hidden in the settings), picks it up; taps still open it, tick it off or
  * start its timer, and a plain swipe scrolls the list.
  */
 function TaskRow({
@@ -316,6 +320,7 @@ function TaskRow({
   onOpen,
   onToggle,
   onStartTimer,
+  showDragHandle,
 }: {
   task: TaskResponse;
   isDone: boolean;
@@ -323,6 +328,7 @@ function TaskRow({
   onToggle: () => void;
   /** Absent when the timer button is switched off in the settings. */
   onStartTimer?: () => void;
+  showDragHandle: boolean;
 }) {
   const { colors } = useTheme();
   const drag = useReorderableDrag();
@@ -377,17 +383,19 @@ function TaskRow({
           <Ionicons name="play" size={16} color={colors.signal} />
         </Pressable>
       )}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`Przenieś zadanie: ${task.title}`}
-        accessibilityHint="Przytrzymaj i przeciągnij, aby zmienić kolejność lub status"
-        hitSlop={8}
-        delayLongPress={150}
-        onLongPress={drag}
-        className="h-[34px] w-7 items-center justify-center"
-      >
-        <Ionicons name="reorder-three" size={22} color={colors.muted} />
-      </Pressable>
+      {showDragHandle && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Przenieś zadanie: ${task.title}`}
+          accessibilityHint="Przytrzymaj i przeciągnij, aby zmienić kolejność lub status"
+          hitSlop={8}
+          delayLongPress={150}
+          onLongPress={drag}
+          className="h-[34px] w-7 items-center justify-center"
+        >
+          <Ionicons name="reorder-three" size={22} color={colors.muted} />
+        </Pressable>
+      )}
     </Pressable>
   );
 }

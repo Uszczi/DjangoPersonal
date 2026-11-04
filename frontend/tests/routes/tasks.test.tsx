@@ -518,7 +518,7 @@ describe("Projects", () => {
     ).not.toBeInTheDocument();
     expect(
       JSON.parse(window.localStorage.getItem("taskListSettings") ?? "{}").state,
-    ).toEqual({ showTimerButton: false });
+    ).toEqual({ showTimerButton: false, showDragHandle: true });
   });
 
   test("user can create a task in the selected project", async () => {
