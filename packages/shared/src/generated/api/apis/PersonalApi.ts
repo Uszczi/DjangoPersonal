@@ -342,21 +342,21 @@ export interface BibliographyAttemptsDestroyRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface BibliographyAttemptsListRequest {
     /**
      *
      */
-    item?: number | null;
+    item?: string | null;
 }
 
 export interface BibliographyAttemptsPartialUpdateRequest {
     /**
      *
      */
-    id: number;
+    id: string;
     /**
      *
      */
@@ -367,7 +367,7 @@ export interface BibliographyAttemptsRetrieveRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface BibliographyItemsCreateRequest {
@@ -381,7 +381,7 @@ export interface BibliographyItemsDestroyRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface BibliographyItemsListRequest {
@@ -399,7 +399,7 @@ export interface BibliographyItemsPartialUpdateRequest {
     /**
      *
      */
-    id: number;
+    id: string;
     /**
      *
      */
@@ -410,7 +410,7 @@ export interface BibliographyItemsRetrieveRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface CategoriesCreateRequest {
@@ -424,14 +424,14 @@ export interface CategoriesDestroyRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface CategoriesPartialUpdateRequest {
     /**
      *
      */
-    id: number;
+    id: string;
     /**
      *
      */
@@ -442,14 +442,14 @@ export interface CategoriesRetrieveRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface CategoriesUpdateRequest {
     /**
      *
      */
-    id: number;
+    id: string;
     /**
      *
      */
@@ -460,14 +460,14 @@ export interface CommentAttachmentsDestroyRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface CommentAttachmentsRetrieveRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface CounterEntriesCreateRequest {
@@ -481,21 +481,21 @@ export interface CounterEntriesDestroyRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface CounterEntriesListRequest {
     /**
      *
      */
-    counter: number;
+    counter: string;
 }
 
 export interface CounterEntriesPartialUpdateRequest {
     /**
      *
      */
-    id: number;
+    id: string;
     /**
      *
      */
@@ -506,7 +506,7 @@ export interface CounterEntriesRetrieveRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface CountersCreateRequest {
@@ -524,7 +524,7 @@ export interface CountersDestroyRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface CountersListRequest {
@@ -538,7 +538,7 @@ export interface CountersPartialUpdateRequest {
     /**
      *
      */
-    id: number;
+    id: string;
     /**
      *
      */
@@ -553,7 +553,7 @@ export interface CountersRetrieveRequest {
     /**
      *
      */
-    id: number;
+    id: string;
     /**
      * IANA time zone where days begin, e.g. Europe/Warsaw (default UTC).
      */
@@ -571,14 +571,14 @@ export interface FoldersDestroyRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface FoldersPartialUpdateRequest {
     /**
      *
      */
-    id: number;
+    id: string;
     /**
      *
      */
@@ -610,14 +610,14 @@ export interface ProjectsDestroyRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface ProjectsPartialUpdateRequest {
     /**
      *
      */
-    id: number;
+    id: string;
     /**
      *
      */
@@ -628,14 +628,14 @@ export interface ProjectsRetrieveRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface ProjectsUpdateRequest {
     /**
      *
      */
-    id: number;
+    id: string;
     /**
      *
      */
@@ -653,7 +653,7 @@ export interface TaskCommentsAttachmentsCreateRequest {
     /**
      *
      */
-    id: number;
+    id: string;
     /**
      * The file, stored exactly as sent.
      */
@@ -671,21 +671,21 @@ export interface TaskCommentsDestroyRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface TaskCommentsListRequest {
     /**
      *
      */
-    task: number;
+    task: string;
 }
 
 export interface TaskCommentsPartialUpdateRequest {
     /**
      *
      */
-    id: number;
+    id: string;
     /**
      *
      */
@@ -703,14 +703,14 @@ export interface TasksDestroyRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface TasksListRequest {
     /**
      *
      */
-    project?: number | null;
+    project?: string | null;
     /**
      *
      */
@@ -721,7 +721,7 @@ export interface TasksPartialUpdateRequest {
     /**
      *
      */
-    id: number;
+    id: string;
     /**
      *
      */
@@ -739,14 +739,14 @@ export interface TimeEntriesDestroyRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface TimeEntriesListRequest {
     /**
      *
      */
-    task?: number | null;
+    task?: string | null;
     /**
      *
      */
@@ -757,7 +757,7 @@ export interface TimeEntriesPartialUpdateRequest {
     /**
      *
      */
-    id: number;
+    id: string;
     /**
      *
      */
@@ -793,14 +793,14 @@ export interface TransactionsDestroyRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface TransactionsListRequest {
     /**
      *
      */
-    wallet: number;
+    wallet: string;
     /**
      *
      */
@@ -823,7 +823,7 @@ export interface TransactionsPartialUpdateRequest {
     /**
      *
      */
-    id: number;
+    id: string;
     /**
      *
      */
@@ -834,14 +834,14 @@ export interface TransactionsRetrieveRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface TransactionsUpdateRequest {
     /**
      *
      */
-    id: number;
+    id: string;
     /**
      *
      */
@@ -859,14 +859,14 @@ export interface WalletsDestroyRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface WalletsPartialUpdateRequest {
     /**
      *
      */
-    id: number;
+    id: string;
     /**
      *
      */
@@ -877,14 +877,14 @@ export interface WalletsRetrieveRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface WalletsUpdateRequest {
     /**
      *
      */
-    id: number;
+    id: string;
     /**
      *
      */
@@ -902,14 +902,14 @@ export interface WhiteboardsDestroyRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface WhiteboardsPartialUpdateRequest {
     /**
      *
      */
-    id: number;
+    id: string;
     /**
      *
      */
@@ -920,7 +920,7 @@ export interface WhiteboardsRetrieveRequest {
     /**
      *
      */
-    id: number;
+    id: string;
 }
 
 export interface WhiteboardsSearchRequest {

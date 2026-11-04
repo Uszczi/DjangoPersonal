@@ -35,7 +35,7 @@ export interface WhiteboardRequest {
     /**
      *
      */
-    folderId?: number | null;
+    folderId?: string | null;
 }
 
 /**

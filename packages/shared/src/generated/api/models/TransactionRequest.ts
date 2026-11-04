@@ -39,11 +39,11 @@ export interface TransactionRequest {
     /**
      *
      */
-    category?: number | null;
+    category?: string | null;
     /**
      *
      */
-    wallet: number;
+    wallet: string;
 }
 
 /**

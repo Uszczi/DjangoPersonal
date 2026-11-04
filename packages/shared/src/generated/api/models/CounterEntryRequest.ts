@@ -23,7 +23,7 @@ export interface CounterEntryRequest {
     /**
      *
      */
-    counter: number;
+    counter: string;
     /**
      *
      */

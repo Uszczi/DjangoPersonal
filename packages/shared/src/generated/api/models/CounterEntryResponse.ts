@@ -23,11 +23,11 @@ export interface CounterEntryResponse {
     /**
      *
      */
-    readonly id: number;
+    readonly id: string;
     /**
      *
      */
-    readonly counterId: number;
+    readonly counterId: string;
     /**
      *
      */

@@ -27,7 +27,7 @@ export interface NoteSource {
     /**
      *
      */
-    whiteboardId: number;
+    whiteboardId: string;
     /**
      *
      */

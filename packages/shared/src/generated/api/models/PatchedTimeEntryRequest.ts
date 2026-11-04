@@ -23,7 +23,7 @@ export interface PatchedTimeEntryRequest {
     /**
      *
      */
-    task?: number | null;
+    task?: string | null;
     /**
      *
      */

@@ -27,7 +27,7 @@ export interface PatchedFolderRequest {
     /**
      *
      */
-    parentId?: number | null;
+    parentId?: string | null;
 }
 
 /**

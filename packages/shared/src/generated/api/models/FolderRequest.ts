@@ -27,7 +27,7 @@ export interface FolderRequest {
     /**
      *
      */
-    parentId?: number | null;
+    parentId?: string | null;
 }
 
 /**

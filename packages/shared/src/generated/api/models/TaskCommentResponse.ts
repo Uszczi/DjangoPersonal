@@ -31,11 +31,11 @@ export interface TaskCommentResponse {
     /**
      *
      */
-    readonly id: number;
+    readonly id: string;
     /**
      *
      */
-    readonly taskId: number;
+    readonly taskId: string;
     /**
      *
      */

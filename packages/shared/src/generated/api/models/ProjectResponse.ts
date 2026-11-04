@@ -23,7 +23,7 @@ export interface ProjectResponse {
     /**
      *
      */
-    readonly id: number;
+    readonly id: string;
     /**
      *
      */

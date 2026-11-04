@@ -39,11 +39,11 @@ export interface PatchedTransactionRequest {
     /**
      *
      */
-    category?: number | null;
+    category?: string | null;
     /**
      *
      */
-    wallet?: number | null;
+    wallet?: string | null;
 }
 
 /**

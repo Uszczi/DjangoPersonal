@@ -23,7 +23,7 @@ export interface TimeEntryCreateRequest {
     /**
      *
      */
-    task?: number | null;
+    task?: string | null;
     /**
      *
      */

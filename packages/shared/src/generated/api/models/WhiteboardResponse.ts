@@ -23,7 +23,7 @@ export interface WhiteboardResponse {
     /**
      *
      */
-    readonly id: number;
+    readonly id: string;
     /**
      *
      */
@@ -39,7 +39,7 @@ export interface WhiteboardResponse {
     /**
      *
      */
-    folderId?: number | null;
+    folderId?: string | null;
     /**
      *
      */

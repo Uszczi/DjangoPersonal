@@ -207,7 +207,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '200':
@@ -228,7 +229,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       requestBody:
         required: true
@@ -255,7 +257,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       requestBody:
         required: true
@@ -282,7 +285,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '204':
@@ -301,7 +305,8 @@ paths:
         required: false
         schema:
           anyOf:
-          - type: integer
+          - type: string
+            format: uuid
           - type: 'null'
           title: Project
       - name: all
@@ -354,7 +359,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       requestBody:
         required: true
@@ -381,7 +387,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '204':
@@ -399,7 +406,8 @@ paths:
         in: query
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Task
       responses:
         '200':
@@ -444,7 +452,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       requestBody:
         required: true
@@ -471,7 +480,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '204':
@@ -489,7 +499,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       requestBody:
         required: true
@@ -517,7 +528,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '200':
@@ -539,7 +551,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '204':
@@ -558,7 +571,8 @@ paths:
         required: false
         schema:
           anyOf:
-          - type: integer
+          - type: string
+            format: uuid
           - type: 'null'
           title: Task
       - name: date
@@ -651,7 +665,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       requestBody:
         required: true
@@ -678,7 +693,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '204':
@@ -815,7 +831,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '200':
@@ -836,7 +853,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       requestBody:
         required: true
@@ -863,7 +881,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '204':
@@ -919,7 +938,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       requestBody:
         required: true
@@ -946,7 +966,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '204':
@@ -1030,7 +1051,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '200':
@@ -1051,7 +1073,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       requestBody:
         required: true
@@ -1078,7 +1101,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       requestBody:
         required: true
@@ -1105,7 +1129,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '204':
@@ -1161,7 +1186,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '200':
@@ -1182,7 +1208,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       requestBody:
         required: true
@@ -1209,7 +1236,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       requestBody:
         required: true
@@ -1236,7 +1264,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '204':
@@ -1254,7 +1283,8 @@ paths:
         in: query
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Wallet
       - name: limit
         in: query
@@ -1335,7 +1365,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '200':
@@ -1356,7 +1387,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       requestBody:
         required: true
@@ -1383,7 +1415,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       requestBody:
         required: true
@@ -1410,7 +1443,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '204':
@@ -1494,7 +1528,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       - name: tz
         in: query
@@ -1528,7 +1563,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       - name: tz
         in: query
@@ -1568,7 +1604,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '204':
@@ -1586,7 +1623,8 @@ paths:
         in: query
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Counter
       responses:
         '200':
@@ -1631,7 +1669,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '200':
@@ -1652,7 +1691,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       requestBody:
         required: true
@@ -1679,7 +1719,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '204':
@@ -1761,7 +1802,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '200':
@@ -1782,7 +1824,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       requestBody:
         required: true
@@ -1809,7 +1852,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '204':
@@ -1830,7 +1874,8 @@ paths:
         required: false
         schema:
           anyOf:
-          - type: integer
+          - type: string
+            format: uuid
           - type: 'null'
           title: Item
       responses:
@@ -1876,7 +1921,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '200':
@@ -1897,7 +1943,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       requestBody:
         required: true
@@ -1924,7 +1971,8 @@ paths:
         in: path
         required: true
         schema:
-          type: integer
+          type: string
+          format: uuid
           title: Id
       responses:
         '204':
@@ -1945,7 +1993,8 @@ components:
     AttemptRequest:
       properties:
         item:
-          type: integer
+          type: string
+          format: uuid
           title: Item
         outcome:
           type: string
@@ -1987,11 +2036,13 @@ components:
     AttemptResponse:
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
           title: Id
           readOnly: true
         item_id:
-          type: integer
+          type: string
+          format: uuid
           title: Item Id
           readOnly: true
         outcome:
@@ -2092,7 +2143,8 @@ components:
     BibliographyItemResponse:
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
           title: Id
           readOnly: true
         kind:
@@ -2185,7 +2237,8 @@ components:
     CategoryResponse:
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
           title: Id
           readOnly: true
         name:
@@ -2217,11 +2270,13 @@ components:
     CommentAttachmentResponse:
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
           title: Id
           readOnly: true
         comment_id:
-          type: integer
+          type: string
+          format: uuid
           title: Comment Id
           readOnly: true
         file_name:
@@ -2258,7 +2313,8 @@ components:
     CounterEntryRequest:
       properties:
         counter:
-          type: integer
+          type: string
+          format: uuid
           title: Counter
         value:
           type: integer
@@ -2283,11 +2339,13 @@ components:
     CounterEntryResponse:
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
           title: Id
           readOnly: true
         counter_id:
-          type: integer
+          type: string
+          format: uuid
           title: Counter Id
           readOnly: true
         value:
@@ -2327,7 +2385,8 @@ components:
     CounterResponse:
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
           title: Id
           readOnly: true
         name:
@@ -2379,7 +2438,8 @@ components:
           title: Name
         parent_id:
           anyOf:
-          - type: integer
+          - type: string
+            format: uuid
           - type: 'null'
           title: Parent Id
       type: object
@@ -2389,7 +2449,8 @@ components:
     FolderResponse:
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
           title: Id
           readOnly: true
         name:
@@ -2397,7 +2458,8 @@ components:
           title: Name
         parent_id:
           anyOf:
-          - type: integer
+          - type: string
+            format: uuid
           - type: 'null'
           title: Parent Id
         created_at:
@@ -2470,7 +2532,8 @@ components:
           type: integer
           title: Number
         whiteboard_id:
-          type: integer
+          type: string
+          format: uuid
           title: Whiteboard Id
         heading:
           type: string
@@ -2662,7 +2725,8 @@ components:
           title: Name
         parent_id:
           anyOf:
-          - type: integer
+          - type: string
+            format: uuid
           - type: 'null'
           title: Parent Id
       type: object
@@ -2740,7 +2804,8 @@ components:
           title: Description
         project:
           anyOf:
-          - type: integer
+          - type: string
+            format: uuid
           - type: 'null'
           title: Project
         status:
@@ -2759,7 +2824,8 @@ components:
       properties:
         task:
           anyOf:
-          - type: integer
+          - type: string
+            format: uuid
           - type: 'null'
           title: Task
         title:
@@ -2810,12 +2876,14 @@ components:
           title: Description
         category:
           anyOf:
-          - type: integer
+          - type: string
+            format: uuid
           - type: 'null'
           title: Category
         wallet:
           anyOf:
-          - type: integer
+          - type: string
+            format: uuid
           - type: 'null'
           title: Wallet
       type: object
@@ -2889,7 +2957,8 @@ components:
           title: Content
         folder_id:
           anyOf:
-          - type: integer
+          - type: string
+            format: uuid
           - type: 'null'
           title: Folder Id
       type: object
@@ -2929,7 +2998,8 @@ components:
     ProjectResponse:
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
           title: Id
           readOnly: true
         name:
@@ -3008,7 +3078,8 @@ components:
     TaskCommentCreateRequest:
       properties:
         task:
-          type: integer
+          type: string
+          format: uuid
           title: Task
         body:
           type: string
@@ -3022,11 +3093,13 @@ components:
     TaskCommentResponse:
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
           title: Id
           readOnly: true
         task_id:
-          type: integer
+          type: string
+          format: uuid
           title: Task Id
           readOnly: true
         body:
@@ -3064,7 +3137,8 @@ components:
           default: ''
         project:
           anyOf:
-          - type: integer
+          - type: string
+            format: uuid
           - type: 'null'
           title: Project
         status:
@@ -3084,7 +3158,8 @@ components:
     TaskResponse:
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
           title: Id
           readOnly: true
         title:
@@ -3094,7 +3169,8 @@ components:
           type: string
           title: Description
         project_id:
-          type: integer
+          type: string
+          format: uuid
           title: Project Id
           readOnly: true
         status:
@@ -3123,7 +3199,8 @@ components:
       properties:
         task:
           anyOf:
-          - type: integer
+          - type: string
+            format: uuid
           - type: 'null'
           title: Task
         title:
@@ -3147,12 +3224,14 @@ components:
     TimeEntryResponse:
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
           title: Id
           readOnly: true
         task_id:
           anyOf:
-          - type: integer
+          - type: string
+            format: uuid
           - type: 'null'
           title: Task Id
           readOnly: true
@@ -3220,7 +3299,8 @@ components:
       properties:
         task:
           anyOf:
-          - type: integer
+          - type: string
+            format: uuid
           - type: 'null'
           title: Task
         title:
@@ -3279,11 +3359,13 @@ components:
           default: ''
         category:
           anyOf:
-          - type: integer
+          - type: string
+            format: uuid
           - type: 'null'
           title: Category
         wallet:
-          type: integer
+          type: string
+          format: uuid
           title: Wallet
       type: object
       required:
@@ -3295,7 +3377,8 @@ components:
     TransactionResponse:
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
           title: Id
           readOnly: true
         title:
@@ -3313,12 +3396,14 @@ components:
           title: Description
         category_id:
           anyOf:
-          - type: integer
+          - type: string
+            format: uuid
           - type: 'null'
           title: Category Id
           readOnly: true
         wallet_id:
-          type: integer
+          type: string
+          format: uuid
           title: Wallet Id
           readOnly: true
         kind:
@@ -3344,7 +3429,8 @@ components:
     UserResponse:
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
           title: Id
         username:
           type: string
@@ -3419,7 +3505,8 @@ components:
     WalletResponse:
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
           title: Id
           readOnly: true
         name:
@@ -3475,7 +3562,8 @@ components:
           title: Content
         folder_id:
           anyOf:
-          - type: integer
+          - type: string
+            format: uuid
           - type: 'null'
           title: Folder Id
       type: object
@@ -3483,7 +3571,8 @@ components:
     WhiteboardResponse:
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
           title: Id
           readOnly: true
         kind:
@@ -3499,7 +3588,8 @@ components:
           title: Content
         folder_id:
           anyOf:
-          - type: integer
+          - type: string
+            format: uuid
           - type: 'null'
           title: Folder Id
         created_at:
@@ -3524,7 +3614,8 @@ components:
     WhiteboardSearchResult:
       properties:
         id:
-          type: integer
+          type: string
+          format: uuid
           title: Id
         kind:
           type: string
@@ -3534,7 +3625,8 @@ components:
           title: Name
         folder_id:
           anyOf:
-          - type: integer
+          - type: string
+            format: uuid
           - type: 'null'
           title: Folder Id
         created_at:

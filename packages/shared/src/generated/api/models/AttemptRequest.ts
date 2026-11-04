@@ -26,7 +26,7 @@ export interface AttemptRequest {
     /**
      *
      */
-    item: number;
+    item: string;
     /**
      *
      */

@@ -23,7 +23,7 @@ export interface TaskCommentCreateRequest {
     /**
      *
      */
-    task: number;
+    task: string;
     /**
      *
      */
