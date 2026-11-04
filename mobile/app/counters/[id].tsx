@@ -134,12 +134,12 @@ export default function CounterScreen() {
           ListHeaderComponent={
             <View className="gap-1 p-4">
               <Text
-                className="font-utility text-[44px] font-bold text-ink tabular-nums"
+                className="text-center font-utility text-[44px] font-bold text-ink tabular-nums"
                 accessibilityLabel={`Suma: ${counter.total}`}
               >
                 {counter.total}
               </Text>
-              <View className="flex-row items-center gap-2">
+              <View className="flex-row items-center justify-center gap-2">
                 <ColorDot color={counter.color} />
                 <Text className={common.muted}>
                   {entryCountLabel(counter.entryCount)}
