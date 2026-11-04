@@ -24,7 +24,7 @@ The name is historical: the backend was Django until the move to FastAPI + SQLAl
 ├── package.json        npm workspaces root (packages/*, frontend, mobile); one package-lock.json
 ├── deployment/         Dockerfile, compose files, nginx configs, deploy.sh,
 │                       observability/ (Prometheus, Grafana dashboards, Loki, Tempo, Alloy)
-├── docs/               agents/ (workflow docs); adr/ for decision records
+├── docs/               agents/ (workflow docs); adr/ for decision records; research/ for findings
 ├── .scratch/           Issue tracker: specs and tickets as Markdown (see below)
 ├── GLOSSARY.md         Domain terms
 ├── justfile            All common commands (task runner: `just`)
