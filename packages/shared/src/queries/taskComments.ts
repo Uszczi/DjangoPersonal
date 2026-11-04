@@ -4,6 +4,7 @@
  * large file never holds up the text and one failed upload loses nothing else.
  */
 import {
+  type QueryClient,
   queryOptions,
   useMutation,
   useQuery,
@@ -14,6 +15,7 @@ import { api } from "../api";
 import type {
   CommentAttachmentResponse,
   TaskCommentResponse,
+  TaskResponse,
 } from "../generated/api";
 import { taskCommentKeys, taskKeys } from "./keys";
 
@@ -34,6 +36,30 @@ export const taskCommentsQuery = (taskId: number) =>
 
 export function useTaskComments(taskId: number) {
   return useQuery(taskCommentsQuery(taskId));
+}
+
+/**
+ * Moves a Task's comment count by `delta` in every cached task list, so the
+ * lists show a new or deleted comment without fetching them again. The
+ * server's count replaces it on their next refetch.
+ */
+export function shiftCommentCount(
+  queryClient: QueryClient,
+  taskId: number,
+  delta: number,
+) {
+  queryClient.setQueriesData<TaskResponse[]>(
+    { queryKey: taskKeys.all },
+    (tasks) =>
+      tasks?.map((task) =>
+        task.id === taskId
+          ? {
+              ...task,
+              commentCount: Math.max(0, (task.commentCount ?? 0) + delta),
+            }
+          : task,
+      ),
+  );
 }
 
 /** The file's bytes, as uploaded. */
@@ -112,14 +138,15 @@ export function useAddTaskComment(taskId: number) {
       return comment;
     },
     // Reloaded even after a failed upload: the comment and the files that
-    // made it are saved. The task lists show the new comment count.
-    onSettled: () =>
-      Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: taskCommentKeys.task(taskId),
-        }),
-        queryClient.invalidateQueries({ queryKey: taskKeys.all }),
-      ]),
+    // made it are saved, so it counts in the task lists too.
+    onSettled: (_, error) => {
+      if (error === null || error instanceof AttachmentUploadError) {
+        shiftCommentCount(queryClient, taskId, 1);
+      }
+      return queryClient.invalidateQueries({
+        queryKey: taskCommentKeys.task(taskId),
+      });
+    },
   });
 }
 
@@ -176,8 +203,7 @@ export function useDeleteTaskComment() {
         (comments: TaskCommentResponse[] | undefined) =>
           comments?.filter((item) => item.id !== comment.id),
       );
-      // The task lists show the comment count.
-      return queryClient.invalidateQueries({ queryKey: taskKeys.all });
+      shiftCommentCount(queryClient, comment.taskId, -1);
     },
   });
 }
