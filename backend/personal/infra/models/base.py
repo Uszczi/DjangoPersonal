@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import DateTime, MetaData, inspect
+from sqlalchemy import Column, DateTime, MetaData, inspect
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.sql.schema import CallableColumnDefault, ScalarElementColumnDefault
 from sqlalchemy.types import TypeDecorator
@@ -60,7 +60,11 @@ class Base(DeclarativeBase):
         for attribute in inspect(cls).column_attrs:
             if attribute.key in kwargs:
                 continue
-            default = attribute.columns[0].default
+            column = attribute.columns[0]
+            if not isinstance(column, Column):
+                # A computed attribute (a `column_property` over a query) has no default.
+                continue
+            default = column.default
             if isinstance(default, CallableColumnDefault):
                 # SQLAlchemy wraps zero-argument callables to take an execution
                 # context; ours never read it.

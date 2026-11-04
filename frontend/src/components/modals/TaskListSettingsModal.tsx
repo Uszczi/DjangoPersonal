@@ -9,6 +9,12 @@ export function TaskListSettingsModal({ onClose }: { onClose: () => void }) {
   const setShowTimerButton = useTaskListSettingsStore(
     (state) => state.setShowTimerButton,
   );
+  const showCommentCount = useTaskListSettingsStore(
+    (state) => state.showCommentCount,
+  );
+  const setShowCommentCount = useTaskListSettingsStore(
+    (state) => state.setShowCommentCount,
+  );
 
   return (
     <Modal
@@ -25,6 +31,16 @@ export function TaskListSettingsModal({ onClose }: { onClose: () => void }) {
           className="size-4 cursor-pointer accent-signal"
           checked={showTimerButton}
           onChange={(event) => setShowTimerButton(event.target.checked)}
+        />
+      </label>
+      <label className="mt-4 flex cursor-pointer items-center justify-between gap-4 text-[14px] font-medium text-ink">
+        Liczba komentarzy w każdym wierszu
+        <input
+          type="checkbox"
+          role="switch"
+          className="size-4 cursor-pointer accent-signal"
+          checked={showCommentCount}
+          onChange={(event) => setShowCommentCount(event.target.checked)}
         />
       </label>
       <p className="m-0 mt-3 text-[12px] text-muted">

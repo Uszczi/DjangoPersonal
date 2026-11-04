@@ -3106,6 +3106,11 @@ components:
           title: Position
           default: 0
           readOnly: true
+        comment_count:
+          type: integer
+          title: Comment Count
+          default: 0
+          readOnly: true
       type: object
       required:
       - id

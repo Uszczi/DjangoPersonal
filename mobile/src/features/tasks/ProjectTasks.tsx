@@ -27,6 +27,7 @@ import { useCollapsedStatuses } from "@personal/shared/useCollapsedStatuses";
 
 import { Fab } from "@/ui/Fab";
 import { useTaskListSettingsStore } from "@personal/shared/stores/taskListSettings";
+import { commentCountLabel } from "@personal/shared/queries/taskComments";
 import { shortTaskTitle } from "@personal/shared/taskTitle";
 import { useTheme } from "@/theme";
 import { common } from "@/ui/classes";
@@ -129,6 +130,9 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
   );
   const showDragHandle = useTaskListSettingsStore(
     (state) => state.showDragHandle,
+  );
+  const showCommentCount = useTaskListSettingsStore(
+    (state) => state.showCommentCount,
   );
   const [actionError, setActionError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -292,6 +296,7 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
                   showTimerButton ? () => void startTimer(task) : undefined
                 }
                 showDragHandle={showDragHandle}
+                showCommentCount={showCommentCount}
               />
             );
           }}
@@ -321,6 +326,7 @@ function TaskRow({
   onToggle,
   onStartTimer,
   showDragHandle,
+  showCommentCount,
 }: {
   task: TaskResponse;
   isDone: boolean;
@@ -329,6 +335,7 @@ function TaskRow({
   /** Absent when the timer button is switched off in the settings. */
   onStartTimer?: () => void;
   showDragHandle: boolean;
+  showCommentCount: boolean;
 }) {
   const { colors } = useTheme();
   const drag = useReorderableDrag();
@@ -372,6 +379,18 @@ function TaskRow({
           </Text>
         )}
       </View>
+      {showCommentCount && (task.commentCount ?? 0) > 0 && (
+        <View
+          accessible
+          accessibilityLabel={commentCountLabel(task.commentCount ?? 0)}
+          className="flex-row items-center gap-1"
+        >
+          <Ionicons name="chatbubble-outline" size={14} color={colors.muted} />
+          <Text className="font-utility text-xs text-muted tabular-nums">
+            {task.commentCount}
+          </Text>
+        </View>
+      )}
       {!isDone && onStartTimer && (
         <Pressable
           accessibilityRole="button"

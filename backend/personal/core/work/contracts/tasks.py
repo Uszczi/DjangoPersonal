@@ -64,3 +64,4 @@ class TaskResponse(BaseModel):
     project_id: int = Field(..., json_schema_extra={'readOnly': True})
     status: str = Field(..., json_schema_extra={'readOnly': True})
     position: int = Field(default=0, json_schema_extra={'readOnly': True})
+    comment_count: int = Field(default=0, json_schema_extra={'readOnly': True})

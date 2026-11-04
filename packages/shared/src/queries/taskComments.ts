@@ -15,7 +15,7 @@ import type {
   CommentAttachmentResponse,
   TaskCommentResponse,
 } from "../generated/api";
-import { taskCommentKeys } from "./keys";
+import { taskCommentKeys, taskKeys } from "./keys";
 
 /**
  * A file to attach. On the web a `File`; React Native's `FormData` takes a
@@ -39,6 +39,17 @@ export function useTaskComments(taskId: number) {
 /** The file's bytes, as uploaded. */
 export function downloadAttachment(attachment: CommentAttachmentResponse) {
   return api.commentAttachmentsRetrieve({ id: attachment.id });
+}
+
+/** Polish plural for a Task's comment count: 1 komentarz, 2 komentarze, 5 komentarzy. */
+export function commentCountLabel(count: number): string {
+  if (count === 1) return "1 komentarz";
+  const lastDigit = count % 10;
+  const lastTwo = count % 100;
+  if (lastDigit >= 2 && lastDigit <= 4 && (lastTwo < 12 || lastTwo > 14)) {
+    return `${count} komentarze`;
+  }
+  return `${count} komentarzy`;
 }
 
 /** "2,4 MB"-style size for a file listing. */
@@ -101,11 +112,14 @@ export function useAddTaskComment(taskId: number) {
       return comment;
     },
     // Reloaded even after a failed upload: the comment and the files that
-    // made it are saved.
+    // made it are saved. The task lists show the new comment count.
     onSettled: () =>
-      queryClient.invalidateQueries({
-        queryKey: taskCommentKeys.task(taskId),
-      }),
+      Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: taskCommentKeys.task(taskId),
+        }),
+        queryClient.invalidateQueries({ queryKey: taskKeys.all }),
+      ]),
   });
 }
 
@@ -156,12 +170,15 @@ export function useDeleteTaskComment() {
   return useMutation({
     mutationFn: (comment: TaskCommentResponse) =>
       api.taskCommentsDestroy({ id: comment.id }),
-    onSuccess: (_, comment) =>
+    onSuccess: (_, comment) => {
       queryClient.setQueryData(
         taskCommentKeys.task(comment.taskId),
         (comments: TaskCommentResponse[] | undefined) =>
           comments?.filter((item) => item.id !== comment.id),
-      ),
+      );
+      // The task lists show the comment count.
+      return queryClient.invalidateQueries({ queryKey: taskKeys.all });
+    },
   });
 }
 

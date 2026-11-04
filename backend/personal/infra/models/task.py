@@ -1,5 +1,5 @@
-from sqlalchemy import ForeignKey, String, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey, String, Text, column, func, select, table
+from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from personal.infra.rules import (
     DEFAULT_PROJECT_STATUSES,
@@ -9,6 +9,9 @@ from personal.infra.rules import (
 
 from .base import Base
 from .project import Project
+
+# The comments table by name only: `TaskComment` imports this module.
+_comments = table('task_comments', column('task_id'))
 
 
 class Task(Base):
@@ -31,6 +34,15 @@ class Task(Base):
     )
     #: Order among the tasks of the same project and status.
     position: Mapped[int] = mapped_column(default=0)
+
+    #: How many comments the task has, counted in the query that loads it.
+    comment_count: Mapped[int] = column_property(
+        select(func.count())
+        .select_from(_comments)
+        .where(_comments.c.task_id == id)
+        .correlate_except(_comments)
+        .scalar_subquery()
+    )
 
     project: Mapped[Project] = relationship()
 

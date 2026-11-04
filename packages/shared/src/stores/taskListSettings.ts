@@ -15,11 +15,14 @@ type TaskListSettings = {
    * press on the row still drags it).
    */
   showDragHandle: boolean;
+  /** Whether a Task's row shows how many comments it has. */
+  showCommentCount: boolean;
 };
 
 type TaskListSettingsState = TaskListSettings & {
   setShowTimerButton: (showTimerButton: boolean) => void;
   setShowDragHandle: (showDragHandle: boolean) => void;
+  setShowCommentCount: (showCommentCount: boolean) => void;
 };
 
 /** The saved settings that are still booleans; anything else keeps its default. */
@@ -34,6 +37,9 @@ function savedSettings(persisted: unknown): Partial<TaskListSettings> {
   if (typeof saved.showDragHandle === "boolean") {
     settings.showDragHandle = saved.showDragHandle;
   }
+  if (typeof saved.showCommentCount === "boolean") {
+    settings.showCommentCount = saved.showCommentCount;
+  }
   return settings;
 }
 
@@ -42,8 +48,10 @@ export const useTaskListSettingsStore = create<TaskListSettingsState>()(
     (set) => ({
       showTimerButton: true,
       showDragHandle: true,
+      showCommentCount: true,
       setShowTimerButton: (showTimerButton) => set({ showTimerButton }),
       setShowDragHandle: (showDragHandle) => set({ showDragHandle }),
+      setShowCommentCount: (showCommentCount) => set({ showCommentCount }),
     }),
     {
       name: "taskListSettings",
@@ -51,6 +59,7 @@ export const useTaskListSettingsStore = create<TaskListSettingsState>()(
       partialize: (state): TaskListSettings => ({
         showTimerButton: state.showTimerButton,
         showDragHandle: state.showDragHandle,
+        showCommentCount: state.showCommentCount,
       }),
       merge: (persisted, current) => ({
         ...current,

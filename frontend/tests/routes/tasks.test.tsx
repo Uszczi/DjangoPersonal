@@ -478,6 +478,51 @@ describe("Projects", () => {
     ).toEqual(["Open note", "Completed note"]);
   });
 
+  test("a row shows its comment count until the list settings hide it", async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse([inbox]))
+      .mockResolvedValueOnce(
+        jsonResponse([
+          {
+            id: 1,
+            title: "Discussed",
+            description: "",
+            project_id: 1,
+            status: "Todo",
+            comment_count: 2,
+          },
+          {
+            id: 2,
+            title: "Quiet",
+            description: "",
+            project_id: 1,
+            status: "Todo",
+            comment_count: 0,
+          },
+        ]),
+      );
+    const user = userEvent.setup();
+
+    renderApp("/tasks");
+    expect(await screen.findByLabelText("2 komentarze")).toBeInTheDocument();
+    expect(screen.getAllByLabelText(/komentarz/)).toHaveLength(1);
+
+    await user.click(
+      screen.getByRole("button", { name: "Ustawienia listy zadań" }),
+    );
+    const dialog = await screen.findByRole("dialog", {
+      name: "Ustawienia listy zadań",
+    });
+    await user.click(
+      within(dialog).getByRole("switch", {
+        name: "Liczba komentarzy w każdym wierszu",
+      }),
+    );
+    await user.click(within(dialog).getByRole("button", { name: "Gotowe" }));
+
+    expect(screen.queryByLabelText("2 komentarze")).not.toBeInTheDocument();
+  });
+
   test("the task list settings hide the timer button on every row, remembered on this device", async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([inbox]))
@@ -518,7 +563,11 @@ describe("Projects", () => {
     ).not.toBeInTheDocument();
     expect(
       JSON.parse(window.localStorage.getItem("taskListSettings") ?? "{}").state,
-    ).toEqual({ showTimerButton: false, showDragHandle: true });
+    ).toEqual({
+      showTimerButton: false,
+      showDragHandle: true,
+      showCommentCount: true,
+    });
   });
 
   test("user can create a task in the selected project", async () => {

@@ -19,6 +19,12 @@ export function TaskListSettingsSheet({ onClose }: { onClose: () => void }) {
   const setShowDragHandle = useTaskListSettingsStore(
     (state) => state.setShowDragHandle,
   );
+  const showCommentCount = useTaskListSettingsStore(
+    (state) => state.showCommentCount,
+  );
+  const setShowCommentCount = useTaskListSettingsStore(
+    (state) => state.setShowCommentCount,
+  );
 
   return (
     <Sheet title="Ustawienia listy zadań" onClose={onClose}>
@@ -30,6 +36,17 @@ export function TaskListSettingsSheet({ onClose }: { onClose: () => void }) {
           accessibilityLabel="Przycisk timera w każdym wierszu"
           value={showTimerButton}
           onValueChange={setShowTimerButton}
+          trackColor={{ true: colors.signal, false: colors.controlBorder }}
+        />
+      </SheetRow>
+      <SheetRow>
+        <Text className="flex-1 text-[15px] font-medium text-ink">
+          Liczba komentarzy w każdym wierszu
+        </Text>
+        <Switch
+          accessibilityLabel="Liczba komentarzy w każdym wierszu"
+          value={showCommentCount}
+          onValueChange={setShowCommentCount}
           trackColor={{ true: colors.signal, false: colors.controlBorder }}
         />
       </SheetRow>
