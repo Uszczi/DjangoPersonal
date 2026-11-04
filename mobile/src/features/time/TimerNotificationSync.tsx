@@ -9,21 +9,19 @@ import { useAuthStore } from "@personal/shared/stores/auth";
 import { shortTaskTitle } from "@personal/shared/taskTitle";
 import { formatClock } from "@personal/shared/timeFormat";
 
+import {
+  canNotify,
+  END_CHANNEL_ID,
+  ONGOING_CHANNEL_ID,
+  useNotificationPermissionStore,
+  VIBRATION,
+} from "./notificationPermission";
 import { useTimerNotificationSettingsStore } from "./timerNotificationSettings";
 
 /** One identifier, so a new limit replaces the old notification. */
 const NOTIFICATION_ID = "timer-limit";
 /** The notification that stays while a timer runs. */
 const ONGOING_ID = "timer-ongoing";
-/**
- * Android fixes a channel's sound and vibration when it is created, so a
- * change to them needs a new id; the old ones are deleted.
- */
-const CHANNEL_ID = "timer-end";
-const OLD_CHANNEL_IDS = ["timer", "timer-alarm"];
-/** A quiet channel: the running timer sits in the shade, no sound or banner. */
-const ONGOING_CHANNEL_ID = "timer-running";
-const VIBRATION = [0, 500, 250, 500, 250, 500];
 
 // Show the notification even when the app is open; the running timer's
 // one only in the list, so it does not pop up over the app.
@@ -38,36 +36,6 @@ Notifications.setNotificationHandler({
     };
   },
 });
-
-/** Asks once; Android 13+ needs the channel before it shows the prompt. */
-async function canNotify(): Promise<boolean> {
-  if (Platform.OS === "android") {
-    await Promise.all(
-      OLD_CHANNEL_IDS.map((id) =>
-        Notifications.deleteNotificationChannelAsync(id),
-      ),
-    );
-    // The notification stream follows the ringer: sound normally, only the
-    // vibration in vibrate mode.
-    await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
-      name: "Koniec timera",
-      importance: Notifications.AndroidImportance.MAX,
-      enableVibrate: true,
-      vibrationPattern: VIBRATION,
-    });
-    await Notifications.setNotificationChannelAsync(ONGOING_CHANNEL_ID, {
-      name: "Aktywny timer",
-      importance: Notifications.AndroidImportance.LOW,
-      sound: null,
-      enableVibrate: false,
-      showBadge: false,
-    });
-  }
-  const current = await Notifications.getPermissionsAsync();
-  if (current.granted) return true;
-  if (!current.canAskAgain) return false;
-  return (await Notifications.requestPermissionsAsync()).granted;
-}
 
 /**
  * Keeps the phone's notifications in step with the timer's server state:
@@ -106,6 +74,8 @@ export function TimerNotificationSync(): null {
   // Wall-clock times as the timer card shows them.
   const startLabel = entry ? formatClock(entry.start) : null;
   const endLabel = entry?.plannedEnd ? formatClock(entry.plannedEnd) : null;
+  // Granting the permission on the Konto screen shows the notification at once.
+  const granted = useNotificationPermissionStore((state) => state.granted);
   const ongoing = showOngoing && entryId != null;
 
   useEffect(() => {
@@ -127,7 +97,7 @@ export function TimerNotificationSync(): null {
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DATE,
           date: fireAt,
-          channelId: CHANNEL_ID,
+          channelId: END_CHANNEL_ID,
         },
       });
     })().catch(() => {
@@ -136,7 +106,7 @@ export function TimerNotificationSync(): null {
     return () => {
       cancelled = true;
     };
-  }, [fireAt, entryId, title]);
+  }, [fireAt, entryId, title, granted]);
 
   useEffect(() => {
     if (Platform.OS === "web") return;
@@ -169,7 +139,7 @@ export function TimerNotificationSync(): null {
     return () => {
       cancelled = true;
     };
-  }, [ongoing, entryId, title, startLabel, endLabel]);
+  }, [ongoing, entryId, title, startLabel, endLabel, granted]);
 
   return null;
 }
