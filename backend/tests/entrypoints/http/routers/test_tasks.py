@@ -256,3 +256,15 @@ def test_task_list_can_span_all_projects(api_client: Any, post_json: Any) -> Non
     assert all(
         task['project_id'] != second_project['id'] for task in inbox_only.json()
     )
+
+
+def test_tasks_carry_their_comment_count(post_json: Any, api_client: Any) -> None:
+    created = post_json('/api/v1/tasks/', {'title': 'Discuss the plan'})
+    task_id = created.json()['id']
+    assert created.json()['comment_count'] == 0
+
+    for body in ('First', 'Second'):
+        post_json('/api/v1/task-comments/', {'task': task_id, 'body': body})
+
+    listed = api_client.get('/api/v1/tasks/').json()
+    assert [task['comment_count'] for task in listed if task['id'] == task_id] == [2]

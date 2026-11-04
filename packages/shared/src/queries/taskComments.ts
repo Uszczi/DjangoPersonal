@@ -4,6 +4,7 @@
  * large file never holds up the text and one failed upload loses nothing else.
  */
 import {
+  type QueryClient,
   queryOptions,
   useMutation,
   useQuery,
@@ -14,8 +15,9 @@ import { api } from "../api";
 import type {
   CommentAttachmentResponse,
   TaskCommentResponse,
+  TaskResponse,
 } from "../generated/api";
-import { taskCommentKeys } from "./keys";
+import { taskCommentKeys, taskKeys } from "./keys";
 
 /**
  * A file to attach. On the web a `File`; React Native's `FormData` takes a
@@ -36,9 +38,44 @@ export function useTaskComments(taskId: number) {
   return useQuery(taskCommentsQuery(taskId));
 }
 
+/**
+ * Moves a Task's comment count by `delta` in every cached task list, so the
+ * lists show a new or deleted comment without fetching them again. The
+ * server's count replaces it on their next refetch.
+ */
+export function shiftCommentCount(
+  queryClient: QueryClient,
+  taskId: number,
+  delta: number,
+) {
+  queryClient.setQueriesData<TaskResponse[]>(
+    { queryKey: taskKeys.all },
+    (tasks) =>
+      tasks?.map((task) =>
+        task.id === taskId
+          ? {
+              ...task,
+              commentCount: Math.max(0, (task.commentCount ?? 0) + delta),
+            }
+          : task,
+      ),
+  );
+}
+
 /** The file's bytes, as uploaded. */
 export function downloadAttachment(attachment: CommentAttachmentResponse) {
   return api.commentAttachmentsRetrieve({ id: attachment.id });
+}
+
+/** Polish plural for a Task's comment count: 1 komentarz, 2 komentarze, 5 komentarzy. */
+export function commentCountLabel(count: number): string {
+  if (count === 1) return "1 komentarz";
+  const lastDigit = count % 10;
+  const lastTwo = count % 100;
+  if (lastDigit >= 2 && lastDigit <= 4 && (lastTwo < 12 || lastTwo > 14)) {
+    return `${count} komentarze`;
+  }
+  return `${count} komentarzy`;
 }
 
 /** "2,4 MB"-style size for a file listing. */
@@ -101,11 +138,15 @@ export function useAddTaskComment(taskId: number) {
       return comment;
     },
     // Reloaded even after a failed upload: the comment and the files that
-    // made it are saved.
-    onSettled: () =>
-      queryClient.invalidateQueries({
+    // made it are saved, so it counts in the task lists too.
+    onSettled: (_, error) => {
+      if (error === null || error instanceof AttachmentUploadError) {
+        shiftCommentCount(queryClient, taskId, 1);
+      }
+      return queryClient.invalidateQueries({
         queryKey: taskCommentKeys.task(taskId),
-      }),
+      });
+    },
   });
 }
 
@@ -156,12 +197,14 @@ export function useDeleteTaskComment() {
   return useMutation({
     mutationFn: (comment: TaskCommentResponse) =>
       api.taskCommentsDestroy({ id: comment.id }),
-    onSuccess: (_, comment) =>
+    onSuccess: (_, comment) => {
       queryClient.setQueryData(
         taskCommentKeys.task(comment.taskId),
         (comments: TaskCommentResponse[] | undefined) =>
           comments?.filter((item) => item.id !== comment.id),
-      ),
+      );
+      shiftCommentCount(queryClient, comment.taskId, -1);
+    },
   });
 }
 

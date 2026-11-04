@@ -1,6 +1,7 @@
 from pydantic import Field, field_validator
 
 from personal.core.shared.base import BaseModel
+from personal.infra.rules import MAX_TASK_TITLE_LENGTH
 
 
 class _TaskPayload(BaseModel):
@@ -41,7 +42,7 @@ class _TaskPayload(BaseModel):
 
 
 class TaskCreateRequest(_TaskPayload):
-    title: str = Field(min_length=1, max_length=200)
+    title: str = Field(min_length=1, max_length=MAX_TASK_TITLE_LENGTH)
     description: str = ''
     project: int | None = None
     status: str | None = None
@@ -49,7 +50,7 @@ class TaskCreateRequest(_TaskPayload):
 
 
 class PatchedTaskUpdateRequest(_TaskPayload):
-    title: str | None = Field(default=None, min_length=1, max_length=200)
+    title: str | None = Field(default=None, min_length=1, max_length=MAX_TASK_TITLE_LENGTH)
     description: str | None = None
     project: int | None = None
     status: str | None = None
@@ -63,3 +64,4 @@ class TaskResponse(BaseModel):
     project_id: int = Field(..., json_schema_extra={'readOnly': True})
     status: str = Field(..., json_schema_extra={'readOnly': True})
     position: int = Field(default=0, json_schema_extra={'readOnly': True})
+    comment_count: int = Field(default=0, json_schema_extra={'readOnly': True})

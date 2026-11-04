@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from personal.infra.models import (
     Project,
     Task,
+    TaskComment,
     User,
 )
 from personal.infra.repo import (
@@ -122,3 +123,19 @@ def test_next_position_is_zero_for_an_empty_project(session: Session, user: User
     work = _project(session, user, 'Work', 0)
 
     assert TaskRepository(session).next_position(project=work, status='Todo') == 0
+
+
+def test_task_counts_its_comments(session: Session, user: User) -> None:
+    tasks = TaskRepository(session)
+    inbox = ProjectRepository(session).get_inbox(user=user)
+    commented = tasks.create(title='c', description='', project=inbox, status='Todo')
+    quiet = tasks.create(title='q', description='', project=inbox, status='Todo')
+    session.add_all(
+        [TaskComment(user_id=user.id, task_id=commented.id, body=str(n)) for n in range(2)]
+    )
+    session.flush()
+    session.expire_all()
+
+    counts = {task.id: task.comment_count for task in tasks.list_inbox(user=user)}
+
+    assert counts == {commented.id: 2, quiet.id: 0}

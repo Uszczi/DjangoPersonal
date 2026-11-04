@@ -8,6 +8,7 @@ import type { TimeEntryResponse } from "@personal/shared/generated/api";
 import { TIMER_LOAD_ERROR } from "@personal/shared/loadErrors";
 import { defaultProject, useProjects } from "@personal/shared/queries/projects";
 import { useAllTasks } from "@personal/shared/queries/tasks";
+import { shortTaskTitle } from "@personal/shared/taskTitle";
 import {
   useStartTimer,
   useTimeEntries,
@@ -72,7 +73,9 @@ function TimerPage() {
   const runningEntry =
     runningEntryRaw && runningEntryRaw.end == null ? runningEntryRaw : null;
   const stoppedEntries = entries.filter((entry) => entry.end != null);
-  const taskTitles = new Map(tasks.map((task) => [task.id, task.title]));
+  const taskTitles = new Map(
+    tasks.map((task) => [task.id, shortTaskTitle(task.title)]),
+  );
   const titleOf = (entry: TimeEntryResponse) => entryTitle(entry, taskTitles);
   const defaultProjectId = String(
     project ?? defaultProject(projects)?.id ?? "",

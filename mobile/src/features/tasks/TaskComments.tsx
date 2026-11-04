@@ -1,15 +1,23 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { File } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
-import { Image, Modal, Pressable, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  Modal,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
-import { refreshAccessToken } from "@personal/shared/api";
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import type {
   CommentAttachmentResponse,
   TaskCommentResponse,
   TaskResponse,
 } from "@personal/shared/generated/api";
-import { apiBaseUrl } from "@personal/shared/platform";
 import {
   AttachmentUploadError,
   MAX_ATTACHMENT_BYTES,
@@ -22,8 +30,9 @@ import {
   useUpdateTaskComment,
   type AttachmentUpload,
 } from "@personal/shared/queries/taskComments";
-import { useAuthStore } from "@personal/shared/stores/auth";
 
+import { useAttachmentUri } from "@/features/tasks/attachmentCache";
+import { useTheme } from "@/theme";
 import { Button } from "@/ui/Button";
 import { confirmDestructive } from "@/ui/confirm";
 import { common, form } from "@/ui/classes";
@@ -34,7 +43,7 @@ const COMMENT_INPUT =
 const FORM_ACTIONS = "mt-2.5 flex-row gap-2";
 const THUMBNAILS = "mt-1 flex-row flex-wrap gap-2";
 
-/** A picked photo waiting to be sent: React Native uploads it from its file URI. */
+/** A picked photo waiting to be sent, read from its file URI on upload. */
 type PendingPhoto = { uri: string; name: string; type: string };
 
 function pendingPhoto(asset: ImagePicker.ImagePickerAsset): PendingPhoto {
@@ -92,30 +101,22 @@ async function takePhoto(): Promise<Picked> {
     : checkSizes(result.assets);
 }
 
-/** React Native's FormData sends a `{ uri, name, type }` file as is. */
-function asUploads(photos: PendingPhoto[]): AttachmentUpload[] {
-  return photos.map((photo) => photo as unknown as AttachmentUpload);
-}
-
 /**
- * The picture straight from the API: the native image loader sends the
- * access token itself. A token that expired meanwhile fails the load once;
- * the token is then refreshed and the new one reloads the picture.
+ * The photos as FormData parts. Expo replaces the global `fetch` with
+ * `expo/fetch`, which refuses React Native's `{ uri, name, type }` parts
+ * ("Unsupported FormDataPart implementation") but sends any part that has
+ * `bytes()`, with its `name` and `type` as the part's headers. The bytes are
+ * read from the picked file when the request is sent.
  */
-function useAttachmentSource(attachment: CommentAttachmentResponse) {
-  const access = useAuthStore((state) => state.access);
-  const [retried, setRetried] = useState(false);
-  return {
-    source: {
-      uri: `${apiBaseUrl()}/api/v1/comment-attachments/${attachment.id}/`,
-      headers: access ? { Authorization: `Bearer ${access}` } : undefined,
-    },
-    onError: () => {
-      if (retried) return;
-      setRetried(true);
-      void refreshAccessToken();
-    },
-  };
+function asUploads(photos: PendingPhoto[]): AttachmentUpload[] {
+  return photos.map(
+    ({ uri, name, type }) =>
+      ({
+        name,
+        type,
+        bytes: () => new File(uri).bytes(),
+      }) as unknown as AttachmentUpload,
+  );
 }
 
 function AttachmentImage({
@@ -125,14 +126,31 @@ function AttachmentImage({
   attachment: CommentAttachmentResponse;
   onOpen: () => void;
 }) {
-  const { source, onError } = useAttachmentSource(attachment);
+  const { colors } = useTheme();
+  const { uri, failed } = useAttachmentUri(attachment.id);
   return (
     <Pressable
       accessibilityRole="imagebutton"
       accessibilityLabel={`Powiększ zdjęcie: ${attachment.fileName}`}
+      disabled={uri === null}
       onPress={onOpen}
     >
-      <Image source={source} onError={onError} className={THUMBNAIL} />
+      {uri !== null ? (
+        <Image source={{ uri }} className={THUMBNAIL} />
+      ) : (
+        <View className={`${THUMBNAIL} items-center justify-center`}>
+          {failed ? (
+            <Ionicons
+              name="image-outline"
+              size={22}
+              color={colors.muted}
+              accessibilityLabel="Nie udało się wczytać zdjęcia"
+            />
+          ) : (
+            <ActivityIndicator colorClassName="accent-muted" />
+          )}
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -144,7 +162,7 @@ function FullScreenImage({
   attachment: CommentAttachmentResponse;
   onClose: () => void;
 }) {
-  const { source, onError } = useAttachmentSource(attachment);
+  const { uri } = useAttachmentUri(attachment.id);
   return (
     <Modal visible animationType="fade" onRequestClose={onClose}>
       <Pressable
@@ -152,12 +170,9 @@ function FullScreenImage({
         onPress={onClose}
         accessibilityLabel="Zamknij zdjęcie"
       >
-        <Image
-          source={source}
-          onError={onError}
-          className="size-full"
-          resizeMode="contain"
-        />
+        {uri !== null && (
+          <Image source={{ uri }} className="size-full" resizeMode="contain" />
+        )}
       </Pressable>
     </Modal>
   );

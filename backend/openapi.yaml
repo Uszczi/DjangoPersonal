@@ -2729,7 +2729,7 @@ components:
         title:
           anyOf:
           - type: string
-            maxLength: 200
+            maxLength: 1000
             minLength: 1
           - type: 'null'
           title: Title
@@ -3055,7 +3055,7 @@ components:
       properties:
         title:
           type: string
-          maxLength: 200
+          maxLength: 1000
           minLength: 1
           title: Title
         description:
@@ -3104,6 +3104,11 @@ components:
         position:
           type: integer
           title: Position
+          default: 0
+          readOnly: true
+        comment_count:
+          type: integer
+          title: Comment Count
           default: 0
           readOnly: true
       type: object

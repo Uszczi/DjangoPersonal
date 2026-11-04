@@ -1,5 +1,6 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { MessageSquare } from "lucide-react";
 
 import {
   DragHandle,
@@ -11,6 +12,8 @@ import {
 } from "@/design-system";
 import type { TaskResponse } from "@personal/shared/generated/api";
 import { useTaskListSettingsStore } from "@personal/shared/stores/taskListSettings";
+import { commentCountLabel } from "@personal/shared/queries/taskComments";
+import { shortTaskTitle } from "@personal/shared/taskTitle";
 
 /** One Task in its status list: drag handle, done checkbox, title (opens the editor), timer start (unless turned off in the list's settings). */
 export function SortableTaskRow({
@@ -37,6 +40,10 @@ export function SortableTaskRow({
   const showTimerButton = useTaskListSettingsStore(
     (state) => state.showTimerButton,
   );
+  const showCommentCount = useTaskListSettingsStore(
+    (state) => state.showCommentCount,
+  );
+  const commentCount = task.commentCount ?? 0;
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -72,7 +79,7 @@ export function SortableTaskRow({
         >
           <div className="min-w-0">
             <ListRowTitle className={isCompleted ? "line-through" : ""}>
-              {task.title}
+              {shortTaskTitle(task.title)}
             </ListRowTitle>
             {task.description && (
               <ListRowSubtitle>{task.description}</ListRowSubtitle>
@@ -81,6 +88,16 @@ export function SortableTaskRow({
         </ListRowButton>
       </>
       <>
+        {showCommentCount && commentCount > 0 && (
+          <span
+            className="mr-1 inline-flex shrink-0 items-center gap-1 text-[12px] text-muted tabular-nums"
+            title={commentCountLabel(commentCount)}
+            aria-label={commentCountLabel(commentCount)}
+          >
+            <MessageSquare size={14} aria-hidden="true" />
+            {commentCount}
+          </span>
+        )}
         {showTimerButton && (
           <IconButton
             className="text-[14px] hover:text-ink"

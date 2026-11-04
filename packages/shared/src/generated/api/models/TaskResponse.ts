@@ -44,6 +44,10 @@ export interface TaskResponse {
      *
      */
     readonly position?: number;
+    /**
+     *
+     */
+    readonly commentCount?: number;
 }
 
 /**
@@ -74,6 +78,7 @@ export function TaskResponseFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'projectId': json['project_id'],
         'status': json['status'],
         'position': json['position'] == null ? undefined : json['position'],
+        'commentCount': json['comment_count'] == null ? undefined : json['comment_count'],
     };
 }
 
@@ -81,7 +86,7 @@ export function TaskResponseToJSON(json: any): TaskResponse {
     return TaskResponseToJSONTyped(json, false);
 }
 
-export function TaskResponseToJSONTyped(value?: Omit<TaskResponse, 'id'|'projectId'|'status'|'position'> | null, ignoreDiscriminator: boolean = false): any {
+export function TaskResponseToJSONTyped(value?: Omit<TaskResponse, 'id'|'projectId'|'status'|'position'|'commentCount'> | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

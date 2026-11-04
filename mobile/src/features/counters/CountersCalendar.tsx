@@ -21,6 +21,7 @@ import { useEveryCounterEntries } from "@personal/shared/queries/counters";
 import type { CounterCalendarMode } from "@personal/shared/stores/counterView";
 
 import { useTheme } from "@/theme";
+import { MonthSwipe } from "@/ui/MonthSwipe";
 import { NamedIcon } from "@/ui/NamedIcon";
 
 const dayName = new Intl.DateTimeFormat("pl-PL", {
@@ -58,54 +59,60 @@ export function CountersCalendar({
   const todayDay = monthKeyOf(today) === month ? today.getDate() : null;
 
   return (
-    <View accessibilityLabel="Kalendarz liczników" className="pt-2 pb-4">
-      <View className="mb-2 flex-row items-center">
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Poprzedni miesiąc"
-          hitSlop={8}
-          onPress={() => setMonth((shown) => shiftMonth(shown, -1))}
-          className="px-3 py-2 active:opacity-60"
-        >
-          <NamedIcon
-            name="chevron-left"
-            fallback="chevron-left"
-            size={18}
-            color={colors.inkSoft}
+    // The day rows of the matrix scroll sideways, so only the grid swipes.
+    <MonthSwipe
+      enabled={mode === "grid"}
+      onShift={(delta) => setMonth((shown) => shiftMonth(shown, delta))}
+    >
+      <View accessibilityLabel="Kalendarz liczników" className="pt-2 pb-4">
+        <View className="mb-2 flex-row items-center">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Poprzedni miesiąc"
+            hitSlop={8}
+            onPress={() => setMonth((shown) => shiftMonth(shown, -1))}
+            className="px-3 py-2 active:opacity-60"
+          >
+            <NamedIcon
+              name="chevron-left"
+              fallback="chevron-left"
+              size={18}
+              color={colors.inkSoft}
+            />
+          </Pressable>
+          <Text
+            accessibilityLiveRegion="polite"
+            className="flex-1 text-center text-[15px] font-semibold text-ink"
+          >
+            {monthLabel(month)}
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Następny miesiąc"
+            hitSlop={8}
+            onPress={() => setMonth((shown) => shiftMonth(shown, 1))}
+            className="px-3 py-2 active:opacity-60"
+          >
+            <NamedIcon
+              name="chevron-right"
+              fallback="chevron-right"
+              size={18}
+              color={colors.inkSoft}
+            />
+          </Pressable>
+        </View>
+        {mode === "grid" ? (
+          <MonthGrid
+            key={month}
+            months={months}
+            month={month}
+            todayDay={todayDay}
           />
-        </Pressable>
-        <Text
-          accessibilityLiveRegion="polite"
-          className="flex-1 text-center text-[15px] font-semibold text-ink"
-        >
-          {monthLabel(month)}
-        </Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Następny miesiąc"
-          hitSlop={8}
-          onPress={() => setMonth((shown) => shiftMonth(shown, 1))}
-          className="px-3 py-2 active:opacity-60"
-        >
-          <NamedIcon
-            name="chevron-right"
-            fallback="chevron-right"
-            size={18}
-            color={colors.inkSoft}
-          />
-        </Pressable>
+        ) : (
+          <MonthMatrix months={months} month={month} todayDay={todayDay} />
+        )}
       </View>
-      {mode === "grid" ? (
-        <MonthGrid
-          key={month}
-          months={months}
-          month={month}
-          todayDay={todayDay}
-        />
-      ) : (
-        <MonthMatrix months={months} month={month} todayDay={todayDay} />
-      )}
-    </View>
+    </MonthSwipe>
   );
 }
 

@@ -27,6 +27,8 @@ import { useCollapsedStatuses } from "@personal/shared/useCollapsedStatuses";
 
 import { Fab } from "@/ui/Fab";
 import { useTaskListSettingsStore } from "@personal/shared/stores/taskListSettings";
+import { commentCountLabel } from "@personal/shared/queries/taskComments";
+import { shortTaskTitle } from "@personal/shared/taskTitle";
 import { useTheme } from "@/theme";
 import { common } from "@/ui/classes";
 
@@ -125,6 +127,12 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
   const startTaskTimer = useStartTimer();
   const showTimerButton = useTaskListSettingsStore(
     (state) => state.showTimerButton,
+  );
+  const showDragHandle = useTaskListSettingsStore(
+    (state) => state.showDragHandle,
+  );
+  const showCommentCount = useTaskListSettingsStore(
+    (state) => state.showCommentCount,
   );
   const [actionError, setActionError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -287,6 +295,8 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
                 onStartTimer={
                   showTimerButton ? () => void startTimer(task) : undefined
                 }
+                showDragHandle={showDragHandle}
+                showCommentCount={showCommentCount}
               />
             );
           }}
@@ -306,7 +316,7 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
 
 /**
  * One Task in a reorderable section. A long press anywhere on the row, or a
- * shorter one on the grip, picks it up; taps still open it, tick it off or
+ * shorter one on the grip (unless hidden in the settings), picks it up; taps still open it, tick it off or
  * start its timer, and a plain swipe scrolls the list.
  */
 function TaskRow({
@@ -315,6 +325,8 @@ function TaskRow({
   onOpen,
   onToggle,
   onStartTimer,
+  showDragHandle,
+  showCommentCount,
 }: {
   task: TaskResponse;
   isDone: boolean;
@@ -322,6 +334,8 @@ function TaskRow({
   onToggle: () => void;
   /** Absent when the timer button is switched off in the settings. */
   onStartTimer?: () => void;
+  showDragHandle: boolean;
+  showCommentCount: boolean;
 }) {
   const { colors } = useTheme();
   const drag = useReorderableDrag();
@@ -357,7 +371,7 @@ function TaskRow({
               : "text-sm font-medium text-ink"
           }
         >
-          {task.title}
+          {shortTaskTitle(task.title)}
         </Text>
         {task.description !== "" && (
           <Text className={common.rowSubtitle} numberOfLines={1}>
@@ -365,6 +379,18 @@ function TaskRow({
           </Text>
         )}
       </View>
+      {showCommentCount && (task.commentCount ?? 0) > 0 && (
+        <View
+          accessible
+          accessibilityLabel={commentCountLabel(task.commentCount ?? 0)}
+          className="flex-row items-center gap-1"
+        >
+          <Ionicons name="chatbubble-outline" size={14} color={colors.muted} />
+          <Text className="font-utility text-xs text-muted tabular-nums">
+            {task.commentCount}
+          </Text>
+        </View>
+      )}
       {!isDone && onStartTimer && (
         <Pressable
           accessibilityRole="button"
@@ -376,17 +402,19 @@ function TaskRow({
           <Ionicons name="play" size={16} color={colors.signal} />
         </Pressable>
       )}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`Przenieś zadanie: ${task.title}`}
-        accessibilityHint="Przytrzymaj i przeciągnij, aby zmienić kolejność lub status"
-        hitSlop={8}
-        delayLongPress={150}
-        onLongPress={drag}
-        className="h-[34px] w-7 items-center justify-center"
-      >
-        <Ionicons name="reorder-three" size={22} color={colors.muted} />
-      </Pressable>
+      {showDragHandle && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Przenieś zadanie: ${task.title}`}
+          accessibilityHint="Przytrzymaj i przeciągnij, aby zmienić kolejność lub status"
+          hitSlop={8}
+          delayLongPress={150}
+          onLongPress={drag}
+          className="h-[34px] w-7 items-center justify-center"
+        >
+          <Ionicons name="reorder-three" size={22} color={colors.muted} />
+        </Pressable>
+      )}
     </Pressable>
   );
 }
