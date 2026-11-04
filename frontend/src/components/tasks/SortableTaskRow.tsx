@@ -11,6 +11,7 @@ import {
 } from "@/design-system";
 import type { TaskResponse } from "@personal/shared/generated/api";
 import { useTaskListSettingsStore } from "@personal/shared/stores/taskListSettings";
+import { shortTaskTitle } from "@personal/shared/taskTitle";
 
 /** One Task in its status list: drag handle, done checkbox, title (opens the editor), timer start (unless turned off in the list's settings). */
 export function SortableTaskRow({
@@ -72,7 +73,7 @@ export function SortableTaskRow({
         >
           <div className="min-w-0">
             <ListRowTitle className={isCompleted ? "line-through" : ""}>
-              {task.title}
+              {shortTaskTitle(task.title)}
             </ListRowTitle>
             {task.description && (
               <ListRowSubtitle>{task.description}</ListRowSubtitle>

@@ -5,6 +5,7 @@ import { TIMER_LOAD_ERROR } from "@personal/shared/loadErrors";
 import { useProjects } from "@personal/shared/queries/projects";
 import { useAllTasks } from "@personal/shared/queries/tasks";
 import { useTimeEntries, useTimer } from "@personal/shared/queries/timer";
+import { shortTaskTitle } from "@personal/shared/taskTitle";
 
 import { TimeLog } from "@/features/time/TimeLog";
 import { TimerCard } from "@/features/time/TimerCard";
@@ -80,7 +81,9 @@ export default function TimeScreen() {
   }
 
   const stoppedEntries = entries.filter((entry) => entry.end != null);
-  const taskTitles = new Map(tasks.map((task) => [task.id, task.title]));
+  const taskTitles = new Map(
+    tasks.map((task) => [task.id, shortTaskTitle(task.title)]),
+  );
 
   if (pageError) {
     return (

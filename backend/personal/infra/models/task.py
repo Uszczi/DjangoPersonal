@@ -1,7 +1,11 @@
 from sqlalchemy import ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from personal.infra.rules import DEFAULT_PROJECT_STATUSES, MAX_STATUS_LENGTH
+from personal.infra.rules import (
+    DEFAULT_PROJECT_STATUSES,
+    MAX_STATUS_LENGTH,
+    MAX_TASK_TITLE_LENGTH,
+)
 
 from .base import Base
 from .project import Project
@@ -20,7 +24,7 @@ class Task(Base):
     project_id: Mapped[int] = mapped_column(
         ForeignKey('projects.id', ondelete='CASCADE'), index=True
     )
-    title: Mapped[str] = mapped_column(String(200))
+    title: Mapped[str] = mapped_column(String(MAX_TASK_TITLE_LENGTH))
     description: Mapped[str] = mapped_column(Text, default='')
     status: Mapped[str] = mapped_column(
         String(MAX_STATUS_LENGTH), default=DEFAULT_PROJECT_STATUSES[0]

@@ -20,6 +20,7 @@ import {
   initialNewTaskStatus,
   useNewTaskStatusStore,
 } from "@personal/shared/stores/newTaskStatus";
+import { TASK_TITLE_MAX_LENGTH } from "@personal/shared/taskTitle";
 
 type TaskEditorModalProps = {
   /** Omit (or pass `null`) to create a new TaskResponse; pass a TaskResponse to edit it. */
@@ -139,7 +140,7 @@ export function TaskEditorModal({
               ref={titleRef}
               resize="none"
               autoCapitalize="sentences"
-              maxLength={200}
+              maxLength={TASK_TITLE_MAX_LENGTH}
               rows={1}
               value={form.title}
               onChange={(event) =>

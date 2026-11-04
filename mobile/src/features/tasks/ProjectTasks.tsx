@@ -27,6 +27,7 @@ import { useCollapsedStatuses } from "@personal/shared/useCollapsedStatuses";
 
 import { Fab } from "@/ui/Fab";
 import { useTaskListSettingsStore } from "@personal/shared/stores/taskListSettings";
+import { shortTaskTitle } from "@personal/shared/taskTitle";
 import { useTheme } from "@/theme";
 import { common } from "@/ui/classes";
 
@@ -357,7 +358,7 @@ function TaskRow({
               : "text-sm font-medium text-ink"
           }
         >
-          {task.title}
+          {shortTaskTitle(task.title)}
         </Text>
         {task.description !== "" && (
           <Text className={common.rowSubtitle} numberOfLines={1}>

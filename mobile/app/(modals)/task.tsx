@@ -21,6 +21,7 @@ import {
   initialNewTaskStatus,
   useNewTaskStatusStore,
 } from "@personal/shared/stores/newTaskStatus";
+import { TASK_TITLE_MAX_LENGTH } from "@personal/shared/taskTitle";
 
 import { Button } from "@/ui/Button";
 import { ChipGroup } from "@/ui/ChipGroup";
@@ -163,7 +164,7 @@ export default function TaskEditorScreen() {
           onChangeText={(title) =>
             setForm((current) => ({ ...current, title }))
           }
-          maxLength={200}
+          maxLength={TASK_TITLE_MAX_LENGTH}
           multiline
           autoFocus={!task}
           autoCapitalize="sentences"
