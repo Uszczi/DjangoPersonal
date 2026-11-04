@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Literal, Self
+from uuid import UUID
 
 from pydantic import ConfigDict, Field, field_validator
 
@@ -64,7 +65,7 @@ class PatchedBibliographyItemRequest(_BibliographyItemPayload):
 
 
 class BibliographyItemResponse(BaseModel):
-    id: int = Field(..., json_schema_extra={'readOnly': True})
+    id: UUID = Field(..., json_schema_extra={'readOnly': True})
     kind: ItemKind
     title: str
     creator: str

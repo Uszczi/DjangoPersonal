@@ -1,8 +1,10 @@
+from uuid import UUID
+
 from pgvector.sqlalchemy import VECTOR
 from sqlalchemy import JSON, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import Base
+from .base import Base, new_id
 from .user import User
 from .whiteboard import Whiteboard
 
@@ -24,9 +26,9 @@ class NoteChunk(Base):
     __tablename__ = 'note_chunks'
     __table_args__ = (UniqueConstraint('whiteboard_id', 'position'),)
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
-    whiteboard_id: Mapped[int] = mapped_column(
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=new_id)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
+    whiteboard_id: Mapped[UUID] = mapped_column(
         ForeignKey('whiteboards.id', ondelete='CASCADE'), index=True
     )
     #: Order within the Notatka, from 0.

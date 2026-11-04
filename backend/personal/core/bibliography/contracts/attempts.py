@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from uuid import UUID
 
 from pydantic import ConfigDict, Field, field_validator
 
@@ -26,7 +27,7 @@ class AttemptRequest(_AttemptPayload):
     progress; the use case checks that, together with the start date.
     """
 
-    item: int
+    item: UUID
     outcome: AttemptOutcome
     started_on: date | None = None
     ended_on: date | None = None
@@ -49,8 +50,8 @@ class PatchedAttemptRequest(_AttemptPayload):
 
 
 class AttemptResponse(BaseModel):
-    id: int = Field(..., json_schema_extra={'readOnly': True})
-    item_id: int = Field(..., json_schema_extra={'readOnly': True})
+    id: UUID = Field(..., json_schema_extra={'readOnly': True})
+    item_id: UUID = Field(..., json_schema_extra={'readOnly': True})
     outcome: AttemptOutcome
     started_on: date | None
     ended_on: date | None

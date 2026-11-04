@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy import exists, select
 from sqlalchemy.orm import Session
 
@@ -27,7 +29,7 @@ class CategoryRepository:
         )
         return list(self.session.scalars(query))
 
-    def find(self, category_id: int, *, user: User) -> CategoryModel | None:
+    def find(self, category_id: UUID, *, user: User) -> CategoryModel | None:
         query = select(CategoryModel).where(
             CategoryModel.id == category_id, CategoryModel.user_id == user.id
         )

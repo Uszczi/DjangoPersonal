@@ -95,7 +95,7 @@ def test_existing_duplicate_whiteboard_names_are_numbered(alembic_config: Config
                 text(board), {'id': id_, 'user': user, 'folder': folder, 'name': name}
             )
 
-    command.upgrade(alembic_config, 'head')
+    command.upgrade(alembic_config, '0010')
 
     with engine.connect() as connection:
         rows = connection.execute(text('SELECT id, name FROM whiteboards')).all()
@@ -103,10 +103,17 @@ def test_existing_duplicate_whiteboard_names_are_numbered(alembic_config: Config
     assert names == {1: 'Plan', 2: 'Plan 3', 3: 'Plan 2', 4: 'Plan', 5: 'Plan', 6: 'plan'}
 
 
-def test_downgrade_removes_everything(alembic_config: Config, migrated: Engine) -> None:
+def test_downgrade_from_before_the_uuid_keys_removes_everything(alembic_config: Config) -> None:
+    command.upgrade(alembic_config, '0024')
     command.downgrade(alembic_config, 'base')
 
-    assert inspect(migrated).get_table_names() == ['alembic_version']
+    engine = create_engine(alembic_config.get_main_option('sqlalchemy.url') or '')
+    assert inspect(engine).get_table_names() == ['alembic_version']
+
+
+def test_the_uuid_keys_cannot_be_downgraded(alembic_config: Config, migrated: Engine) -> None:
+    with pytest.raises(NotImplementedError):
+        command.downgrade(alembic_config, '0024')
 
 
 def test_folder_names_lose_spaces_and_slashes(alembic_config: Config) -> None:
@@ -134,7 +141,7 @@ def test_folder_names_lose_spaces_and_slashes(alembic_config: Config) -> None:
                 {'id': id_, 'parent': parent, 'name': name, 'key': name.casefold()},
             )
 
-    command.upgrade(alembic_config, 'head')
+    command.upgrade(alembic_config, '0011')
 
     with engine.connect() as connection:
         rows = connection.execute(text('SELECT id, name FROM folders')).all()
@@ -161,8 +168,72 @@ def test_existing_categories_become_expense_ones(alembic_config: Config) -> None
                 {'id': id_, 'name': name, 'key': name.casefold(), 'system': is_system},
             )
 
-    command.upgrade(alembic_config, 'head')
+    command.upgrade(alembic_config, '0019')
 
     with engine.connect() as connection:
         rows = connection.execute(text('SELECT id, kind FROM categories')).all()
     assert {row[0]: row[1] for row in rows} == {1: 'expense', 2: 'expense'}
+
+
+def test_integer_keys_become_uuids_that_keep_rows_linked_and_ordered(
+    alembic_config: Config,
+) -> None:
+    command.upgrade(alembic_config, '0024')
+    engine = create_engine(alembic_config.get_main_option('sqlalchemy.url') or '')
+    statements = [
+        "INSERT INTO users (id, username, password, is_active, is_staff, date_joined)"
+        " VALUES (7, 'ala', 'x', 1, 0, '2026-01-01'), (3, 'ola', 'x', 1, 0, '2026-01-01')",
+        "INSERT INTO user_settings (user_id, theme) VALUES (7, 'dark')",
+        "INSERT INTO projects (id, user_id, name, normalized_name, description, is_inbox,"
+        " position, project_statuses, terminal_status)"
+        " VALUES (1, 7, 'Inbox', 'inbox', '', 1, 0, '[\"todo\", \"done\"]', 'done')",
+        "INSERT INTO tasks (id, project_id, title, description, status, position)"
+        " VALUES (5, 1, 'Pierwsze', '', 'todo', 0), (9, 1, 'Drugie', '', 'todo', 0)",
+        "INSERT INTO time_entries (id, user_id, task_id, title, start)"
+        " VALUES (1, 7, 9, '', '2026-01-01 10:00:00')",
+        # A child Folder with a lower id than its parent: inserted parent first.
+        "INSERT INTO folders (id, user_id, parent_id, name, created_at)"
+        " VALUES (4, 7, NULL, 'Praca', '2026-01-01')",
+        "INSERT INTO folders (id, user_id, parent_id, name, created_at)"
+        " VALUES (2, 7, 4, 'Klient', '2026-01-01')",
+        "UPDATE folders SET parent_id = 2 WHERE id = 4",
+        "UPDATE folders SET parent_id = NULL WHERE id = 2",
+        "INSERT INTO whiteboards (id, user_id, folder_id, kind, name, content, created_at,"
+        " updated_at) VALUES (1, 7, 4, 'markdown', 'Notatka', '{}', '2026-01-01', '2026-01-01')",
+        "INSERT INTO note_chunks (id, user_id, whiteboard_id, position, heading, text,"
+        " content_hash, embedding_model, embedding)"
+        " VALUES (1, 7, 1, 0, 'Notatka', 'x', 'h', 'm', '[0.1]')",
+    ]
+    with engine.begin() as connection:
+        for statement in statements:
+            connection.execute(text(statement))
+
+    command.upgrade(alembic_config, 'head')
+
+    with engine.connect() as connection:
+        users: dict[str, str] = dict(connection.execute(text('SELECT username, id FROM users')).all())
+        theme_owner = connection.execute(text('SELECT user_id FROM user_settings')).scalar()
+        tasks = connection.execute(text('SELECT id, title FROM tasks ORDER BY id')).all()
+        timed = connection.execute(
+            text('SELECT t.title FROM time_entries e JOIN tasks t ON t.id = e.task_id')
+        ).scalar()
+        folders: dict[str, str | None] = dict(
+            connection.execute(
+                text(
+                    'SELECT c.name, p.name FROM folders c LEFT JOIN folders p ON p.id = c.parent_id'
+                )
+            ).all()
+        )
+        note_folder = connection.execute(
+            text('SELECT f.name FROM whiteboards w JOIN folders f ON f.id = w.folder_id')
+        ).scalar()
+        chunks = connection.execute(text('SELECT count(*) FROM note_chunks')).scalar()
+
+    assert all(len(user_id) == 32 for user_id in users.values())
+    assert users['ola'] < users['ala'], 'ids follow the old order'
+    assert theme_owner == users['ala']
+    assert [title for _, title in tasks] == ['Pierwsze', 'Drugie']
+    assert timed == 'Drugie'
+    assert folders == {'Klient': None, 'Praca': 'Klient'}
+    assert note_folder == 'Praca'
+    assert chunks == 0

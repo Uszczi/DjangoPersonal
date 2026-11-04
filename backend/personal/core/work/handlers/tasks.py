@@ -1,4 +1,5 @@
 from functools import partial
+from uuid import UUID
 
 from personal.core.shared.errors import DomainError, NotFound
 from personal.core.shared.patch import apply_provided
@@ -15,7 +16,7 @@ from personal.infra.repo import (
 from .projects import _resolve_project
 
 
-def _get_task(repository: TaskRepository, task_id: int, *, user: User) -> TaskModel:
+def _get_task(repository: TaskRepository, task_id: UUID, *, user: User) -> TaskModel:
     task = repository.find(task_id, user=user)
     if task is None:
         raise NotFound('Task not found.')
@@ -23,7 +24,7 @@ def _get_task(repository: TaskRepository, task_id: int, *, user: User) -> TaskMo
 
 
 def _resolve_task(
-    repository: TaskRepository, task_id: int | None, *, user: User
+    repository: TaskRepository, task_id: UUID | None, *, user: User
 ) -> TaskModel | None:
     """Resolve a task referenced by another payload, or ``None`` when omitted."""
     if task_id is None:
@@ -67,7 +68,7 @@ class ListTasks:
         self.user = user
 
     def execute(
-        self, project_id: int | None = None, all_projects: bool = False
+        self, project_id: UUID | None = None, all_projects: bool = False
     ) -> list[TaskModel]:
         if all_projects:
             tasks = self.tasks.list_all(user=self.user)
@@ -127,7 +128,7 @@ class UpdateTask:
         self.tasks = tasks
         self.user = user
 
-    def execute(self, task_id: int, data: PatchedTaskUpdateRequest) -> TaskModel:
+    def execute(self, task_id: UUID, data: PatchedTaskUpdateRequest) -> TaskModel:
         task = _get_task(self.tasks, task_id, user=self.user)
 
         old_project_id = task.project.id
@@ -166,7 +167,7 @@ class DeleteTask:
         self.tasks = tasks
         self.user = user
 
-    def execute(self, task_id: int) -> None:
+    def execute(self, task_id: UUID) -> None:
         task = _get_task(self.tasks, task_id, user=self.user)
         try:
             self.tasks.delete(task)

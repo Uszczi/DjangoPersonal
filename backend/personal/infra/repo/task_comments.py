@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session, selectinload, undefer
 
@@ -19,14 +21,14 @@ class TaskCommentRepository:
             .options(selectinload(TaskCommentModel.attachments))
         )
 
-    def list_for_task(self, task_id: int, *, user: User) -> list[TaskCommentModel]:
+    def list_for_task(self, task_id: UUID, *, user: User) -> list[TaskCommentModel]:
         """Every comment of ``user`` on this Task, oldest first (a conversation)."""
         query = self._owned_by(user).where(TaskCommentModel.task_id == task_id).order_by(
             TaskCommentModel.created_at, TaskCommentModel.id
         )
         return list(self.session.scalars(query))
 
-    def find(self, comment_id: int, *, user: User) -> TaskCommentModel | None:
+    def find(self, comment_id: UUID, *, user: User) -> TaskCommentModel | None:
         query = self._owned_by(user).where(TaskCommentModel.id == comment_id)
         return self.session.scalars(query).first()
 
@@ -46,7 +48,7 @@ class CommentAttachmentRepository:
         self.session = session
 
     def find(
-        self, attachment_id: int, *, user: User, with_data: bool = False
+        self, attachment_id: UUID, *, user: User, with_data: bool = False
     ) -> CommentAttachmentModel | None:
         """The attachment for ``user``; ``with_data`` also reads the file's bytes."""
         query = select(CommentAttachmentModel).where(

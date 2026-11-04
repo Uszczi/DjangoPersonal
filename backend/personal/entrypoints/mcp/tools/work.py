@@ -2,6 +2,7 @@
 
 from datetime import date as date_type
 from typing import Any
+from uuid import UUID
 
 from personal import wiring
 from personal.core.work import clock, handlers
@@ -40,7 +41,7 @@ def list_projects(ctx: ToolContext) -> list[dict[str, Any]]:
 
 
 @tool
-def get_project(ctx: ToolContext, project_id: int) -> dict[str, Any]:
+def get_project(ctx: ToolContext, project_id: UUID) -> dict[str, Any]:
     """Fetch a single project by id."""
     with unit_of_work(ctx) as (session, user):
         handler = handlers.GetProject(wiring.project_repository(session), user)
@@ -71,7 +72,7 @@ def create_project(
 @tool
 def update_project(
     ctx: ToolContext,
-    project_id: int,
+    project_id: UUID,
     name: str | None = None,
     description: str | None = None,
     project_statuses: list[str] | None = None,
@@ -92,7 +93,7 @@ def update_project(
 
 
 @tool
-def delete_project(ctx: ToolContext, project_id: int) -> str:
+def delete_project(ctx: ToolContext, project_id: UUID) -> str:
     """Delete a project, moving its tasks to the inbox."""
     with unit_of_work(ctx) as (session, user):
         handlers.DeleteProject(wiring.project_repository(session), user).execute(project_id)
@@ -101,7 +102,7 @@ def delete_project(ctx: ToolContext, project_id: int) -> str:
 
 @tool
 def list_tasks(
-    ctx: ToolContext, project_id: int | None = None, all_projects: bool = False
+    ctx: ToolContext, project_id: UUID | None = None, all_projects: bool = False
 ) -> list[dict[str, Any]]:
     """List tasks. Scope to a project, the inbox (default), or all projects."""
     with unit_of_work(ctx) as (session, user):
@@ -114,7 +115,7 @@ def create_task(
     ctx: ToolContext,
     title: str,
     description: str = '',
-    project_id: int | None = None,
+    project_id: UUID | None = None,
     status: str | None = None,
 ) -> dict[str, Any]:
     """Create a task (defaults to the inbox project)."""
@@ -133,10 +134,10 @@ def create_task(
 @tool
 def update_task(
     ctx: ToolContext,
-    task_id: int,
+    task_id: UUID,
     title: str | None = None,
     description: str | None = None,
-    project_id: int | None = None,
+    project_id: UUID | None = None,
     status: str | None = None,
     position: int | None = None,
 ) -> dict[str, Any]:
@@ -160,7 +161,7 @@ def update_task(
 
 
 @tool
-def delete_task(ctx: ToolContext, task_id: int) -> str:
+def delete_task(ctx: ToolContext, task_id: UUID) -> str:
     """Delete a task (refused if time has been recorded)."""
     with unit_of_work(ctx) as (session, user):
         handlers.DeleteTask(wiring.task_repository(session), user).execute(task_id)
@@ -168,7 +169,7 @@ def delete_task(ctx: ToolContext, task_id: int) -> str:
 
 
 @tool
-def list_task_comments(ctx: ToolContext, task_id: int) -> list[dict[str, Any]]:
+def list_task_comments(ctx: ToolContext, task_id: UUID) -> list[dict[str, Any]]:
     """List a task's comments, oldest first, with their attached files' names and sizes."""
     with unit_of_work(ctx) as (session, user):
         handler = handlers.ListTaskComments(
@@ -178,7 +179,7 @@ def list_task_comments(ctx: ToolContext, task_id: int) -> list[dict[str, Any]]:
 
 
 @tool
-def add_task_comment(ctx: ToolContext, task_id: int, body: str) -> dict[str, Any]:
+def add_task_comment(ctx: ToolContext, task_id: UUID, body: str) -> dict[str, Any]:
     """Comment on a task."""
     payload = TaskCommentCreateRequest.model_validate({'task': task_id, 'body': body})
     with unit_of_work(ctx) as (session, user):
@@ -189,7 +190,7 @@ def add_task_comment(ctx: ToolContext, task_id: int, body: str) -> dict[str, Any
 
 
 @tool
-def update_task_comment(ctx: ToolContext, comment_id: int, body: str) -> dict[str, Any]:
+def update_task_comment(ctx: ToolContext, comment_id: UUID, body: str) -> dict[str, Any]:
     """Change a comment's text."""
     payload = PatchedTaskCommentRequest.model_validate({'body': body})
     with unit_of_work(ctx) as (session, user):
@@ -198,7 +199,7 @@ def update_task_comment(ctx: ToolContext, comment_id: int, body: str) -> dict[st
 
 
 @tool
-def delete_task_comment(ctx: ToolContext, comment_id: int) -> str:
+def delete_task_comment(ctx: ToolContext, comment_id: UUID) -> str:
     """Delete a comment together with its attached files."""
     with unit_of_work(ctx) as (session, user):
         handlers.DeleteTaskComment(wiring.task_comment_repository(session), user).execute(
@@ -209,7 +210,7 @@ def delete_task_comment(ctx: ToolContext, comment_id: int) -> str:
 
 @tool
 def list_time_entries(
-    ctx: ToolContext, task_id: int | None = None, date: str | None = None
+    ctx: ToolContext, task_id: UUID | None = None, date: str | None = None
 ) -> list[dict[str, Any]]:
     """List time entries, optionally filtered by task or date (YYYY-MM-DD)."""
     with unit_of_work(ctx) as (session, user):
@@ -220,7 +221,7 @@ def list_time_entries(
 @tool
 def create_time_entry(
     ctx: ToolContext,
-    task_id: int,
+    task_id: UUID,
     date: str,
     duration_minutes: int,
 ) -> dict[str, Any]:
@@ -242,8 +243,8 @@ def create_time_entry(
 @tool
 def update_time_entry(
     ctx: ToolContext,
-    entry_id: int,
-    task_id: int | None = None,
+    entry_id: UUID,
+    task_id: UUID | None = None,
     date: str | None = None,
     duration_minutes: int | None = None,
 ) -> dict[str, Any]:
@@ -261,7 +262,7 @@ def update_time_entry(
 
 
 @tool
-def delete_time_entry(ctx: ToolContext, entry_id: int) -> str:
+def delete_time_entry(ctx: ToolContext, entry_id: UUID) -> str:
     """Delete a time entry."""
     with unit_of_work(ctx) as (session, user):
         handlers.DeleteTimeEntry(wiring.time_entry_repository(session), user).execute(entry_id)
@@ -270,7 +271,7 @@ def delete_time_entry(ctx: ToolContext, entry_id: int) -> str:
 
 @tool
 def start_timer(
-    ctx: ToolContext, task_id: int, duration_minutes: int | None = None
+    ctx: ToolContext, task_id: UUID, duration_minutes: int | None = None
 ) -> dict[str, Any]:
     """Start a timer for a task; with ``duration_minutes`` it stops by itself after that long."""
     with unit_of_work(ctx) as (session, user):

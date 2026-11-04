@@ -1,4 +1,5 @@
 from decimal import Decimal
+from uuid import UUID
 
 from pydantic import Field, field_validator
 
@@ -66,7 +67,7 @@ class PatchedWalletRequest(_WalletPayload):
 
 
 class WalletResponse(BaseModel):
-    id: int = Field(..., json_schema_extra={'readOnly': True})
+    id: UUID = Field(..., json_schema_extra={'readOnly': True})
     name: str
     color: str
     icon: str | None = None

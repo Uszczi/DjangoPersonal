@@ -1,9 +1,10 @@
 from datetime import date, datetime
+from uuid import UUID
 
 from sqlalchemy import CheckConstraint, ForeignKey, Index, String, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import Base, UTCDateTime, utc_now
+from .base import Base, UTCDateTime, new_id, utc_now
 from .bibliography_item import BibliographyItem
 from .user import User
 
@@ -46,9 +47,9 @@ class Attempt(Base):
     OUTCOME_FINISHED = 'finished'
     OUTCOME_ABANDONED = 'abandoned'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
-    item_id: Mapped[int] = mapped_column(
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=new_id)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
+    item_id: Mapped[UUID] = mapped_column(
         ForeignKey('bibliography_items.id', ondelete='CASCADE'), index=True
     )
     outcome: Mapped[str] = mapped_column(String(20))

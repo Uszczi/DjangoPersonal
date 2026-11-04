@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 from datetime import date as datetime_date
 from datetime import datetime, timedelta
+from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -19,7 +20,7 @@ class TimeEntryRepository:
         self.session = session
 
     def list(
-        self, *, task_id: int | None = None, day: datetime_date | None = None, user: User
+        self, *, task_id: UUID | None = None, day: datetime_date | None = None, user: User
     ) -> Sequence[TimeEntryModel]:
         """Entries for a task and/or a calendar day, newest first."""
         query = select(TimeEntryModel).where(TimeEntryModel.user_id == user.id)
@@ -50,7 +51,7 @@ class TimeEntryRepository:
         )
         return [(name, used) for name, used in self.session.execute(query)]
 
-    def find(self, entry_id: int, *, user: User) -> TimeEntryModel | None:
+    def find(self, entry_id: UUID, *, user: User) -> TimeEntryModel | None:
         query = select(TimeEntryModel).where(
             TimeEntryModel.id == entry_id, TimeEntryModel.user_id == user.id
         )

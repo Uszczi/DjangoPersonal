@@ -1,4 +1,5 @@
 from datetime import UTC, tzinfo
+from uuid import UUID
 
 from personal.core.counters.recency import recency
 from personal.core.shared.errors import NotFound
@@ -17,7 +18,7 @@ from ..contracts import (
 )
 
 
-def _get_counter(repository: CounterRepository, counter_id: int, *, user: User) -> CounterModel:
+def _get_counter(repository: CounterRepository, counter_id: UUID, *, user: User) -> CounterModel:
     counter = repository.find(counter_id, user=user)
     if counter is None:
         raise NotFound('Counter not found.')
@@ -38,7 +39,7 @@ def _with_recency(
 
 
 def _get_entry(
-    repository: CounterEntryRepository, entry_id: int, *, user: User
+    repository: CounterEntryRepository, entry_id: UUID, *, user: User
 ) -> CounterEntryModel:
     entry = repository.find(entry_id, user=user)
     if entry is None:
@@ -67,7 +68,7 @@ class GetCounter:
         self.user = user
         self.tz = tz
 
-    def execute(self, counter_id: int) -> CounterModel:
+    def execute(self, counter_id: UUID) -> CounterModel:
         counter = _get_counter(self.counters, counter_id, user=self.user)
         return _with_recency(self.counters, [counter], user=self.user, tz=self.tz)[0]
 
@@ -93,7 +94,7 @@ class UpdateCounter:
         self.user = user
         self.tz = tz
 
-    def execute(self, counter_id: int, data: PatchedCounterRequest) -> CounterModel:
+    def execute(self, counter_id: UUID, data: PatchedCounterRequest) -> CounterModel:
         counter = _get_counter(self.counters, counter_id, user=self.user)
         apply_provided(data, counter)
         counter = self.counters.save(counter)
@@ -105,7 +106,7 @@ class DeleteCounter:
         self.counters = counters
         self.user = user
 
-    def execute(self, counter_id: int) -> None:
+    def execute(self, counter_id: UUID) -> None:
         self.counters.delete(_get_counter(self.counters, counter_id, user=self.user))
 
 
@@ -119,7 +120,7 @@ class ListCounterEntries:
         self.counters = counters
         self.user = user
 
-    def execute(self, counter_id: int) -> list[CounterEntryModel]:
+    def execute(self, counter_id: UUID) -> list[CounterEntryModel]:
         _get_counter(self.counters, counter_id, user=self.user)
         return self.entries.list_for_counter(counter_id, user=self.user)
 
@@ -129,7 +130,7 @@ class GetCounterEntry:
         self.entries = entries
         self.user = user
 
-    def execute(self, entry_id: int) -> CounterEntryModel:
+    def execute(self, entry_id: UUID) -> CounterEntryModel:
         return _get_entry(self.entries, entry_id, user=self.user)
 
 
@@ -159,7 +160,7 @@ class UpdateCounterEntry:
         self.entries = entries
         self.user = user
 
-    def execute(self, entry_id: int, data: PatchedCounterEntryRequest) -> CounterEntryModel:
+    def execute(self, entry_id: UUID, data: PatchedCounterEntryRequest) -> CounterEntryModel:
         entry = _get_entry(self.entries, entry_id, user=self.user)
         apply_provided(data, entry)
         return self.entries.save(entry)
@@ -170,5 +171,5 @@ class DeleteCounterEntry:
         self.entries = entries
         self.user = user
 
-    def execute(self, entry_id: int) -> None:
+    def execute(self, entry_id: UUID) -> None:
         self.entries.delete(_get_entry(self.entries, entry_id, user=self.user))

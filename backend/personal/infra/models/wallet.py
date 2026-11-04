@@ -1,5 +1,6 @@
 from decimal import Decimal
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import ForeignKey, String, UniqueConstraint, event
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -11,7 +12,7 @@ from personal.infra.rules import (
     wallet_name_key,
 )
 
-from .base import Base
+from .base import Base, new_id
 from .user import User
 
 
@@ -23,8 +24,8 @@ class Wallet(Base):
         UniqueConstraint('user_id', 'normalized_name', name='wallet_name_unique_per_user'),
     )
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=new_id)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
     name: Mapped[str] = mapped_column(String(100))
     normalized_name: Mapped[str] = mapped_column(String(100))
     #: ``#RRGGBB``, shown next to the wallet's name.

@@ -1,6 +1,7 @@
 """Whiteboard endpoints: boards and Notatki alike (``kind``)."""
 
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Query, Response, status
 
@@ -59,14 +60,14 @@ def create_whiteboard(
 
 @router.get('/whiteboards/{id}/', operation_id='whiteboards_retrieve')
 def get_whiteboard(
-    id: int, user: CurrentUser, whiteboards: WhiteboardRepositoryDep
+    id: UUID, user: CurrentUser, whiteboards: WhiteboardRepositoryDep
 ) -> WhiteboardResponse:
     return WhiteboardResponse.model_validate(handlers.GetWhiteboard(whiteboards, user).execute(id))
 
 
 @router.patch('/whiteboards/{id}/', operation_id='whiteboards_partial_update')
 def update_whiteboard(
-    id: int,
+    id: UUID,
     payload: PatchedWhiteboardRequest,
     user: CurrentUser,
     whiteboards: WhiteboardRepositoryDep,
@@ -82,5 +83,5 @@ def update_whiteboard(
     response_class=Response,
     operation_id='whiteboards_destroy',
 )
-def delete_whiteboard(id: int, user: CurrentUser, whiteboards: WhiteboardRepositoryDep) -> None:
+def delete_whiteboard(id: UUID, user: CurrentUser, whiteboards: WhiteboardRepositoryDep) -> None:
     handlers.DeleteWhiteboard(whiteboards, user).execute(id)

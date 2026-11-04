@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pydantic import Field, field_validator
 
 from personal.core.shared.base import BaseModel
@@ -85,7 +87,7 @@ class PatchedProjectRequest(_ProjectPayload):
 
 
 class ProjectResponse(BaseModel):
-    id: int = Field(..., json_schema_extra={'readOnly': True})
+    id: UUID = Field(..., json_schema_extra={'readOnly': True})
     name: str
     description: str
     is_inbox: bool = Field(..., json_schema_extra={'readOnly': True})

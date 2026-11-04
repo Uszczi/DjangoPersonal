@@ -7,6 +7,7 @@ call time, which also lets tests swap :data:`database` for their own.
 """
 
 import os
+from uuid import UUID
 
 from personal import wiring
 from personal.core.accounts.ports import PasswordHasher, RateLimiter, TokenService
@@ -37,10 +38,10 @@ embedder: Embedder = wiring.embedder(settings)
 answer_generator: AnswerGenerator = wiring.answer_generator(settings)
 
 
-def _optional_int(name: str) -> int | None:
+def _optional_uuid(name: str) -> UUID | None:
     value = os.environ.get(name, '').strip()
-    return int(value) if value else None
+    return UUID(value) if value else None
 
 
 #: The user stdio tool calls act for (there is no request to authenticate).
-default_user_id = _optional_int('MCP_DEFAULT_USER_ID')
+default_user_id = _optional_uuid('MCP_DEFAULT_USER_ID')

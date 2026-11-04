@@ -9,6 +9,7 @@ Three ways in, tried in order:
 """
 
 from typing import Any
+from uuid import UUID
 
 from mcp.server.auth.middleware.auth_context import get_access_token
 from sqlalchemy.orm import Session
@@ -44,7 +45,13 @@ def request_address(request: Request) -> str:
     return request.client.host if request.client else 'unknown'
 
 
-def _active_user(session: Session, user_id: int) -> User:
+def _active_user(session: Session, user_id: UUID | str) -> User:
+    if isinstance(user_id, str):
+        try:
+            user_id = UUID(user_id)
+        except ValueError:
+            # A token issued before the ids became UUIDs (ADR 0001).
+            raise PermissionError('User not found or inactive.') from None
     user = UserRepository(session).find(user_id)
     if user is None or not user.is_active:
         raise PermissionError('User not found or inactive.')
@@ -56,12 +63,12 @@ def get_current_user(
     *,
     session: Session,
     tokens: TokenService,
-    default_user_id: int | None,
+    default_user_id: UUID | None,
 ) -> User:
     """The active user for this tool call, or raise :class:`PermissionError`."""
     access = get_access_token()
     if access is not None and access.subject is not None:
-        return _active_user(session, int(access.subject))
+        return _active_user(session, access.subject)
 
     request = _request(ctx)
     if request is None:

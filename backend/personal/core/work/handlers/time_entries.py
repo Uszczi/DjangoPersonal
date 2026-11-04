@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 from datetime import date as datetime_date
 from datetime import datetime, timedelta
+from uuid import UUID
 
 from personal.core.shared.errors import DomainError, NotFound
 from personal.core.work import clock
@@ -19,7 +20,7 @@ def _ensure_not_future(value: datetime_date) -> None:
 
 
 def _get_time_entry(
-    repository: TimeEntryRepository, entry_id: int, *, user: User
+    repository: TimeEntryRepository, entry_id: UUID, *, user: User
 ) -> TimeEntryModel:
     entry = repository.find(entry_id, user=user)
     if entry is None:
@@ -34,7 +35,7 @@ class ListTimeEntries:
         self.user = user
 
     def execute(
-        self, task_id: int | None = None, day: datetime_date | None = None
+        self, task_id: UUID | None = None, day: datetime_date | None = None
     ) -> Sequence[TimeEntryModel]:
         settle_expired_timer(self.time_entries, self.user)
         return self.time_entries.list(task_id=task_id, day=day, user=self.user)
@@ -111,7 +112,7 @@ class UpdateTimeEntry:
         self.time_entries = time_entries
         self.user = user
 
-    def execute(self, entry_id: int, data: PatchedTimeEntryRequest) -> TimeEntryModel:
+    def execute(self, entry_id: UUID, data: PatchedTimeEntryRequest) -> TimeEntryModel:
         settle_expired_timer(self.time_entries, self.user)
         entry = _get_time_entry(self.time_entries, entry_id, user=self.user)
         if entry.end is None:
@@ -144,5 +145,5 @@ class DeleteTimeEntry:
         self.time_entries = time_entries
         self.user = user
 
-    def execute(self, entry_id: int) -> None:
+    def execute(self, entry_id: UUID) -> None:
         self.time_entries.delete(_get_time_entry(self.time_entries, entry_id, user=self.user))

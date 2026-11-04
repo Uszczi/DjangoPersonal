@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -21,7 +22,7 @@ class AttemptRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def list_for_item(self, item_id: int, *, user: User) -> list[AttemptModel]:
+    def list_for_item(self, item_id: UUID, *, user: User) -> list[AttemptModel]:
         query = (
             select(AttemptModel)
             .where(AttemptModel.item_id == item_id, AttemptModel.user_id == user.id)
@@ -40,9 +41,9 @@ class AttemptRepository:
 
     def by_item(
         self, items: Sequence[BibliographyItemModel], *, user: User
-    ) -> dict[int, list[AttemptModel]]:
+    ) -> dict[UUID, list[AttemptModel]]:
         """The Attempts of each of these BibliographyItems, by BibliographyItem id."""
-        found: dict[int, list[AttemptModel]] = {item.id: [] for item in items}
+        found: dict[UUID, list[AttemptModel]] = {item.id: [] for item in items}
         if not found:
             return found
         query = (
@@ -54,7 +55,7 @@ class AttemptRepository:
             found[attempt.item_id].append(attempt)
         return found
 
-    def find(self, attempt_id: int, *, user: User) -> AttemptModel | None:
+    def find(self, attempt_id: UUID, *, user: User) -> AttemptModel | None:
         query = select(AttemptModel).where(
             AttemptModel.id == attempt_id, AttemptModel.user_id == user.id
         )

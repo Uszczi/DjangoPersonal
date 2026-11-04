@@ -1,6 +1,7 @@
 from datetime import date as datetime_date
 from decimal import Decimal
 from typing import Annotated
+from uuid import UUID
 
 from pydantic import Field, PlainSerializer, WithJsonSchema, field_validator
 
@@ -65,8 +66,8 @@ class TransactionRequest(_TransactionPayload):
     amount: Amount = Field(gt=0)
     date: datetime_date
     description: str = ''
-    category: int | None = None
-    wallet: int
+    category: UUID | None = None
+    wallet: UUID
 
 
 class PatchedTransactionRequest(_TransactionPayload):
@@ -74,18 +75,18 @@ class PatchedTransactionRequest(_TransactionPayload):
     amount: Amount | None = Field(default=None, gt=0)
     date: datetime_date | None = None
     description: str | None = None
-    category: int | None = None
-    wallet: int | None = None
+    category: UUID | None = None
+    wallet: UUID | None = None
 
 
 class TransactionResponse(BaseModel):
-    id: int = Field(..., json_schema_extra={'readOnly': True})
+    id: UUID = Field(..., json_schema_extra={'readOnly': True})
     title: str
     amount: Amount
     date: datetime_date
     description: str
-    category_id: int | None = Field(..., json_schema_extra={'readOnly': True})
-    wallet_id: int = Field(..., json_schema_extra={'readOnly': True})
+    category_id: UUID | None = Field(..., json_schema_extra={'readOnly': True})
+    wallet_id: UUID = Field(..., json_schema_extra={'readOnly': True})
     #: The direction, derived from the category (none gives ``expense``);
     #: ``null`` for a System entry, whose signed amount tells the direction.
     kind: CategoryKind | None = Field(..., json_schema_extra={'readOnly': True})

@@ -1,6 +1,7 @@
 """Counter tools: counters and their entries."""
 
 from typing import Any
+from uuid import UUID
 
 from personal import wiring
 from personal.core.counters import handlers as counter_handlers
@@ -29,7 +30,7 @@ def list_counters(ctx: ToolContext, time_zone: str = 'UTC') -> list[dict[str, An
 
 
 @tool
-def get_counter(ctx: ToolContext, counter_id: int, time_zone: str = 'UTC') -> dict[str, Any]:
+def get_counter(ctx: ToolContext, counter_id: UUID, time_zone: str = 'UTC') -> dict[str, Any]:
     """Fetch a single counter by id; ``time_zone`` as in ``list_counters``."""
     tz = zone(time_zone)
     with unit_of_work(ctx) as (session, user):
@@ -48,7 +49,7 @@ def create_counter(ctx: ToolContext, name: str, color: str | None = None) -> dic
 
 @tool
 def update_counter(
-    ctx: ToolContext, counter_id: int, name: str | None = None, color: str | None = None
+    ctx: ToolContext, counter_id: UUID, name: str | None = None, color: str | None = None
 ) -> dict[str, Any]:
     """Rename a counter or change its colour (``#RRGGBB``); only the given fields change."""
     payload = PatchedCounterRequest.model_validate(provided(name=name, color=color))
@@ -58,7 +59,7 @@ def update_counter(
 
 
 @tool
-def delete_counter(ctx: ToolContext, counter_id: int) -> str:
+def delete_counter(ctx: ToolContext, counter_id: UUID) -> str:
     """Delete a counter and its entries."""
     with unit_of_work(ctx) as (session, user):
         counter_handlers.DeleteCounter(wiring.counter_repository(session), user).execute(counter_id)
@@ -66,7 +67,7 @@ def delete_counter(ctx: ToolContext, counter_id: int) -> str:
 
 
 @tool
-def list_counter_entries(ctx: ToolContext, counter_id: int) -> list[dict[str, Any]]:
+def list_counter_entries(ctx: ToolContext, counter_id: UUID) -> list[dict[str, Any]]:
     """List a counter's entries."""
     with unit_of_work(ctx) as (session, user):
         handler = counter_handlers.ListCounterEntries(
@@ -78,7 +79,7 @@ def list_counter_entries(ctx: ToolContext, counter_id: int) -> list[dict[str, An
 @tool
 def create_counter_entry(
     ctx: ToolContext,
-    counter_id: int,
+    counter_id: UUID,
     value: int = 1,
     occurred_at: str | None = None,
     note: str = '',
@@ -103,7 +104,7 @@ def create_counter_entry(
 @tool
 def update_counter_entry(
     ctx: ToolContext,
-    entry_id: int,
+    entry_id: UUID,
     value: int | None = None,
     occurred_at: str | None = None,
     note: str | None = None,
@@ -120,7 +121,7 @@ def update_counter_entry(
 
 
 @tool
-def delete_counter_entry(ctx: ToolContext, entry_id: int) -> str:
+def delete_counter_entry(ctx: ToolContext, entry_id: UUID) -> str:
     """Delete a counter entry."""
     with unit_of_work(ctx) as (session, user):
         handler = counter_handlers.DeleteCounterEntry(

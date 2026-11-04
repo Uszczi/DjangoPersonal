@@ -1,6 +1,7 @@
 """Shared base views for the admin panel."""
 
 from typing import Any, Protocol
+from uuid import UUID
 
 import anyio.to_thread
 from sqladmin import ModelView
@@ -28,6 +29,6 @@ class _RepositoryDeleteView(_AppView):
 
     def _delete(self, pk: Any) -> None:
         with self.session_maker() as session, session.begin():
-            obj = session.get(self.model, int(pk))
+            obj = session.get(self.model, UUID(str(pk)))
             if obj is not None:
                 self.repository(session).delete(obj)

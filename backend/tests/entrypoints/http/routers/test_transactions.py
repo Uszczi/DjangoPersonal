@@ -9,6 +9,7 @@ import pytest
 from personal.core.expenses.handlers.wallets import OPENING_BALANCE_TITLE
 from personal.infra.factories import CategoryFactory, TransactionFactory, WalletFactory
 from tests.harness import ApiClient
+from tests.helpers import UNKNOWN_ID
 
 
 def test_create_transaction(post_json: Any, api_client: Any) -> None:
@@ -86,7 +87,7 @@ def test_list_transactions_pages_through_same_date_ties_without_gaps(
     created = TransactionFactory.create_batch(7, wallet=wallet, date=date(2026, 10, 18))
     created.append(TransactionFactory.create(wallet=wallet, date=date(2026, 10, 1)))
 
-    seen: list[int] = []
+    seen: list[str] = []
     pages = 0
     url = f'/api/v1/transactions/?wallet={wallet.id}&limit=3'
     cursor = None
@@ -101,7 +102,7 @@ def test_list_transactions_pages_through_same_date_ties_without_gaps(
     expected = sorted(
         created, key=lambda t: (t.date, t.id), reverse=True
     )
-    assert seen == [t.id for t in expected]
+    assert seen == [str(t.id) for t in expected]
     assert pages == 3
 
 
@@ -146,7 +147,7 @@ def test_listing_needs_an_own_wallet_and_a_valid_page(
     foreign = WalletFactory.create(user=make_user('someone'), name='Foreign')
     url = f'/api/v1/transactions/?wallet={wallet.id}'
 
-    assert api_client.get('/api/v1/transactions/?wallet=9999').status_code == HTTPStatus.NOT_FOUND
+    assert api_client.get(f'/api/v1/transactions/?wallet={UNKNOWN_ID}').status_code == HTTPStatus.NOT_FOUND
     assert api_client.get(f'/api/v1/transactions/?wallet={foreign.id}').status_code == (
         HTTPStatus.NOT_FOUND
     )

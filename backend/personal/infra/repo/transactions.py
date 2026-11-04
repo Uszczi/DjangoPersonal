@@ -1,5 +1,6 @@
 from datetime import date
 from typing import NamedTuple
+from uuid import UUID
 
 from sqlalchemy import select, tuple_
 from sqlalchemy.orm import Session, joinedload
@@ -12,7 +13,7 @@ class TransactionKey(NamedTuple):
     """Where a transaction sits in a wallet's list: ordered by ``(date, id)``."""
 
     date: date
-    id: int
+    id: UUID
 
 
 class TransactionRepository:
@@ -27,7 +28,7 @@ class TransactionRepository:
 
     def list_for_wallet(
         self,
-        wallet_id: int,
+        wallet_id: UUID,
         *,
         user: User,
         limit: int | None = None,
@@ -62,7 +63,7 @@ class TransactionRepository:
             query = query.limit(limit)
         return list(self.session.scalars(query))
 
-    def find(self, transaction_id: int, *, user: User) -> TransactionModel | None:
+    def find(self, transaction_id: UUID, *, user: User) -> TransactionModel | None:
         # The category rides along: reading `kind` (or a System guard) off a
         # single row should not add a query per request.
         query = (

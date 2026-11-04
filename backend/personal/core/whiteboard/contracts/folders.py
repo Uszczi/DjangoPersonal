@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import Field, field_validator
 
@@ -27,17 +28,17 @@ class _FolderPayload(BaseModel):
 class FolderRequest(_FolderPayload):
     name: str = Field(min_length=1, max_length=100)
     #: The Folder to create it in; without one it sits at the top level.
-    parent_id: int | None = None
+    parent_id: UUID | None = None
 
 
 class PatchedFolderRequest(_FolderPayload):
     name: str | None = Field(default=None, min_length=1, max_length=100)
     #: Moves it into this Folder; an explicit ``null`` moves it to the top level.
-    parent_id: int | None = None
+    parent_id: UUID | None = None
 
 
 class FolderResponse(BaseModel):
-    id: int = Field(..., json_schema_extra={'readOnly': True})
+    id: UUID = Field(..., json_schema_extra={'readOnly': True})
     name: str
-    parent_id: int | None = None
+    parent_id: UUID | None = None
     created_at: datetime = Field(..., json_schema_extra={'readOnly': True})

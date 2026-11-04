@@ -1,11 +1,12 @@
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import CheckConstraint, ForeignKey, String, UniqueConstraint, event
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from personal.infra.rules import DEFAULT_CATEGORY_ICON, category_name_key, normalize_category_name
 
-from .base import Base
+from .base import Base, new_id
 from .user import User
 
 
@@ -21,8 +22,8 @@ class Category(Base):
     KIND_EXPENSE = 'expense'
     KIND_INCOME = 'income'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=new_id)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
     name: Mapped[str] = mapped_column(String(100))
     normalized_name: Mapped[str] = mapped_column(String(100))
     #: System categories carry balance corrections; the API protects them

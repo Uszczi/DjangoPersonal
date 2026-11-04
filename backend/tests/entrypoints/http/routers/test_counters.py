@@ -6,6 +6,7 @@ from typing import Any
 
 from personal.infra.models import User
 from tests.harness import ApiClient
+from tests.helpers import UNKNOWN_ID
 
 
 def _counter(post_json: Any, name: str = 'Kawa') -> int:
@@ -143,8 +144,8 @@ def test_delete_counter_removes_its_entries(post_json: Any, api_client: ApiClien
 
 
 def test_unknown_counter(post_json: Any, api_client: ApiClient) -> None:
-    assert api_client.get('/api/v1/counter-entries/?counter=999').status_code == 404
-    response = post_json('/api/v1/counter-entries/', {'counter': 999, 'occurred_at': '2026-10-20T08:00:00Z'})
+    assert api_client.get(f'/api/v1/counter-entries/?counter={UNKNOWN_ID}').status_code == 404
+    response = post_json('/api/v1/counter-entries/', {'counter': UNKNOWN_ID, 'occurred_at': '2026-10-20T08:00:00Z'})
     assert response.status_code == 404
 
 

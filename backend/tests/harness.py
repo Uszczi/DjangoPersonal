@@ -63,7 +63,7 @@ class ApiClient:
         if self.token is not None:
             merged['Authorization'] = f'Bearer {self.token}'
         merged.update(headers or {})
-        body = None if json is None else jsonlib.dumps(json).encode()
+        body = None if json is None else jsonlib.dumps(json, default=str).encode()
         return self.transport.request(method, path, body=body, headers=merged)
 
     def get(self, path: str, *, headers: dict[str, str] | None = None) -> Response:

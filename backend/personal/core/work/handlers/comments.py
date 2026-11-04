@@ -1,6 +1,7 @@
 """Comments on Tasks and the files attached to them."""
 
 from http import HTTPStatus
+from uuid import UUID
 
 from personal.core.shared.errors import DomainError, NotFound
 from personal.core.shared.patch import apply_provided
@@ -25,7 +26,7 @@ from .tasks import _get_task, _resolve_task
 
 
 def _get_comment(
-    repository: TaskCommentRepository, comment_id: int, *, user: User
+    repository: TaskCommentRepository, comment_id: UUID, *, user: User
 ) -> TaskCommentModel:
     comment = repository.find(comment_id, user=user)
     if comment is None:
@@ -35,7 +36,7 @@ def _get_comment(
 
 def _get_attachment(
     repository: CommentAttachmentRepository,
-    attachment_id: int,
+    attachment_id: UUID,
     *,
     user: User,
     with_data: bool = False,
@@ -54,7 +55,7 @@ class ListTaskComments:
         self.comments = comments
         self.user = user
 
-    def execute(self, task_id: int) -> list[TaskCommentModel]:
+    def execute(self, task_id: UUID) -> list[TaskCommentModel]:
         _get_task(self.tasks, task_id, user=self.user)
         return self.comments.list_for_task(task_id, user=self.user)
 
@@ -80,7 +81,7 @@ class UpdateTaskComment:
         self.comments = comments
         self.user = user
 
-    def execute(self, comment_id: int, data: PatchedTaskCommentRequest) -> TaskCommentModel:
+    def execute(self, comment_id: UUID, data: PatchedTaskCommentRequest) -> TaskCommentModel:
         comment = _get_comment(self.comments, comment_id, user=self.user)
         apply_provided(data, comment)
         return self.comments.save(comment)
@@ -93,7 +94,7 @@ class DeleteTaskComment:
         self.comments = comments
         self.user = user
 
-    def execute(self, comment_id: int) -> None:
+    def execute(self, comment_id: UUID) -> None:
         self.comments.delete(_get_comment(self.comments, comment_id, user=self.user))
 
 
@@ -110,7 +111,7 @@ class AddCommentAttachment:
         self.attachments = attachments
         self.user = user
 
-    def execute(self, comment_id: int, upload: NewAttachment) -> CommentAttachmentModel:
+    def execute(self, comment_id: UUID, upload: NewAttachment) -> CommentAttachmentModel:
         comment = _get_comment(self.comments, comment_id, user=self.user)
         if not upload.data:
             raise DomainError('The file is empty.')
@@ -139,7 +140,7 @@ class GetCommentAttachment:
         self.attachments = attachments
         self.user = user
 
-    def execute(self, attachment_id: int) -> CommentAttachmentModel:
+    def execute(self, attachment_id: UUID) -> CommentAttachmentModel:
         return _get_attachment(self.attachments, attachment_id, user=self.user, with_data=True)
 
 
@@ -148,5 +149,5 @@ class DeleteCommentAttachment:
         self.attachments = attachments
         self.user = user
 
-    def execute(self, attachment_id: int) -> None:
+    def execute(self, attachment_id: UUID) -> None:
         self.attachments.delete(_get_attachment(self.attachments, attachment_id, user=self.user))

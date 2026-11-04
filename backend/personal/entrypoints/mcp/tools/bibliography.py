@@ -2,6 +2,7 @@
 
 from datetime import date as date_type
 from typing import Any, Literal
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 
@@ -40,7 +41,7 @@ def list_bibliography_items(
 
 
 @tool
-def get_bibliography_item(ctx: ToolContext, item_id: int) -> dict[str, Any]:
+def get_bibliography_item(ctx: ToolContext, item_id: UUID) -> dict[str, Any]:
     """Fetch one film, series or book with its status (``list_attempts`` gives its history)."""
     with unit_of_work(ctx) as (session, user):
         handler = bibliography_handlers.GetBibliographyItem(
@@ -82,7 +83,7 @@ def create_bibliography_item(
 @tool
 def update_bibliography_item(
     ctx: ToolContext,
-    item_id: int,
+    item_id: UUID,
     title: str | None = None,
     creator: str | None = None,
     year: int | None = None,
@@ -103,7 +104,7 @@ def update_bibliography_item(
 
 
 @tool
-def delete_bibliography_item(ctx: ToolContext, item_id: int) -> str:
+def delete_bibliography_item(ctx: ToolContext, item_id: UUID) -> str:
     """Delete a film, series or book together with all its attempts."""
     with unit_of_work(ctx) as (session, user):
         bibliography_handlers.DeleteBibliographyItem(
@@ -142,7 +143,7 @@ def _today(time_zone: str) -> date_type:
 
 
 @tool
-def list_attempts(ctx: ToolContext, item_id: int) -> list[dict[str, Any]]:
+def list_attempts(ctx: ToolContext, item_id: UUID) -> list[dict[str, Any]]:
     """The attempts at watching or reading one item, latest first (the one in progress,
     then by end date). ``progress`` is a page (book), minute (film) or episode (series)."""
     with unit_of_work(ctx) as (session, user):
@@ -155,7 +156,7 @@ def list_attempts(ctx: ToolContext, item_id: int) -> list[dict[str, Any]]:
 @tool
 def start_attempt(
     ctx: ToolContext,
-    item_id: int,
+    item_id: UUID,
     started_on: str | None = None,
     progress: int | None = None,
 ) -> dict[str, Any]:
@@ -171,7 +172,7 @@ def start_attempt(
 @tool
 def record_attempt(
     ctx: ToolContext,
-    item_id: int,
+    item_id: UUID,
     outcome: Literal['finished', 'abandoned'] = 'finished',
     ended_on: str | None = None,
     started_on: str | None = None,
@@ -193,7 +194,7 @@ def record_attempt(
 
 def _end_attempt(
     ctx: ToolContext,
-    attempt_id: int,
+    attempt_id: UUID,
     outcome: Literal['finished', 'abandoned'],
     ended_on: str | None,
     time_zone: str,
@@ -207,7 +208,7 @@ def _end_attempt(
 
 @tool
 def finish_attempt(
-    ctx: ToolContext, attempt_id: int, ended_on: str | None = None, time_zone: str = 'UTC'
+    ctx: ToolContext, attempt_id: UUID, ended_on: str | None = None, time_zone: str = 'UTC'
 ) -> dict[str, Any]:
     """Finish the attempt in progress (its progress is dropped). ``ended_on``
     (YYYY-MM-DD) defaults to today in ``time_zone`` (IANA, e.g. ``Europe/Warsaw``)."""
@@ -216,14 +217,14 @@ def finish_attempt(
 
 @tool
 def abandon_attempt(
-    ctx: ToolContext, attempt_id: int, ended_on: str | None = None, time_zone: str = 'UTC'
+    ctx: ToolContext, attempt_id: UUID, ended_on: str | None = None, time_zone: str = 'UTC'
 ) -> dict[str, Any]:
     """Abandon the attempt in progress; ``ended_on`` as in ``finish_attempt``."""
     return _end_attempt(ctx, attempt_id, 'abandoned', ended_on, time_zone)
 
 
 @tool
-def delete_attempt(ctx: ToolContext, attempt_id: int) -> str:
+def delete_attempt(ctx: ToolContext, attempt_id: UUID) -> str:
     """Delete one attempt (e.g. recorded by mistake); the item's status follows."""
     with unit_of_work(ctx) as (session, user):
         bibliography_handlers.DeleteAttempt(wiring.attempt_repository(session), user).execute(
@@ -235,7 +236,7 @@ def delete_attempt(ctx: ToolContext, attempt_id: int) -> str:
 @tool
 def update_attempt(
     ctx: ToolContext,
-    attempt_id: int,
+    attempt_id: UUID,
     progress: int | None = None,
     started_on: str | None = None,
     ended_on: str | None = None,

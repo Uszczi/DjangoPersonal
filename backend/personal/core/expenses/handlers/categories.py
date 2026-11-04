@@ -1,4 +1,5 @@
 from functools import partial
+from uuid import UUID
 
 from personal.core.shared.errors import DomainError, NotFound
 from personal.core.shared.patch import apply_provided
@@ -80,7 +81,7 @@ def ensure_system_category(repository: CategoryRepository, user: User) -> Catego
 
 
 def _get_category(
-    repository: CategoryRepository, category_id: int, *, user: User
+    repository: CategoryRepository, category_id: UUID, *, user: User
 ) -> CategoryModel:
     category = repository.find(category_id, user=user)
     if category is None:
@@ -143,7 +144,7 @@ class GetCategory:
         self.categories = categories
         self.user = user
 
-    def execute(self, category_id: int) -> CategoryModel:
+    def execute(self, category_id: UUID) -> CategoryModel:
         return _get_category(self.categories, category_id, user=self.user)
 
 
@@ -167,7 +168,7 @@ class ReplaceCategory:
         self.categories = categories
         self.user = user
 
-    def execute(self, category_id: int, data: CategoryRequest) -> CategoryModel:
+    def execute(self, category_id: UUID, data: CategoryRequest) -> CategoryModel:
         category = _get_category(self.categories, category_id, user=self.user)
         _reject_system(category, 'renamed')
         apply_provided(
@@ -186,7 +187,7 @@ class UpdateCategory:
         self.categories = categories
         self.user = user
 
-    def execute(self, category_id: int, data: PatchedCategoryRequest) -> CategoryModel:
+    def execute(self, category_id: UUID, data: PatchedCategoryRequest) -> CategoryModel:
         category = _get_category(self.categories, category_id, user=self.user)
         _reject_system(category, 'renamed')
 
@@ -209,7 +210,7 @@ class DeleteCategory:
         self.categories = categories
         self.user = user
 
-    def execute(self, category_id: int) -> None:
+    def execute(self, category_id: UUID) -> None:
         category = _get_category(self.categories, category_id, user=self.user)
         _reject_system(category, 'deleted')
         self.categories.delete(category)

@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Response, status
 
 from personal.core.bibliography import handlers
@@ -20,7 +22,7 @@ def list_attempts(
     user: CurrentUser,
     attempts: AttemptRepositoryDep,
     items: BibliographyItemRepositoryDep,
-    item: int | None = None,
+    item: UUID | None = None,
 ) -> list[AttemptResponse]:
     """One BibliographyItem's Attempts, or every Attempt of the user without ``item``."""
     if item is None:
@@ -47,14 +49,14 @@ def create_attempt(
 
 @router.get('/bibliography-attempts/{id}/', operation_id='bibliography_attempts_retrieve')
 def get_attempt(
-    id: int, user: CurrentUser, attempts: AttemptRepositoryDep
+    id: UUID, user: CurrentUser, attempts: AttemptRepositoryDep
 ) -> AttemptResponse:
     return AttemptResponse.model_validate(handlers.GetAttempt(attempts, user).execute(id))
 
 
 @router.patch('/bibliography-attempts/{id}/', operation_id='bibliography_attempts_partial_update')
 def update_attempt(
-    id: int,
+    id: UUID,
     payload: PatchedAttemptRequest,
     user: CurrentUser,
     attempts: AttemptRepositoryDep,
@@ -69,5 +71,5 @@ def update_attempt(
     response_class=Response,
     operation_id='bibliography_attempts_destroy',
 )
-def delete_attempt(id: int, user: CurrentUser, attempts: AttemptRepositoryDep) -> None:
+def delete_attempt(id: UUID, user: CurrentUser, attempts: AttemptRepositoryDep) -> None:
     handlers.DeleteAttempt(attempts, user).execute(id)

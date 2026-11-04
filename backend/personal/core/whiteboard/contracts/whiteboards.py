@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Any
+from uuid import UUID
 
 from pydantic import Field, field_validator
 
@@ -22,7 +23,7 @@ class WhiteboardRequest(_WhiteboardPayload):
     name: str = Field(default='Bez tytułu', min_length=1, max_length=200)
     content: dict[str, Any] | None = None
     #: The Folder to create it in; without one it stays at the top level.
-    folder_id: int | None = None
+    folder_id: UUID | None = None
 
 
 class PatchedWhiteboardRequest(_WhiteboardPayload):
@@ -30,7 +31,7 @@ class PatchedWhiteboardRequest(_WhiteboardPayload):
     name: str | None = Field(default=None, min_length=1, max_length=200)
     content: dict[str, Any] | None = None
     #: Moves it to this Folder; an explicit ``null`` takes it out of its Folder.
-    folder_id: int | None = None
+    folder_id: UUID | None = None
 
     @field_validator('kind', 'name', 'content')
     @classmethod
@@ -42,11 +43,11 @@ class PatchedWhiteboardRequest(_WhiteboardPayload):
 
 
 class WhiteboardResponse(BaseModel):
-    id: int = Field(..., json_schema_extra={'readOnly': True})
+    id: UUID = Field(..., json_schema_extra={'readOnly': True})
     kind: str = Field(..., json_schema_extra={'readOnly': True})
     name: str
     content: dict[str, Any]
-    folder_id: int | None = None
+    folder_id: UUID | None = None
     created_at: datetime = Field(..., json_schema_extra={'readOnly': True})
     updated_at: datetime = Field(..., json_schema_extra={'readOnly': True})
 
@@ -62,10 +63,10 @@ class WhiteboardSearchResult(BaseModel):
     """A Whiteboard or Notatka found by a search: without its ``content``,
     with the lines of a Notatka's text that matched (empty when only the name did)."""
 
-    id: int
+    id: UUID
     kind: str
     name: str
-    folder_id: int | None = None
+    folder_id: UUID | None = None
     created_at: datetime
     updated_at: datetime
     lines: list[MatchingLine]

@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Response, status
 
 from personal.core.counters import handlers
@@ -39,14 +41,14 @@ def create_counter(
 
 @router.get('/counters/{id}/', operation_id='counters_retrieve')
 def get_counter(
-    id: int, user: CurrentUser, counters: CounterRepositoryDep, tz: TimeZoneDep
+    id: UUID, user: CurrentUser, counters: CounterRepositoryDep, tz: TimeZoneDep
 ) -> CounterResponse:
     return CounterResponse.model_validate(handlers.GetCounter(counters, user, tz).execute(id))
 
 
 @router.patch('/counters/{id}/', operation_id='counters_partial_update')
 def update_counter(
-    id: int,
+    id: UUID,
     payload: PatchedCounterRequest,
     user: CurrentUser,
     counters: CounterRepositoryDep,
@@ -62,13 +64,13 @@ def update_counter(
     response_class=Response,
     operation_id='counters_destroy',
 )
-def delete_counter(id: int, user: CurrentUser, counters: CounterRepositoryDep) -> None:
+def delete_counter(id: UUID, user: CurrentUser, counters: CounterRepositoryDep) -> None:
     handlers.DeleteCounter(counters, user).execute(id)
 
 
 @router.get('/counter-entries/', operation_id='counter_entries_list')
 def list_counter_entries(
-    counter: int,
+    counter: UUID,
     user: CurrentUser,
     entries: CounterEntryRepositoryDep,
     counters: CounterRepositoryDep,
@@ -94,14 +96,14 @@ def create_counter_entry(
 
 @router.get('/counter-entries/{id}/', operation_id='counter_entries_retrieve')
 def get_counter_entry(
-    id: int, user: CurrentUser, entries: CounterEntryRepositoryDep
+    id: UUID, user: CurrentUser, entries: CounterEntryRepositoryDep
 ) -> CounterEntryResponse:
     return CounterEntryResponse.model_validate(handlers.GetCounterEntry(entries, user).execute(id))
 
 
 @router.patch('/counter-entries/{id}/', operation_id='counter_entries_partial_update')
 def update_counter_entry(
-    id: int,
+    id: UUID,
     payload: PatchedCounterEntryRequest,
     user: CurrentUser,
     entries: CounterEntryRepositoryDep,
@@ -116,5 +118,5 @@ def update_counter_entry(
     response_class=Response,
     operation_id='counter_entries_destroy',
 )
-def delete_counter_entry(id: int, user: CurrentUser, entries: CounterEntryRepositoryDep) -> None:
+def delete_counter_entry(id: UUID, user: CurrentUser, entries: CounterEntryRepositoryDep) -> None:
     handlers.DeleteCounterEntry(entries, user).execute(id)

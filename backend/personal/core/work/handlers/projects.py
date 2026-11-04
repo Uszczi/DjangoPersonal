@@ -1,4 +1,5 @@
 from functools import partial
+from uuid import UUID
 
 from personal.core.shared.errors import DomainError, NotFound
 from personal.core.shared.patch import apply_provided
@@ -10,7 +11,7 @@ from personal.infra.rules import INBOX_NAME_KEY, normalize_project_name, project
 
 
 def _get_project(
-    repository: ProjectRepository, project_id: int, *, user: User
+    repository: ProjectRepository, project_id: UUID, *, user: User
 ) -> ProjectModel:
     project = repository.find(project_id, user=user)
     if project is None:
@@ -19,7 +20,7 @@ def _get_project(
 
 
 def _resolve_project(
-    repository: ProjectRepository, project_id: int, *, user: User
+    repository: ProjectRepository, project_id: UUID, *, user: User
 ) -> ProjectModel:
     """Resolve a project referenced by another payload, or fail as invalid."""
     project = repository.find(project_id, user=user)
@@ -100,7 +101,7 @@ class GetProject:
         self.projects = projects
         self.user = user
 
-    def execute(self, project_id: int) -> ProjectModel:
+    def execute(self, project_id: UUID) -> ProjectModel:
         return _get_project(self.projects, project_id, user=self.user)
 
 
@@ -124,7 +125,7 @@ class ReplaceProject:
         self.projects = projects
         self.user = user
 
-    def execute(self, project_id: int, data: ProjectRequest) -> ProjectModel:
+    def execute(self, project_id: UUID, data: ProjectRequest) -> ProjectModel:
         project = _get_project(self.projects, project_id, user=self.user)
         current_terminal = project.terminal_status
         apply_provided(
@@ -143,7 +144,7 @@ class UpdateProject:
         self.projects = projects
         self.user = user
 
-    def execute(self, project_id: int, data: PatchedProjectRequest) -> ProjectModel:
+    def execute(self, project_id: UUID, data: PatchedProjectRequest) -> ProjectModel:
         project = _get_project(self.projects, project_id, user=self.user)
         current_terminal = project.terminal_status
 
@@ -175,7 +176,7 @@ class DeleteProject:
         self.projects = projects
         self.user = user
 
-    def execute(self, project_id: int) -> None:
+    def execute(self, project_id: UUID) -> None:
         project = _get_project(self.projects, project_id, user=self.user)
         if project.is_inbox:
             raise DomainError('Inbox cannot be deleted.')

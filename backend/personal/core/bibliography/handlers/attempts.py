@@ -1,4 +1,5 @@
 from datetime import date
+from uuid import UUID
 
 from personal.core.shared.errors import DomainError, NotFound
 from personal.core.shared.patch import apply_provided
@@ -20,7 +21,7 @@ PROGRESS_ONLY_IN_PROGRESS = 'Progress is set only on an Attempt in progress.'
 NO_REOPENING = 'An ended Attempt cannot be put back in progress; start a new Attempt instead.'
 
 
-def _get_attempt(repository: AttemptRepository, attempt_id: int, *, user: User) -> AttemptModel:
+def _get_attempt(repository: AttemptRepository, attempt_id: UUID, *, user: User) -> AttemptModel:
     attempt = repository.find(attempt_id, user=user)
     if attempt is None:
         raise NotFound('Attempt not found.')
@@ -91,7 +92,7 @@ def _save(repository: AttemptRepository, attempt: AttemptModel) -> AttemptModel:
 def history_order(attempts: list[AttemptModel]) -> list[AttemptModel]:
     """Latest first: the one in progress, then by end date, newest first."""
 
-    def key(attempt: AttemptModel) -> tuple[bool, date, int]:
+    def key(attempt: AttemptModel) -> tuple[bool, date, UUID]:
         return (is_in_progress(attempt), attempt.ended_on or date.min, attempt.id)
 
     return sorted(attempts, key=key, reverse=True)
@@ -107,7 +108,7 @@ class ListAttempts:
         self.items = items
         self.user = user
 
-    def execute(self, item_id: int) -> list[AttemptModel]:
+    def execute(self, item_id: UUID) -> list[AttemptModel]:
         item = get_bibliography_item(self.items, item_id, user=self.user)
         return history_order(self.attempts.list_for_item(item.id, user=self.user))
 
@@ -128,7 +129,7 @@ class GetAttempt:
         self.attempts = attempts
         self.user = user
 
-    def execute(self, attempt_id: int) -> AttemptModel:
+    def execute(self, attempt_id: UUID) -> AttemptModel:
         return _get_attempt(self.attempts, attempt_id, user=self.user)
 
 
@@ -167,7 +168,7 @@ class DeleteAttempt:
         self.attempts = attempts
         self.user = user
 
-    def execute(self, attempt_id: int) -> None:
+    def execute(self, attempt_id: UUID) -> None:
         self.attempts.delete(_get_attempt(self.attempts, attempt_id, user=self.user))
 
 
@@ -181,7 +182,7 @@ class UpdateAttempt:
         self.attempts = attempts
         self.user = user
 
-    def execute(self, attempt_id: int, data: PatchedAttemptRequest) -> AttemptModel:
+    def execute(self, attempt_id: UUID, data: PatchedAttemptRequest) -> AttemptModel:
         attempt = _get_attempt(self.attempts, attempt_id, user=self.user)
         others = self.attempts.list_for_item(attempt.item_id, user=self.user)
         was_ended = not is_in_progress(attempt)

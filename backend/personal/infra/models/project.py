@@ -1,4 +1,5 @@
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import (
     JSON,
@@ -27,7 +28,7 @@ from personal.infra.rules import (
     project_name_key,
 )
 
-from .base import Base
+from .base import Base, new_id
 from .user import User
 
 
@@ -56,8 +57,8 @@ class Project(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=new_id)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
     name: Mapped[str] = mapped_column(String(100))
     #: ``name`` trimmed and case-folded; uniqueness is checked on this.
     normalized_name: Mapped[str] = mapped_column(String(100))

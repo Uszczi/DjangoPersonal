@@ -1,4 +1,5 @@
 from decimal import Decimal
+from uuid import UUID
 
 from sqlalchemy import ColumnElement, Numeric, Select, case, func, select, true
 from sqlalchemy.orm import Session
@@ -66,11 +67,11 @@ class WalletRepository:
         """Every wallet for ``user`` in the user's order (then by name), with count and balance."""
         return self._with_details(WalletModel.user_id == user.id)
 
-    def find(self, wallet_id: int, *, user: User) -> WalletModel | None:
+    def find(self, wallet_id: UUID, *, user: User) -> WalletModel | None:
         found = self._with_details(WalletModel.id == wallet_id, WalletModel.user_id == user.id)
         return found[0] if found else None
 
-    def balance(self, wallet_id: int, *, user: User) -> Decimal:
+    def balance(self, wallet_id: UUID, *, user: User) -> Decimal:
         """The wallet's balance, computed from its ledger.
 
         Handlers read it through here rather than off a loaded wallet, so the

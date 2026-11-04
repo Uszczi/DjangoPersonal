@@ -3,6 +3,7 @@
 from collections import defaultdict
 from collections.abc import Sequence
 from typing import Any
+from uuid import UUID
 
 import anyio.to_thread
 from sqladmin.pagination import Pagination
@@ -83,16 +84,16 @@ class BibliographyItemView(_AppView, model=BibliographyItem):
 
     @staticmethod
     def _status_value(item: BibliographyItem, request: Request | None) -> tuple[str, str]:
-        statuses: dict[int, str] = getattr(request.state, 'item_statuses', {}) if request else {}
+        statuses: dict[UUID, str] = getattr(request.state, 'item_statuses', {}) if request else {}
         status = statuses.get(item.id, '')
         return status, status
 
-    def _derive_statuses(self, items: Sequence[BibliographyItem]) -> dict[int, ItemStatus]:
+    def _derive_statuses(self, items: Sequence[BibliographyItem]) -> dict[UUID, ItemStatus]:
         """Each item's status, as the app derives it; the rows span users, so ask per owner."""
-        by_owner: defaultdict[int, list[BibliographyItem]] = defaultdict(list)
+        by_owner: defaultdict[UUID, list[BibliographyItem]] = defaultdict(list)
         for item in items:
             by_owner[item.user_id].append(item)
-        statuses: dict[int, ItemStatus] = {}
+        statuses: dict[UUID, ItemStatus] = {}
         with self.session_maker() as session:
             users = wiring.user_repository(session)
             attempts = wiring.attempt_repository(session)

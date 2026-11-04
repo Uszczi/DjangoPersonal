@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -29,7 +31,7 @@ class UserRepository:
         flush(self.session, on_conflict=DuplicateUsername)
         return user
 
-    def find(self, user_id: int) -> UserModel | None:
+    def find(self, user_id: UUID) -> UserModel | None:
         return self.session.get(UserModel, user_id)
 
     def get_by_username(self, username: str) -> UserModel | None:

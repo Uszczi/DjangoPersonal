@@ -9,6 +9,7 @@ from collections.abc import Iterable
 from datetime import UTC, datetime, timedelta
 from difflib import SequenceMatcher
 from typing import Any
+from uuid import UUID
 
 import jwt
 
@@ -148,7 +149,7 @@ class JwtTokenService:
         self.secret_key = secret_key
         self.lifetimes = {ACCESS: access_lifetime, REFRESH: refresh_lifetime}
 
-    def _encode(self, user_id: int, token_type: str) -> str:
+    def _encode(self, user_id: UUID, token_type: str) -> str:
         now = datetime.now(UTC)
         claims = {
             'sub': str(user_id),
@@ -159,7 +160,7 @@ class JwtTokenService:
         }
         return jwt.encode(claims, self.secret_key, algorithm=self.algorithm)
 
-    def _decode(self, token: str, token_type: str) -> int:
+    def _decode(self, token: str, token_type: str) -> UUID:
         try:
             claims: dict[str, Any] = jwt.decode(
                 token,
@@ -174,7 +175,7 @@ class JwtTokenService:
         if claims.get('type') != token_type:
             raise InvalidToken(f'Expected an {token_type} token.')
         try:
-            return int(claims['sub'])
+            return UUID(claims['sub'])
         except ValueError as error:
             raise InvalidToken('Token is invalid.') from error
 
@@ -184,5 +185,5 @@ class JwtTokenService:
     def refresh_access(self, refresh: str) -> str:
         return self._encode(self._decode(refresh, REFRESH), ACCESS)
 
-    def user_id_for(self, access: str) -> int:
+    def user_id_for(self, access: str) -> UUID:
         return self._decode(access, ACCESS)

@@ -16,6 +16,7 @@ import secrets
 import time
 from html import escape
 from urllib.parse import urlencode
+from uuid import UUID
 
 import anyio.to_thread
 from mcp.server.auth.provider import (
@@ -214,7 +215,7 @@ async def login_get(request: Request) -> HTMLResponse:
     return HTMLResponse(_login_page(dict(request.query_params)))
 
 
-def _authenticated_user_id(username: str, password: str, *, client: str) -> int | None:
+def _authenticated_user_id(username: str, password: str, *, client: str) -> UUID | None:
     """The id of the account these credentials sign in to, or ``None``.
 
     Failures are throttled like the API login; a blocked client gets

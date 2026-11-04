@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import JSON, ForeignKey, Index, String, event, text
 from sqlalchemy.dialects.postgresql import JSONB
@@ -11,7 +12,7 @@ from personal.infra.rules import (
     normalize_whiteboard_name,
 )
 
-from .base import Base, UTCDateTime, utc_now
+from .base import Base, UTCDateTime, new_id, utc_now
 from .user import User
 
 
@@ -45,10 +46,10 @@ class Whiteboard(Base):
     KIND_WHITEBOARD = 'whiteboard'
     KIND_MARKDOWN = 'markdown'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=new_id)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
     #: The Folder it sits in, if any; deleting the Folder deletes it too.
-    folder_id: Mapped[int | None] = mapped_column(
+    folder_id: Mapped[UUID | None] = mapped_column(
         ForeignKey('folders.id', ondelete='CASCADE'), index=True, default=None
     )
     kind: Mapped[str] = mapped_column(String(20), default=KIND_WHITEBOARD)

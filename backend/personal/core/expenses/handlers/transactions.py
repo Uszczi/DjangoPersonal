@@ -3,6 +3,7 @@ import binascii
 from dataclasses import dataclass
 from datetime import date
 from functools import partial
+from uuid import UUID
 
 from personal.core.shared.errors import DomainError, NotFound
 from personal.core.shared.patch import apply_provided
@@ -21,7 +22,7 @@ from ..contracts import PatchedTransactionRequest, TransactionRequest
 
 
 def _get_transaction(
-    repository: TransactionRepository, transaction_id: int, *, user: User
+    repository: TransactionRepository, transaction_id: UUID, *, user: User
 ) -> TransactionModel:
     transaction = repository.find(transaction_id, user=user)
     if transaction is None:
@@ -30,7 +31,7 @@ def _get_transaction(
 
 
 def _resolve_wallet(
-    repository: WalletRepository, wallet_id: int, *, user: User
+    repository: WalletRepository, wallet_id: UUID, *, user: User
 ) -> WalletModel:
     wallet = repository.find(wallet_id, user=user)
     if wallet is None:
@@ -39,7 +40,7 @@ def _resolve_wallet(
 
 
 def _resolve_category(
-    repository: CategoryRepository, category_id: int | None, *, user: User
+    repository: CategoryRepository, category_id: UUID | None, *, user: User
 ) -> CategoryModel | None:
     if category_id is None:
         return None
@@ -54,7 +55,7 @@ def _resolve_category(
 
 
 def _get_editable_transaction(
-    repository: TransactionRepository, transaction_id: int, *, user: User
+    repository: TransactionRepository, transaction_id: UUID, *, user: User
 ) -> TransactionModel:
     """A transaction the user may edit: anything but a System entry.
 
@@ -84,7 +85,7 @@ def decode_cursor(cursor: str) -> TransactionKey:
     try:
         padded = cursor + '=' * (-len(cursor) % 4)
         day, transaction_id = base64.urlsafe_b64decode(padded).decode().split('|')
-        return TransactionKey(date.fromisoformat(day), int(transaction_id))
+        return TransactionKey(date.fromisoformat(day), UUID(transaction_id))
     except (binascii.Error, UnicodeDecodeError, ValueError):
         raise DomainError('Invalid cursor.') from None
 
@@ -115,7 +116,7 @@ class ListTransactions:
 
     def execute(
         self,
-        wallet_id: int,
+        wallet_id: UUID,
         *,
         limit: int = DEFAULT_PAGE_SIZE,
         cursor: str | None = None,
@@ -148,7 +149,7 @@ class GetTransaction:
         self.transactions = transactions
         self.user = user
 
-    def execute(self, transaction_id: int) -> TransactionModel:
+    def execute(self, transaction_id: UUID) -> TransactionModel:
         return _get_transaction(self.transactions, transaction_id, user=self.user)
 
 
@@ -197,7 +198,7 @@ class ReplaceTransaction:
         self.categories = categories
         self.user = user
 
-    def execute(self, transaction_id: int, data: TransactionRequest) -> TransactionModel:
+    def execute(self, transaction_id: UUID, data: TransactionRequest) -> TransactionModel:
         transaction = _get_editable_transaction(self.transactions, transaction_id, user=self.user)
         transaction.wallet = _resolve_wallet(self.wallets, data.wallet, user=self.user)
         transaction.category = _resolve_category(
@@ -224,7 +225,7 @@ class UpdateTransaction:
         self.user = user
 
     def execute(
-        self, transaction_id: int, data: PatchedTransactionRequest
+        self, transaction_id: UUID, data: PatchedTransactionRequest
     ) -> TransactionModel:
         transaction = _get_editable_transaction(
             self.transactions, transaction_id, user=self.user
@@ -245,6 +246,6 @@ class DeleteTransaction:
         self.transactions = transactions
         self.user = user
 
-    def execute(self, transaction_id: int) -> None:
+    def execute(self, transaction_id: UUID) -> None:
         transaction = _get_transaction(self.transactions, transaction_id, user=self.user)
         self.transactions.delete(transaction)

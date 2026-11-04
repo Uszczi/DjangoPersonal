@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -23,13 +25,13 @@ class FolderRepository:
         query = select(FolderModel).where(FolderModel.user_id == user.id)
         return sorted(self.session.scalars(query), key=lambda folder: (folder.name, folder.id))
 
-    def find(self, folder_id: int, *, user: User) -> FolderModel | None:
+    def find(self, folder_id: UUID, *, user: User) -> FolderModel | None:
         query = select(FolderModel).where(
             FolderModel.id == folder_id, FolderModel.user_id == user.id
         )
         return self.session.scalars(query).first()
 
-    def parent_ids(self, *, user: User) -> dict[int, int | None]:
+    def parent_ids(self, *, user: User) -> dict[UUID, UUID | None]:
         """Each of ``user``'s folders mapped to its parent: the tree, without the rows."""
         query = select(FolderModel.id, FolderModel.parent_id).where(
             FolderModel.user_id == user.id
@@ -41,7 +43,7 @@ class FolderRepository:
         name: str,
         *,
         user: User,
-        parent_id: int | None,
+        parent_id: UUID | None,
         exclude: FolderModel | None = None,
     ) -> bool:
         """Whether a sibling under ``parent_id`` (``None``: the top level) has exactly this name."""

@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from personal.core.shared.errors import DomainError, NotFound
 from personal.core.whiteboard.contracts import FolderRequest, PatchedFolderRequest
 from personal.infra.models import Folder as FolderModel
@@ -9,7 +11,7 @@ DUPLICATE_NAME = 'A folder with this name already exists.'
 INTO_ITSELF = 'A folder cannot be moved into itself or one of its subfolders.'
 
 
-def get_folder(repository: FolderRepository, folder_id: int, *, user: User) -> FolderModel:
+def get_folder(repository: FolderRepository, folder_id: UUID, *, user: User) -> FolderModel:
     folder = repository.find(folder_id, user=user)
     if folder is None:
         raise NotFound('Folder not found.')
@@ -19,7 +21,7 @@ def get_folder(repository: FolderRepository, folder_id: int, *, user: User) -> F
 def _validate_name(
     repository: FolderRepository,
     name: str,
-    parent_id: int | None,
+    parent_id: UUID | None,
     current: FolderModel | None = None,
     *,
     user: User,
@@ -38,18 +40,18 @@ def _validate_name(
 
 def _validate_parent(
     repository: FolderRepository,
-    parent_id: int | None,
+    parent_id: UUID | None,
     moved: FolderModel | None = None,
     *,
     user: User,
-) -> int | None:
+) -> UUID | None:
     """A parent must be the user's own Folder, and never ``moved`` or one inside it."""
     if parent_id is None:
         return None
     get_folder(repository, parent_id, user=user)
     if moved is not None:
         parents = repository.parent_ids(user=user)
-        ancestor: int | None = parent_id
+        ancestor: UUID | None = parent_id
         while ancestor is not None:
             if ancestor == moved.id:
                 raise DomainError(INTO_ITSELF)
@@ -96,7 +98,7 @@ class UpdateFolder:
         self.folders = folders
         self.user = user
 
-    def execute(self, folder_id: int, data: PatchedFolderRequest) -> FolderModel:
+    def execute(self, folder_id: UUID, data: PatchedFolderRequest) -> FolderModel:
         folder = get_folder(self.folders, folder_id, user=self.user)
         # ``null`` is meaningful here (the top level), so presence decides.
         parent_id = folder.parent_id
@@ -123,6 +125,6 @@ class DeleteFolder:
         self.folders = folders
         self.user = user
 
-    def execute(self, folder_id: int) -> None:
+    def execute(self, folder_id: UUID) -> None:
         folder = get_folder(self.folders, folder_id, user=self.user)
         self.folders.delete(folder)

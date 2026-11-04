@@ -10,6 +10,7 @@ from personal.entrypoints.mcp.server import mcp
 from personal.infra import factories
 from personal.infra.models import User
 from tests.entrypoints.mcp.helpers import call
+from tests.helpers import UNKNOWN_ID
 
 
 def test_tools_do_not_expose_the_context_parameter() -> None:
@@ -30,7 +31,7 @@ def test_tool_calls_act_for_the_default_user(mcp_user: User) -> None:
 
 def test_domain_errors_become_tool_errors(mcp_user: User) -> None:
     with pytest.raises(ToolError, match='Project not found.'):
-        call('get_project', project_id=999)
+        call('get_project', project_id=UNKNOWN_ID)
 
 
 def test_a_refused_call_stores_nothing(mcp_user: User) -> None:

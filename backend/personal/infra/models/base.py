@@ -2,6 +2,7 @@
 
 from datetime import UTC, datetime
 from typing import Any
+from uuid import UUID, uuid7
 
 from sqlalchemy import Column, DateTime, MetaData, inspect
 from sqlalchemy.orm import DeclarativeBase
@@ -21,6 +22,11 @@ NAMING_CONVENTION = {
 
 def utc_now() -> datetime:
     return datetime.now(UTC)
+
+
+def new_id() -> UUID:
+    """A fresh primary key: a UUIDv7, so ids sort in creation order (ADR 0001)."""
+    return uuid7()
 
 
 class UTCDateTime(TypeDecorator[datetime]):

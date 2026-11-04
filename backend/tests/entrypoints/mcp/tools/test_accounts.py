@@ -27,4 +27,4 @@ def test_the_login_tool_is_throttled_too(mcp_user: User) -> None:
 
 
 def test_current_account_tool(mcp_user: User) -> None:
-    assert call('get_current_account') == {'id': mcp_user.id, 'username': 'mcp-user'}
+    assert call('get_current_account') == {'id': str(mcp_user.id), 'username': 'mcp-user'}

@@ -1,5 +1,8 @@
 """Folder endpoints: the single-level groups of the Notatnik."""
 
+
+from uuid import UUID
+
 from fastapi import APIRouter, Response, status
 
 from personal.core.whiteboard import handlers
@@ -34,7 +37,7 @@ def create_folder(
 
 @router.patch('/folders/{id}/', operation_id='folders_partial_update')
 def update_folder(
-    id: int, payload: PatchedFolderRequest, user: CurrentUser, folders: FolderRepositoryDep
+    id: UUID, payload: PatchedFolderRequest, user: CurrentUser, folders: FolderRepositoryDep
 ) -> FolderResponse:
     return FolderResponse.model_validate(
         handlers.UpdateFolder(folders, user).execute(id, payload)
@@ -47,5 +50,5 @@ def update_folder(
     response_class=Response,
     operation_id='folders_destroy',
 )
-def delete_folder(id: int, user: CurrentUser, folders: FolderRepositoryDep) -> None:
+def delete_folder(id: UUID, user: CurrentUser, folders: FolderRepositoryDep) -> None:
     handlers.DeleteFolder(folders, user).execute(id)
