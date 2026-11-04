@@ -1,6 +1,7 @@
 from datetime import date
 from decimal import Decimal
 from functools import partial
+from uuid import UUID
 
 from personal.core.shared.errors import DomainError, NotFound
 from personal.core.shared.patch import apply_provided
@@ -25,7 +26,7 @@ BALANCE_CORRECTION_TITLE = 'Korekta stanu'
 
 
 def _get_wallet(
-    repository: WalletRepository, wallet_id: int, *, user: User
+    repository: WalletRepository, wallet_id: UUID, *, user: User
 ) -> WalletModel:
     wallet = repository.find(wallet_id, user=user)
     if wallet is None:
@@ -73,7 +74,7 @@ class GetWallet:
         self.wallets = wallets
         self.user = user
 
-    def execute(self, wallet_id: int) -> WalletModel:
+    def execute(self, wallet_id: UUID) -> WalletModel:
         return _get_wallet(self.wallets, wallet_id, user=self.user)
 
 
@@ -133,7 +134,7 @@ class ReplaceWallet:
         self.wallets = wallets
         self.user = user
 
-    def execute(self, wallet_id: int, data: WalletRequest) -> WalletModel:
+    def execute(self, wallet_id: UUID, data: WalletRequest) -> WalletModel:
         wallet = _get_wallet(self.wallets, wallet_id, user=self.user)
         apply_provided(
             data,
@@ -165,7 +166,7 @@ class UpdateWallet:
         self.transactions = transactions
         self.user = user
 
-    def execute(self, wallet_id: int, data: PatchedWalletRequest) -> WalletModel:
+    def execute(self, wallet_id: UUID, data: PatchedWalletRequest) -> WalletModel:
         wallet = _get_wallet(self.wallets, wallet_id, user=self.user)
 
         if data.name is not None:
@@ -209,6 +210,6 @@ class DeleteWallet:
         self.wallets = wallets
         self.user = user
 
-    def execute(self, wallet_id: int) -> None:
+    def execute(self, wallet_id: UUID) -> None:
         wallet = _get_wallet(self.wallets, wallet_id, user=self.user)
         self.wallets.delete(wallet)

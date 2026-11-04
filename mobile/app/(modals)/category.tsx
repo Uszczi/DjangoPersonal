@@ -32,7 +32,7 @@ import { common, form } from "@/ui/classes";
  * comes from `?kind=` (its section); an edited one keeps its own kind. */
 export default function CategoryEditorScreen() {
   const params = useLocalSearchParams<{ categoryId?: string; kind?: string }>();
-  const categoryId = params.categoryId ? Number(params.categoryId) : null;
+  const categoryId = params.categoryId ?? null;
   const requestedKind: CategoryKind =
     params.kind === "income" ? "income" : "expense";
   const { data: categories = [] } = useCategories();

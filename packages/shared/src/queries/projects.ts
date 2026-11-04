@@ -79,7 +79,7 @@ export function useSaveProject() {
 export function useMoveProject() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, position }: { id: number; position: number }) =>
+    mutationFn: ({ id, position }: { id: string; position: number }) =>
       api.projectsPartialUpdate({ id, patchedProjectRequest: { position } }),
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: projectKeys.all }),

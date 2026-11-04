@@ -5,7 +5,7 @@ import type { FolderResponse } from "./generated/api";
 /** The Folders directly inside `parentId` (`null`: the top level), in list order. */
 export function childFolders(
   folders: FolderResponse[],
-  parentId: number | null,
+  parentId: string | null,
 ) {
   return folders.filter((folder) => (folder.parentId ?? null) === parentId);
 }
@@ -13,8 +13,8 @@ export function childFolders(
 /** `folderId` and every Folder below it. */
 export function subtreeIds(
   folders: FolderResponse[],
-  folderId: number,
-): Set<number> {
+  folderId: string,
+): Set<string> {
   const ids = new Set([folderId]);
   let grew = true;
   while (grew) {
@@ -36,7 +36,7 @@ export function subtreeIds(
 /** Every Folder in tree order (parents before children, siblings alphabetically), with its depth. */
 export function flattenTree(folders: FolderResponse[]) {
   const rows: { folder: FolderResponse; depth: number }[] = [];
-  function visit(parentId: number | null, depth: number) {
+  function visit(parentId: string | null, depth: number) {
     for (const folder of childFolders(folders, parentId)) {
       rows.push({ folder, depth });
       visit(folder.id, depth + 1);
@@ -49,11 +49,11 @@ export function flattenTree(folders: FolderResponse[]) {
 /** The Folders from the top level down to `folderId`, inclusive; empty for `null`. */
 export function folderPath(
   folders: FolderResponse[],
-  folderId: number | null,
+  folderId: string | null,
 ): FolderResponse[] {
   const byId = new Map(folders.map((folder) => [folder.id, folder]));
   const path: FolderResponse[] = [];
-  const seen = new Set<number>();
+  const seen = new Set<string>();
   let current = folderId != null ? byId.get(folderId) : undefined;
   while (current && !seen.has(current.id)) {
     seen.add(current.id);

@@ -5,7 +5,7 @@ import { useAuthStore } from "@personal/shared/stores/auth";
 
 const KEY = ["transactions", "wallet", 1];
 
-function signIn(id: number, username: string) {
+function signIn(id: string, username: string) {
   useAuthStore.setState({
     user: { id, username },
     access: `access-${id}`,
@@ -16,7 +16,7 @@ function signIn(id: number, username: string) {
 describe("the server-state cache", () => {
   beforeEach(() => {
     useAuthStore.setState(useAuthStore.getInitialState());
-    signIn(1, "alice");
+    signIn("1", "alice");
     queryClient.setQueryData(KEY, ["alice’s transaction"]);
   });
 
@@ -27,7 +27,7 @@ describe("the server-state cache", () => {
   });
 
   it("is emptied when another account signs in", () => {
-    signIn(2, "bob");
+    signIn("2", "bob");
 
     expect(queryClient.getQueryData(KEY)).toBeUndefined();
   });

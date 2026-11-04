@@ -24,7 +24,7 @@ import { common, form } from "@/ui/classes";
 /** Creates a Counter, or edits one (`?counterId=`): its name and colour. */
 export default function CounterEditorScreen() {
   const params = useLocalSearchParams<{ counterId?: string }>();
-  const counterId = params.counterId ? Number(params.counterId) : null;
+  const counterId = params.counterId ?? null;
   const { data: counters = [] } = useCounters();
   const counter =
     counterId === null

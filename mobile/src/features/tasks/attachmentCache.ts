@@ -15,17 +15,17 @@ import { useAuthStore } from "@personal/shared/stores/auth";
  */
 const DIRECTORY = new Directory(Paths.cache, "comment-attachments");
 
-function cachedFile(id: number) {
+function cachedFile(id: string) {
   return new File(DIRECTORY, String(id));
 }
 
 /** The cached copy's URI, or `null` before it is downloaded. */
-export function cachedAttachmentUri(id: number): string | null {
+export function cachedAttachmentUri(id: string): string | null {
   const file = cachedFile(id);
   return file.exists ? file.uri : null;
 }
 
-async function downloadWith(id: number, access: string | null) {
+async function downloadWith(id: string, access: string | null) {
   // A failed download can leave a partial file on Android, so it lands
   // under another name and moves into place only once complete.
   const partial = new File(DIRECTORY, `${id}.part`);
@@ -43,7 +43,7 @@ async function downloadWith(id: number, access: string | null) {
   return target.uri;
 }
 
-async function download(id: number): Promise<string> {
+async function download(id: string): Promise<string> {
   DIRECTORY.create({ intermediates: true, idempotent: true });
   try {
     return await downloadWith(id, useAuthStore.getState().access);
@@ -57,9 +57,9 @@ async function download(id: number): Promise<string> {
 }
 
 /** One download per Attachment, however many views ask for it at once. */
-const pending = new Map<number, Promise<string>>();
+const pending = new Map<string, Promise<string>>();
 
-function attachmentUri(id: number): Promise<string> {
+function attachmentUri(id: string): Promise<string> {
   let request = pending.get(id);
   if (request === undefined) {
     request = download(id).finally(() => pending.delete(id));
@@ -69,7 +69,7 @@ function attachmentUri(id: number): Promise<string> {
 }
 
 /** The local URI of an Attachment's file, downloading it on first use. */
-export function useAttachmentUri(id: number) {
+export function useAttachmentUri(id: string) {
   const [uri, setUri] = useState(() => cachedAttachmentUri(id));
   const [failed, setFailed] = useState(false);
 

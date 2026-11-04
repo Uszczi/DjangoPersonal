@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Response, status
 
 from personal.core.bibliography import handlers
@@ -45,7 +47,7 @@ def create_bibliography_item(
 
 @router.get('/bibliography-items/{id}/', operation_id='bibliography_items_retrieve')
 def get_bibliography_item(
-    id: int,
+    id: UUID,
     user: CurrentUser,
     items: BibliographyItemRepositoryDep,
     attempts: AttemptRepositoryDep,
@@ -56,7 +58,7 @@ def get_bibliography_item(
 
 @router.patch('/bibliography-items/{id}/', operation_id='bibliography_items_partial_update')
 def update_bibliography_item(
-    id: int,
+    id: UUID,
     payload: PatchedBibliographyItemRequest,
     user: CurrentUser,
     items: BibliographyItemRepositoryDep,
@@ -73,6 +75,6 @@ def update_bibliography_item(
     operation_id='bibliography_items_destroy',
 )
 def delete_bibliography_item(
-    id: int, user: CurrentUser, items: BibliographyItemRepositoryDep
+    id: UUID, user: CurrentUser, items: BibliographyItemRepositoryDep
 ) -> None:
     handlers.DeleteBibliographyItem(items, user).execute(id)

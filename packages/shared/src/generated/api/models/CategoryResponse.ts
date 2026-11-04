@@ -23,7 +23,7 @@ export interface CategoryResponse {
     /**
      *
      */
-    readonly id: number;
+    readonly id: string;
     /**
      *
      */

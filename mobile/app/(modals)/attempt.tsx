@@ -36,11 +36,11 @@ export default function AttemptEditorScreen() {
     action: string;
     attemptId?: string;
   }>();
-  const itemId = Number(params.itemId);
+  const itemId = params.itemId;
   const action = ATTEMPT_ACTIONS.find(
     (candidate) => candidate === params.action,
   );
-  const attemptId = params.attemptId ? Number(params.attemptId) : null;
+  const attemptId = params.attemptId ?? null;
   const { data: attempts = [] } = useAttempts(
     attemptId === null ? null : itemId,
   );

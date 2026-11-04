@@ -6,8 +6,8 @@ type CategoryBreakdownProps = {
   summary: MonthSummary;
   categories: CategoryResponse[];
   /** The Category the list is narrowed to (`null` for uncategorised), if any. */
-  selected: number | null | undefined;
-  onSelect: (categoryId: number | null | undefined) => void;
+  selected: string | null | undefined;
+  onSelect: (categoryId: string | null | undefined) => void;
 };
 
 /** "Na co poszło": the month's Expenses by Category, each a bar against the largest; a click narrows the list. */

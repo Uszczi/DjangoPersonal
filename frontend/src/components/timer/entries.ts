@@ -1,4 +1,4 @@
-export type TaskTitles = Map<number, string>;
+export type TaskTitles = Map<string, string>;
 
 export { entryTitle } from "@personal/shared/timeLog";
 

@@ -24,7 +24,7 @@ import { TitleSuggestions } from "@/features/tasks/TitleSuggestions";
 import { entryTitle } from "@/features/time/entryDays";
 
 /** The project chip for starting a timer with no project (project ids start at 1). */
-const NO_PROJECT = 0;
+const NO_PROJECT = "none";
 
 type TimerCardProps = {
   /** The running entry, or null when no timer runs. */
@@ -34,7 +34,7 @@ type TimerCardProps = {
   nowTick: number;
   projects: ProjectResponse[];
   tasks: TaskResponse[];
-  taskTitles: ReadonlyMap<number, string>;
+  taskTitles: ReadonlyMap<string, string>;
   /** Called once a timer has started, so the clock restarts from now. */
   onStarted: () => void;
 };
@@ -54,7 +54,7 @@ export function TimerCard({
   const discardTimer = useDiscardTimer();
   const refreshTimer = useRefreshTimer();
 
-  const [startProjectId, setStartProjectId] = useState<number | null>(null);
+  const [startProjectId, setStartProjectId] = useState<string | null>(null);
   const [startTitle, setStartTitle] = useState("");
   /** Minutes, or 0 for a timer that runs until stopped. */
   const [startLimit, setStartLimit] = useState(0);

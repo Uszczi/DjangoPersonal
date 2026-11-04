@@ -32,7 +32,7 @@ export interface WhiteboardSearchResult {
     /**
      *
      */
-    id: number;
+    id: string;
     /**
      *
      */
@@ -44,7 +44,7 @@ export interface WhiteboardSearchResult {
     /**
      *
      */
-    folderId?: number | null;
+    folderId?: string | null;
     /**
      *
      */

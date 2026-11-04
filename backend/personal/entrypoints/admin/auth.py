@@ -1,5 +1,8 @@
 """Sign-in for the admin panel: staff accounts only, kept in a signed session cookie."""
 
+
+from uuid import UUID
+
 import anyio.to_thread
 from sqladmin.authentication import AuthenticationBackend
 from sqlalchemy.orm import Session, sessionmaker
@@ -37,7 +40,7 @@ class StaffAuthentication(AuthenticationBackend):
         if user_id is None:
             return False
         request.session.clear()
-        request.session[SESSION_KEY] = user_id
+        request.session[SESSION_KEY] = str(user_id)
         return True
 
     async def logout(self, request: Request) -> bool:
@@ -45,12 +48,13 @@ class StaffAuthentication(AuthenticationBackend):
         return True
 
     async def authenticate(self, request: Request) -> bool:
-        user_id = request.session.get(SESSION_KEY)
-        if not isinstance(user_id, int):
+        try:
+            user_id = UUID(request.session.get(SESSION_KEY))
+        except (TypeError, ValueError):
             return False
         return await anyio.to_thread.run_sync(self._is_staff, user_id)
 
-    def _staff_user_id(self, credentials: LoginRequest) -> int | None:
+    def _staff_user_id(self, credentials: LoginRequest) -> UUID | None:
         with self.session_maker() as session, session.begin():
             try:
                 user = handlers.AuthenticateUser(UserRepository(session), self.hasher).execute(
@@ -60,7 +64,7 @@ class StaffAuthentication(AuthenticationBackend):
                 return None
             return user.id if user.is_staff else None
 
-    def _is_staff(self, user_id: int) -> bool:
+    def _is_staff(self, user_id: UUID) -> bool:
         with self.session_maker() as session:
             user = UserRepository(session).find(user_id)
             return user is not None and user.is_active and user.is_staff

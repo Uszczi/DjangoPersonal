@@ -34,15 +34,14 @@ export const Route = createFileRoute("/counters/$counterId")({
 /** One counter: its total, quick +1, an options menu (edit, delete), a calendar of the days its entries fall on, and the entries to add, edit and delete. */
 function CounterPage() {
   const { counterId } = Route.useParams();
-  const id = Number(counterId);
   const navigate = useNavigate();
   const {
     data: counters = [],
     isPending: isLoading,
     isError: isCountersError,
   } = useCounters();
-  const counter = counters.find((item) => item.id === id);
-  const entriesQuery = useCounterEntries(counter ? id : null);
+  const counter = counters.find((item) => item.id === counterId);
+  const entriesQuery = useCounterEntries(counter ? counterId : null);
   const saveEntry = useSaveCounterEntry();
 
   const isMissing = !isLoading && !isCountersError && !counter;
@@ -121,7 +120,7 @@ function CounterPage() {
           variant="primary"
           onClick={() =>
             saveEntry.mutate({
-              counterId: id,
+              counterId,
               input: { value: 1, occurredAt: new Date(), note: "" },
             })
           }
@@ -130,7 +129,7 @@ function CounterPage() {
         </Button>
         <Button
           variant="secondary"
-          onClick={() => ShowModal(CounterEntryEditorModal, { counterId: id })}
+          onClick={() => ShowModal(CounterEntryEditorModal, { counterId })}
         >
           <span aria-hidden="true">+</span>
           Nowy wpis
@@ -149,7 +148,7 @@ function CounterPage() {
           <CounterEntryList
             entries={entries}
             onEdit={(entry) =>
-              ShowModal(CounterEntryEditorModal, { counterId: id, entry })
+              ShowModal(CounterEntryEditorModal, { counterId, entry })
             }
           />
         </>

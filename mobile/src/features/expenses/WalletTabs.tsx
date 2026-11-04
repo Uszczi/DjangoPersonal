@@ -7,8 +7,8 @@ import { WalletMark } from "@/features/expenses/WalletMark";
 
 type WalletTabsProps = {
   wallets: WalletResponse[];
-  selectedId: number | undefined;
-  onSelect: (walletId: number) => void;
+  selectedId: string | undefined;
+  onSelect: (walletId: string) => void;
 };
 
 /**

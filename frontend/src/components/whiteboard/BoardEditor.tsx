@@ -37,7 +37,7 @@ export function BoardEditor({ boardId, item, searchQuery }: BoardEditorProps) {
   const save = useCallback(
     async (payload: SavePayload) => {
       await api.whiteboardsPartialUpdate({
-        id: Number(boardId),
+        id: boardId,
         patchedWhiteboardRequest: {
           content:
             payload.kind === "whiteboard"

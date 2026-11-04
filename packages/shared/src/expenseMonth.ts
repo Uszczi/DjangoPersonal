@@ -98,7 +98,7 @@ export function signedCents(transaction: TransactionResponse): number {
 
 export type CategoryTotal = {
   /** `null`: Expenses filed under no Category. */
-  categoryId: number | null;
+  categoryId: string | null;
   cents: number;
   count: number;
 };
@@ -132,7 +132,7 @@ export function summarizeMonth(
     hasIncome: false,
     count: 0,
   }));
-  const categories = new Map<number | null, CategoryTotal>();
+  const categories = new Map<string | null, CategoryTotal>();
   let expenseCents = 0;
   let incomeCents = 0;
 

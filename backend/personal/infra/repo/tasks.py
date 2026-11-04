@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session, joinedload
 
@@ -33,10 +35,10 @@ class TaskRepository:
     def list_inbox(self, *, user: User) -> list[TaskModel]:
         return list(self.session.scalars(self._owned_by(user).where(ProjectModel.is_inbox.is_(True))))
 
-    def list_for_project(self, project_id: int, *, user: User) -> list[TaskModel]:
+    def list_for_project(self, project_id: UUID, *, user: User) -> list[TaskModel]:
         return list(self.session.scalars(self._owned_by(user).where(TaskModel.project_id == project_id)))
 
-    def find(self, task_id: int, *, user: User) -> TaskModel | None:
+    def find(self, task_id: UUID, *, user: User) -> TaskModel | None:
         return self.session.scalars(self._owned_by(user).where(TaskModel.id == task_id)).first()
 
     def create(

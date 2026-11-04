@@ -1,5 +1,6 @@
 from datetime import timedelta
 from typing import NamedTuple, Protocol
+from uuid import UUID
 
 from personal.infra.models import User
 
@@ -51,7 +52,7 @@ class TokenService(Protocol):
         """A new access token for ``refresh``, or raise :class:`InvalidToken`."""
         ...
 
-    def user_id_for(self, access: str) -> int:
+    def user_id_for(self, access: str) -> UUID:
         """The id of the user an access token was issued to, or raise :class:`InvalidToken`."""
         ...
 

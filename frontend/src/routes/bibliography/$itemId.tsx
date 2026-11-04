@@ -27,6 +27,7 @@ import {
 } from "@personal/shared/loadErrors";
 import { useAttempts } from "@personal/shared/queries/bibliographyAttempts";
 import { useBibliographyItem } from "@personal/shared/queries/bibliographyItems";
+import { isUUID } from "@personal/shared/ids";
 import { ShowModal } from "@/stores/modal";
 
 export const Route = createFileRoute("/bibliography/$itemId")({
@@ -36,8 +37,8 @@ export const Route = createFileRoute("/bibliography/$itemId")({
 /** One film, series or book: its derived status, the actions its Attempts allow, and their history. */
 function BibliographyItemPage() {
   const { itemId: rawItemId } = Route.useParams();
-  const parsed = Number(rawItemId);
-  const id = Number.isInteger(parsed) ? parsed : null;
+  // A malformed id (a pre-UUID link, a typo) redirects like a deleted item.
+  const id = isUUID(rawItemId) ? rawItemId : null;
   const navigate = useNavigate();
   const { data: item, isPending, isError, error } = useBibliographyItem(id);
   const attemptsQuery = useAttempts(item ? item.id : null);

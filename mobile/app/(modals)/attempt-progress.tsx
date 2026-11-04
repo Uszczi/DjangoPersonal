@@ -28,8 +28,8 @@ import { common, form } from "@/ui/classes";
  */
 export default function AttemptProgressScreen() {
   const params = useLocalSearchParams<{ itemId: string; attemptId: string }>();
-  const itemId = Number(params.itemId);
-  const attemptId = Number(params.attemptId);
+  const itemId = params.itemId;
+  const attemptId = params.attemptId;
   const { data: item } = useBibliographyItem(itemId);
   const { data: attempts = [] } = useAttempts(itemId);
   const attempt = attempts.find((candidate) => candidate.id === attemptId);

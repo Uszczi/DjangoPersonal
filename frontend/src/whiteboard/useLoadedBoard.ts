@@ -33,7 +33,7 @@ export function useLoadedBoard(boardId: string): BoardLoadState {
     const setState = (state: BoardLoadState) => setResult({ boardId, state });
     async function load() {
       try {
-        const wb = await api.whiteboardsRetrieve({ id: Number(boardId) });
+        const wb = await api.whiteboardsRetrieve({ id: boardId });
         if (!loadGuard.isLatest(requestId)) return;
         const { parseBoard } = await import("@/whiteboard/boardDocument");
         const markdown =

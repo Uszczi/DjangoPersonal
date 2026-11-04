@@ -31,7 +31,7 @@ export interface TaskCreateRequest {
     /**
      *
      */
-    project?: number | null;
+    project?: string | null;
     /**
      *
      */

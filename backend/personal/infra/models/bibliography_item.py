@@ -1,12 +1,13 @@
 from datetime import datetime
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import CheckConstraint, ForeignKey, String, Text, event
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from personal.infra.rules import normalize_bibliography_item_text
 
-from .base import Base, UTCDateTime, utc_now
+from .base import Base, UTCDateTime, new_id, utc_now
 from .user import User
 
 
@@ -28,8 +29,8 @@ class BibliographyItem(Base):
     KIND_BOOK = 'book'
     KIND_SERIES = 'series'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=new_id)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
     kind: Mapped[str] = mapped_column(String(10))
     title: Mapped[str] = mapped_column(String(300))
     #: The author, director or a series' creator, as written.

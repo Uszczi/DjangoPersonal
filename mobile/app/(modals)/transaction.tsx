@@ -28,7 +28,7 @@ import { DateTimeField } from "@/ui/DateTimeField";
 import { common, form } from "@/ui/classes";
 
 /** `0` stands for "no category" in the chip group, which needs a non-null value. */
-const NO_CATEGORY = 0;
+const NO_CATEGORY = "none";
 
 function validateAmount(raw: string): string {
   if (!raw) return "Podaj kwotę.";
@@ -50,10 +50,8 @@ export default function TransactionEditorScreen() {
     walletId: string;
     transactionId?: string;
   }>();
-  const walletId = Number(params.walletId);
-  const transactionId = params.transactionId
-    ? Number(params.transactionId)
-    : null;
+  const walletId = params.walletId;
+  const transactionId = params.transactionId ?? null;
 
   const queryClient = useQueryClient();
   const saveTransaction = useSaveTransaction();
@@ -75,10 +73,10 @@ export default function TransactionEditorScreen() {
   const [description, setDescription] = useState(
     transaction?.description ?? "",
   );
-  const [category, setCategory] = useState<number>(
+  const [category, setCategory] = useState<string>(
     transaction?.categoryId ?? NO_CATEGORY,
   );
-  const [wallet, setWallet] = useState<number>(
+  const [wallet, setWallet] = useState<string>(
     transaction?.walletId ?? walletId,
   );
   const [formError, setFormError] = useState("");

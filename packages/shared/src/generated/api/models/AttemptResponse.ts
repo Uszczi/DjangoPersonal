@@ -23,11 +23,11 @@ export interface AttemptResponse {
     /**
      *
      */
-    readonly id: number;
+    readonly id: string;
     /**
      *
      */
-    readonly itemId: number;
+    readonly itemId: string;
     /**
      *
      */

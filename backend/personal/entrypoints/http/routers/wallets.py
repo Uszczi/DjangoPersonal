@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Response, status
 
 from personal.core.expenses import handlers
@@ -42,20 +44,20 @@ def create_wallet(
 
 
 @router.get('/wallets/{id}/', operation_id='wallets_retrieve')
-def get_wallet(id: int, user: CurrentUser, wallets: WalletRepositoryDep) -> WalletResponse:
+def get_wallet(id: UUID, user: CurrentUser, wallets: WalletRepositoryDep) -> WalletResponse:
     return WalletResponse.model_validate(handlers.GetWallet(wallets, user).execute(id))
 
 
 @router.put('/wallets/{id}/', operation_id='wallets_update')
 def replace_wallet(
-    id: int, payload: WalletRequest, user: CurrentUser, wallets: WalletRepositoryDep
+    id: UUID, payload: WalletRequest, user: CurrentUser, wallets: WalletRepositoryDep
 ) -> WalletResponse:
     return WalletResponse.model_validate(handlers.ReplaceWallet(wallets, user).execute(id, payload))
 
 
 @router.patch('/wallets/{id}/', operation_id='wallets_partial_update')
 def update_wallet(
-    id: int,
+    id: UUID,
     payload: PatchedWalletRequest,
     user: CurrentUser,
     wallets: WalletRepositoryDep,
@@ -72,5 +74,5 @@ def update_wallet(
     response_class=Response,
     operation_id='wallets_destroy',
 )
-def delete_wallet(id: int, user: CurrentUser, wallets: WalletRepositoryDep) -> None:
+def delete_wallet(id: UUID, user: CurrentUser, wallets: WalletRepositoryDep) -> None:
     handlers.DeleteWallet(wallets, user).execute(id)

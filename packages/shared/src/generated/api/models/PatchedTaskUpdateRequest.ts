@@ -31,7 +31,7 @@ export interface PatchedTaskUpdateRequest {
     /**
      *
      */
-    project?: number | null;
+    project?: string | null;
     /**
      *
      */

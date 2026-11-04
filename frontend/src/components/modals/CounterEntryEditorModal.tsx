@@ -17,7 +17,7 @@ import { useSaveCounterEntry } from "@personal/shared/queries/counters";
 import { ShowModal } from "@/stores/modal";
 
 type CounterEntryEditorModalProps = {
-  counterId: number;
+  counterId: string;
   /** Omit to add a new entry; pass one to edit it. */
   entry?: CounterEntryResponse | null;
   onClose: () => void;

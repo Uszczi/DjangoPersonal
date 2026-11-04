@@ -1,10 +1,11 @@
 from datetime import date as date_type
 from decimal import Decimal
+from uuid import UUID
 
 from sqlalchemy import ForeignKey, Index, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import Base
+from .base import Base, new_id
 from .category import Category
 from .user import User
 from .wallet import Wallet
@@ -19,10 +20,10 @@ class Transaction(Base):
     #: per-wallet lookup — so ``wallet_id`` needs no index of its own.
     __table_args__ = (Index('ix_transactions_wallet_id_date_id', 'wallet_id', 'date', 'id'),)
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
-    wallet_id: Mapped[int] = mapped_column(ForeignKey('wallets.id', ondelete='CASCADE'))
-    category_id: Mapped[int | None] = mapped_column(
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=new_id)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
+    wallet_id: Mapped[UUID] = mapped_column(ForeignKey('wallets.id', ondelete='CASCADE'))
+    category_id: Mapped[UUID | None] = mapped_column(
         ForeignKey('categories.id', ondelete='CASCADE'), index=True
     )
     title: Mapped[str] = mapped_column(String(200))

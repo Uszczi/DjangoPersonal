@@ -1,12 +1,13 @@
 from datetime import datetime
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import ForeignKey, String, Text, event
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from personal.infra.rules import DEFAULT_COUNTER_COLOR, normalize_color, normalize_counter_name
 
-from .base import Base, UTCDateTime, utc_now
+from .base import Base, UTCDateTime, new_id, utc_now
 from .user import User
 
 
@@ -18,8 +19,8 @@ class Counter(Base):
     # without this, SQLAlchemy refuses ``int | None`` outside ``Mapped[]``.
     __allow_unmapped__ = True
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=new_id)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
     name: Mapped[str] = mapped_column(String(100))
     #: ``#RRGGBB``, shown with the counter in the lists.
     color: Mapped[str] = mapped_column(
@@ -55,9 +56,9 @@ class CounterEntry(Base):
 
     __tablename__ = 'counter_entries'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
-    counter_id: Mapped[int] = mapped_column(
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=new_id)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
+    counter_id: Mapped[UUID] = mapped_column(
         ForeignKey('counters.id', ondelete='CASCADE'), index=True
     )
     value: Mapped[int] = mapped_column(default=1)

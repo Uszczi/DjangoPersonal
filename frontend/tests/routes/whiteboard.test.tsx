@@ -3,13 +3,14 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { renderApp } from "../renderApp";
+import { uid } from "../ids";
 
 vi.mock("@/components/WhiteboardCanvas", () => ({
   WhiteboardCanvas: () => <div data-testid="whiteboard-canvas" />,
 }));
 
 const wb = {
-  id: 5,
+  id: uid(5),
   name: "Bez tytułu",
   content: { version: 1, elements: [], viewport: { x: 0, y: 0, zoom: 1 } },
   created_at: "2026-10-18T10:00:00Z",
@@ -37,7 +38,8 @@ describe("Whiteboard", () => {
     fetchMock.mockImplementation((input: RequestInfo | URL) => {
       const url = requestUrl(input);
       if (url.startsWith("/api/v1/whiteboards/")) {
-        if (url.includes("/5/")) return Promise.resolve(jsonResponse(wb));
+        if (url.includes(`/${uid(5)}/`))
+          return Promise.resolve(jsonResponse(wb));
         return Promise.resolve(jsonResponse([]));
       }
       if (url.startsWith("/api/v1/projects/"))
@@ -78,7 +80,7 @@ describe("Whiteboard", () => {
   test("not-found page for missing whiteboard", async () => {
     fetchMock.mockImplementation((input: RequestInfo | URL) => {
       const url = requestUrl(input);
-      if (url.includes("/api/v1/whiteboards/999/")) {
+      if (url.includes(`/api/v1/whiteboards/${uid(999)}/`)) {
         return Promise.resolve(
           jsonResponse({ detail: "Whiteboard not found." }, 404),
         );
@@ -95,14 +97,14 @@ describe("Whiteboard", () => {
         );
       return Promise.resolve(jsonResponse([]));
     });
-    renderApp("/whiteboard/999");
+    renderApp(`/whiteboard/${uid(999)}`);
     expect(
       await screen.findByRole("heading", { name: "Tej strony nie ma" }),
     ).toBeInTheDocument();
   });
 
   test("opening a whiteboard shows save state", async () => {
-    renderApp("/whiteboard/5");
+    renderApp(`/whiteboard/${uid(5)}`);
     expect(
       await screen.findByRole("heading", { name: "Bez tytułu" }),
     ).toBeInTheDocument();
@@ -117,7 +119,7 @@ describe("Whiteboard", () => {
         const url = requestUrl(input);
         const method =
           init?.method ?? (input instanceof Request ? input.method : "GET");
-        if (url.includes("/api/v1/whiteboards/5/")) {
+        if (url.includes(`/api/v1/whiteboards/${uid(5)}/`)) {
           if (method === "PATCH")
             return Promise.resolve(jsonResponse({ detail }, 400));
           return Promise.resolve(jsonResponse(wb));
@@ -130,7 +132,7 @@ describe("Whiteboard", () => {
       },
     );
     const user = userEvent.setup();
-    renderApp("/whiteboard/5");
+    renderApp(`/whiteboard/${uid(5)}`);
 
     await user.click(
       await screen.findByRole("button", { name: "Kliknij, aby zmienić nazwę" }),
@@ -153,7 +155,7 @@ describe("Whiteboard", () => {
 
   describe("the Notatnik tree beside an open item", () => {
     const folder = {
-      id: 1,
+      id: uid(1),
       name: "Praca",
       parent_id: null,
       created_at: wb.created_at,
@@ -161,15 +163,15 @@ describe("Whiteboard", () => {
     };
     const inFolder = {
       ...wb,
-      id: 5,
+      id: uid(5),
       name: "Plan",
       kind: "markdown",
-      folder_id: 1,
+      folder_id: uid(1),
       content: { markdown: "# Plan" },
     };
     const loose = {
       ...wb,
-      id: 6,
+      id: uid(6),
       name: "Luźna",
       kind: "markdown",
       folder_id: null,
@@ -179,9 +181,9 @@ describe("Whiteboard", () => {
     beforeEach(() => {
       fetchMock.mockImplementation((input: RequestInfo | URL) => {
         const url = requestUrl(input);
-        if (url.includes("/api/v1/whiteboards/5/"))
+        if (url.includes(`/api/v1/whiteboards/${uid(5)}/`))
           return Promise.resolve(jsonResponse(inFolder));
-        if (url.includes("/api/v1/whiteboards/6/"))
+        if (url.includes(`/api/v1/whiteboards/${uid(6)}/`))
           return Promise.resolve(jsonResponse(loose));
         if (url.startsWith("/api/v1/whiteboards/"))
           return Promise.resolve(jsonResponse([inFolder, loose]));
@@ -197,7 +199,7 @@ describe("Whiteboard", () => {
 
     test("reveals the open Notatka in its Folder and opens another on the right", async () => {
       const user = userEvent.setup();
-      renderApp("/whiteboard/5");
+      renderApp(`/whiteboard/${uid(5)}`);
 
       const tree = await screen.findByRole("complementary", {
         name: "Drzewo Notatnika",
@@ -224,7 +226,7 @@ describe("Whiteboard", () => {
     });
 
     test("a Notatka opens in the highlighted mode", async () => {
-      renderApp("/whiteboard/5");
+      renderApp(`/whiteboard/${uid(5)}`);
       expect(
         await screen.findByRole("button", { name: "Podświetlony" }),
       ).toHaveAttribute("aria-pressed", "true");
@@ -232,7 +234,7 @@ describe("Whiteboard", () => {
 
     test("the highlighted and editable modes share one field", async () => {
       const user = userEvent.setup();
-      renderApp("/whiteboard/5");
+      renderApp(`/whiteboard/${uid(5)}`);
 
       const field = await screen.findByDisplayValue("# Plan");
       await user.click(screen.getByRole("button", { name: "Edycja" }));
@@ -247,7 +249,7 @@ describe("Whiteboard", () => {
     test("searches the open Notatka and steps through the matches", async () => {
       fetchMock.mockImplementation((input: RequestInfo | URL) => {
         const url = requestUrl(input);
-        if (url.includes("/api/v1/whiteboards/5/"))
+        if (url.includes(`/api/v1/whiteboards/${uid(5)}/`))
           return Promise.resolve(
             jsonResponse({
               ...inFolder,
@@ -265,7 +267,7 @@ describe("Whiteboard", () => {
         return Promise.resolve(jsonResponse([]));
       });
       const user = userEvent.setup();
-      renderApp("/whiteboard/5");
+      renderApp(`/whiteboard/${uid(5)}`);
 
       const field = await screen.findByDisplayValue(/plan A/);
       field.focus();
@@ -316,7 +318,7 @@ describe("Whiteboard", () => {
 
     test("the tree collapses and expands", async () => {
       const user = userEvent.setup();
-      renderApp("/whiteboard/5");
+      renderApp(`/whiteboard/${uid(5)}`);
 
       await user.click(
         await screen.findByRole("button", { name: "Zwiń drzewo Notatnika" }),

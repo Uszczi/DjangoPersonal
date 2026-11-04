@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy import ForeignKey, String, Text, column, func, select, table
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
@@ -7,7 +9,7 @@ from personal.infra.rules import (
     MAX_TASK_TITLE_LENGTH,
 )
 
-from .base import Base
+from .base import Base, new_id
 from .project import Project
 
 # The comments table by name only: `TaskComment` imports this module.
@@ -23,8 +25,8 @@ class Task(Base):
 
     __tablename__ = 'tasks'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    project_id: Mapped[int] = mapped_column(
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=new_id)
+    project_id: Mapped[UUID] = mapped_column(
         ForeignKey('projects.id', ondelete='CASCADE'), index=True
     )
     title: Mapped[str] = mapped_column(String(MAX_TASK_TITLE_LENGTH))

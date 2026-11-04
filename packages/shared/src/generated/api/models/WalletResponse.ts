@@ -23,7 +23,7 @@ export interface WalletResponse {
     /**
      *
      */
-    readonly id: number;
+    readonly id: string;
     /**
      *
      */

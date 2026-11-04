@@ -35,7 +35,7 @@ export interface PatchedWhiteboardRequest {
     /**
      *
      */
-    folderId?: number | null;
+    folderId?: string | null;
 }
 
 /**

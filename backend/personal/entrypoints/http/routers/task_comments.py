@@ -1,5 +1,6 @@
 from typing import Annotated
 from urllib.parse import quote
+from uuid import UUID
 
 from fastapi import APIRouter, File, Response, UploadFile, status
 
@@ -23,7 +24,7 @@ router = APIRouter(tags=['personal'])
 
 @router.get('/task-comments/', operation_id='task_comments_list')
 def list_task_comments(
-    task: int,
+    task: UUID,
     user: CurrentUser,
     tasks: TaskRepositoryDep,
     comments: TaskCommentRepositoryDep,
@@ -49,7 +50,7 @@ def create_task_comment(
 
 @router.patch('/task-comments/{id}/', operation_id='task_comments_partial_update')
 def update_task_comment(
-    id: int,
+    id: UUID,
     payload: PatchedTaskCommentRequest,
     user: CurrentUser,
     comments: TaskCommentRepositoryDep,
@@ -64,7 +65,7 @@ def update_task_comment(
     response_class=Response,
     operation_id='task_comments_destroy',
 )
-def delete_task_comment(id: int, user: CurrentUser, comments: TaskCommentRepositoryDep) -> None:
+def delete_task_comment(id: UUID, user: CurrentUser, comments: TaskCommentRepositoryDep) -> None:
     handlers.DeleteTaskComment(comments, user).execute(id)
 
 
@@ -74,7 +75,7 @@ def delete_task_comment(id: int, user: CurrentUser, comments: TaskCommentReposit
     operation_id='task_comments_attachments_create',
 )
 def add_comment_attachment(
-    id: int,
+    id: UUID,
     file: Annotated[UploadFile, File(description='The file, stored exactly as sent.')],
     user: CurrentUser,
     comments: TaskCommentRepositoryDep,
@@ -100,7 +101,7 @@ def add_comment_attachment(
     },
 )
 def download_comment_attachment(
-    id: int, user: CurrentUser, attachments: CommentAttachmentRepositoryDep
+    id: UUID, user: CurrentUser, attachments: CommentAttachmentRepositoryDep
 ) -> Response:
     attachment = handlers.GetCommentAttachment(attachments, user).execute(id)
     # Only pictures may render in place; anything else is a download, so a
@@ -125,6 +126,6 @@ def download_comment_attachment(
     operation_id='comment_attachments_destroy',
 )
 def delete_comment_attachment(
-    id: int, user: CurrentUser, attachments: CommentAttachmentRepositoryDep
+    id: UUID, user: CurrentUser, attachments: CommentAttachmentRepositoryDep
 ) -> None:
     handlers.DeleteCommentAttachment(attachments, user).execute(id)

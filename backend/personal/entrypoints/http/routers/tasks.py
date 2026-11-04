@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Response, status
 
 from personal.core.work import handlers
@@ -11,7 +13,7 @@ router = APIRouter(tags=['personal'])
 def list_tasks(
     user: CurrentUser,
     tasks: TaskRepositoryDep,
-    project: int | None = None,
+    project: UUID | None = None,
     all: bool = False,
 ) -> list[TaskResponse]:
     found = handlers.ListTasks(tasks, user).execute(project_id=project, all_projects=all)
@@ -35,7 +37,7 @@ def create_task(
 
 @router.patch('/tasks/{id}/', operation_id='tasks_partial_update')
 def update_task(
-    id: int,
+    id: UUID,
     payload: PatchedTaskUpdateRequest,
     user: CurrentUser,
     projects: ProjectRepositoryDep,
@@ -51,5 +53,5 @@ def update_task(
     response_class=Response,
     operation_id='tasks_destroy',
 )
-def delete_task(id: int, user: CurrentUser, tasks: TaskRepositoryDep) -> None:
+def delete_task(id: UUID, user: CurrentUser, tasks: TaskRepositoryDep) -> None:
     handlers.DeleteTask(tasks, user).execute(id)

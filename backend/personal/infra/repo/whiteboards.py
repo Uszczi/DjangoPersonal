@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -25,7 +26,7 @@ class WhiteboardRepository:
         )
         return list(self.session.scalars(query))
 
-    def find(self, whiteboard_id: int, *, user: User) -> WhiteboardModel | None:
+    def find(self, whiteboard_id: UUID, *, user: User) -> WhiteboardModel | None:
         query = select(WhiteboardModel).where(
             WhiteboardModel.id == whiteboard_id, WhiteboardModel.user_id == user.id
         )
@@ -38,7 +39,7 @@ class WhiteboardRepository:
         name: str,
         content: dict[str, Any] | None = None,
         kind: str = WhiteboardModel.KIND_WHITEBOARD,
-        folder_id: int | None = None,
+        folder_id: UUID | None = None,
     ) -> WhiteboardModel:
         """Insert a board straight into its Folder (so its name is checked there), or
         fail on a name clash."""
@@ -53,7 +54,7 @@ class WhiteboardRepository:
         flush(self.session, on_conflict=DuplicateWhiteboardName)
         return whiteboard
 
-    def names_in_folder(self, *, user: User, folder_id: int | None) -> set[str]:
+    def names_in_folder(self, *, user: User, folder_id: UUID | None) -> set[str]:
         """The names already used in ``folder_id`` (``None``: the top level)."""
         query = select(WhiteboardModel.name).where(
             WhiteboardModel.user_id == user.id,
@@ -68,7 +69,7 @@ class WhiteboardRepository:
         name: str,
         *,
         user: User,
-        folder_id: int | None,
+        folder_id: UUID | None,
         exclude: WhiteboardModel | None = None,
     ) -> bool:
         """Whether another Whiteboard or Notatka in ``folder_id`` has exactly this name."""

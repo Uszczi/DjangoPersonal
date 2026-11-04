@@ -71,7 +71,7 @@ def test_the_current_user_needs_a_valid_access_token(
 
     me = anon_client.authenticated(tokens.access).get('/api/v1/auth/me/')
     assert me.status_code == HTTPStatus.OK
-    assert me.json() == {'id': user.id, 'username': 'someone'}
+    assert me.json() == {'id': str(user.id), 'username': 'someone'}
 
 
 def test_inactive_and_deleted_users_are_unauthorized(

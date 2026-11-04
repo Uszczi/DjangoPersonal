@@ -1,4 +1,5 @@
 from typing import Literal
+from uuid import UUID
 
 from pydantic import Field, field_validator, model_validator
 
@@ -48,7 +49,7 @@ class PatchedCategoryRequest(_CategoryPayload):
 
 
 class CategoryResponse(BaseModel):
-    id: int = Field(..., json_schema_extra={'readOnly': True})
+    id: UUID = Field(..., json_schema_extra={'readOnly': True})
     name: str
     icon: str
     is_system: bool = Field(default=False, json_schema_extra={'readOnly': True})

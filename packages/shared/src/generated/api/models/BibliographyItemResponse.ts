@@ -23,7 +23,7 @@ export interface BibliographyItemResponse {
     /**
      *
      */
-    readonly id: number;
+    readonly id: string;
     /**
      *
      */

@@ -1,6 +1,7 @@
 """Passwords and tokens: the accounts ports implemented in infra."""
 
 from datetime import timedelta
+from uuid import UUID
 
 import jwt
 import pytest
@@ -73,17 +74,18 @@ def _service(secret: str = SECRET, *, access: timedelta = timedelta(minutes=15))
 
 
 def test_tokens_carry_the_user_and_their_type() -> None:
-    user = User(id=7, username='u', password='x')
+    user_id = UUID('00000000-0000-7000-8000-000000000007')
+    user = User(id=user_id, username='u', password='x')
     service = _service()
 
     pair = service.issue(user)
     claims = jwt.decode(pair.access, SECRET, algorithms=['HS256'])
 
-    assert claims['sub'] == '7' and claims['type'] == 'access'
+    assert claims['sub'] == str(user_id) and claims['type'] == 'access'
     assert claims['exp'] - claims['iat'] == 15 * 60
     assert jwt.decode(pair.refresh, SECRET, algorithms=['HS256'])['type'] == 'refresh'
-    assert service.user_id_for(pair.access) == 7
-    assert service.user_id_for(service.refresh_access(pair.refresh)) == 7
+    assert service.user_id_for(pair.access) == user_id
+    assert service.user_id_for(service.refresh_access(pair.refresh)) == user_id
 
 
 def test_tokens_are_rejected_when_misused_forged_or_expired() -> None:

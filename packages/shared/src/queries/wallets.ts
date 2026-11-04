@@ -49,7 +49,7 @@ export function balanceChange(
 /** The selected Wallet if it still exists, else the first one. */
 export function validSelection(
   wallets: WalletResponse[],
-  selectedWalletId: number | null,
+  selectedWalletId: string | null,
 ) {
   if (wallets.some((wallet) => wallet.id === selectedWalletId))
     return selectedWalletId;
@@ -78,7 +78,7 @@ function replaceWallets(queryClient: QueryClient, fresh: WalletResponse[]) {
  */
 export async function refreshWallets(
   queryClient: QueryClient,
-  walletIds: number[],
+  walletIds: string[],
 ) {
   const results = await Promise.allSettled(
     [...new Set(walletIds)].map((id) => api.walletsRetrieve({ id })),
@@ -153,7 +153,7 @@ export function useUpdateWallet() {
 /** `wallets` with the one of id `id` moved to index `position`. */
 export function moveWalletInList(
   wallets: WalletResponse[],
-  id: number,
+  id: string,
   position: number,
 ): WalletResponse[] {
   const moving = wallets.find((wallet) => wallet.id === id);
@@ -170,7 +170,7 @@ export function moveWalletInList(
 export function useMoveWallet() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, position }: { id: number; position: number }) =>
+    mutationFn: ({ id, position }: { id: string; position: number }) =>
       api.walletsPartialUpdate({ id, patchedWalletRequest: { position } }),
     onMutate: async ({ id, position }) => {
       await queryClient.cancelQueries({ queryKey: walletKeys.all });

@@ -14,7 +14,7 @@ import { api } from "../api";
 import type { AttemptRequest, PatchedAttemptRequest } from "../generated/api";
 import { bibliographyItemKeys } from "./keys";
 
-export const attemptsQuery = (itemId: number) =>
+export const attemptsQuery = (itemId: string) =>
   queryOptions({
     queryKey: bibliographyItemKeys.attempts(itemId),
     queryFn: ({ signal }) =>
@@ -22,9 +22,9 @@ export const attemptsQuery = (itemId: number) =>
   });
 
 /** An item's Attempts, latest first; `null` waits for an item. */
-export function useAttempts(itemId: number | null) {
+export function useAttempts(itemId: string | null) {
   return useQuery({
-    ...attemptsQuery(itemId ?? 0),
+    ...attemptsQuery(itemId ?? ""),
     enabled: itemId !== null,
   });
 }
@@ -40,7 +40,7 @@ export function useAllAttempts(enabled = true) {
   return useQuery({ ...allAttemptsQuery(), enabled });
 }
 
-function afterWrite(queryClient: QueryClient, itemId: number) {
+function afterWrite(queryClient: QueryClient, itemId: string) {
   // The server decides which Attempt is the latest (and so the status).
   void queryClient.invalidateQueries({
     queryKey: bibliographyItemKeys.attempts(itemId),
@@ -69,7 +69,7 @@ export function useUpdateAttempt() {
       id,
       changes,
     }: {
-      id: number;
+      id: string;
       changes: PatchedAttemptRequest;
     }) =>
       api.bibliographyAttemptsPartialUpdate({
@@ -84,7 +84,7 @@ export function useUpdateAttempt() {
 export function useDeleteAttempt() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id }: { id: number; itemId: number }) =>
+    mutationFn: ({ id }: { id: string; itemId: string }) =>
       api.bibliographyAttemptsDestroy({ id }),
     onSuccess: (_, { itemId }) => afterWrite(queryClient, itemId),
   });

@@ -25,7 +25,7 @@ type TransactionEditorModalProps = {
   /** Omit (or pass `null`) to create a new transaction; pass one to edit it. */
   transaction?: TransactionResponse | null;
   /** The wallet the page is showing; the default choice for a new transaction. */
-  walletId: number;
+  walletId: string;
   onClose: () => void;
 };
 
@@ -68,9 +68,8 @@ export function TransactionEditorModal({
     amount: transaction?.amount ?? "",
     date: transaction ? dateKey(transaction.date) : todayKey(),
     description: transaction?.description ?? "",
-    category:
-      transaction?.categoryId != null ? String(transaction.categoryId) : "",
-    wallet: String(transaction?.walletId ?? walletId),
+    category: transaction?.categoryId ?? "",
+    wallet: transaction?.walletId ?? walletId,
   });
   const [formError, setFormError] = useState("");
   const selectedCategory = categories.find(
@@ -119,8 +118,8 @@ export function TransactionEditorModal({
       amount: form.amount.trim(),
       date: form.date,
       description: form.description.trim(),
-      category: form.category ? Number(form.category) : null,
-      wallet: Number(form.wallet),
+      category: form.category || null,
+      wallet: form.wallet,
     };
 
     if (!input.title) {

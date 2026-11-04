@@ -3,6 +3,8 @@
 from http import HTTPStatus
 from typing import Any
 
+from tests.helpers import UNKNOWN_ID
+
 
 def test_whiteboard_can_be_created_with_default_name(post_json: Any) -> None:
     response = post_json('/api/v1/whiteboards/', {})
@@ -57,7 +59,7 @@ def test_whiteboard_can_be_created_in_a_folder(api_client: Any, post_json: Any) 
 
 
 def test_whiteboard_cannot_be_created_in_a_missing_folder(post_json: Any) -> None:
-    response = post_json('/api/v1/whiteboards/', {'name': 'X', 'folder_id': 9999})
+    response = post_json('/api/v1/whiteboards/', {'name': 'X', 'folder_id': UNKNOWN_ID})
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 
@@ -105,7 +107,7 @@ def test_whiteboard_cannot_be_moved_to_a_missing_or_foreign_folder(
     url = f"/api/v1/whiteboards/{created['id']}/"
 
     assert stranger.patch(url, {'folder_id': foreign['id']}).status_code == HTTPStatus.NOT_FOUND
-    assert stranger.patch(url, {'folder_id': 9999}).status_code == HTTPStatus.NOT_FOUND
+    assert stranger.patch(url, {'folder_id': UNKNOWN_ID}).status_code == HTTPStatus.NOT_FOUND
     assert stranger.get(url).json()['folder_id'] is None
 
 

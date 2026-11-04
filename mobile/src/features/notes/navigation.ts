@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import type { FolderResponse } from "@personal/shared/generated/api";
 
 /** A Notatnik item as the lists need it; both the list and search results fit. */
-export type NotatnikItem = { id: number; kind: string; name: string };
+export type NotatnikItem = { id: string; kind: string; name: string };
 
 export function isNote(item: NotatnikItem) {
   return item.kind === "markdown";

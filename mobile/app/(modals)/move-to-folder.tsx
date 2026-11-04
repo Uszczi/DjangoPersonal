@@ -26,7 +26,7 @@ export default function MoveToFolderScreen() {
     id: string;
   }>();
   const isFolder = params.target === "folder";
-  const id = Number(params.id);
+  const id = params.id;
   const { data: folders = [] } = useFolders();
   const { data: items = [] } = useWhiteboards();
   const moveFolder = useMoveFolder();
@@ -37,19 +37,19 @@ export default function MoveToFolderScreen() {
   const current = isFolder
     ? (folders.find((folder) => folder.id === id)?.parentId ?? null)
     : (items.find((item) => item.id === id)?.folderId ?? null);
-  const excluded = isFolder ? subtreeIds(folders, id) : new Set<number>();
+  const excluded = isFolder ? subtreeIds(folders, id) : new Set<string>();
   const choices = [
     { id: null, name: "Najwyższy poziom", depth: 0 },
     ...flattenTree(folders)
       .filter(({ folder }) => !excluded.has(folder.id))
       .map(({ folder, depth }) => ({
-        id: folder.id as number | null,
+        id: folder.id as string | null,
         name: folder.name,
         depth: depth + 1,
       })),
   ];
 
-  async function move(folderId: number | null) {
+  async function move(folderId: string | null) {
     if (folderId === current) {
       router.back();
       return;

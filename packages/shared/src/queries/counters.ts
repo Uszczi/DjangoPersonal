@@ -14,6 +14,7 @@ import {
 
 import { api } from "../api";
 import type { CounterEntryResponse } from "../generated/api";
+import { compareIds } from "../ids";
 import { counterKeys } from "./keys";
 
 export type CounterEntryInput = {
@@ -38,7 +39,9 @@ function localTimeZone(): string | undefined {
 /** Newest first, matching the server's order (occurred_at desc, then id desc). */
 function newestFirst(entries: CounterEntryResponse[]): CounterEntryResponse[] {
   return [...entries].sort(
-    (a, b) => b.occurredAt.getTime() - a.occurredAt.getTime() || b.id - a.id,
+    (a, b) =>
+      b.occurredAt.getTime() - a.occurredAt.getTime() ||
+      compareIds(b.id, a.id),
   );
 }
 
@@ -48,7 +51,7 @@ export const countersQuery = queryOptions({
     api.countersList({ tz: localTimeZone() }, { signal }),
 });
 
-export const counterEntriesQuery = (counterId: number) =>
+export const counterEntriesQuery = (counterId: string) =>
   queryOptions({
     queryKey: counterKeys.entries(counterId),
     queryFn: ({ signal }) =>
@@ -60,9 +63,9 @@ export function useCounters() {
 }
 
 /** A Counter's entries, newest first; `null` waits for a Counter. */
-export function useCounterEntries(counterId: number | null) {
+export function useCounterEntries(counterId: string | null) {
   return useQuery({
-    ...counterEntriesQuery(counterId ?? 0),
+    ...counterEntriesQuery(counterId ?? ""),
     enabled: counterId !== null,
   });
 }
@@ -72,11 +75,11 @@ export function useCounterEntries(counterId: number | null) {
  * whose entries have not loaded yet is missing. Shares each Counter's cache
  * with `useCounterEntries`.
  */
-export function useEveryCounterEntries(counterIds: number[]) {
+export function useEveryCounterEntries(counterIds: string[]) {
   return useQueries({
     queries: counterIds.map((id) => counterEntriesQuery(id)),
     combine: (results) => {
-      const byCounter = new Map<number, CounterEntryResponse[]>();
+      const byCounter = new Map<string, CounterEntryResponse[]>();
       results.forEach((result, index) => {
         if (result.data) byCounter.set(counterIds[index], result.data);
       });
@@ -87,7 +90,7 @@ export function useEveryCounterEntries(counterIds: number[]) {
 
 function updateEntries(
   queryClient: QueryClient,
-  counterId: number,
+  counterId: string,
   update: (entries: CounterEntryResponse[]) => CounterEntryResponse[],
 ) {
   queryClient.setQueryData(
@@ -117,7 +120,7 @@ export function useCreateCounter() {
 export function useUpdateCounter() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, ...input }: CounterInput & { id: number }) =>
+    mutationFn: ({ id, ...input }: CounterInput & { id: string }) =>
       api.countersPartialUpdate({
         id,
         patchedCounterRequest: input,
@@ -134,7 +137,7 @@ export function useUpdateCounter() {
 export function useDeleteCounter() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => api.countersDestroy({ id }),
+    mutationFn: (id: string) => api.countersDestroy({ id }),
     onSuccess: (_, id) => {
       queryClient.setQueryData(countersQuery.queryKey, (list) =>
         list?.filter((item) => item.id !== id),
@@ -153,7 +156,7 @@ export function useSaveCounterEntry() {
       input,
       entry,
     }: {
-      counterId: number;
+      counterId: string;
       input: CounterEntryInput;
       entry?: CounterEntryResponse | null;
     }) =>

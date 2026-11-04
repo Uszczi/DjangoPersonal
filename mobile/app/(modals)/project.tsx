@@ -46,7 +46,7 @@ function newStatus(name: string): StatusDraft {
  */
 export default function ProjectEditorScreen() {
   const params = useLocalSearchParams<{ projectId?: string }>();
-  const projectId = params.projectId ? Number(params.projectId) : null;
+  const projectId = params.projectId ?? null;
   const { data: projects = [] } = useProjects();
   const project =
     projectId === null

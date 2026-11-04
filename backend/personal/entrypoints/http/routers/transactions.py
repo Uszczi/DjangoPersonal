@@ -1,5 +1,6 @@
 from datetime import date
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Query, Response, status
 
@@ -22,7 +23,7 @@ router = APIRouter(tags=['personal'])
 
 @router.get('/transactions/', operation_id='transactions_list')
 def list_transactions(
-    wallet: int,
+    wallet: UUID,
     user: CurrentUser,
     transactions: TransactionRepositoryDep,
     wallets: WalletRepositoryDep,
@@ -64,7 +65,7 @@ def create_transaction(
 
 @router.get('/transactions/{id}/', operation_id='transactions_retrieve')
 def get_transaction(
-    id: int, user: CurrentUser, transactions: TransactionRepositoryDep
+    id: UUID, user: CurrentUser, transactions: TransactionRepositoryDep
 ) -> TransactionResponse:
     transaction = handlers.GetTransaction(transactions, user).execute(id)
     return TransactionResponse.model_validate(transaction)
@@ -72,7 +73,7 @@ def get_transaction(
 
 @router.put('/transactions/{id}/', operation_id='transactions_update')
 def replace_transaction(
-    id: int,
+    id: UUID,
     payload: TransactionRequest,
     user: CurrentUser,
     transactions: TransactionRepositoryDep,
@@ -85,7 +86,7 @@ def replace_transaction(
 
 @router.patch('/transactions/{id}/', operation_id='transactions_partial_update')
 def update_transaction(
-    id: int,
+    id: UUID,
     payload: PatchedTransactionRequest,
     user: CurrentUser,
     transactions: TransactionRepositoryDep,
@@ -102,5 +103,5 @@ def update_transaction(
     response_class=Response,
     operation_id='transactions_destroy',
 )
-def delete_transaction(id: int, user: CurrentUser, transactions: TransactionRepositoryDep) -> None:
+def delete_transaction(id: UUID, user: CurrentUser, transactions: TransactionRepositoryDep) -> None:
     handlers.DeleteTransaction(transactions, user).execute(id)

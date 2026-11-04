@@ -33,7 +33,7 @@ type TimeLogProps = {
   nowTick: number;
   tasks: TaskResponse[];
   projects: ProjectResponse[];
-  taskTitles: ReadonlyMap<number, string>;
+  taskTitles: ReadonlyMap<string, string>;
   /** Called once a resumed timer has started, so the clock restarts from now. */
   onStarted: () => void;
 };

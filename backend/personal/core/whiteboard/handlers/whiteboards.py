@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from personal.core.shared.errors import DomainError, NotFound
 from personal.core.whiteboard.contracts import (
     MatchingLine,
@@ -21,7 +23,7 @@ DUPLICATE_NAME = 'A whiteboard or note with this name already exists in this fol
 
 
 def _get_whiteboard(
-    repository: WhiteboardRepository, whiteboard_id: int, *, user: User
+    repository: WhiteboardRepository, whiteboard_id: UUID, *, user: User
 ) -> WhiteboardModel:
     whiteboard = repository.find(whiteboard_id, user=user)
     if whiteboard is None:
@@ -29,7 +31,7 @@ def _get_whiteboard(
     return whiteboard
 
 
-def _ensure_folder(repository: FolderRepository, folder_id: int | None, *, user: User) -> None:
+def _ensure_folder(repository: FolderRepository, folder_id: UUID | None, *, user: User) -> None:
     """A Whiteboard may only go into one of its owner's Folders (``None`` is no Folder)."""
     if folder_id is not None:
         get_folder(repository, folder_id, user=user)
@@ -38,7 +40,7 @@ def _ensure_folder(repository: FolderRepository, folder_id: int | None, *, user:
 def _validate_name(
     repository: WhiteboardRepository,
     name: str,
-    folder_id: int | None,
+    folder_id: UUID | None,
     current: WhiteboardModel | None = None,
     *,
     user: User,
@@ -51,7 +53,7 @@ def _validate_name(
     return name
 
 
-def _untitled_name(repository: WhiteboardRepository, folder_id: int | None, *, user: User) -> str:
+def _untitled_name(repository: WhiteboardRepository, folder_id: UUID | None, *, user: User) -> str:
     """The first free of "Bez tytułu", "Bez tytułu 2", … so new boards never clash."""
     taken = repository.names_in_folder(user=user, folder_id=folder_id)
     name = UNTITLED_WHITEBOARD_NAME
@@ -119,7 +121,7 @@ class GetWhiteboard:
         self.whiteboards = whiteboards
         self.user = user
 
-    def execute(self, whiteboard_id: int) -> WhiteboardModel:
+    def execute(self, whiteboard_id: UUID) -> WhiteboardModel:
         return _get_whiteboard(self.whiteboards, whiteboard_id, user=self.user)
 
 
@@ -162,7 +164,7 @@ class UpdateWhiteboard:
         self.folders = folders
         self.user = user
 
-    def execute(self, whiteboard_id: int, data: PatchedWhiteboardRequest) -> WhiteboardModel:
+    def execute(self, whiteboard_id: UUID, data: PatchedWhiteboardRequest) -> WhiteboardModel:
         whiteboard = _get_whiteboard(self.whiteboards, whiteboard_id, user=self.user)
         # ``null`` is meaningful here (no Folder), so presence decides.
         folder_id = whiteboard.folder_id
@@ -197,6 +199,6 @@ class DeleteWhiteboard:
         self.whiteboards = whiteboards
         self.user = user
 
-    def execute(self, whiteboard_id: int) -> None:
+    def execute(self, whiteboard_id: UUID) -> None:
         whiteboard = _get_whiteboard(self.whiteboards, whiteboard_id, user=self.user)
         self.whiteboards.delete(whiteboard)

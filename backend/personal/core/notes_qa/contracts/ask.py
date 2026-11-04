@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pydantic import Field, field_validator
 
 from personal.core.shared.base import BaseModel
@@ -20,7 +22,7 @@ class NoteSource(BaseModel):
     """A Chunk the answer cites, under the number it is cited by (``[1]``)."""
 
     number: int
-    whiteboard_id: int
+    whiteboard_id: UUID
     heading: str
     text: str
     #: Cosine similarity with the question, in [-1, 1].

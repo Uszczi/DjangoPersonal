@@ -43,7 +43,7 @@ export function ManualEntryModal({
 
   const projectId = form.projectId || defaultProjectId;
   const suggestions = tasks
-    .filter((task) => task.projectId === Number(projectId))
+    .filter((task) => task.projectId === projectId)
     .map((task) => task.title);
 
   async function submit(event: FormEvent<HTMLFormElement>) {

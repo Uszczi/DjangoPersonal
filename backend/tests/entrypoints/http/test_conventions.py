@@ -22,13 +22,12 @@ import pytest
 from personal.infra.models import User
 from tests.entrypoints.http.test_contract import SNAPSHOT
 from tests.harness import ApiClient, Response
+from tests.helpers import UNKNOWN_ID
 
 CONTRACT: list[dict[str, Any]] = json.loads(SNAPSHOT.read_text())
 
 #: The operations that are how a client gets a token in the first place.
 PUBLIC_OPERATIONS = {'auth_login', 'auth_register', 'auth_refresh'}
-
-UNKNOWN_ID = 999_999
 
 
 def _created(response: Response) -> dict[str, Any]:
@@ -204,7 +203,7 @@ by_named_resource = pytest.mark.parametrize(
 
 
 def _try_every_method(
-    client: ApiClient, resource: Resource, row_id: int, body: dict[str, Any]
+    client: ApiClient, resource: Resource, row_id: str, body: dict[str, Any]
 ) -> dict[str, int]:
     """The status each method the resource has on ``row_id`` answers ``client`` with."""
     url = f'{resource.path}{row_id}/'

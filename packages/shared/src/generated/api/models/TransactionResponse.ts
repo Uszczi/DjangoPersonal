@@ -23,7 +23,7 @@ export interface TransactionResponse {
     /**
      *
      */
-    readonly id: number;
+    readonly id: string;
     /**
      *
      */
@@ -43,11 +43,11 @@ export interface TransactionResponse {
     /**
      *
      */
-    readonly categoryId: number | null;
+    readonly categoryId: string | null;
     /**
      *
      */
-    readonly walletId: number;
+    readonly walletId: string;
     /**
      *
      */

@@ -23,11 +23,11 @@ export interface CommentAttachmentResponse {
     /**
      *
      */
-    readonly id: number;
+    readonly id: string;
     /**
      *
      */
-    readonly commentId: number;
+    readonly commentId: string;
     /**
      *
      */

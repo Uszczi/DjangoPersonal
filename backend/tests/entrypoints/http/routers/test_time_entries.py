@@ -5,6 +5,7 @@ from http import HTTPStatus
 from typing import Any
 
 from tests.entrypoints.http.routers.helpers import create_task
+from tests.helpers import UNKNOWN_ID
 
 
 def test_user_can_log_time_manually(post_json: Any, fixed_clock: Any) -> None:
@@ -123,9 +124,9 @@ def test_time_entry_endpoints_reject_unknown_tasks(post_json: Any, fixed_clock: 
 
     manual = post_json(
         '/api/v1/time-entries/',
-        {'task': 9999, 'date': '2026-10-13', 'duration_minutes': 30},
+        {'task': UNKNOWN_ID, 'date': '2026-10-13', 'duration_minutes': 30},
     )
-    start = post_json('/api/v1/timer/start/', {'task': 9999})
+    start = post_json('/api/v1/timer/start/', {'task': UNKNOWN_ID})
 
     assert manual.status_code == HTTPStatus.BAD_REQUEST
     assert start.status_code == HTTPStatus.BAD_REQUEST

@@ -23,7 +23,7 @@ export interface TimerStartRequest {
     /**
      *
      */
-    task?: number | null;
+    task?: string | null;
     /**
      *
      */

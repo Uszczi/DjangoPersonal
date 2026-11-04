@@ -14,10 +14,10 @@ type MoveTargetsModalProps = {
   /** The name of what is being moved. */
   name: string;
   /** Where it is now (`null`: the top level); that place is not offered. */
-  currentFolderId: number | null;
+  currentFolderId: string | null;
   /** Folders it may not go into. */
-  excluded?: Set<number>;
-  move: (folderId: number | null) => Promise<unknown>;
+  excluded?: Set<string>;
+  move: (folderId: string | null) => Promise<unknown>;
   onClose: () => void;
 };
 
@@ -33,14 +33,14 @@ function MoveTargetsModal({
   const [isMoving, setIsMoving] = useState(false);
   const [moveError, setMoveError] = useState("");
 
-  const paths = new Map<number, string>();
+  const paths = new Map<string, string>();
   const targets = flattenTree(folders).map(({ folder, depth }) => {
     const parentPath =
       folder.parentId != null ? paths.get(folder.parentId) : undefined;
     const path = parentPath ? `${parentPath} / ${folder.name}` : folder.name;
     paths.set(folder.id, path);
     return {
-      id: folder.id as number | null,
+      id: folder.id as string | null,
       label: `📁 ${folder.name}`,
       name: path,
       depth,
@@ -59,7 +59,7 @@ function MoveTargetsModal({
     if (!isMoving) onClose();
   }
 
-  async function handleMove(folderId: number | null) {
+  async function handleMove(folderId: string | null) {
     setIsMoving(true);
     setMoveError("");
     try {

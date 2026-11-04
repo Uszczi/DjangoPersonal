@@ -6,6 +6,7 @@ from typing import Any
 
 from personal.infra.models import User
 from tests.harness import ApiClient
+from tests.helpers import UNKNOWN_ID
 
 ITEMS = '/api/v1/bibliography-items/'
 ATTEMPTS = '/api/v1/bibliography-attempts/'
@@ -226,8 +227,8 @@ def test_attempts_need_an_own_item(
     item = _item(post_json)
     other = client_for(make_user('other'))
 
-    assert api_client.get(f'{ATTEMPTS}?item=999').status_code == 404
-    assert post_json(ATTEMPTS, {'item': 999, 'outcome': 'in_progress'}).status_code == 404
+    assert api_client.get(f'{ATTEMPTS}?item={UNKNOWN_ID}').status_code == 404
+    assert post_json(ATTEMPTS, {'item': UNKNOWN_ID, 'outcome': 'in_progress'}).status_code == 404
     assert other.get(f'{ATTEMPTS}?item={item}').status_code == 404
     assert other.post(ATTEMPTS, {'item': item, 'outcome': 'in_progress'}).status_code == 404
 

@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -22,7 +24,7 @@ class BibliographyItemRepository:
             query = query.where(BibliographyItemModel.kind == kind)
         return list(self.session.scalars(query))
 
-    def find(self, item_id: int, *, user: User) -> BibliographyItemModel | None:
+    def find(self, item_id: UUID, *, user: User) -> BibliographyItemModel | None:
         query = select(BibliographyItemModel).where(
             BibliographyItemModel.id == item_id, BibliographyItemModel.user_id == user.id
         )

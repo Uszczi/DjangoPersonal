@@ -5,15 +5,17 @@ each other's sessions. Values are validated against the loaded project list
 before use, so a stale id (deleted project) simply falls back to the default.
  */
 
-const storageKey = (userId: number) => `lastProject:${userId}`;
+import { isUUID } from "@personal/shared/ids";
 
-export function rememberProject(userId: number, projectId: number): void {
-  window.localStorage.setItem(storageKey(userId), String(projectId));
+const storageKey = (userId: string) => `lastProject:${userId}`;
+
+export function rememberProject(userId: string, projectId: string): void {
+  window.localStorage.setItem(storageKey(userId), projectId);
 }
 
-export function rememberedProjectId(userId: number): number | null {
+export function rememberedProjectId(userId: string): string | null {
   const raw = window.localStorage.getItem(storageKey(userId));
-  if (raw === null) return null;
-  const id = Number(raw);
-  return Number.isInteger(id) && id > 0 ? id : null;
+  // A value saved by the pre-UUID app (an integer) is not an id any more.
+  if (raw === null || !isUUID(raw)) return null;
+  return raw;
 }

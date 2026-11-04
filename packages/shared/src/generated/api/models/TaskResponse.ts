@@ -23,7 +23,7 @@ export interface TaskResponse {
     /**
      *
      */
-    readonly id: number;
+    readonly id: string;
     /**
      *
      */
@@ -35,7 +35,7 @@ export interface TaskResponse {
     /**
      *
      */
-    readonly projectId: number;
+    readonly projectId: string;
     /**
      *
      */

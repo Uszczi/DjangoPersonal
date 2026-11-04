@@ -34,8 +34,8 @@ export default function CounterEntryEditorScreen() {
     counterId: string;
     entryId?: string;
   }>();
-  const counterId = Number(params.counterId);
-  const entryId = params.entryId ? Number(params.entryId) : null;
+  const counterId = params.counterId;
+  const entryId = params.entryId ?? null;
   const { data: entries = [] } = useCounterEntries(
     entryId === null ? null : counterId,
   );

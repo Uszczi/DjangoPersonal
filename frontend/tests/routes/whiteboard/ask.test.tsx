@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { renderApp } from "../../renderApp";
+import { uid } from "../../ids";
 
 vi.mock("@/components/WhiteboardCanvas", () => ({
   WhiteboardCanvas: () => <div data-testid="whiteboard-canvas" />,
@@ -18,7 +19,7 @@ function jsonResponse(data: unknown, status = 200) {
 }
 
 const NOTE = {
-  id: 7,
+  id: uid(7),
   kind: "markdown",
   name: "Samochód",
   folder_id: null,
@@ -32,7 +33,7 @@ const ANSWER = {
   sources: [
     {
       number: 1,
-      whiteboard_id: 7,
+      whiteboard_id: uid(7),
       heading: "Samochód / Ubezpieczenie",
       text: "OC kończy się **14 marca**.",
       score: 0.82,
@@ -57,7 +58,7 @@ function fakeBackend(ask: (question: string) => Response) {
     }
     if (path.endsWith("/folders/")) return jsonResponse([]);
     if (path.endsWith("/whiteboards/")) return jsonResponse([NOTE]);
-    if (path.includes("/whiteboards/7/")) return jsonResponse(NOTE);
+    if (path.includes(`/whiteboards/${uid(7)}/`)) return jsonResponse(NOTE);
     if (path.includes("/timer/"))
       return jsonResponse({ entry: null, server_now: "2026-10-25T12:00:00Z" });
     return jsonResponse([]);

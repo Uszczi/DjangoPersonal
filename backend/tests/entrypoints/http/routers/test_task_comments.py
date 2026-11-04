@@ -7,6 +7,7 @@ from typing import Any
 from personal.core.work.attachments import MAX_ATTACHMENT_BYTES
 from personal.infra.models import User
 from tests.harness import ApiClient
+from tests.helpers import UNKNOWN_ID
 
 PNG = b'\x89PNG\r\n\x1a\n' + bytes(range(256)) * 4
 
@@ -39,8 +40,8 @@ def test_comments_are_listed_oldest_first(post_json: Any, api_client: ApiClient)
 
 
 def test_comment_needs_an_existing_task(post_json: Any, api_client: ApiClient) -> None:
-    assert post_json('/api/v1/task-comments/', {'task': 999, 'body': 'x'}).status_code == 400
-    assert api_client.get('/api/v1/task-comments/?task=999').status_code == 404
+    assert post_json('/api/v1/task-comments/', {'task': UNKNOWN_ID, 'body': 'x'}).status_code == 400
+    assert api_client.get(f'/api/v1/task-comments/?task={UNKNOWN_ID}').status_code == 404
 
 
 def test_attached_file_comes_back_byte_for_byte(post_json: Any, api_client: ApiClient) -> None:

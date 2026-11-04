@@ -34,7 +34,7 @@ export function useBoardName(boardId: string, initialName: string) {
     setError("");
     try {
       const updated = await api.whiteboardsPartialUpdate({
-        id: Number(boardId),
+        id: boardId,
         patchedWhiteboardRequest: { name: trimmed },
       });
       setName(updated.name);

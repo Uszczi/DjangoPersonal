@@ -27,7 +27,7 @@ import { dateFromKey, dateKey, todayKey } from "@personal/shared/timeFormat";
 import { ShowModal } from "@/stores/modal";
 
 type AttemptEditorModalProps = {
-  itemId: number;
+  itemId: string;
   action: AttemptAction;
   /** The Attempt to finish, abandon or edit; omit for `start` and `record`. */
   attempt?: AttemptResponse | null;

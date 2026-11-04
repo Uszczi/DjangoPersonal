@@ -23,11 +23,11 @@ export interface TimeEntryResponse {
     /**
      *
      */
-    readonly id: number;
+    readonly id: string;
     /**
      *
      */
-    readonly taskId: number | null;
+    readonly taskId: string | null;
     /**
      *
      */

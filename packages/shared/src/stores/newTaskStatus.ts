@@ -10,7 +10,7 @@ import { platformStorage } from "../platform";
  */
 type NewTaskStatusState = {
   lastStatusByProject: Record<string, string>;
-  rememberStatus: (projectId: number, status: string) => void;
+  rememberStatus: (projectId: string, status: string) => void;
 };
 
 export const useNewTaskStatusStore = create<NewTaskStatusState>()(
@@ -21,7 +21,7 @@ export const useNewTaskStatusStore = create<NewTaskStatusState>()(
         set((state) => ({
           lastStatusByProject: {
             ...state.lastStatusByProject,
-            [String(projectId)]: status,
+            [projectId]: status,
           },
         })),
     }),
@@ -49,10 +49,10 @@ export const useNewTaskStatusStore = create<NewTaskStatusState>()(
 /** The status a new Task in a Project with `statuses` starts with. */
 export function initialNewTaskStatus(
   lastStatusByProject: Record<string, string>,
-  projectId: number,
+  projectId: string,
   statuses: readonly string[],
 ): string {
-  const last = lastStatusByProject[String(projectId)];
+  const last = lastStatusByProject[projectId];
   return last !== undefined && statuses.includes(last)
     ? last
     : (statuses[0] ?? "");

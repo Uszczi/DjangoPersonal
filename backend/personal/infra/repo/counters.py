@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from datetime import datetime
+from uuid import UUID
 
 from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.orm import Session
@@ -47,16 +48,16 @@ class CounterRepository:
         """Every counter for ``user``, latest entry added first, with count and total."""
         return self._with_totals(CounterModel.user_id == user.id)
 
-    def find(self, counter_id: int, *, user: User) -> CounterModel | None:
+    def find(self, counter_id: UUID, *, user: User) -> CounterModel | None:
         """The counter with this id for ``user`` (with count and total), or ``None``."""
         found = self._with_totals(CounterModel.id == counter_id, CounterModel.user_id == user.id)
         return found[0] if found else None
 
     def entry_times(
         self, counters: Sequence[CounterModel], *, user: User
-    ) -> dict[int, list[datetime]]:
+    ) -> dict[UUID, list[datetime]]:
         """When each of ``user``'s entries in these counters happened, by counter id."""
-        times: dict[int, list[datetime]] = {counter.id: [] for counter in counters}
+        times: dict[UUID, list[datetime]] = {counter.id: [] for counter in counters}
         if not times:
             return times
         query = select(CounterEntryModel.counter_id, CounterEntryModel.occurred_at).where(
@@ -84,7 +85,7 @@ class CounterEntryRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def list_for_counter(self, counter_id: int, *, user: User) -> list[CounterEntryModel]:
+    def list_for_counter(self, counter_id: UUID, *, user: User) -> list[CounterEntryModel]:
         """Every entry of ``user`` in this counter, newest first."""
         query = (
             select(CounterEntryModel)
@@ -93,7 +94,7 @@ class CounterEntryRepository:
         )
         return list(self.session.scalars(query))
 
-    def find(self, entry_id: int, *, user: User) -> CounterEntryModel | None:
+    def find(self, entry_id: UUID, *, user: User) -> CounterEntryModel | None:
         query = select(CounterEntryModel).where(
             CounterEntryModel.id == entry_id, CounterEntryModel.user_id == user.id
         )

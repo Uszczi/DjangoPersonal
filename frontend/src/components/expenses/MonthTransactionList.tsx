@@ -14,7 +14,7 @@ import { TRANSACTIONS_LOAD_ERROR } from "@personal/shared/transactionList";
 type Filter = { label: string; onClear: () => void };
 
 type MonthTransactionListProps = {
-  walletId: number;
+  walletId: string;
   transactions: TransactionResponse[];
   categories: CategoryResponse[];
   /** The active narrowings (a day, a Category), each removable. */

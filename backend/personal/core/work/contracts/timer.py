@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import Field
 
@@ -8,7 +9,7 @@ from .time_entries import MAX_ENTRY_DURATION_MINUTES, TimeEntryResponse
 
 
 class TimerStartRequest(BaseModel):
-    task: int | None = None
+    task: UUID | None = None
     title: str = ''
     #: Stop the timer by itself after this many minutes; omitted runs until stopped.
     duration_minutes: int | None = Field(default=None, ge=1, le=MAX_ENTRY_DURATION_MINUTES)

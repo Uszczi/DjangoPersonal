@@ -26,8 +26,8 @@ export type TransactionInput = {
   amount: string;
   date: string;
   description: string;
-  category: number | null;
-  wallet: number;
+  category: string | null;
+  wallet: string;
 };
 
 /** The API contract types `date` as a Date; the form carries the wire string. */
@@ -39,7 +39,7 @@ export function toTransactionRequest(input: TransactionInput) {
 const MONTH_PAGE_SIZE = 200;
 
 async function fetchMonth(
-  walletId: number,
+  walletId: string,
   month: MonthKey,
   signal: AbortSignal,
 ): Promise<TransactionResponse[]> {
@@ -64,10 +64,10 @@ async function fetchMonth(
 }
 
 /** One month (`yyyy-mm`) of the wallet's transactions, newest first; `null` waits for a wallet. */
-export function useMonthTransactions(walletId: number | null, month: MonthKey) {
+export function useMonthTransactions(walletId: string | null, month: MonthKey) {
   return useQuery({
-    queryKey: transactionKeys.month(walletId ?? 0, month),
-    queryFn: ({ signal }) => fetchMonth(walletId ?? 0, month, signal),
+    queryKey: transactionKeys.month(walletId ?? "", month),
+    queryFn: ({ signal }) => fetchMonth(walletId ?? "", month, signal),
     enabled: walletId !== null,
   });
 }
@@ -78,8 +78,8 @@ export function useMonthTransactions(walletId: number | null, month: MonthKey) {
  */
 export function findCachedTransaction(
   queryClient: QueryClient,
-  walletId: number,
-  transactionId: number,
+  walletId: string,
+  transactionId: string,
 ): TransactionResponse | undefined {
   for (const [, items] of queryClient.getQueriesData<TransactionResponse[]>({
     queryKey: transactionKeys.months(walletId),
@@ -93,7 +93,7 @@ export function findCachedTransaction(
 /** Rewrite every cached month of a wallet; `update` gets the month's key too. */
 function updateMonths(
   queryClient: QueryClient,
-  walletId: number,
+  walletId: string,
   update: (items: TransactionResponse[], month: MonthKey) => TransactionResponse[],
 ) {
   for (const [key, items] of queryClient.getQueriesData<TransactionResponse[]>({
@@ -104,7 +104,7 @@ function updateMonths(
   }
 }
 
-function without(items: TransactionResponse[], id: number) {
+function without(items: TransactionResponse[], id: string) {
   return items.filter((item) => item.id !== id);
 }
 

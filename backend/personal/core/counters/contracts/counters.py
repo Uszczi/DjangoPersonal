@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import AwareDatetime, Field, field_validator
 
@@ -41,7 +42,7 @@ class PatchedCounterRequest(_CounterPayload):
 
 
 class CounterResponse(BaseModel):
-    id: int = Field(..., json_schema_extra={'readOnly': True})
+    id: UUID = Field(..., json_schema_extra={'readOnly': True})
     name: str
     color: str
     created_at: datetime = Field(..., json_schema_extra={'readOnly': True})
@@ -76,7 +77,7 @@ class _CounterEntryPayload(BaseModel):
 
 
 class CounterEntryRequest(_CounterEntryPayload):
-    counter: int
+    counter: UUID
     value: int = Field(default=1, ge=-1_000_000_000, le=1_000_000_000)
     #: The moment the entry happened; must carry a time zone (sent as ISO 8601).
     occurred_at: AwareDatetime
@@ -90,8 +91,8 @@ class PatchedCounterEntryRequest(_CounterEntryPayload):
 
 
 class CounterEntryResponse(BaseModel):
-    id: int = Field(..., json_schema_extra={'readOnly': True})
-    counter_id: int = Field(..., json_schema_extra={'readOnly': True})
+    id: UUID = Field(..., json_schema_extra={'readOnly': True})
+    counter_id: UUID = Field(..., json_schema_extra={'readOnly': True})
     value: int
     occurred_at: datetime
     note: str

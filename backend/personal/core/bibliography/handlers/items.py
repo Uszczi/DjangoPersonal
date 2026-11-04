@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from typing import NamedTuple
+from uuid import UUID
 
 from personal.core.shared.errors import NotFound
 from personal.core.shared.patch import apply_provided
@@ -25,7 +26,7 @@ class ItemWithStatus(NamedTuple):
 
 
 def get_bibliography_item(
-    repository: BibliographyItemRepository, item_id: int, *, user: User
+    repository: BibliographyItemRepository, item_id: UUID, *, user: User
 ) -> BibliographyItemModel:
     """The user's BibliographyItem, or ``NotFound``."""
     item = repository.find(item_id, user=user)
@@ -36,7 +37,7 @@ def get_bibliography_item(
 
 def item_statuses(
     attempts: AttemptRepository, items: Sequence[BibliographyItemModel], *, user: User
-) -> dict[int, ItemStatus]:
+) -> dict[UUID, ItemStatus]:
     """Each of the user's BibliographyItems' status (by id), from its Attempts.
 
     The one place the status is derived from storage: the use cases and the admin
@@ -86,7 +87,7 @@ class GetBibliographyItem:
         self.attempts = attempts
         self.user = user
 
-    def execute(self, item_id: int) -> ItemWithStatus:
+    def execute(self, item_id: UUID) -> ItemWithStatus:
         item = get_bibliography_item(self.items, item_id, user=self.user)
         return _with_status(self.attempts, [item], user=self.user)[0]
 
@@ -110,7 +111,7 @@ class DeleteBibliographyItem:
         self.items = items
         self.user = user
 
-    def execute(self, item_id: int) -> None:
+    def execute(self, item_id: UUID) -> None:
         self.items.delete(get_bibliography_item(self.items, item_id, user=self.user))
 
 
@@ -127,7 +128,7 @@ class UpdateBibliographyItem:
         self.attempts = attempts
         self.user = user
 
-    def execute(self, item_id: int, data: PatchedBibliographyItemRequest) -> ItemWithStatus:
+    def execute(self, item_id: UUID, data: PatchedBibliographyItemRequest) -> ItemWithStatus:
         item = get_bibliography_item(self.items, item_id, user=self.user)
         attempts = self.attempts.list_for_item(item.id, user=self.user)
         apply_provided(data, item)

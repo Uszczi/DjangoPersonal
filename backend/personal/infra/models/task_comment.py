@@ -1,9 +1,10 @@
 from datetime import datetime
+from uuid import UUID
 
 from sqlalchemy import ForeignKey, LargeBinary, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import Base, UTCDateTime, utc_now
+from .base import Base, UTCDateTime, new_id, utc_now
 from .task import Task
 from .user import User
 
@@ -21,9 +22,9 @@ class TaskComment(Base):
 
     __tablename__ = 'task_comments'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
-    task_id: Mapped[int] = mapped_column(ForeignKey('tasks.id', ondelete='CASCADE'), index=True)
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=new_id)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
+    task_id: Mapped[UUID] = mapped_column(ForeignKey('tasks.id', ondelete='CASCADE'), index=True)
     body: Mapped[str] = mapped_column(Text, default='')
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utc_now)
 
@@ -49,9 +50,9 @@ class CommentAttachment(Base):
 
     __tablename__ = 'comment_attachments'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
-    comment_id: Mapped[int] = mapped_column(
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=new_id)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), index=True)
+    comment_id: Mapped[UUID] = mapped_column(
         ForeignKey('task_comments.id', ondelete='CASCADE'), index=True
     )
     file_name: Mapped[str] = mapped_column(String(255))

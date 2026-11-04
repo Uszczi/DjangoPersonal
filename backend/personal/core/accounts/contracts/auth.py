@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pydantic import Field, model_validator
 
 from personal.core.shared.base import BaseModel
@@ -25,7 +27,7 @@ class RefreshRequest(BaseModel):
 
 
 class UserResponse(BaseModel):
-    id: int
+    id: UUID
     username: str
 
 

@@ -64,7 +64,7 @@ export function renderApp(
 
   if (options?.authenticated !== false) {
     useAuthStore.setState({
-      user: { id: 1, username: "testuser" },
+      user: { id: "1", username: "testuser" },
       access: "test-access-token",
       refresh: "test-refresh-token",
     });

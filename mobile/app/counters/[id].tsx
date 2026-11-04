@@ -34,7 +34,7 @@ import { common } from "@/ui/classes";
 /** One Counter: its total, quick +1, a month calendar, and the entries to add, edit and delete. */
 export default function CounterScreen() {
   const { id: rawId } = useLocalSearchParams<{ id: string }>();
-  const id = Number(rawId);
+  const id = rawId;
 
   const { data: counters = [] } = useCounters();
   const counter = counters.find((item) => item.id === id);

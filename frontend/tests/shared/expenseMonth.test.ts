@@ -13,11 +13,11 @@ import {
 import type { TransactionResponse } from "@personal/shared/generated/api";
 
 function transaction(
-  id: number,
+  id: string,
   amount: string,
   day: number,
   kind: TransactionResponse["kind"],
-  categoryId: number | null = null,
+  categoryId: string | null = null,
 ): TransactionResponse {
   return {
     id,
@@ -26,7 +26,7 @@ function transaction(
     date: new Date(2026, 9, day),
     description: "",
     categoryId,
-    walletId: 1,
+    walletId: "1",
     kind,
   };
 }
@@ -60,11 +60,11 @@ describe("expense month", () => {
   test("a month sums Expenses and Income apart, leaving System entries out", () => {
     const summary = summarizeMonth(
       [
-        transaction(1, "40.10", 24, "expense", 7),
-        transaction(2, "9.90", 24, "expense", null),
-        transaction(3, "0.20", 2, "expense", 7),
-        transaction(4, "5000.00", 24, "income", 8),
-        transaction(5, "100.00", 2, null),
+        transaction("1", "40.10", 24, "expense", "7"),
+        transaction("2", "9.90", 24, "expense", null),
+        transaction("3", "0.20", 2, "expense", "7"),
+        transaction("4", "5000.00", 24, "income", "8"),
+        transaction("5", "100.00", 2, null),
       ],
       "2026-10",
     );
@@ -73,7 +73,7 @@ describe("expense month", () => {
     expect(summary.incomeCents).toBe(500000);
     expect(summary.netCents).toBe(494980);
     expect(summary.byCategory).toEqual([
-      { categoryId: 7, cents: 4030, count: 2 },
+      { categoryId: "7", cents: 4030, count: 2 },
       { categoryId: null, cents: 990, count: 1 },
     ]);
     expect(summary.days[24]).toEqual({

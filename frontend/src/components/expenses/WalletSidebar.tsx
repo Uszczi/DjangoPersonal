@@ -19,7 +19,7 @@ import { ShowModal } from "@/stores/modal";
 
 type WalletSidebarProps = {
   wallets: WalletResponse[];
-  activeWalletId: number;
+  activeWalletId: string;
   onManageCategories: () => void;
 };
 
@@ -40,7 +40,7 @@ export function WalletSidebar({
     if (!over || active.id === over.id) return;
     const position = wallets.findIndex((wallet) => wallet.id === over.id);
     if (position === -1) return;
-    moveWallet.mutate({ id: Number(active.id), position });
+    moveWallet.mutate({ id: String(active.id), position });
   }
 
   const total = wallets.reduce(

@@ -203,8 +203,7 @@ function StartTimerRow({
     ...new Set(
       tasks
         .filter(
-          (task) =>
-            projectId === NO_PROJECT || task.projectId === Number(projectId),
+          (task) => projectId === NO_PROJECT || task.projectId === projectId,
         )
         .map((task) => task.title),
     ),

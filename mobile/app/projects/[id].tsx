@@ -14,7 +14,7 @@ import { taskListSettingsAction } from "@/features/tasks/taskListSettings";
  */
 export default function ProjectTasksScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const projectId = Number(id);
+  const projectId = id;
   const { data: projects = [] } = useProjects();
   const project = projects.find((item) => item.id === projectId) ?? null;
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);

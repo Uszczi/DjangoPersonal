@@ -23,7 +23,7 @@ export interface FolderResponse {
     /**
      *
      */
-    readonly id: number;
+    readonly id: string;
     /**
      *
      */
@@ -31,7 +31,7 @@ export interface FolderResponse {
     /**
      *
      */
-    parentId?: number | null;
+    parentId?: string | null;
     /**
      *
      */

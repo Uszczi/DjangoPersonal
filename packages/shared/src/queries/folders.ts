@@ -13,12 +13,13 @@ import {
 import { api } from "../api";
 import { subtreeIds } from "../folderTree";
 import type { FolderResponse, WhiteboardResponse } from "../generated/api";
+import { compareIds } from "../ids";
 import { folderKeys, whiteboardKeys } from "./keys";
 
 /** The server's order: by name, character by character, so case matters. */
 function byName(folders: FolderResponse[]) {
   return [...folders].sort((a, b) =>
-    a.name < b.name ? -1 : a.name > b.name ? 1 : a.id - b.id,
+    a.name < b.name ? -1 : a.name > b.name ? 1 : compareIds(a.id, b.id),
   );
 }
 
@@ -49,7 +50,7 @@ export function useCreateFolder() {
       parentId = null,
     }: {
       name: string;
-      parentId?: number | null;
+      parentId?: string | null;
     }) => api.foldersCreate({ folderRequest: { name, parentId } }),
     onSuccess: (created) => {
       queryClient.setQueryData(
@@ -63,7 +64,7 @@ export function useCreateFolder() {
 export function useRenameFolder() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, name }: { id: number; name: string }) =>
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
       api.foldersPartialUpdate({ id, patchedFolderRequest: { name } }),
     onSuccess: (updated) => replaceFolder(queryClient, updated),
   });
@@ -73,7 +74,7 @@ export function useRenameFolder() {
 export function useMoveFolder() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, parentId }: { id: number; parentId: number | null }) =>
+    mutationFn: ({ id, parentId }: { id: string; parentId: string | null }) =>
       api.foldersPartialUpdate({ id, patchedFolderRequest: { parentId } }),
     onSuccess: (updated) => replaceFolder(queryClient, updated),
   });
@@ -86,7 +87,7 @@ export function useMoveFolder() {
 export function useDeleteFolder() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => api.foldersDestroy({ id }),
+    mutationFn: (id: string) => api.foldersDestroy({ id }),
     onSuccess: (_, id) => {
       const removed = subtreeIds(
         queryClient.getQueryData(foldersQuery.queryKey) ?? [],

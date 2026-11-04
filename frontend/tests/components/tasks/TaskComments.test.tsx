@@ -5,9 +5,10 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { renderApp } from "../../renderApp";
+import { uid } from "../../ids";
 
 const inbox = {
-  id: 1,
+  id: uid(1),
   name: "Inbox",
   description: "",
   is_inbox: true,
@@ -16,16 +17,16 @@ const inbox = {
 };
 
 const task = {
-  id: 7,
+  id: uid(7),
   title: "Prepare outline",
   description: "",
-  project_id: 1,
+  project_id: uid(1),
   status: "Todo",
 };
 
 const photo = {
-  id: 40,
-  comment_id: 30,
+  id: uid(40),
+  comment_id: uid(30),
   file_name: "tablica.jpg",
   content_type: "image/jpeg",
   size: 2_400_000,
@@ -35,7 +36,7 @@ const photo = {
 
 const manual = {
   ...photo,
-  id: 41,
+  id: uid(41),
   file_name: "instrukcja.pdf",
   content_type: "application/pdf",
   is_image: false,
@@ -55,12 +56,13 @@ function serve(comments: Record<string, unknown>[]) {
     const method = init?.method ?? "GET";
     if (url === "/api/v1/projects/") return jsonResponse([inbox]);
     if (url.startsWith("/api/v1/tasks/")) return jsonResponse([task]);
-    if (url === "/api/v1/task-comments/?task=7") return jsonResponse(comments);
+    if (url === `/api/v1/task-comments/?task=${uid(7)}`)
+      return jsonResponse(comments);
     if (url === "/api/v1/task-comments/" && method === "POST") {
       const { body } = JSON.parse(String(init?.body)) as { body: string };
       const created = {
-        id: 30,
-        task_id: 7,
+        id: uid(30),
+        task_id: uid(7),
         body,
         created_at: "2026-10-29T10:00:00Z",
         attachments: [] as unknown[],
@@ -68,14 +70,14 @@ function serve(comments: Record<string, unknown>[]) {
       comments.push(created);
       return jsonResponse(created, 201);
     }
-    if (url === "/api/v1/task-comments/30/attachments/") {
+    if (url === `/api/v1/task-comments/${uid(30)}/attachments/`) {
       (comments[0].attachments as unknown[]).push(photo);
       return jsonResponse(photo, 201);
     }
     if (url.startsWith("/api/v1/comment-attachments/")) {
       return new Response(new Blob(["bytes"], { type: "image/jpeg" }));
     }
-    if (url === "/api/v1/task-comments/30/" && method === "DELETE") {
+    if (url === `/api/v1/task-comments/${uid(30)}/` && method === "DELETE") {
       comments.splice(0, 1);
       return jsonResponse(null, 204);
     }
@@ -144,7 +146,7 @@ describe("Task comments", () => {
     expect(within(dialog).getByLabelText("Nowy komentarz")).toHaveValue("");
 
     const upload = fetchMock.mock.calls.find(
-      ([url]) => url === "/api/v1/task-comments/30/attachments/",
+      ([url]) => url === `/api/v1/task-comments/${uid(30)}/attachments/`,
     );
     expect(upload).toBeDefined();
     const sent = (upload![1] as RequestInit).body as FormData;
@@ -155,8 +157,8 @@ describe("Task comments", () => {
     fetchMock.mockImplementation(
       serve([
         {
-          id: 30,
-          task_id: 7,
+          id: uid(30),
+          task_id: uid(7),
           body: "",
           created_at: "2026-10-29T10:00:00Z",
           attachments: [manual],
@@ -177,8 +179,8 @@ describe("Task comments", () => {
     fetchMock.mockImplementation(
       serve([
         {
-          id: 30,
-          task_id: 7,
+          id: uid(30),
+          task_id: uid(7),
           body: "Najpierw tekst",
           created_at: "2026-10-29T10:00:00Z",
           attachments: [],
@@ -192,7 +194,7 @@ describe("Task comments", () => {
       type: "image/jpeg",
     });
     await user.upload(
-      within(dialog).getByTestId("comment-30-file-input"),
+      within(dialog).getByTestId(`comment-${uid(30)}-file-input`),
       picture,
     );
 
@@ -200,7 +202,7 @@ describe("Task comments", () => {
       await within(dialog).findByRole("img", { name: "tablica.jpg" }),
     ).toBeInTheDocument();
     const upload = fetchMock.mock.calls.find(
-      ([url]) => url === "/api/v1/task-comments/30/attachments/",
+      ([url]) => url === `/api/v1/task-comments/${uid(30)}/attachments/`,
     );
     expect(upload).toBeDefined();
     expect(((upload![1] as RequestInit).body as FormData).get("file")).toBe(
@@ -212,8 +214,8 @@ describe("Task comments", () => {
     fetchMock.mockImplementation(
       serve([
         {
-          id: 30,
-          task_id: 7,
+          id: uid(30),
+          task_id: uid(7),
           body: "Do usunięcia",
           created_at: "2026-10-29T10:00:00Z",
           attachments: [],
@@ -233,7 +235,7 @@ describe("Task comments", () => {
       ).not.toBeInTheDocument(),
     );
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/v1/task-comments/30/",
+      `/api/v1/task-comments/${uid(30)}/`,
       expect.objectContaining({ method: "DELETE" }),
     );
   });

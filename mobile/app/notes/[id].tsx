@@ -11,7 +11,7 @@ import { NoteEditor } from "@/features/notes/NoteEditor";
 /** One Notatka (`?q=`: a Notatnik search to mark in it). */
 export default function NoteScreen() {
   const { id: rawId, q } = useLocalSearchParams<{ id: string; q?: string }>();
-  const id = Number(rawId);
+  const id = rawId;
   const note = useWhiteboard(id);
 
   if (note.isPending) {

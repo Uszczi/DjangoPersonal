@@ -1,6 +1,7 @@
 """Notatnik tools: folders, whiteboards and Notatki, and the grep over them."""
 
 from typing import Any
+from uuid import UUID
 
 from personal import wiring
 from personal.core.whiteboard import handlers as whiteboard_handlers
@@ -24,7 +25,7 @@ def list_folders(ctx: ToolContext) -> list[dict[str, Any]]:
 
 
 @tool
-def create_folder(ctx: ToolContext, name: str, parent_id: int | None = None) -> dict[str, Any]:
+def create_folder(ctx: ToolContext, name: str, parent_id: UUID | None = None) -> dict[str, Any]:
     """Create a Folder, inside ``parent_id`` or at the top level."""
     payload = FolderRequest.model_validate({'name': name, 'parent_id': parent_id})
     with unit_of_work(ctx) as (session, user):
@@ -35,9 +36,9 @@ def create_folder(ctx: ToolContext, name: str, parent_id: int | None = None) -> 
 @tool
 def update_folder(
     ctx: ToolContext,
-    folder_id: int,
+    folder_id: UUID,
     name: str | None = None,
-    parent_id: int | None = None,
+    parent_id: UUID | None = None,
     move_to_top_level: bool = False,
 ) -> dict[str, Any]:
     """Rename a Folder or move it into ``parent_id`` (or to the top level)."""
@@ -51,7 +52,7 @@ def update_folder(
 
 
 @tool
-def delete_folder(ctx: ToolContext, folder_id: int) -> str:
+def delete_folder(ctx: ToolContext, folder_id: UUID) -> str:
     """Delete a Folder with its subfolders and every whiteboard and Notatka in them."""
     with unit_of_work(ctx) as (session, user):
         whiteboard_handlers.DeleteFolder(wiring.folder_repository(session), user).execute(folder_id)
@@ -79,7 +80,7 @@ def search_notatnik(ctx: ToolContext, query: str) -> list[dict[str, Any]]:
         return [result.model_dump(mode='json') for result in handler.execute(query)]
 
 @tool
-def get_whiteboard(ctx: ToolContext, whiteboard_id: int) -> dict[str, Any]:
+def get_whiteboard(ctx: ToolContext, whiteboard_id: UUID) -> dict[str, Any]:
     """Fetch a whiteboard or Notatka with its content
     (a Notatka's text is ``content.markdown``)."""
     with unit_of_work(ctx) as (session, user):
@@ -101,7 +102,7 @@ def create_whiteboard(
     kind: str = 'whiteboard',
     markdown: str | None = None,
     content: dict[str, Any] | None = None,
-    folder_id: int | None = None,
+    folder_id: UUID | None = None,
 ) -> dict[str, Any]:
     """Create a whiteboard, or a Notatka with ``kind="markdown"`` and its text
     in ``markdown``. ``content`` is the raw document, for whiteboards."""
@@ -122,11 +123,11 @@ def create_whiteboard(
 @tool
 def update_whiteboard(
     ctx: ToolContext,
-    whiteboard_id: int,
+    whiteboard_id: UUID,
     name: str | None = None,
     markdown: str | None = None,
     content: dict[str, Any] | None = None,
-    folder_id: int | None = None,
+    folder_id: UUID | None = None,
     remove_from_folder: bool = False,
 ) -> dict[str, Any]:
     """Update a whiteboard or Notatka (partial). ``markdown`` replaces a
@@ -143,7 +144,7 @@ def update_whiteboard(
 
 
 @tool
-def delete_whiteboard(ctx: ToolContext, whiteboard_id: int) -> str:
+def delete_whiteboard(ctx: ToolContext, whiteboard_id: UUID) -> str:
     """Delete a whiteboard or Notatka."""
     with unit_of_work(ctx) as (session, user):
         handler = whiteboard_handlers.DeleteWhiteboard(wiring.whiteboard_repository(session), user)

@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy import exists, select, update
 from sqlalchemy.orm import Session
 
@@ -33,7 +35,7 @@ class ProjectRepository:
         )
         return list(self.session.scalars(query))
 
-    def find(self, project_id: int, *, user: User) -> ProjectModel | None:
+    def find(self, project_id: UUID, *, user: User) -> ProjectModel | None:
         query = select(ProjectModel).where(
             ProjectModel.id == project_id, ProjectModel.user_id == user.id
         )

@@ -1,6 +1,7 @@
 """Expense tools: wallets, categories and transactions."""
 
 from typing import Any, Literal
+from uuid import UUID
 
 from personal import wiring
 from personal.core.expenses import handlers as expense_handlers
@@ -33,7 +34,7 @@ def list_wallets(ctx: ToolContext) -> list[dict[str, Any]]:
 
 
 @tool
-def get_wallet(ctx: ToolContext, wallet_id: int) -> dict[str, Any]:
+def get_wallet(ctx: ToolContext, wallet_id: UUID) -> dict[str, Any]:
     """Fetch a single wallet by id."""
     with unit_of_work(ctx) as (session, user):
         handler = expense_handlers.GetWallet(wiring.wallet_repository(session), user)
@@ -66,7 +67,7 @@ def create_wallet(
 @tool
 def update_wallet(
     ctx: ToolContext,
-    wallet_id: int,
+    wallet_id: UUID,
     name: str | None = None,
     color: str | None = None,
     icon: str | None = None,
@@ -94,7 +95,7 @@ def update_wallet(
 
 
 @tool
-def delete_wallet(ctx: ToolContext, wallet_id: int) -> str:
+def delete_wallet(ctx: ToolContext, wallet_id: UUID) -> str:
     """Delete a wallet together with all its transactions."""
     with unit_of_work(ctx) as (session, user):
         expense_handlers.DeleteWallet(wiring.wallet_repository(session), user).execute(wallet_id)
@@ -129,7 +130,7 @@ def create_category(
 
 @tool
 def update_category(
-    ctx: ToolContext, category_id: int, name: str | None = None, icon: str | None = None
+    ctx: ToolContext, category_id: UUID, name: str | None = None, icon: str | None = None
 ) -> dict[str, Any]:
     """Update a category (partial)."""
     payload = PatchedCategoryRequest.model_validate(provided(name=name, icon=icon))
@@ -139,7 +140,7 @@ def update_category(
 
 
 @tool
-def delete_category(ctx: ToolContext, category_id: int) -> str:
+def delete_category(ctx: ToolContext, category_id: UUID) -> str:
     """Delete a category together with all its transactions (system categories are refused)."""
     with unit_of_work(ctx) as (session, user):
         handler = expense_handlers.DeleteCategory(wiring.category_repository(session), user)
@@ -153,7 +154,7 @@ def delete_category(ctx: ToolContext, category_id: int) -> str:
 @tool
 def list_transactions(
     ctx: ToolContext,
-    wallet_id: int,
+    wallet_id: UUID,
     limit: int = expense_handlers.DEFAULT_PAGE_SIZE,
     cursor: str | None = None,
     date_from: str | None = None,
@@ -183,12 +184,12 @@ def list_transactions(
 @tool
 def create_transaction(
     ctx: ToolContext,
-    wallet_id: int,
+    wallet_id: UUID,
     title: str,
     amount: str,
     date: str,
     description: str = '',
-    category_id: int | None = None,
+    category_id: UUID | None = None,
 ) -> dict[str, Any]:
     """Record an expense or an income; the direction follows from the category's
     kind. ``amount`` is a positive decimal string (``"12.50"``), ``date`` is
@@ -216,14 +217,14 @@ def create_transaction(
 @tool
 def update_transaction(
     ctx: ToolContext,
-    transaction_id: int,
+    transaction_id: UUID,
     title: str | None = None,
     amount: str | None = None,
     date: str | None = None,
     description: str | None = None,
-    category_id: int | None = None,
+    category_id: UUID | None = None,
     clear_category: bool = False,
-    wallet_id: int | None = None,
+    wallet_id: UUID | None = None,
 ) -> dict[str, Any]:
     """Update a transaction (partial); ``clear_category`` uncategorizes it."""
     fields = provided(
@@ -248,7 +249,7 @@ def update_transaction(
 
 
 @tool
-def delete_transaction(ctx: ToolContext, transaction_id: int) -> str:
+def delete_transaction(ctx: ToolContext, transaction_id: UUID) -> str:
     """Delete a transaction."""
     with unit_of_work(ctx) as (session, user):
         handler = expense_handlers.DeleteTransaction(wiring.transaction_repository(session), user)

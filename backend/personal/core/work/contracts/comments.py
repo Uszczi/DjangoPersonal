@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import Field, field_validator
 
@@ -25,7 +26,7 @@ class _TaskCommentPayload(BaseModel):
 
 
 class TaskCommentCreateRequest(_TaskCommentPayload):
-    task: int
+    task: UUID
     #: May be empty when the comment is only there to carry attachments.
     body: str = Field(default='', max_length=MAX_COMMENT_LENGTH)
 
@@ -35,8 +36,8 @@ class PatchedTaskCommentRequest(_TaskCommentPayload):
 
 
 class CommentAttachmentResponse(BaseModel):
-    id: int = Field(..., json_schema_extra={'readOnly': True})
-    comment_id: int = Field(..., json_schema_extra={'readOnly': True})
+    id: UUID = Field(..., json_schema_extra={'readOnly': True})
+    comment_id: UUID = Field(..., json_schema_extra={'readOnly': True})
     file_name: str = Field(..., json_schema_extra={'readOnly': True})
     content_type: str = Field(..., json_schema_extra={'readOnly': True})
     #: In bytes.
@@ -47,8 +48,8 @@ class CommentAttachmentResponse(BaseModel):
 
 
 class TaskCommentResponse(BaseModel):
-    id: int = Field(..., json_schema_extra={'readOnly': True})
-    task_id: int = Field(..., json_schema_extra={'readOnly': True})
+    id: UUID = Field(..., json_schema_extra={'readOnly': True})
+    task_id: UUID = Field(..., json_schema_extra={'readOnly': True})
     body: str
     created_at: datetime = Field(..., json_schema_extra={'readOnly': True})
     attachments: list[CommentAttachmentResponse] = Field(

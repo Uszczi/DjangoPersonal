@@ -13,7 +13,7 @@ type SearchResultsProps = {
   query: string;
   folders: FolderResponse[];
   whiteboards: WhiteboardResponse[];
-  activeId: number | null;
+  activeId: string | null;
   onRevealFolder: (folder: FolderResponse) => void;
 };
 
@@ -42,7 +42,7 @@ export function SearchResults({
           return wb ? [{ wb, lines: hit.lines }] : [];
         })
       : [];
-  const location = (folderId: number | null) =>
+  const location = (folderId: string | null) =>
     folderPath(folders, folderId)
       .map((f) => f.name)
       .join(" / ") || "Bez folderu";

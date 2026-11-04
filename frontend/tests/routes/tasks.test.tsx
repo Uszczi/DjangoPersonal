@@ -9,11 +9,12 @@ import { ProjectEditorModal } from "@/components/modals/ProjectEditorModal";
 import type { ProjectResponse } from "@personal/shared/generated/api";
 import { ShowModal } from "@/stores/modal";
 import { renderApp } from "../renderApp";
+import { uid } from "../ids";
 
 const DEFAULT_STATUSES = ["Todo", "Zrobione"];
 
 const inbox = {
-  id: 1,
+  id: uid(1),
   name: "Inbox",
   description: "",
   is_inbox: true,
@@ -22,7 +23,7 @@ const inbox = {
 };
 
 const planning = {
-  id: 2,
+  id: uid(2),
   name: "Planning",
   description: "",
   is_inbox: false,
@@ -31,17 +32,17 @@ const planning = {
 };
 
 const task = {
-  id: 7,
+  id: uid(7),
   title: "Prepare outline",
   description: "",
-  project_id: 2,
+  project_id: uid(2),
   status: "Todo",
 };
 
 // The project editor and delete dialog have no trigger in the current UI, so
 // tests open them the same way the app does, through the modal store.
 const inboxProject: ProjectResponse = {
-  id: 1,
+  id: uid(1),
   name: "Inbox",
   description: "",
   isInbox: true,
@@ -50,7 +51,7 @@ const inboxProject: ProjectResponse = {
 };
 
 const planningProject: ProjectResponse = {
-  id: 2,
+  id: uid(2),
   name: "Planning",
   description: "",
   isInbox: false,
@@ -59,7 +60,7 @@ const planningProject: ProjectResponse = {
 };
 
 const readingProject: ProjectResponse = {
-  id: 2,
+  id: uid(2),
   name: "Reading",
   description: "Books to explore",
   isInbox: false,
@@ -129,7 +130,7 @@ describe("Projects", () => {
       .mockResolvedValueOnce(
         jsonResponse(
           {
-            id: 2,
+            id: uid(2),
             name: "Planning",
             description: "Quarterly plans",
             is_inbox: false,
@@ -196,7 +197,7 @@ describe("Projects", () => {
         jsonResponse([
           inbox,
           {
-            id: 2,
+            id: uid(2),
             name: "Reading",
             description: "Books to explore",
             is_inbox: false,
@@ -209,7 +210,7 @@ describe("Projects", () => {
       .mockResolvedValueOnce(jsonResponse([]))
       .mockResolvedValueOnce(
         jsonResponse({
-          id: 2,
+          id: uid(2),
           name: "Research",
           description: "Sources and notes",
           is_inbox: false,
@@ -243,7 +244,7 @@ describe("Projects", () => {
     ).toBeInTheDocument();
     expect(fetchMock).toHaveBeenNthCalledWith(
       4,
-      "/api/v1/projects/2/",
+      `/api/v1/projects/${uid(2)}/`,
       expect.objectContaining({
         method: "PATCH",
         body: JSON.stringify({
@@ -304,7 +305,7 @@ describe("Projects", () => {
     await user.click(screen.getByRole("button", { name: "Zapisz zmiany" }));
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
-        "/api/v1/projects/2/",
+        `/api/v1/projects/${uid(2)}/`,
         expect.objectContaining({
           method: "PATCH",
           body: JSON.stringify({
@@ -319,12 +320,17 @@ describe("Projects", () => {
   });
 
   test("user can drag a task into another status", async () => {
-    const doneTask = { ...task, id: 8, title: "Ship it", status: "Zrobione" };
+    const doneTask = {
+      ...task,
+      id: uid(8),
+      title: "Ship it",
+      status: "Zrobione",
+    };
     fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
       if (url === "/api/v1/projects/") return jsonResponse([inbox, planning]);
       if (url.startsWith("/api/v1/tasks/?"))
         return jsonResponse([task, doneTask]);
-      if (url === "/api/v1/tasks/7/" && init?.method === "PATCH")
+      if (url === `/api/v1/tasks/${uid(7)}/` && init?.method === "PATCH")
         return jsonResponse({ ...task, status: "Zrobione", position: 0 });
       throw new Error(`Unexpected request: ${url}`);
     });
@@ -338,7 +344,7 @@ describe("Projects", () => {
           ? this.firstElementChild.getAttribute("aria-label")
           : null;
         const top = taskId
-          ? taskId === "7"
+          ? taskId === uid(7)
             ? 0
             : 100
           : list
@@ -353,7 +359,7 @@ describe("Projects", () => {
       });
     const user = userEvent.setup();
 
-    renderApp("/tasks?project=2");
+    renderApp(`/tasks?project=${uid(2)}`);
     await expandStatus(user, "Zrobione");
     const handle = await screen.findByRole("button", {
       name: "Przeciągnij zadanie: Prepare outline",
@@ -366,7 +372,7 @@ describe("Projects", () => {
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
-        "/api/v1/tasks/7/",
+        `/api/v1/tasks/${uid(7)}/`,
         expect.objectContaining({
           method: "PATCH",
           body: JSON.stringify({ status: "Zrobione", position: 0 }),
@@ -380,7 +386,7 @@ describe("Projects", () => {
       .mockResolvedValueOnce(
         jsonResponse([
           {
-            id: 3,
+            id: uid(3),
             name: "Zulu",
             description: "",
             is_inbox: false,
@@ -389,7 +395,7 @@ describe("Projects", () => {
           },
           inbox,
           {
-            id: 2,
+            id: uid(2),
             name: "Alpha",
             description: "",
             is_inbox: false,
@@ -437,17 +443,17 @@ describe("Projects", () => {
       .mockResolvedValueOnce(
         jsonResponse([
           {
-            id: 2,
+            id: uid(2),
             title: "Completed note",
             description: "",
-            project_id: 1,
+            project_id: uid(1),
             status: "Zrobione",
           },
           {
-            id: 1,
+            id: uid(1),
             title: "Open note",
             description: "",
-            project_id: 1,
+            project_id: uid(1),
             status: "Todo",
           },
         ]),
@@ -460,7 +466,7 @@ describe("Projects", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
       "/api/v1/projects/",
-      "/api/v1/tasks/?project=1",
+      `/api/v1/tasks/?project=${uid(1)}`,
     ]);
     const openList = screen.getByRole("list", { name: "Todo" });
     // Finished Tasks start folded away.
@@ -484,18 +490,18 @@ describe("Projects", () => {
       .mockResolvedValueOnce(
         jsonResponse([
           {
-            id: 1,
+            id: uid(1),
             title: "Discussed",
             description: "",
-            project_id: 1,
+            project_id: uid(1),
             status: "Todo",
             comment_count: 2,
           },
           {
-            id: 2,
+            id: uid(2),
             title: "Quiet",
             description: "",
-            project_id: 1,
+            project_id: uid(1),
             status: "Todo",
             comment_count: 0,
           },
@@ -529,10 +535,10 @@ describe("Projects", () => {
       .mockResolvedValueOnce(
         jsonResponse([
           {
-            id: 1,
+            id: uid(1),
             title: "Open note",
             description: "",
-            project_id: 1,
+            project_id: uid(1),
             status: "Todo",
           },
         ]),
@@ -576,7 +582,7 @@ describe("Projects", () => {
         jsonResponse([
           inbox,
           {
-            id: 2,
+            id: uid(2),
             name: "Planning",
             description: "",
             is_inbox: false,
@@ -590,10 +596,10 @@ describe("Projects", () => {
       .mockResolvedValueOnce(
         jsonResponse(
           {
-            id: 4,
+            id: uid(4),
             title: "Capture requirements",
             description: "Talk to the team",
-            project_id: 2,
+            project_id: uid(2),
             status: "Todo",
           },
           201,
@@ -627,7 +633,7 @@ describe("Projects", () => {
         body: JSON.stringify({
           title: "Capture requirements",
           description: "Talk to the team",
-          project: 2,
+          project: uid(2),
           status: "Todo",
         }),
       }),
@@ -640,7 +646,7 @@ describe("Projects", () => {
         jsonResponse([
           inbox,
           {
-            id: 2,
+            id: uid(2),
             name: "Planning",
             description: "",
             is_inbox: false,
@@ -654,10 +660,10 @@ describe("Projects", () => {
       .mockResolvedValueOnce(
         jsonResponse(
           {
-            id: 4,
+            id: uid(4),
             title: "Already shipped",
             description: "",
-            project_id: 2,
+            project_id: uid(2),
             status: "Zrobione",
           },
           201,
@@ -693,7 +699,7 @@ describe("Projects", () => {
         jsonResponse([
           inbox,
           {
-            id: 2,
+            id: uid(2),
             name: "Planning",
             description: "",
             is_inbox: false,
@@ -706,37 +712,37 @@ describe("Projects", () => {
       .mockResolvedValueOnce(
         jsonResponse([
           {
-            id: 7,
+            id: uid(7),
             title: "Prepare outline",
             description: "",
-            project_id: 2,
+            project_id: uid(2),
             status: "Todo",
           },
           {
-            id: 6,
+            id: uid(6),
             title: "Completed note",
             description: "",
-            project_id: 2,
+            project_id: uid(2),
             status: "Zrobione",
           },
         ]),
       )
       .mockResolvedValueOnce(
         jsonResponse({
-          id: 7,
+          id: uid(7),
           title: "Prepare outline",
           description: "",
-          project_id: 2,
+          project_id: uid(2),
           status: "Zrobione",
           position: 0,
         }),
       )
       .mockResolvedValueOnce(
         jsonResponse({
-          id: 7,
+          id: uid(7),
           title: "Prepare outline",
           description: "",
-          project_id: 2,
+          project_id: uid(2),
           status: "Todo",
         }),
       );
@@ -776,7 +782,7 @@ describe("Projects", () => {
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       4,
-      "/api/v1/tasks/7/",
+      `/api/v1/tasks/${uid(7)}/`,
       expect.objectContaining({
         method: "PATCH",
         body: JSON.stringify({ status: "Zrobione" }),
@@ -784,7 +790,7 @@ describe("Projects", () => {
     );
     expect(fetchMock).toHaveBeenNthCalledWith(
       5,
-      "/api/v1/tasks/7/",
+      `/api/v1/tasks/${uid(7)}/`,
       expect.objectContaining({
         method: "PATCH",
         body: JSON.stringify({ status: "Todo" }),
@@ -799,7 +805,7 @@ describe("Projects", () => {
         jsonResponse([
           inbox,
           {
-            id: 2,
+            id: uid(2),
             name: "Planning",
             description: "",
             is_inbox: false,
@@ -807,7 +813,7 @@ describe("Projects", () => {
             terminal_status: "Zrobione",
           },
           {
-            id: 3,
+            id: uid(3),
             name: "Archive",
             description: "",
             is_inbox: false,
@@ -820,30 +826,30 @@ describe("Projects", () => {
       .mockResolvedValueOnce(
         jsonResponse([
           {
-            id: 8,
+            id: uid(8),
             title: "Capture scope",
             description: "",
-            project_id: 2,
+            project_id: uid(2),
             status: "Todo",
           },
         ]),
       )
       .mockResolvedValueOnce(
         jsonResponse({
-          id: 8,
+          id: uid(8),
           title: "Capture requirements",
           description: "Confirm with the team",
-          project_id: 3,
+          project_id: uid(3),
           status: "Todo",
         }),
       )
       .mockResolvedValueOnce(
         jsonResponse([
           {
-            id: 8,
+            id: uid(8),
             title: "Capture requirements",
             description: "Confirm with the team",
-            project_id: 3,
+            project_id: uid(3),
             status: "Todo",
           },
         ]),
@@ -868,7 +874,7 @@ describe("Projects", () => {
       screen.getByLabelText("Opis (opcjonalnie)"),
       "Confirm with the team",
     );
-    await user.selectOptions(screen.getByLabelText("Projekt zadania"), "3");
+    await user.selectOptions(screen.getByLabelText("Projekt zadania"), uid(3));
     await user.click(screen.getByRole("button", { name: "Zapisz zmiany" }));
 
     expect(
@@ -879,13 +885,13 @@ describe("Projects", () => {
     expect(screen.getByText("Confirm with the team")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenNthCalledWith(
       4,
-      "/api/v1/tasks/8/",
+      `/api/v1/tasks/${uid(8)}/`,
       expect.objectContaining({
         method: "PATCH",
         body: JSON.stringify({
           title: "Capture requirements",
           description: "Confirm with the team",
-          project: 3,
+          project: uid(3),
           status: "Todo",
         }),
       }),
@@ -898,7 +904,7 @@ describe("Projects", () => {
         jsonResponse([
           inbox,
           {
-            id: 2,
+            id: uid(2),
             name: "Planning",
             description: "",
             is_inbox: false,
@@ -911,20 +917,20 @@ describe("Projects", () => {
       .mockResolvedValueOnce(
         jsonResponse([
           {
-            id: 9,
+            id: uid(9),
             title: "First title",
             description: "Old note",
-            project_id: 2,
+            project_id: uid(2),
             status: "Todo",
           },
         ]),
       )
       .mockResolvedValueOnce(
         jsonResponse({
-          id: 9,
+          id: uid(9),
           title: "Updated title",
           description: "New note",
-          project_id: 2,
+          project_id: uid(2),
           status: "Todo",
         }),
       );
@@ -949,13 +955,13 @@ describe("Projects", () => {
     expect(screen.getByText("New note")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenNthCalledWith(
       4,
-      "/api/v1/tasks/9/",
+      `/api/v1/tasks/${uid(9)}/`,
       expect.objectContaining({
         method: "PATCH",
         body: JSON.stringify({
           title: "Updated title",
           description: "New note",
-          project: 2,
+          project: uid(2),
           status: "Todo",
         }),
       }),
@@ -969,7 +975,7 @@ describe("Projects", () => {
         jsonResponse([
           inbox,
           {
-            id: 2,
+            id: uid(2),
             name: "Planning",
             description: "",
             is_inbox: false,
@@ -977,7 +983,7 @@ describe("Projects", () => {
             terminal_status: "Zrobione",
           },
           {
-            id: 3,
+            id: uid(3),
             name: "Archive",
             description: "",
             is_inbox: false,
@@ -990,10 +996,10 @@ describe("Projects", () => {
       .mockResolvedValueOnce(
         jsonResponse([
           {
-            id: 7,
+            id: uid(7),
             title: "Planning task",
             description: "",
-            project_id: 2,
+            project_id: uid(2),
             status: "Todo",
           },
         ]),
@@ -1002,10 +1008,10 @@ describe("Projects", () => {
       .mockResolvedValueOnce(
         jsonResponse([
           {
-            id: 9,
+            id: uid(9),
             title: "Archive task",
             description: "",
-            project_id: 3,
+            project_id: uid(3),
             status: "Todo",
           },
         ]),
@@ -1030,10 +1036,10 @@ describe("Projects", () => {
     await act(async () => {
       pendingUpdate.resolve(
         jsonResponse({
-          id: 7,
+          id: uid(7),
           title: "Planning task",
           description: "",
-          project_id: 2,
+          project_id: uid(2),
           status: "Zrobione",
         }),
       );
@@ -1064,7 +1070,7 @@ describe("Deleting tasks and projects", () => {
   test("user must confirm before a task is permanently deleted", async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([inbox]))
-      .mockResolvedValueOnce(jsonResponse([{ ...task, project_id: 1 }]))
+      .mockResolvedValueOnce(jsonResponse([{ ...task, project_id: uid(1) }]))
       .mockResolvedValueOnce(new Response(null, { status: 204 }));
     const user = userEvent.setup();
 
@@ -1089,7 +1095,7 @@ describe("Deleting tasks and projects", () => {
 
     expect(screen.getByText("Prepare outline")).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalledWith(
-      "/api/v1/tasks/7/",
+      `/api/v1/tasks/${uid(7)}/`,
       expect.objectContaining({ method: "DELETE" }),
     );
 
@@ -1108,7 +1114,7 @@ describe("Deleting tasks and projects", () => {
     expect(screen.getByText("Nie ma tu jeszcze zadań.")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenNthCalledWith(
       3,
-      "/api/v1/tasks/7/",
+      `/api/v1/tasks/${uid(7)}/`,
       expect.objectContaining({ method: "DELETE" }),
     );
   });
@@ -1116,7 +1122,7 @@ describe("Deleting tasks and projects", () => {
   test("a task with recorded time cannot be deleted and the dialog explains why", async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse([inbox]))
-      .mockResolvedValueOnce(jsonResponse([{ ...task, project_id: 1 }]))
+      .mockResolvedValueOnce(jsonResponse([{ ...task, project_id: uid(1) }]))
       .mockResolvedValueOnce(
         jsonResponse(
           { detail: "A task with recorded time entries cannot be deleted." },
@@ -1181,7 +1187,7 @@ describe("Deleting tasks and projects", () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(4));
     expect(fetchMock).toHaveBeenNthCalledWith(
       4,
-      "/api/v1/projects/2/",
+      `/api/v1/projects/${uid(2)}/`,
       expect.objectContaining({ method: "DELETE" }),
     );
     expect(

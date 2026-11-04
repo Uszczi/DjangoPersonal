@@ -1,5 +1,6 @@
 from datetime import date as datetime_date
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Query, Response, status
 
@@ -19,7 +20,7 @@ router = APIRouter(tags=['personal'])
 def list_time_entries(
     user: CurrentUser,
     time_entries: TimeEntryRepositoryDep,
-    task: int | None = None,
+    task: UUID | None = None,
     date: datetime_date | None = None,
 ) -> list[TimeEntryResponse]:
     found = handlers.ListTimeEntries(time_entries, user).execute(task_id=task, day=date)
@@ -55,7 +56,7 @@ def create_time_entry(
 
 @router.patch('/time-entries/{id}/', operation_id='time_entries_partial_update')
 def update_time_entry(
-    id: int,
+    id: UUID,
     payload: PatchedTimeEntryRequest,
     user: CurrentUser,
     tasks: TaskRepositoryDep,
@@ -71,5 +72,5 @@ def update_time_entry(
     response_class=Response,
     operation_id='time_entries_destroy',
 )
-def delete_time_entry(id: int, user: CurrentUser, time_entries: TimeEntryRepositoryDep) -> None:
+def delete_time_entry(id: UUID, user: CurrentUser, time_entries: TimeEntryRepositoryDep) -> None:
     handlers.DeleteTimeEntry(time_entries, user).execute(id)

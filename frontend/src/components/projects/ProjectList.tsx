@@ -113,7 +113,7 @@ export function ProjectList({
     const targetIndex = reordered.findIndex((p) => p.id === active.id);
 
     // The list is reloaded either way, so a refused move snaps back.
-    moveProject.mutate({ id: Number(active.id), position: targetIndex });
+    moveProject.mutate({ id: String(active.id), position: targetIndex });
   }
 
   return (

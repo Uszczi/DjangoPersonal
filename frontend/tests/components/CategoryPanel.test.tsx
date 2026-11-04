@@ -5,31 +5,32 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { renderApp } from "../renderApp";
+import { uid } from "../ids";
 
 // API returns snake_case; the generated client maps it to camelCase.
 const catJedzenie = {
-  id: 1,
+  id: uid(1),
   name: "Jedzenie",
   icon: "utensils",
   is_system: false,
   kind: "expense",
 };
 const catTransport = {
-  id: 2,
+  id: uid(2),
   name: "Transport",
   icon: "car",
   is_system: false,
   kind: "expense",
 };
 const catWynagrodzenie = {
-  id: 4,
+  id: uid(4),
   name: "Wynagrodzenie",
   icon: "banknote",
   is_system: false,
   kind: "income",
 };
 const catSystem = {
-  id: 3,
+  id: uid(3),
   name: "System",
   icon: "settings",
   is_system: true,
@@ -143,7 +144,7 @@ describe("Categories", () => {
       .mockResolvedValueOnce(initial.categories)
       .mockResolvedValueOnce(
         jsonResponse(
-          { id: 9, name: "Rachunki", icon: "tag", kind: "expense" },
+          { id: uid(9), name: "Rachunki", icon: "tag", kind: "expense" },
           201,
         ),
       );
@@ -180,7 +181,7 @@ describe("Categories", () => {
       .mockResolvedValueOnce(initial.categories)
       .mockResolvedValueOnce(
         jsonResponse(
-          { id: 5, name: "Prezenty", icon: "tag", kind: "income" },
+          { id: uid(5), name: "Prezenty", icon: "tag", kind: "income" },
           201,
         ),
       );
@@ -243,7 +244,7 @@ describe("Categories", () => {
       .mockResolvedValueOnce(initial.categories)
       .mockResolvedValueOnce(
         jsonResponse({
-          id: 1,
+          id: uid(1),
           name: "Żywność",
           icon: "utensils",
           kind: "expense",
@@ -270,7 +271,7 @@ describe("Categories", () => {
     expect(await within(list).findByText("Żywność")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenNthCalledWith(
       3,
-      "/api/v1/categories/1/",
+      `/api/v1/categories/${uid(1)}/`,
       expect.objectContaining({
         method: "PATCH",
         body: JSON.stringify({ name: "Żywność", icon: "utensils" }),
@@ -307,7 +308,7 @@ describe("Categories", () => {
     await waitFor(() =>
       expect(fetchMock).toHaveBeenNthCalledWith(
         3,
-        "/api/v1/categories/1/",
+        `/api/v1/categories/${uid(1)}/`,
         expect.objectContaining({ method: "DELETE" }),
       ),
     );
@@ -320,7 +321,7 @@ describe("Categories", () => {
       .mockResolvedValueOnce(initial.categories)
       .mockResolvedValueOnce(
         jsonResponse(
-          { id: 9, name: "Kawa", icon: "coffee", kind: "expense" },
+          { id: uid(9), name: "Kawa", icon: "coffee", kind: "expense" },
           201,
         ),
       );
@@ -452,7 +453,7 @@ describe("Categories", () => {
     await waitFor(() =>
       expect(fetchMock).toHaveBeenNthCalledWith(
         3,
-        "/api/v1/categories/1/",
+        `/api/v1/categories/${uid(1)}/`,
         expect.objectContaining({
           method: "PATCH",
           body: JSON.stringify({ name: "Jedzenie", icon: "rocket" }),

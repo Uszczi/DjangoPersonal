@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy import JSON, ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -23,7 +25,7 @@ class MobileSettings(Base):
 
     __tablename__ = 'mobile_settings'
 
-    user_id: Mapped[int] = mapped_column(
+    user_id: Mapped[UUID] = mapped_column(
         ForeignKey('users.id', ondelete='CASCADE'), primary_key=True
     )
     #: The bottom-bar tabs the account has hidden; every other tab is visible.

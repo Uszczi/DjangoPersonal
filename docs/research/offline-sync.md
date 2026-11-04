@@ -8,7 +8,7 @@ Status: research only, nothing implemented. Written 2026-11-04.
 
 - **Reads already survive offline.** Both clients persist the TanStack Query cache for 24 h (`packages/shared/src/queries/persist.ts`). A cold start without a network paints the last data.
 - **Writes do not.** Every mutation is a plain `useMutation` that calls the generated client. Offline it fails (or, under TanStack Query's default `networkMode: "online"`, pauses until the process dies). Paused mutations are not persisted, there are no mutation keys or `setMutationDefaults`, and nothing resumes them after a restart.
-- **The server owns time and ids.** `StartTimer`/`StopTimer` stamp `clock.now()` on the server (`core/work/handlers/timer.py`). `TimerStartRequest` has no start time, and every id is a server-assigned integer. So a write made offline cannot say *when* it happened, and the client cannot name a Task it created offline.
+- **The server owns time and ids.** `StartTimer`/`StopTimer` stamp `clock.now()` on the server (`core/work/handlers/timer.py`). `TimerStartRequest` has no start time, and every id is a server-assigned integer (to become a UUIDv7, see `docs/adr/0001-uuid-primary-keys.md`). So a write made offline cannot say *when* it happened, and the client cannot name a Task it created offline.
 - **PATCH is already field-level** (`apply_provided`). That is the property that makes "last writer wins per field" an acceptable conflict rule for this app: one user, a few devices, rare concurrent edits.
 
 ## The options
@@ -32,7 +32,7 @@ Cost: small, fits the current stack, no new backend concepts. Limits:
 
 This is option 1 with three server-side additions that make replay safe. It is the general pattern behind most "offline first" REST apps:
 
-1. **Client-generated ids.** Each new row gets a UUID made on the device, sent on create and stored alongside or instead of the integer id. Later operations, such as starting a timer on a Task created offline, refer to the UUID, so the queue needs no id remapping. The cheapest version adds a `client_id UUID UNIQUE` column to the entities that can be created offline (`tasks`, `time_entries`, `transactions`, `counter_entries`) and accepts it in the create contracts.
+1. **Client-generated ids.** Each new row gets a UUID made on the device and sent on create. Later operations, such as starting a timer on a Task created offline, refer to the UUID, so the queue needs no id remapping. Decided in `docs/adr/0001-uuid-primary-keys.md`: every primary key is a UUIDv7 (instead of a separate `client_id` column), so what is left for offline work is accepting the client's id in the create contracts.
 2. **Idempotency keys.** Every queued write carries an `Idempotency-Key` header, a UUID per operation. The server stores `(user_id, key) → response` for a day and answers a repeat with the stored response, so retries after a lost response are harmless. This is a small table plus one FastAPI dependency. The MCP server does not need it.
 3. **Client time for time-based actions.** `TimerStartRequest` and the stop call accept an optional `at` (when the user pressed the button). The handler validates it: not in the future beyond a small skew, not before the previous entry's end, not older than e.g. 24 h. The existing `serverOffset` already gives the client its offset from the server clock to correct `at`. For the timer this is the crucial change: start offline at 9:00, sync at 9:40, and the entry still starts at 9:00.
 
@@ -66,8 +66,8 @@ These merge concurrent edits of one document without conflicts. They fit the **W
 Go with **option 2, built on option 1's machinery**, in small steps:
 
 1. **Timer offline (first slice).** Add `onlineManager` + NetInfo on mobile. Give the timer start/stop/discard mutations keys, defaults and optimistic `onMutate`. Accept an optional `at` in the timer endpoints. Add the `Idempotency-Key` table and dependency. Show the pending count in the timer card.
-2. **Tasks offline.** Add `client_id` on Tasks plus create/update/move/toggle through the outbox. Field-level PATCH stays last-writer-wins.
-3. **The rest as needed.** Transactions and counter entries follow the same recipe (each create gets a `client_id`).
+2. **Tasks offline.** Accept the client's UUID on Task create, plus create/update/move/toggle through the outbox. Field-level PATCH stays last-writer-wins.
+3. **The rest as needed.** Transactions and counter entries follow the same recipe (each create accepts the client's UUID).
 4. Revisit a sync engine (option 3) only if most screens need to work offline. Revisit CRDTs (option 4) only for offline Notatki.
 
 Open questions before step 1:

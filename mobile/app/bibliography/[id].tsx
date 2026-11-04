@@ -36,7 +36,7 @@ import { useRefreshOnFocus } from "@/useRefreshOnFocus";
 /** One film, series or book: its derived status, the actions its Attempts allow, and their history. */
 export default function BibliographyItemScreen() {
   const { id: rawId } = useLocalSearchParams<{ id: string }>();
-  const id = Number(rawId);
+  const id = rawId;
 
   const itemQuery = useBibliographyItem(Number.isInteger(id) ? id : null);
   const item = itemQuery.data;

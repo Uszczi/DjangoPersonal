@@ -37,7 +37,7 @@ import { useWalletSelectionStore } from "@personal/shared/stores/walletSelection
 
 type ExpensesPageProps = {
   /** The wallet named by the URL; without one the page shows the store's selected wallet. */
-  walletId?: number;
+  walletId?: string;
   /** The month from `?month=`; without one, the current month. */
   month?: MonthKey;
 };
@@ -156,7 +156,7 @@ function WalletMonth({
   const previous = useMonthTransactions(wallet.id, shiftMonth(month, -1));
   const [day, setDay] = useState<number | null>(null);
   // `undefined`: every Category; `null`: the uncategorised Expenses.
-  const [categoryId, setCategoryId] = useState<number | null | undefined>();
+  const [categoryId, setCategoryId] = useState<string | null | undefined>();
 
   const transactions = current.data ?? [];
   const summary = summarizeMonth(transactions, month);

@@ -1,5 +1,7 @@
 """CreateTask and UpdateTask: where a Task lands in its status list."""
 
+from uuid import UUID
+
 import pytest
 from sqlalchemy.orm import Session
 
@@ -19,13 +21,13 @@ def project(session: Session, user: User) -> Project:
     return ProjectRepository(session).save(Project(user_id=user.id, name='Planning'))
 
 
-def _create(session: Session, user: User, project: Project, title: str, status: str) -> int:
+def _create(session: Session, user: User, project: Project, title: str, status: str) -> UUID:
     request = TaskCreateRequest(title=title, project=project.id, status=status)
     handler = CreateTask(ProjectRepository(session), TaskRepository(session), user)
     return handler.execute(request).id
 
 
-def _update(session: Session, user: User, task_id: int, **fields: object) -> None:
+def _update(session: Session, user: User, task_id: UUID, **fields: object) -> None:
     request = PatchedTaskUpdateRequest.model_validate(fields)
     UpdateTask(ProjectRepository(session), TaskRepository(session), user).execute(task_id, request)
 

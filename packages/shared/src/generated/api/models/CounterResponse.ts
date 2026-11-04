@@ -23,7 +23,7 @@ export interface CounterResponse {
     /**
      *
      */
-    readonly id: number;
+    readonly id: string;
     /**
      *
      */
