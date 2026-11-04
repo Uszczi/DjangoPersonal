@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { Platform, Switch, Text, View } from "react-native";
 import { ScrollViewContainer } from "react-native-reorderable-list";
 
 import { api } from "@personal/shared/api";
@@ -16,6 +16,8 @@ import { Button } from "@/ui/Button";
 import { ChipGroup } from "@/ui/ChipGroup";
 import { confirmDestructive } from "@/ui/confirm";
 import { TabBarSettings } from "@/features/tabs/TabBarSettings";
+import { useTimerNotificationSettingsStore } from "@/features/time/timerNotificationSettings";
+import { useTheme } from "@/theme";
 import { card, common, form } from "@/ui/classes";
 
 export default function AccountScreen() {
@@ -25,6 +27,13 @@ export default function AccountScreen() {
   const [isDeleting, setIsDeleting] = useState(false);
   const themePreference = useThemeStore((state) => state.preference);
   const updateTheme = useUpdateTheme();
+  const { colors } = useTheme();
+  const showOngoing = useTimerNotificationSettingsStore(
+    (state) => state.showOngoing,
+  );
+  const setShowOngoing = useTimerNotificationSettingsStore(
+    (state) => state.setShowOngoing,
+  );
 
   async function deleteAccount() {
     const confirmed = await confirmDestructive(
@@ -72,6 +81,25 @@ export default function AccountScreen() {
           )}
           <Text className={form.hint}>
             Zapisywany na koncie, wspólny dla wszystkich urządzeń.
+          </Text>
+        </View>
+        <View className={card.section}>
+          <Text className={card.kicker}>POWIADOMIENIA</Text>
+          <View className="flex-row items-center gap-3">
+            <Text className="flex-1 text-[15px] font-medium text-ink">
+              Powiadomienie o aktywnym timerze
+            </Text>
+            <Switch
+              accessibilityLabel="Powiadomienie o aktywnym timerze"
+              value={showOngoing}
+              onValueChange={setShowOngoing}
+              trackColor={{ true: colors.signal, false: colors.controlBorder }}
+            />
+          </View>
+          <Text className={form.hint}>
+            {Platform.OS === "ios"
+              ? "Widoczne, dopóki timer działa. Zapisywane na tym urządzeniu."
+              : "Zostaje na pasku powiadomień, dopóki timer działa. Zapisywane na tym urządzeniu."}
           </Text>
         </View>
         <TabBarSettings />

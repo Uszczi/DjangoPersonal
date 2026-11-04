@@ -19,6 +19,7 @@ import { queryClient } from "@/queryClient";
 import { TabBarSync } from "@/features/tabs/TabBarSync";
 import { useTabBarStore } from "@/features/tabs/tabBar";
 import { TimerNotificationSync } from "@/features/time/TimerNotificationSync";
+import { useTimerNotificationSettingsStore } from "@/features/time/timerNotificationSettings";
 import { useTaskListSettingsStore } from "@personal/shared/stores/taskListSettings";
 import { useTaskProjectStore } from "@/features/tasks/taskProject";
 import {
@@ -64,6 +65,7 @@ export default function RootLayout() {
       useTabBarStore.persist.rehydrate(),
       useTaskProjectStore.persist.rehydrate(),
       useTaskListSettingsStore.persist.rehydrate(),
+      useTimerNotificationSettingsStore.persist.rehydrate(),
     ]).finally(() => setIsHydrated(true));
   }, []);
 
