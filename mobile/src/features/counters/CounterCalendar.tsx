@@ -17,14 +17,12 @@ import type { CounterEntryResponse } from "@personal/shared/generated/api";
 import { useTheme } from "@/theme";
 import { MonthSwipe } from "@/ui/MonthSwipe";
 import { NamedIcon } from "@/ui/NamedIcon";
+import { WEEK_CELL, WeekGrid } from "@/ui/WeekGrid";
 
 const dayName = new Intl.DateTimeFormat("pl-PL", {
   day: "numeric",
   month: "long",
 });
-
-// Seven cells a row: a seventh of the width each, the gap inside the cell.
-const CELL = "w-[14.2857%] p-0.5";
 
 /** A local calendar day as `yyyy-mm-d`, the key entries are grouped by. */
 function dayKey(month: MonthKey, day: number) {
@@ -100,23 +98,23 @@ export function CounterCalendar({
             />
           </Pressable>
         </View>
-        <View className="flex-row flex-wrap">
+        <WeekGrid>
           {WEEKDAY_LABELS.map((label) => (
-            <View key={label} className={CELL}>
+            <View key={label} className={WEEK_CELL}>
               <Text className="text-center font-utility text-[10px] font-semibold text-muted">
                 {label.toUpperCase()}
               </Text>
             </View>
           ))}
           {Array.from({ length: leadingBlankDays(month) }, (_, index) => (
-            <View key={`blank-${index}`} className={CELL} />
+            <View key={`blank-${index}`} className={WEEK_CELL} />
           ))}
           {days.map((day) => {
             const key = dayKey(month, day);
             const count = countsByDay.get(key) ?? 0;
             const marked = count > 0;
             return (
-              <View key={key} className={CELL}>
+              <View key={key} className={WEEK_CELL}>
                 <View
                   accessible
                   accessibilityLabel={`${dayName.format(dayOfMonth(month, day))}: ${
@@ -146,7 +144,7 @@ export function CounterCalendar({
               </View>
             );
           })}
-        </View>
+        </WeekGrid>
       </View>
     </MonthSwipe>
   );

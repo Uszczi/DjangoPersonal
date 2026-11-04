@@ -12,6 +12,7 @@ import {
 import { mixColor } from "@/features/expenses/mixColor";
 import { useTheme } from "@/theme";
 import { card } from "@/ui/classes";
+import { WEEK_CELL, WeekGrid } from "@/ui/WeekGrid";
 
 type MonthCalendarProps = {
   month: MonthKey;
@@ -24,9 +25,6 @@ const dayName = new Intl.DateTimeFormat("pl-PL", {
   day: "numeric",
   month: "long",
 });
-
-// Seven cells a row: a seventh of the width each, the gap inside the cell.
-const CELL = "w-[14.2857%] p-0.5";
 
 /**
  * The month as a calendar, like the web: each day tinted by how much was
@@ -56,16 +54,16 @@ export function MonthCalendar({
           {formatCents(Math.round(average))}
         </Text>
       </View>
-      <View className="flex-row flex-wrap">
+      <WeekGrid>
         {WEEKDAY_LABELS.map((label) => (
-          <View key={label} className={CELL}>
+          <View key={label} className={WEEK_CELL}>
             <Text className="text-center font-utility text-[10px] text-muted">
               {label.toUpperCase()}
             </Text>
           </View>
         ))}
         {Array.from({ length: leadingBlankDays(month) }, (_, index) => (
-          <View key={`blank-${index}`} className={CELL} />
+          <View key={`blank-${index}`} className={WEEK_CELL} />
         ))}
         {days.map((total, index) => {
           const day = index + 1;
@@ -74,7 +72,7 @@ export function MonthCalendar({
           const selected = selectedDay === day;
           const strong = share > 0.55;
           return (
-            <View key={day} className={CELL}>
+            <View key={day} className={WEEK_CELL}>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`${dayName.format(dayOfMonth(month, day))}${
@@ -124,7 +122,7 @@ export function MonthCalendar({
             </View>
           );
         })}
-      </View>
+      </WeekGrid>
     </View>
   );
 }

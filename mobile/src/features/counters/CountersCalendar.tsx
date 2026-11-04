@@ -23,14 +23,12 @@ import type { CounterCalendarMode } from "@personal/shared/stores/counterView";
 import { useTheme } from "@/theme";
 import { MonthSwipe } from "@/ui/MonthSwipe";
 import { NamedIcon } from "@/ui/NamedIcon";
+import { WEEK_CELL, WeekGrid } from "@/ui/WeekGrid";
 
 const dayName = new Intl.DateTimeFormat("pl-PL", {
   day: "numeric",
   month: "long",
 });
-
-// Seven cells a row: a seventh of the width each, the gap inside the cell.
-const CELL = "w-[14.2857%] p-0.5";
 
 type MonthProps = {
   months: CounterMonth[];
@@ -159,23 +157,23 @@ function MonthGrid({ months, month, todayDay }: MonthProps) {
           );
         })}
       </View>
-      <View className="flex-row flex-wrap">
+      <WeekGrid>
         {WEEKDAY_LABELS.map((label) => (
-          <View key={label} className={CELL}>
+          <View key={label} className={WEEK_CELL}>
             <Text className="text-center font-utility text-[10px] font-semibold text-muted">
               {label.toUpperCase()}
             </Text>
           </View>
         ))}
         {Array.from({ length: leadingBlankDays(month) }, (_, index) => (
-          <View key={`blank-${index}`} className={CELL} />
+          <View key={`blank-${index}`} className={WEEK_CELL} />
         ))}
         {days.map((day) => {
           const hits = shown.filter(({ days }) => days[day - 1] !== null);
           const names = hits.map(({ counter }) => counter.name).join(", ");
           const isSelected = selected === day;
           return (
-            <View key={day} className={CELL}>
+            <View key={day} className={WEEK_CELL}>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`${dayName.format(dayOfMonth(month, day))}: ${names || "brak wpisów"}`}
@@ -208,7 +206,7 @@ function MonthGrid({ months, month, todayDay }: MonthProps) {
             </View>
           );
         })}
-      </View>
+      </WeekGrid>
       {selected !== null && (
         <View className="mt-3 gap-1 rounded-lg border border-card-line bg-paper p-4">
           <Text className="mb-1 text-sm font-semibold text-ink">
