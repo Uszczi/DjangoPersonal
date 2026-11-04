@@ -105,7 +105,7 @@ export function CategoryPanel() {
   const createCategory = useCreateCategory();
   const updateCategory = useUpdateCategory();
 
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editIcon, setEditIcon] = useState(DEFAULT_CATEGORY_ICON);
   const [renameError, setRenameError] = useState("");

@@ -5,22 +5,23 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { renderApp } from "../../renderApp";
+import { UID, uid } from "../../ids";
 
 vi.mock("@/components/WhiteboardCanvas", () => ({
   WhiteboardCanvas: () => <div data-testid="whiteboard-canvas" />,
 }));
 
 type Folder = {
-  id: number;
+  id: string;
   name: string;
-  parent_id?: number | null;
+  parent_id?: string | null;
   created_at: string;
 };
 type Board = {
-  id: number;
+  id: string;
   kind: "whiteboard" | "markdown";
   name: string;
-  folder_id: number | null;
+  folder_id: string | null;
   content: Record<string, unknown>;
   created_at: string;
   updated_at: string;
@@ -43,13 +44,13 @@ function fakeBackend(initial: { folders?: Folder[]; boards?: Board[] } = {}) {
   let clock = Date.parse("2026-10-25T12:00:00Z");
   const now = () => new Date((clock += 1000)).toISOString();
 
-  function nameTaken(name: string, parentId: number | null, except?: number) {
+  function nameTaken(name: string, parentId: string | null, except?: string) {
     return folders.some(
       (f) =>
         f.id !== except && f.parent_id === parentId && f.name === name.trim(),
     );
   }
-  function subtree(id: number) {
+  function subtree(id: string) {
     const ids = new Set([id]);
     for (let grew = true; grew;) {
       grew = false;
@@ -106,7 +107,7 @@ function fakeBackend(initial: { folders?: Folder[]; boards?: Board[] } = {}) {
         const parentId = body.parent_id ?? null;
         if (nameTaken(body.name, parentId)) return duplicate();
         const folder = {
-          id: nextId++,
+          id: uid(nextId++),
           name: body.name.trim(),
           parent_id: parentId,
           created_at: now(),
@@ -116,13 +117,13 @@ function fakeBackend(initial: { folders?: Folder[]; boards?: Board[] } = {}) {
       }
       return jsonResponse(
         [...folders].sort((a, b) =>
-          a.name < b.name ? -1 : a.name > b.name ? 1 : a.id - b.id,
+          a.name < b.name ? -1 : a.name > b.name ? 1 : a.id.localeCompare(b.id),
         ),
       );
     }
-    const folderMatch = path.match(/\/folders\/(\d+)\/$/);
+    const folderMatch = path.match(new RegExp(`/folders/(${UID})/$`));
     if (folderMatch) {
-      const folder = folders.find((f) => f.id === Number(folderMatch[1]));
+      const folder = folders.find((f) => f.id === folderMatch[1]);
       if (!folder) return jsonResponse({ detail: "Folder not found." }, 404);
       if (method === "DELETE") {
         const removed = subtree(folder.id);
@@ -153,7 +154,7 @@ function fakeBackend(initial: { folders?: Folder[]; boards?: Board[] } = {}) {
     if (path.endsWith("/whiteboards/")) {
       if (method === "POST") {
         const board: Board = {
-          id: nextId++,
+          id: uid(nextId++),
           kind: body.kind ?? "whiteboard",
           name: body.name ?? "Bez tytułu",
           folder_id: body.folder_id ?? null,
@@ -173,9 +174,9 @@ function fakeBackend(initial: { folders?: Folder[]; boards?: Board[] } = {}) {
         ),
       );
     }
-    const boardMatch = path.match(/\/whiteboards\/(\d+)\/$/);
+    const boardMatch = path.match(new RegExp(`/whiteboards/(${UID})/$`));
     if (boardMatch) {
-      const board = boards.find((b) => b.id === Number(boardMatch[1]));
+      const board = boards.find((b) => b.id === boardMatch[1]);
       if (!board) return jsonResponse({ detail: "Whiteboard not found." }, 404);
       if (method === "DELETE") {
         boards = boards.filter((b) => b !== board);
@@ -192,15 +193,15 @@ function fakeBackend(initial: { folders?: Folder[]; boards?: Board[] } = {}) {
 }
 
 const work: Folder = {
-  id: 1,
+  id: uid(1),
   name: "Praca",
   created_at: "2026-10-01T10:00:00Z",
 };
 
 function board(
-  id: number,
+  id: string,
   name: string,
-  folderId: number | null,
+  folderId: string | null,
   updatedAt: string,
   kind: Board["kind"] = "whiteboard",
 ): Board {
@@ -230,9 +231,9 @@ describe("Notatnik search", () => {
   });
 
   const projects: Folder = {
-    id: 2,
+    id: uid(2),
     name: "Projekty",
-    parent_id: 1,
+    parent_id: uid(1),
     created_at: "2026-10-01T10:00:00Z",
   };
 
@@ -241,8 +242,14 @@ describe("Notatnik search", () => {
       fakeBackend({
         folders: [work, projects],
         boards: [
-          board(5, "Żółw szkic", 2, "2026-10-20T10:00:00Z", "markdown"),
-          board(6, "Zakupy", null, "2026-10-19T10:00:00Z"),
+          board(
+            uid(5),
+            "Żółw szkic",
+            uid(2),
+            "2026-10-20T10:00:00Z",
+            "markdown",
+          ),
+          board(uid(6), "Zakupy", null, "2026-10-19T10:00:00Z"),
         ],
       }),
     );
@@ -276,12 +283,18 @@ describe("Notatnik search", () => {
   });
 
   test("asks the server for Notatki matching their text and shows the lines with their numbers", async () => {
-    const note = board(5, "Dziennik", 2, "2026-10-20T10:00:00Z", "markdown");
+    const note = board(
+      uid(5),
+      "Dziennik",
+      uid(2),
+      "2026-10-20T10:00:00Z",
+      "markdown",
+    );
     note.content = {
       markdown:
         "# Poniedziałek\nKupić mleko\nZadzwonić do Żanety\nmleko owsiane, nie krowie",
     };
-    const drawing = board(6, "Szkic", null, "2026-10-19T10:00:00Z");
+    const drawing = board(uid(6), "Szkic", null, "2026-10-19T10:00:00Z");
     drawing.content = {
       version: 1,
       elements: [{ type: "note", text: "mleko" }],
@@ -326,7 +339,13 @@ describe("Notatnik search", () => {
   });
 
   test("a Notatka found by its text opens with its own search already showing the query", async () => {
-    const note = board(5, "Dziennik", null, "2026-10-20T10:00:00Z", "markdown");
+    const note = board(
+      uid(5),
+      "Dziennik",
+      null,
+      "2026-10-20T10:00:00Z",
+      "markdown",
+    );
     note.content = { markdown: "Zadzwonić do Żanety\nnic\nżaneta oddzwoni" };
     fetchMock.mockImplementation(fakeBackend({ boards: [note] }));
     const user = userEvent.setup();
@@ -366,7 +385,13 @@ describe("Notatnik search", () => {
   });
 
   test("shows the first three matching lines and how many more there are", async () => {
-    const note = board(5, "Lista", null, "2026-10-20T10:00:00Z", "markdown");
+    const note = board(
+      uid(5),
+      "Lista",
+      null,
+      "2026-10-20T10:00:00Z",
+      "markdown",
+    );
     note.content = {
       markdown: [
         "kawa 1",
@@ -439,7 +464,7 @@ describe("Notatnik search", () => {
     fetchMock.mockImplementation(
       fakeBackend({
         folders: [work, projects],
-        boards: [board(5, "Plan", 2, "2026-10-20T10:00:00Z")],
+        boards: [board(uid(5), "Plan", uid(2), "2026-10-20T10:00:00Z")],
       }),
     );
     const user = userEvent.setup();
@@ -484,7 +509,7 @@ describe("Notatnik folders", () => {
     fetchMock.mockImplementation(
       fakeBackend({
         folders: [work],
-        boards: [board(5, "Szkic", null, "2026-10-20T10:00:00Z")],
+        boards: [board(uid(5), "Szkic", null, "2026-10-20T10:00:00Z")],
       }),
     );
     const user = userEvent.setup();
@@ -608,9 +633,15 @@ describe("Notatnik folders", () => {
       fakeBackend({
         folders: [work],
         boards: [
-          board(5, "Stary plan", 1, "2026-10-10T10:00:00Z", "markdown"),
-          board(6, "Nowy szkic", 1, "2026-10-20T10:00:00Z"),
-          board(7, "Luźna", null, "2026-10-15T10:00:00Z"),
+          board(
+            uid(5),
+            "Stary plan",
+            uid(1),
+            "2026-10-10T10:00:00Z",
+            "markdown",
+          ),
+          board(uid(6), "Nowy szkic", uid(1), "2026-10-20T10:00:00Z"),
+          board(uid(7), "Luźna", null, "2026-10-15T10:00:00Z"),
         ],
       }),
     );
@@ -662,13 +693,15 @@ describe("Notatnik folders", () => {
     );
 
     await vi.waitFor(() =>
-      expect(router.state.location.pathname).toMatch(/^\/whiteboard\/\d+$/),
+      expect(router.state.location.pathname).toMatch(
+        new RegExp(`^/whiteboard/${UID}$`),
+      ),
     );
     const created = (await (
       await backend("/api/v1/whiteboards/")
     ).json()) as Board[];
     expect(created.map((b) => [b.kind, b.folder_id])).toEqual([
-      ["markdown", 1],
+      ["markdown", uid(1)],
     ]);
   });
 
@@ -685,13 +718,15 @@ describe("Notatnik folders", () => {
     );
 
     await vi.waitFor(() =>
-      expect(router.state.location.pathname).toMatch(/^\/whiteboard\/\d+$/),
+      expect(router.state.location.pathname).toMatch(
+        new RegExp(`^/whiteboard/${UID}$`),
+      ),
     );
     const created = (await (
       await backend("/api/v1/whiteboards/")
     ).json()) as Board[];
     expect(created.map((b) => [b.kind, b.folder_id])).toEqual([
-      ["whiteboard", 1],
+      ["whiteboard", uid(1)],
     ]);
   });
 
@@ -699,7 +734,7 @@ describe("Notatnik folders", () => {
     fetchMock.mockImplementation(
       fakeBackend({
         folders: [work],
-        boards: [board(5, "Plan", 1, "2026-10-10T10:00:00Z")],
+        boards: [board(uid(5), "Plan", uid(1), "2026-10-10T10:00:00Z")],
       }),
     );
     const user = userEvent.setup();
@@ -723,7 +758,7 @@ describe("Notatnik folders", () => {
     fetchMock.mockImplementation(
       fakeBackend({
         folders: [work],
-        boards: [board(5, "Plan", 1, "2026-10-10T10:00:00Z")],
+        boards: [board(uid(5), "Plan", uid(1), "2026-10-10T10:00:00Z")],
       }),
     );
     const user = userEvent.setup();
@@ -756,14 +791,14 @@ describe("Notatnik folders", () => {
 
   test('"Przenieś do…" moves an item into a folder, between folders and out', async () => {
     const home: Folder = {
-      id: 2,
+      id: uid(2),
       name: "Dom",
       created_at: "2026-10-01T10:00:00Z",
     };
     fetchMock.mockImplementation(
       fakeBackend({
         folders: [work, home],
-        boards: [board(5, "Plan", null, "2026-10-10T10:00:00Z")],
+        boards: [board(uid(5), "Plan", null, "2026-10-10T10:00:00Z")],
       }),
     );
     const user = userEvent.setup();
@@ -832,7 +867,7 @@ describe("Notatnik folders", () => {
     [22, "Usunąć folder „Praca” i 22 elementy w nim?"],
   ])("deleting a folder with %i items asks “%s”", async (count, question) => {
     const items = Array.from({ length: count }, (_, i) =>
-      board(10 + i, `Plan ${i}`, 1, "2026-10-10T10:00:00Z"),
+      board(uid(10 + i), `Plan ${i}`, uid(1), "2026-10-10T10:00:00Z"),
     );
     fetchMock.mockImplementation(
       fakeBackend({ folders: [work], boards: items }),
@@ -853,7 +888,7 @@ describe("Notatnik folders", () => {
     fetchMock.mockImplementation(
       fakeBackend({
         folders: [work],
-        boards: [board(5, "Plan", 1, "2026-10-10T10:00:00Z")],
+        boards: [board(uid(5), "Plan", uid(1), "2026-10-10T10:00:00Z")],
       }),
     );
     const user = userEvent.setup();
@@ -882,8 +917,8 @@ describe("Notatnik folders", () => {
       fakeBackend({
         folders: [work],
         boards: [
-          board(5, "Plan", 1, "2026-10-10T10:00:00Z"),
-          board(6, "Luźna", null, "2026-10-11T10:00:00Z"),
+          board(uid(5), "Plan", uid(1), "2026-10-10T10:00:00Z"),
+          board(uid(6), "Luźna", null, "2026-10-11T10:00:00Z"),
         ],
       }),
     );
@@ -943,14 +978,14 @@ describe("Notatnik folders", () => {
 
   test("a subfolder may share a name with a folder elsewhere", async () => {
     const home: Folder = {
-      id: 2,
+      id: uid(2),
       name: "Dom",
       created_at: "2026-10-01T10:00:00Z",
     };
     const notes: Folder = {
-      id: 3,
+      id: uid(3),
       name: "Notatki",
-      parent_id: 1,
+      parent_id: uid(1),
       created_at: "2026-10-01T10:00:00Z",
     };
     fetchMock.mockImplementation(fakeBackend({ folders: [work, home, notes] }));
@@ -972,14 +1007,14 @@ describe("Notatnik folders", () => {
 
   test("a folder moves into another one but never into itself or below itself", async () => {
     const home: Folder = {
-      id: 2,
+      id: uid(2),
       name: "Dom",
       created_at: "2026-10-01T10:00:00Z",
     };
     const client: Folder = {
-      id: 3,
+      id: uid(3),
       name: "Klient",
-      parent_id: 1,
+      parent_id: uid(1),
       created_at: "2026-10-01T10:00:00Z",
     };
     fetchMock.mockImplementation(
@@ -1016,18 +1051,18 @@ describe("Notatnik folders", () => {
 
   test("deleting a folder counts and removes what is in its subfolders", async () => {
     const client: Folder = {
-      id: 3,
+      id: uid(3),
       name: "Klient",
-      parent_id: 1,
+      parent_id: uid(1),
       created_at: "2026-10-01T10:00:00Z",
     };
     fetchMock.mockImplementation(
       fakeBackend({
         folders: [work, client],
         boards: [
-          board(5, "Plan", 1, "2026-10-10T10:00:00Z"),
-          board(6, "Umowa", 3, "2026-10-11T10:00:00Z"),
-          board(7, "Luźna", null, "2026-10-12T10:00:00Z"),
+          board(uid(5), "Plan", uid(1), "2026-10-10T10:00:00Z"),
+          board(uid(6), "Umowa", uid(3), "2026-10-11T10:00:00Z"),
+          board(uid(7), "Luźna", null, "2026-10-12T10:00:00Z"),
         ],
       }),
     );

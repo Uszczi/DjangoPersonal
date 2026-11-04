@@ -12,7 +12,7 @@ The first bare visit in a session restores the remembered Project, a Project tha
 remembered for later sessions, and one the user does not have (deleted,
 someone else's, a typo) is dropped from the URL.
  */
-export function useProjectSearchParam(project: number | undefined) {
+export function useProjectSearchParam(project: string | undefined) {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const { data: projects = [], isPending: isLoading, isError } = useProjects();

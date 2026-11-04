@@ -28,13 +28,13 @@ export type AttachmentUpload = Blob;
 /** The largest file the server accepts, to refuse bigger ones before sending. */
 export const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024;
 
-export const taskCommentsQuery = (taskId: number) =>
+export const taskCommentsQuery = (taskId: string) =>
   queryOptions({
     queryKey: taskCommentKeys.task(taskId),
     queryFn: ({ signal }) => api.taskCommentsList({ task: taskId }, { signal }),
   });
 
-export function useTaskComments(taskId: number) {
+export function useTaskComments(taskId: string) {
   return useQuery(taskCommentsQuery(taskId));
 }
 
@@ -45,7 +45,7 @@ export function useTaskComments(taskId: number) {
  */
 export function shiftCommentCount(
   queryClient: QueryClient,
-  taskId: number,
+  taskId: string,
   delta: number,
 ) {
   queryClient.setQueriesData<TaskResponse[]>(
@@ -106,7 +106,7 @@ export class AttachmentUploadError extends Error {
   }
 }
 
-async function uploadAll(commentId: number, files: AttachmentUpload[]) {
+async function uploadAll(commentId: string, files: AttachmentUpload[]) {
   let failed = 0;
   let firstError: unknown = null;
   for (const file of files) {
@@ -121,7 +121,7 @@ async function uploadAll(commentId: number, files: AttachmentUpload[]) {
 }
 
 /** Comment on a Task, then attach `files` to the comment. */
-export function useAddTaskComment(taskId: number) {
+export function useAddTaskComment(taskId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({
@@ -151,7 +151,7 @@ export function useAddTaskComment(taskId: number) {
 }
 
 /** Attach more files to a comment that already exists. */
-export function useAddCommentAttachments(taskId: number) {
+export function useAddCommentAttachments(taskId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -208,7 +208,7 @@ export function useDeleteTaskComment() {
   });
 }
 
-export function useDeleteCommentAttachment(taskId: number) {
+export function useDeleteCommentAttachment(taskId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (attachment: CommentAttachmentResponse) =>

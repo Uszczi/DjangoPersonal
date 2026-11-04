@@ -30,7 +30,7 @@ export const projectKeys = {
 
 export const taskKeys = {
   all: ["tasks"] as const,
-  project: (projectId: number) => ["tasks", "project", projectId] as const,
+  project: (projectId: string) => ["tasks", "project", projectId] as const,
   /** Every Task of every Project, for the timer's task picker. */
   everything: ["tasks", "everything"] as const,
 };
@@ -38,7 +38,7 @@ export const taskKeys = {
 export const taskCommentKeys = {
   all: ["taskComments"] as const,
   /** One Task's comments, oldest first. */
-  task: (taskId: number) => ["taskComments", taskId] as const,
+  task: (taskId: string) => ["taskComments", taskId] as const,
 };
 
 export const timerKeys = {
@@ -54,12 +54,12 @@ export const walletKeys = {
 
 export const transactionKeys = {
   all: ["transactions"] as const,
-  wallet: (walletId: number) => ["transactions", "wallet", walletId] as const,
+  wallet: (walletId: string) => ["transactions", "wallet", walletId] as const,
   /** Every cached month of a wallet. */
-  months: (walletId: number) =>
+  months: (walletId: string) =>
     ["transactions", "wallet", walletId, "month"] as const,
   /** One month (`yyyy-mm`) of a wallet's transactions. */
-  month: (walletId: number, month: string) =>
+  month: (walletId: string, month: string) =>
     ["transactions", "wallet", walletId, "month", month] as const,
 };
 
@@ -73,12 +73,12 @@ export const whiteboardKeys = {
   /** The list, without its items' content. */
   all: ["whiteboards"] as const,
   /** One item with its content, as the retrieve endpoint returns it. */
-  detail: (id: number) => ["whiteboards", "detail", id] as const,
+  detail: (id: string) => ["whiteboards", "detail", id] as const,
 };
 
 export const counterKeys = {
   all: ["counters"] as const,
-  entries: (counterId: number) => ["counterEntries", counterId] as const,
+  entries: (counterId: string) => ["counterEntries", counterId] as const,
 };
 
 /** Which BibliographyItems a list shows; a missing filter means all. */
@@ -93,9 +93,9 @@ export const bibliographyItemKeys = {
   list: (filters: BibliographyItemFilters) =>
     ["bibliographyItems", "list", filters] as const,
   /** One item, as the retrieve endpoint returns it. */
-  detail: (itemId: number) => ["bibliographyItems", "detail", itemId] as const,
+  detail: (itemId: string) => ["bibliographyItems", "detail", itemId] as const,
   /** One item's Attempts. */
-  attempts: (itemId: number) => ["bibliographyAttempts", itemId] as const,
+  attempts: (itemId: string) => ["bibliographyAttempts", itemId] as const,
   /** Every Attempt of the user, on any item (the year view). */
   allAttempts: ["bibliographyAttempts", "all"] as const,
 };

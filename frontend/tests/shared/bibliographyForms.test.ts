@@ -73,8 +73,8 @@ describe("parseItemNumber", () => {
 
 describe("attemptWrite", () => {
   const ended: AttemptResponse = {
-    id: 7,
-    itemId: 1,
+    id: "7",
+    itemId: "1",
     outcome: "abandoned",
     startedOn: null,
     endedOn: new Date(2026, 9, 1),
@@ -87,14 +87,14 @@ describe("attemptWrite", () => {
   it("starts a new Attempt with no end date", () => {
     expect(
       attemptWrite("start", {
-        itemId: 1,
+        itemId: "1",
         attempt: null,
         startedOn: start,
         endedOn: end,
       }),
     ).toEqual({
       create: {
-        item: 1,
+        item: "1",
         outcome: "in_progress",
         startedOn: start,
         endedOn: null,
@@ -105,13 +105,13 @@ describe("attemptWrite", () => {
   it("re-dates an ended Attempt without touching its outcome", () => {
     expect(
       attemptWrite("edit", {
-        itemId: 1,
+        itemId: "1",
         attempt: ended,
         startedOn: start,
         endedOn: end,
       }),
     ).toEqual({
-      update: { id: 7, changes: { startedOn: start, endedOn: end } },
+      update: { id: "7", changes: { startedOn: start, endedOn: end } },
     });
   });
 

@@ -5,11 +5,12 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { renderApp } from "../renderApp";
+import { uid } from "../ids";
 
 const DEFAULT_STATUSES = ["Todo", "Zrobione"];
 
 const inbox = {
-  id: 1,
+  id: uid(1),
   name: "Inbox",
   description: "",
   is_inbox: true,
@@ -18,7 +19,7 @@ const inbox = {
 };
 
 const planning = {
-  id: 2,
+  id: uid(2),
   name: "Planning",
   description: "",
   is_inbox: false,
@@ -87,7 +88,7 @@ describe("Routing", () => {
   });
 
   test("a URL naming a ProjectResponse that does not exist drops it from the URL", async () => {
-    const { router } = renderApp("/tasks?project=999");
+    const { router } = renderApp(`/tasks?project=${uid(999)}`);
 
     await waitFor(() => expect(router.state.location.search).toEqual({}));
     expect(router.state.location.pathname).toBe("/tasks");
@@ -101,7 +102,7 @@ describe("Routing", () => {
       Promise.resolve(jsonResponse({ detail: "Nie udało się" }, 500)),
     );
 
-    renderApp("/tasks?project=2");
+    renderApp(`/tasks?project=${uid(2)}`);
 
     expect(
       await screen.findByRole("heading", {
@@ -126,11 +127,11 @@ describe("Routing", () => {
       ),
     );
     expect(router.state.location.pathname).toBe("/tasks");
-    expect(router.state.location.search).toMatchObject({ project: 2 });
+    expect(router.state.location.search).toMatchObject({ project: uid(2) });
 
     // A refresh is a fresh mount at the same URL.
     cleanup();
-    renderApp("/tasks?project=2");
+    renderApp(`/tasks?project=${uid(2)}`);
 
     expect(
       await screen.findByRole("link", { name: "Planning" }),
@@ -145,19 +146,23 @@ describe("Routing", () => {
     await screen.findByRole("link", { name: "Inbox" });
     await user.click(screen.getByRole("link", { name: "Planning" }));
     await waitFor(() =>
-      expect(first.router.state.location.search).toMatchObject({ project: 2 }),
+      expect(first.router.state.location.search).toMatchObject({
+        project: uid(2),
+      }),
     );
-    expect(window.localStorage.getItem("lastProject:1")).toBe("2");
+    expect(window.localStorage.getItem("lastProject:1")).toBe(uid(2));
     cleanup();
 
     // Reopening the bare Tasks URL restores the remembered project.
     // renderApp clears localStorage, so put the remembered value back before
     // the project list finishes loading.
     const second = renderApp("/tasks");
-    window.localStorage.setItem("lastProject:1", "2");
+    window.localStorage.setItem("lastProject:1", uid(2));
 
     await waitFor(() =>
-      expect(second.router.state.location.search).toMatchObject({ project: 2 }),
+      expect(second.router.state.location.search).toMatchObject({
+        project: uid(2),
+      }),
     );
     expect(
       await screen.findByRole("link", { name: "Planning" }),
@@ -166,13 +171,15 @@ describe("Routing", () => {
 
   test("a remembered ProjectResponse that no longer exists falls back to the default", async () => {
     const { router } = renderApp("/tasks");
-    window.localStorage.setItem("lastProject:1", "999");
+    window.localStorage.setItem("lastProject:1", uid(999));
 
     expect(await screen.findByRole("link", { name: "Inbox" })).toHaveAttribute(
       "aria-current",
       "page",
     );
-    expect(router.state.location.search).not.toMatchObject({ project: 999 });
+    expect(router.state.location.search).not.toMatchObject({
+      project: uid(999),
+    });
   });
 
   test("sidebar ProjectResponse links and topbar tabs change the URL", async () => {
@@ -182,7 +189,7 @@ describe("Routing", () => {
 
     await user.click(screen.getByRole("link", { name: "Planning" }));
     await waitFor(() =>
-      expect(router.state.location.search).toMatchObject({ project: 2 }),
+      expect(router.state.location.search).toMatchObject({ project: uid(2) }),
     );
     expect(router.state.location.pathname).toBe("/tasks");
 
@@ -215,7 +222,7 @@ describe("Routing", () => {
 
     await user.click(screen.getByRole("link", { name: "Planning" }));
     await waitFor(() =>
-      expect(router.state.location.search).toMatchObject({ project: 2 }),
+      expect(router.state.location.search).toMatchObject({ project: uid(2) }),
     );
     await user.click(screen.getByRole("link", { name: "Czas" }));
     await screen.findByRole("heading", { name: "Czas" });
@@ -233,7 +240,9 @@ describe("Routing", () => {
       router.history.back();
     });
     await waitFor(() =>
-      expect(router.state.location.search).not.toMatchObject({ project: 2 }),
+      expect(router.state.location.search).not.toMatchObject({
+        project: uid(2),
+      }),
     );
     expect(await screen.findByRole("link", { name: "Inbox" })).toHaveAttribute(
       "aria-current",
@@ -244,7 +253,7 @@ describe("Routing", () => {
       router.history.forward();
     });
     await waitFor(() =>
-      expect(router.state.location.search).toMatchObject({ project: 2 }),
+      expect(router.state.location.search).toMatchObject({ project: uid(2) }),
     );
     expect(
       await screen.findByRole("link", { name: "Planning" }),

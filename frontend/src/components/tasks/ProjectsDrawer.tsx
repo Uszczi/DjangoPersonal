@@ -10,7 +10,7 @@ export function ProjectsDrawer({
   selectedProjectId,
   onClose,
 }: {
-  selectedProjectId: number | null;
+  selectedProjectId: string | null;
   onClose: () => void;
 }) {
   return (

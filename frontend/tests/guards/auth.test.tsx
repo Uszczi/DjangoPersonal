@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { renderApp } from "../renderApp";
 import { useAuthStore } from "@personal/shared/stores/auth";
+import { uid } from "../ids";
 
 function jsonResponse(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -38,7 +39,7 @@ describe("Auth", () => {
       .mockResolvedValueOnce(
         jsonResponse({ access: "access-1", refresh: "refresh-1" }),
       )
-      .mockResolvedValueOnce(jsonResponse({ id: 1, username: "alice" }));
+      .mockResolvedValueOnce(jsonResponse({ id: uid(1), username: "alice" }));
 
     const user = userEvent.setup();
     renderApp("/login", { authenticated: false });
@@ -85,7 +86,7 @@ describe("Auth", () => {
       .mockResolvedValueOnce(
         jsonResponse({ access: "access-2", refresh: "refresh-2" }),
       )
-      .mockResolvedValueOnce(jsonResponse({ id: 2, username: "bob" }));
+      .mockResolvedValueOnce(jsonResponse({ id: uid(2), username: "bob" }));
 
     const user = userEvent.setup();
     renderApp("/register", { authenticated: false });

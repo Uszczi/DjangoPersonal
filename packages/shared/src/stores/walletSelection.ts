@@ -6,8 +6,8 @@ import { create } from "zustand";
  * that no longer exists falls back to the first Wallet (`validSelection`).
  */
 type WalletSelectionState = {
-  selectedWalletId: number | null;
-  selectWallet: (walletId: number) => void;
+  selectedWalletId: string | null;
+  selectWallet: (walletId: string) => void;
 };
 
 export const useWalletSelectionStore = create<WalletSelectionState>((set) => ({

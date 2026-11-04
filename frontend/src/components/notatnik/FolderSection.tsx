@@ -30,10 +30,10 @@ type FolderSectionProps = {
   /** Every Folder and item of the Notatnik; the section picks its own children. */
   folders: FolderResponse[];
   whiteboards: WhiteboardResponse[];
-  activeId: number | null;
-  isExpanded: (folderId: number) => boolean;
-  onToggle: (folderId: number) => void;
-  onCreate: (kind: ItemKind, folderId: number) => void;
+  activeId: string | null;
+  isExpanded: (folderId: string) => boolean;
+  onToggle: (folderId: string) => void;
+  onCreate: (kind: ItemKind, folderId: string) => void;
 };
 
 /** A collapsible Folder: its subfolders first, alphabetically, then its items, newest first. */

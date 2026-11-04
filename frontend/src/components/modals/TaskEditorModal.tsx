@@ -26,7 +26,7 @@ type TaskEditorModalProps = {
   /** Omit (or pass `null`) to create a new TaskResponse; pass a TaskResponse to edit it. */
   task?: TaskResponse | null;
   /** The ProjectResponse a new TaskResponse is created in. Ignored when editing. */
-  projectId?: number;
+  projectId?: string;
   onClose: () => void;
 };
 
@@ -42,7 +42,7 @@ export function TaskEditorModal({
   );
   const rememberStatus = useNewTaskStatusStore((state) => state.rememberStatus);
 
-  const initialProjectId = task?.projectId ?? projectId ?? 0;
+  const initialProjectId = task?.projectId ?? projectId ?? "";
 
   const [form, setForm] = useState<TaskInput>(() => ({
     title: task?.title ?? "",
@@ -103,7 +103,7 @@ export function TaskEditorModal({
       setFormError("Podaj tytuł zadania.");
       return;
     }
-    if (!Number.isInteger(input.project) || input.project <= 0) {
+    if (!input.project) {
       setFormError("Wybierz projekt dla zadania.");
       return;
     }
@@ -174,7 +174,7 @@ export function TaskEditorModal({
                 onChange={(event) =>
                   setForm((current) => ({
                     ...current,
-                    project: Number(event.target.value),
+                    project: event.target.value,
                   }))
                 }
                 required

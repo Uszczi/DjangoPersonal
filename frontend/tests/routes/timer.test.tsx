@@ -12,9 +12,10 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { renderApp } from "../renderApp";
+import { uid } from "../ids";
 
 const inbox = {
-  id: 1,
+  id: uid(1),
   name: "Inbox",
   description: "",
   is_inbox: true,
@@ -23,10 +24,10 @@ const inbox = {
 };
 
 const task = {
-  id: 7,
+  id: uid(7),
   title: "Prepare outline",
   description: "",
-  project_id: 1,
+  project_id: uid(1),
   status: "Todo",
 };
 
@@ -55,7 +56,7 @@ function timerResponse(entry: unknown) {
 }
 
 function entryPayload(
-  id: number,
+  id: string,
   dateKey: string,
   startTime: string,
   endTime: string,
@@ -158,19 +159,19 @@ describe("Time tracking", () => {
 
   test("the URL project preselects the timer and the manual entry and starts one of its tasks", async () => {
     const planning = {
-      id: 2,
+      id: uid(2),
       name: "Planning",
       description: "",
       is_inbox: false,
     };
     const planningTask = {
       ...task,
-      id: 8,
+      id: uid(8),
       title: "Plan release",
       project_id: planning.id,
     };
     const runningEntry = {
-      id: 5,
+      id: uid(5),
       task: planningTask.id,
       start: `${daysAgoKey(0)}T12:00:00Z`,
       end: null,
@@ -196,12 +197,12 @@ describe("Time tracking", () => {
     });
     const user = userEvent.setup();
 
-    renderApp("/timer?project=2");
+    renderApp(`/timer?project=${uid(2)}`);
     const timerSection = await screen.findByRole("region", {
       name: "Bieżący timer",
     });
 
-    expect(within(timerSection).getByLabelText("Projekt")).toHaveValue("2");
+    expect(within(timerSection).getByLabelText("Projekt")).toHaveValue(uid(2));
     // Opening each title field lists only the chosen project's tasks.
     await user.click(within(timerSection).getByLabelText("Zadanie"));
     expect(
@@ -215,7 +216,7 @@ describe("Time tracking", () => {
     const manualEntry = screen.getByRole("dialog", {
       name: "Dodaj wpis ręcznie",
     });
-    expect(within(manualEntry).getByLabelText("Projekt")).toHaveValue("2");
+    expect(within(manualEntry).getByLabelText("Projekt")).toHaveValue(uid(2));
     await user.click(within(manualEntry).getByLabelText("Zadanie"));
     expect(
       screen.getByRole("option", { name: "Plan release" }),
@@ -249,7 +250,7 @@ describe("Time tracking", () => {
 
   test("user can start a timer from a task row and stop it on the timer page", async () => {
     const runningEntry = {
-      id: 5,
+      id: uid(5),
       task_id: task.id,
       start: `${daysAgoKey(0)}T12:00:00Z`,
       end: null,
@@ -367,7 +368,7 @@ describe("Time tracking", () => {
     vi.useFakeTimers();
     try {
       const runningEntry = {
-        id: 5,
+        id: uid(5),
         task_id: task.id,
         start: "2026-10-15T12:00:00Z",
         end: null,
@@ -398,7 +399,7 @@ describe("Time tracking", () => {
   });
 
   test("user can add a manual entry and sees it under today with the day’s total", async () => {
-    const created = entryPayload(6, daysAgoKey(0), "08:00:00", "08:45:00");
+    const created = entryPayload(uid(6), daysAgoKey(0), "08:00:00", "08:45:00");
     fetchMock
       .mockResolvedValueOnce(jsonResponse([inbox]))
       .mockResolvedValueOnce(jsonResponse([task]))
@@ -451,8 +452,13 @@ describe("Time tracking", () => {
   });
 
   test("user can edit and delete an entry", async () => {
-    const original = entryPayload(6, daysAgoKey(0), "08:00:00", "08:45:00");
-    const updated = entryPayload(6, daysAgoKey(0), "08:00:00", "09:00:00");
+    const original = entryPayload(
+      uid(6),
+      daysAgoKey(0),
+      "08:00:00",
+      "08:45:00",
+    );
+    const updated = entryPayload(uid(6), daysAgoKey(0), "08:00:00", "09:00:00");
     fetchMock
       .mockResolvedValueOnce(jsonResponse([inbox]))
       .mockResolvedValueOnce(jsonResponse([task]))
@@ -521,7 +527,7 @@ describe("Time tracking", () => {
 
   test("user can discard the running timer so nothing is saved", async () => {
     const runningEntry = {
-      id: 5,
+      id: uid(5),
       task_id: task.id,
       start: "2026-10-15T12:00:00Z",
       end: null,
@@ -563,9 +569,24 @@ describe("Time tracking", () => {
   });
 
   test("the Dziennik groups entries by day with totals and the last seven days", async () => {
-    const todayFirst = entryPayload(6, daysAgoKey(0), "08:00:00", "08:30:00");
-    const todaySecond = entryPayload(7, daysAgoKey(0), "10:00:00", "10:45:00");
-    const yesterday = entryPayload(8, daysAgoKey(1), "09:00:00", "10:30:00");
+    const todayFirst = entryPayload(
+      uid(6),
+      daysAgoKey(0),
+      "08:00:00",
+      "08:30:00",
+    );
+    const todaySecond = entryPayload(
+      uid(7),
+      daysAgoKey(0),
+      "10:00:00",
+      "10:45:00",
+    );
+    const yesterday = entryPayload(
+      uid(8),
+      daysAgoKey(1),
+      "09:00:00",
+      "10:30:00",
+    );
     fetchMock
       .mockResolvedValueOnce(jsonResponse([inbox]))
       .mockResolvedValueOnce(jsonResponse([task]))
@@ -592,9 +613,9 @@ describe("Time tracking", () => {
   });
 
   test("older days stay hidden until the user asks for them", async () => {
-    const recent = entryPayload(6, daysAgoKey(2), "08:00:00", "08:30:00");
+    const recent = entryPayload(uid(6), daysAgoKey(2), "08:00:00", "08:30:00");
     const old = {
-      ...entryPayload(7, daysAgoKey(20), "08:00:00", "09:00:00"),
+      ...entryPayload(uid(7), daysAgoKey(20), "08:00:00", "09:00:00"),
       task_id: null,
       title: "Old work",
     };
@@ -628,14 +649,14 @@ describe("Time tracking", () => {
   });
 
   test("resuming restarts a Task's entry on the Task and a titled one on its title", async () => {
-    const onTask = entryPayload(6, daysAgoKey(0), "08:00:00", "08:30:00");
+    const onTask = entryPayload(uid(6), daysAgoKey(0), "08:00:00", "08:30:00");
     const titled = {
-      ...entryPayload(7, daysAgoKey(0), "09:00:00", "09:20:00"),
+      ...entryPayload(uid(7), daysAgoKey(0), "09:00:00", "09:20:00"),
       task_id: null,
       title: "Code review",
     };
     const running = {
-      id: 9,
+      id: uid(9),
       task_id: null,
       title: "Code review",
       start: `${daysAgoKey(0)}T12:00:00Z`,
@@ -681,7 +702,7 @@ describe("Time tracking", () => {
 
   test("Statystyki show the month's total and the split by project", async () => {
     const planning = {
-      id: 2,
+      id: uid(2),
       name: "Planning",
       description: "",
       is_inbox: false,
@@ -690,17 +711,17 @@ describe("Time tracking", () => {
     };
     const planningTask = {
       ...task,
-      id: 8,
+      id: uid(8),
       title: "Plan release",
       project_id: planning.id,
     };
-    const first = entryPayload(6, daysAgoKey(0), "08:00:00", "09:00:00");
+    const first = entryPayload(uid(6), daysAgoKey(0), "08:00:00", "09:00:00");
     const second = {
-      ...entryPayload(7, daysAgoKey(0), "10:00:00", "10:30:00"),
+      ...entryPayload(uid(7), daysAgoKey(0), "10:00:00", "10:30:00"),
       task_id: planningTask.id,
     };
     const loose = {
-      ...entryPayload(8, daysAgoKey(0), "11:00:00", "11:15:00"),
+      ...entryPayload(uid(8), daysAgoKey(0), "11:00:00", "11:15:00"),
       task_id: null,
       title: "Email",
     };
@@ -747,19 +768,19 @@ describe("Time tracking", () => {
 
   test("user can start a timer without a project and gets every project’s titles as suggestions", async () => {
     const planning = {
-      id: 2,
+      id: uid(2),
       name: "Planning",
       description: "",
       is_inbox: false,
     };
     const planningTask = {
       ...task,
-      id: 8,
+      id: uid(8),
       title: "Plan release",
       project_id: planning.id,
     };
     const runningEntry = {
-      id: 5,
+      id: uid(5),
       task_id: null,
       title: "Plan release",
       start: "2026-10-15T12:00:00Z",
@@ -822,7 +843,7 @@ describe("Time tracking", () => {
 
   test("user can start a timer with a time limit", async () => {
     const runningEntry = {
-      id: 5,
+      id: uid(5),
       task_id: null,
       title: "Deep work",
       start: "2026-10-15T12:00:00Z",
@@ -892,7 +913,7 @@ describe("Time tracking", () => {
     );
     try {
       const runningEntry = {
-        id: 5,
+        id: uid(5),
         task_id: task.id,
         start: "2026-10-15T11:59:55Z",
         end: null,
@@ -958,7 +979,7 @@ describe("Time tracking", () => {
     );
     try {
       const runningEntry = {
-        id: 5,
+        id: uid(5),
         task_id: task.id,
         start: "2026-10-15T11:59:55Z",
         end: null,

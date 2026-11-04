@@ -6,7 +6,7 @@ import type {
   BibliographyItemResponse,
 } from "@personal/shared/generated/api";
 
-function item(id: number, title: string): BibliographyItemResponse {
+function item(id: string, title: string): BibliographyItemResponse {
   return {
     id,
     kind: "film",
@@ -21,8 +21,8 @@ function item(id: number, title: string): BibliographyItemResponse {
 }
 
 function attempt(
-  id: number,
-  itemId: number,
+  id: string,
+  itemId: string,
   fields: Partial<AttemptResponse> = {},
 ): AttemptResponse {
   return {
@@ -47,7 +47,7 @@ describe("attemptYear", () => {
   it("is the end date's year, else the start's, else when it was recorded", () => {
     expect(
       attemptYear(
-        attempt(1, 1, {
+        attempt("1", "1", {
           startedOn: day("2025-12-30"),
           endedOn: day("2026-01-02"),
         }),
@@ -55,25 +55,30 @@ describe("attemptYear", () => {
     ).toBe(2026);
     expect(
       attemptYear(
-        attempt(1, 1, { outcome: "in_progress", startedOn: day("2025-12-30") }),
+        attempt("1", "1", {
+          outcome: "in_progress",
+          startedOn: day("2025-12-30"),
+        }),
       ),
     ).toBe(2025);
-    expect(attemptYear(attempt(1, 1, { outcome: "in_progress" }))).toBe(2024);
+    expect(attemptYear(attempt("1", "1", { outcome: "in_progress" }))).toBe(
+      2024,
+    );
   });
 });
 
 describe("groupByYear", () => {
-  const rejs = item(1, "Rejs");
-  const mis = item(2, "Miś");
-  const lalka = item(3, "Lalka");
+  const rejs = item("1", "Rejs");
+  const mis = item("2", "Miś");
+  const lalka = item("3", "Lalka");
 
   it("lists every Attempt under its year, newest first, planned items on top", () => {
     const groups = groupByYear(
       [lalka, mis, rejs],
       [
-        attempt(10, rejs.id, { endedOn: day("2025-03-01") }),
-        attempt(11, mis.id, { endedOn: day("2026-01-05") }),
-        attempt(12, rejs.id, { endedOn: day("2026-04-01") }),
+        attempt("10", rejs.id, { endedOn: day("2025-03-01") }),
+        attempt("11", mis.id, { endedOn: day("2026-01-05") }),
+        attempt("12", rejs.id, { endedOn: day("2026-04-01") }),
       ],
     );
 
@@ -87,18 +92,18 @@ describe("groupByYear", () => {
       [
         "2026",
         [
-          ["Rejs", 12],
-          ["Miś", 11],
+          ["Rejs", "12"],
+          ["Miś", "11"],
         ],
       ],
-      ["2025", [["Rejs", 10]]],
+      ["2025", [["Rejs", "10"]]],
     ]);
   });
 
   it("places a date-only day by the local calendar", () => {
     const groups = groupByYear(
       [rejs],
-      [attempt(10, rejs.id, { endedOn: day("2026-01-01") })],
+      [attempt("10", rejs.id, { endedOn: day("2026-01-01") })],
     );
 
     expect(groups.map((group) => group.key)).toEqual(["2026"]);
@@ -109,10 +114,10 @@ describe("groupByYear", () => {
     const groups = groupByYear(
       [rejs, mis],
       [
-        attempt(10, rejs.id, { endedOn: day("2026-01-31") }),
-        attempt(11, mis.id, { endedOn: day("2026-03-01") }),
-        attempt(12, rejs.id, { endedOn: day("2026-03-20") }),
-        attempt(13, mis.id, { endedOn: day("2025-12-24") }),
+        attempt("10", rejs.id, { endedOn: day("2026-01-31") }),
+        attempt("11", mis.id, { endedOn: day("2026-03-01") }),
+        attempt("12", rejs.id, { endedOn: day("2026-03-20") }),
+        attempt("13", mis.id, { endedOn: day("2025-12-24") }),
       ],
     );
 
@@ -126,10 +131,10 @@ describe("groupByYear", () => {
       ),
     ).toEqual([
       [
-        ["2026-03", "marzec", [12, 11]],
-        ["2026-01", "styczeń", [10]],
+        ["2026-03", "marzec", ["12", "11"]],
+        ["2026-01", "styczeń", ["10"]],
       ],
-      [["2025-12", "grudzień", [13]]],
+      [["2025-12", "grudzień", ["13"]]],
     ]);
   });
 
@@ -137,8 +142,8 @@ describe("groupByYear", () => {
     const groups = groupByYear(
       [rejs, mis],
       [
-        attempt(10, rejs.id, { endedOn: day("2026-04-01") }),
-        attempt(11, mis.id, {
+        attempt("10", rejs.id, { endedOn: day("2026-04-01") }),
+        attempt("11", mis.id, {
           outcome: "in_progress",
           startedOn: day("2026-04-01"),
         }),
@@ -155,8 +160,8 @@ describe("groupByYear", () => {
     const groups = groupByYear(
       [rejs],
       [
-        attempt(10, rejs.id, { endedOn: day("2025-03-01") }),
-        attempt(11, mis.id, { endedOn: day("2026-01-05") }),
+        attempt("10", rejs.id, { endedOn: day("2025-03-01") }),
+        attempt("11", mis.id, { endedOn: day("2026-01-05") }),
       ],
     );
 

@@ -12,7 +12,7 @@ import { NotatnikActionsSheet } from "@/features/notes/NotatnikActionsSheet";
 /** One Folder of the Notatnik: its subfolders and items, and its own options. */
 export default function FolderScreen() {
   const { id: rawId } = useLocalSearchParams<{ id: string }>();
-  const id = Number(rawId);
+  const id = rawId;
   const { data: folders, isPending } = useFolders();
   const folder = folders?.find((item) => item.id === id);
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);

@@ -32,7 +32,7 @@ function entry(
   extra: Partial<TimeEntryResponse> = {},
 ): TimeEntryResponse {
   return {
-    id: nextId++,
+    id: String(nextId++),
     taskId: null,
     title: "Work",
     start: at(day, start),
@@ -41,18 +41,18 @@ function entry(
   };
 }
 
-function project(id: number, name = `P${id}`): ProjectResponse {
+function project(id: string, name = `P${id}`): ProjectResponse {
   return {
     id,
     name,
     description: "",
-    isInbox: id === 1,
+    isInbox: id === "1",
     projectStatuses: [],
     terminalStatus: "",
   };
 }
 
-function task(id: number, projectId: number, title = `T${id}`): TaskResponse {
+function task(id: string, projectId: string, title = `T${id}`): TaskResponse {
   return { id, title, description: "", projectId, status: "" };
 }
 
@@ -92,12 +92,12 @@ describe("periodBuckets", () => {
 
 describe("computeTimeStats", () => {
   test("totals the period by day and by project, and ranks the titles", () => {
-    const projects = [project(1, "Inbox"), project(2, "Site")];
-    const tasks = [task(10, 2, "Build page")];
+    const projects = [project("1", "Inbox"), project("2", "Site")];
+    const tasks = [task("10", "2", "Build page")];
     const entries = [
-      entry("2026-10-12", "08:00:00", "09:00:00", { taskId: 10, title: "" }),
+      entry("2026-10-12", "08:00:00", "09:00:00", { taskId: "10", title: "" }),
       entry("2026-10-14", "08:00:00", "08:30:00"),
-      entry("2026-10-14", "09:00:00", "09:15:00", { taskId: 10, title: "" }),
+      entry("2026-10-14", "09:00:00", "09:15:00", { taskId: "10", title: "" }),
       // The week before: not in this period.
       entry("2026-10-05", "08:00:00", "10:00:00"),
     ];
@@ -203,12 +203,14 @@ describe("computeTimeStats", () => {
 
 describe("seriesResolver", () => {
   test("a Project keeps its colour slot by id; past the palette it folds into Inne projekty", () => {
-    const projects = [9, 8, 7, 6, 5, 4, 3, 2, 1].map((id) => project(id));
-    const tasks = projects.map((item) => task(100 + item.id, item.id));
+    const projects = ["9", "8", "7", "6", "5", "4", "3", "2", "1"].map((id) =>
+      project(id),
+    );
+    const tasks = projects.map((item) => task(`10${item.id}`, item.id));
     const seriesOf = seriesResolver(tasks, projects);
     const onProject = (id: number) =>
       seriesOf(
-        entry("2026-10-14", "08:00:00", "09:00:00", { taskId: 100 + id }),
+        entry("2026-10-14", "08:00:00", "09:00:00", { taskId: `10${id}` }),
       );
 
     expect(onProject(1)).toMatchObject({ key: "1", slot: 0 });

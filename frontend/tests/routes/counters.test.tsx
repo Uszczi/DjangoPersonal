@@ -11,9 +11,10 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { renderApp } from "../renderApp";
+import { UID, uid } from "../ids";
 
 type Counter = {
-  id: number;
+  id: string;
   name: string;
   color?: string;
   created_at: string;
@@ -22,8 +23,8 @@ type Counter = {
   days_since_last_entry?: number | null;
 };
 type Entry = {
-  id: number;
-  counter_id: number;
+  id: string;
+  counter_id: string;
   value: number;
   occurred_at: string;
   note: string;
@@ -70,11 +71,11 @@ function fakeBackend(
     const body = init?.body ? JSON.parse(String(init.body)) : {};
     if (path.includes("/projects/")) return jsonResponse([]);
 
-    const counterMatch = bare.match(/\/counters\/(\d+)\/$/);
+    const counterMatch = bare.match(new RegExp(`/counters/(${UID})/$`));
     if (bare.endsWith("/counters/")) {
       if (method === "POST") {
         const counter = {
-          id: nextId++,
+          id: uid(nextId++),
           name: body.name,
           color: body.color,
           created_at: "2026-10-24T10:00:00Z",
@@ -85,7 +86,7 @@ function fakeBackend(
       return jsonResponse(counters.map(withTotals));
     }
     if (counterMatch) {
-      const id = Number(counterMatch[1]);
+      const id = counterMatch[1];
       const counter = counters.find((item) => item.id === id);
       if (!counter) return jsonResponse({ detail: "Counter not found." }, 404);
       if (method === "DELETE") {
@@ -97,22 +98,22 @@ function fakeBackend(
       return jsonResponse(withTotals(counter));
     }
 
-    const entryMatch = path.match(/\/counter-entries\/(\d+)\/$/);
+    const entryMatch = path.match(new RegExp(`/counter-entries/(${UID})/$`));
     if (path.includes("/counter-entries/?counter=")) {
-      const id = Number(new URL(path, "http://x").searchParams.get("counter"));
+      const id = new URL(path, "http://x").searchParams.get("counter");
       return jsonResponse(
         entries
           .filter((entry) => entry.counter_id === id)
           .sort(
             (a, b) =>
               Date.parse(b.occurred_at) - Date.parse(a.occurred_at) ||
-              b.id - a.id,
+              b.id.localeCompare(a.id),
           ),
       );
     }
     if (path.endsWith("/counter-entries/") && method === "POST") {
       const entry = {
-        id: nextId++,
+        id: uid(nextId++),
         counter_id: body.counter,
         value: body.value ?? 1,
         occurred_at: body.occurred_at,
@@ -125,7 +126,7 @@ function fakeBackend(
       return jsonResponse(entry, 201);
     }
     if (entryMatch) {
-      const entry = entries.find((item) => item.id === Number(entryMatch[1]));
+      const entry = entries.find((item) => item.id === entryMatch[1]);
       if (!entry)
         return jsonResponse({ detail: "Counter entry not found." }, 404);
       if (method === "DELETE") {
@@ -139,7 +140,7 @@ function fakeBackend(
   };
 }
 
-const coffee = { id: 1, name: "Kawa", created_at: "2026-10-01T10:00:00Z" };
+const coffee = { id: uid(1), name: "Kawa", created_at: "2026-10-01T10:00:00Z" };
 
 describe("Counters", () => {
   const fetchMock = vi.fn();
@@ -212,7 +213,7 @@ describe("Counters", () => {
     fetchMock.mockImplementation(fakeBackend({ counters: [coffee] }));
     const user = userEvent.setup();
 
-    renderApp("/counters/1");
+    renderApp(`/counters/${uid(1)}`);
     await user.click(
       await screen.findByRole("button", { name: "Opcje licznika" }),
     );
@@ -223,7 +224,7 @@ describe("Counters", () => {
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
-        expect.stringContaining("/api/v1/counters/1/"),
+        expect.stringContaining(`/api/v1/counters/${uid(1)}/`),
         expect.objectContaining({
           method: "PATCH",
           body: JSON.stringify({ name: "Kawa", color: "#b84a7a" }),
@@ -242,8 +243,8 @@ describe("Counters", () => {
         counters: [coffee],
         entries: [
           {
-            id: 10,
-            counter_id: 1,
+            id: uid(10),
+            counter_id: uid(1),
             value: 2,
             occurred_at: "2026-10-20T08:00:00Z",
             note: "",
@@ -267,7 +268,11 @@ describe("Counters", () => {
   });
 
   test("a counter that gets an entry moves to the top of the list", async () => {
-    const water = { id: 2, name: "Woda", created_at: "2026-10-02T10:00:00Z" };
+    const water = {
+      id: uid(2),
+      name: "Woda",
+      created_at: "2026-10-02T10:00:00Z",
+    };
     fetchMock.mockImplementation(fakeBackend({ counters: [coffee, water] }));
     const user = userEvent.setup();
 
@@ -343,15 +348,15 @@ describe("Counters", () => {
         counters: [{ ...coffee, streak_days: 3, days_since_last_entry: 0 }],
         entries: [
           {
-            id: 1,
-            counter_id: 1,
+            id: uid(1),
+            counter_id: uid(1),
             value: 2,
             occurred_at: "2026-10-20T10:00:00Z",
             note: "",
           },
           {
-            id: 2,
-            counter_id: 1,
+            id: uid(2),
+            counter_id: uid(1),
             value: 3,
             occurred_at: "2026-10-21T10:00:00Z",
             note: "",
@@ -408,12 +413,12 @@ describe("Counters", () => {
         counters: [
           { ...coffee, streak_days: 3, days_since_last_entry: 0 },
           {
-            id: 2,
+            id: uid(2),
             name: "Bieganie",
             created_at: "2026-10-01T10:00:00Z",
             days_since_last_entry: 5,
           },
-          { id: 3, name: "Woda", created_at: "2026-10-01T10:00:00Z" },
+          { id: uid(3), name: "Woda", created_at: "2026-10-01T10:00:00Z" },
         ],
       }),
     );
@@ -445,7 +450,7 @@ describe("Counters", () => {
     fetchMock.mockImplementation(fakeBackend({ counters: [coffee] }));
     const user = userEvent.setup();
 
-    renderApp("/counters/1");
+    renderApp(`/counters/${uid(1)}`);
     const page = await screen.findByRole("region", { name: "Licznik: Kawa" });
     await screen.findByText("Brak wpisów. Dodaj pierwszy wpis.");
 
@@ -510,22 +515,22 @@ describe("Counters", () => {
         counters: [coffee],
         entries: [
           {
-            id: 10,
-            counter_id: 1,
+            id: uid(10),
+            counter_id: uid(1),
             value: 1,
             occurred_at: new Date(2026, 9, 20, 8).toISOString(),
             note: "",
           },
           {
-            id: 11,
-            counter_id: 1,
+            id: uid(11),
+            counter_id: uid(1),
             value: 1,
             occurred_at: new Date(2026, 9, 20, 18).toISOString(),
             note: "",
           },
           {
-            id: 12,
-            counter_id: 1,
+            id: uid(12),
+            counter_id: uid(1),
             value: 1,
             occurred_at: new Date(2026, 8, 3, 12).toISOString(),
             note: "",
@@ -535,7 +540,7 @@ describe("Counters", () => {
     );
     const user = userEvent.setup();
 
-    renderApp("/counters/1");
+    renderApp(`/counters/${uid(1)}`);
     const calendar = await screen.findByRole("region", {
       name: "Kalendarz wpisów",
     });
@@ -564,33 +569,33 @@ describe("Counters", () => {
       fakeBackend({
         counters: [
           coffee,
-          { id: 2, name: "Woda", created_at: coffee.created_at },
+          { id: uid(2), name: "Woda", created_at: coffee.created_at },
         ],
         entries: [
           {
-            id: 10,
-            counter_id: 1,
+            id: uid(10),
+            counter_id: uid(1),
             value: 2,
             occurred_at: new Date(2026, 9, 20, 8).toISOString(),
             note: "",
           },
           {
-            id: 11,
-            counter_id: 1,
+            id: uid(11),
+            counter_id: uid(1),
             value: 1,
             occurred_at: new Date(2026, 9, 20, 18).toISOString(),
             note: "",
           },
           {
-            id: 12,
-            counter_id: 2,
+            id: uid(12),
+            counter_id: uid(2),
             value: 5,
             occurred_at: new Date(2026, 9, 20, 12).toISOString(),
             note: "",
           },
           {
-            id: 13,
-            counter_id: 2,
+            id: uid(13),
+            counter_id: uid(2),
             value: 1,
             occurred_at: new Date(2026, 9, 21, 12).toISOString(),
             note: "",
@@ -641,8 +646,8 @@ describe("Counters", () => {
         counters: [coffee],
         entries: [
           {
-            id: 10,
-            counter_id: 1,
+            id: uid(10),
+            counter_id: uid(1),
             value: 2,
             occurred_at: new Date(2026, 9, 20, 8).toISOString(),
             note: "",
@@ -695,7 +700,7 @@ describe("Counters", () => {
     fetchMock.mockImplementation(fakeBackend({ counters: [coffee] }));
     const user = userEvent.setup();
 
-    renderApp("/counters/1");
+    renderApp(`/counters/${uid(1)}`);
     const page = await screen.findByRole("region", { name: "Licznik: Kawa" });
     await user.click(within(page).getByRole("button", { name: "Nowy wpis" }));
     const when = await screen.findByLabelText("Kiedy");
@@ -713,7 +718,7 @@ describe("Counters", () => {
     fetchMock.mockImplementation(fakeBackend({ counters: [coffee] }));
     const user = userEvent.setup();
 
-    renderApp("/counters/1");
+    renderApp(`/counters/${uid(1)}`);
     const page = await screen.findByRole("region", { name: "Licznik: Kawa" });
     await user.click(within(page).getByRole("button", { name: "Nowy wpis" }));
     const value = await screen.findByLabelText("Wartość");
@@ -734,7 +739,7 @@ describe("Counters", () => {
     fetchMock.mockImplementation(fakeBackend({ counters: [coffee] }));
     const user = userEvent.setup();
 
-    const { router } = renderApp("/counters/1");
+    const { router } = renderApp(`/counters/${uid(1)}`);
     await user.click(
       await screen.findByRole("button", { name: "Edytuj licznik: Kawa" }),
     );
@@ -766,7 +771,7 @@ describe("Counters", () => {
   test("an unknown counter redirects to the list", async () => {
     fetchMock.mockImplementation(fakeBackend({ counters: [coffee] }));
 
-    const { router } = renderApp("/counters/999");
+    const { router } = renderApp(`/counters/${uid(999)}`);
 
     await screen.findByRole("list", { name: "Liczniki" });
     expect(router.state.location.pathname).toBe("/counters");

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { ProjectResponse } from "@personal/shared/generated/api";
+import { isUUID } from "@personal/shared/ids";
 import { defaultProject } from "@personal/shared/queries/projects";
 import { platformStorage } from "@personal/shared/platform";
 
@@ -12,8 +13,8 @@ import { platformStorage } from "@personal/shared/platform";
  * storage.
  */
 type TaskProjectState = {
-  projectId: number | null;
-  setProjectId: (projectId: number) => void;
+  projectId: string | null;
+  setProjectId: (projectId: string) => void;
 };
 
 export const useTaskProjectStore = create<TaskProjectState>()(
@@ -29,7 +30,7 @@ export const useTaskProjectStore = create<TaskProjectState>()(
       merge: (persisted, current) => {
         const projectId = (persisted as Partial<TaskProjectState> | undefined)
           ?.projectId;
-        return typeof projectId === "number"
+        return typeof projectId === "string" && isUUID(projectId)
           ? { ...current, projectId }
           : current;
       },
@@ -43,7 +44,7 @@ export const useTaskProjectStore = create<TaskProjectState>()(
  */
 export function selectedTaskProject(
   projects: ProjectResponse[],
-  projectId: number | null,
+  projectId: string | null,
 ): ProjectResponse | null {
   return (
     projects.find((item) => item.id === projectId) ?? defaultProject(projects)

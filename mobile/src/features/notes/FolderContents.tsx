@@ -56,7 +56,7 @@ function countLabel(count: number) {
  * press offers rename, move and delete; the "+" adds a Notatka or a Folder
  * here.
  */
-export function FolderContents({ folderId }: { folderId: number | null }) {
+export function FolderContents({ folderId }: { folderId: string | null }) {
   const { colors } = useTheme();
   const folders = useFolders();
   const whiteboards = useWhiteboards();

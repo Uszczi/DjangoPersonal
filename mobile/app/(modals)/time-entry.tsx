@@ -44,7 +44,7 @@ function validate(date: string, title: string, minutes: number) {
 /** Adds a time entry by hand, or edits one (`?entryId=`), like the web Timer page's forms. */
 export default function TimeEntryEditorScreen() {
   const params = useLocalSearchParams<{ entryId?: string }>();
-  const entryId = params.entryId ? Number(params.entryId) : null;
+  const entryId = params.entryId ?? null;
 
   const { data: projects = [] } = useProjects();
   const { data: entries = [] } = useTimeEntries();
@@ -60,7 +60,7 @@ export default function TimeEntryEditorScreen() {
   const [date, setDate] = useState(() =>
     entry ? dateKey(entry.start) : todayKey(),
   );
-  const [projectId, setProjectId] = useState<number | null>(null);
+  const [projectId, setProjectId] = useState<string | null>(null);
   const [title, setTitle] = useState(() => {
     if (!entry) return "";
     if (entry.title) return entry.title;

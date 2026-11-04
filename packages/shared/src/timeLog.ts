@@ -27,11 +27,12 @@ export const LOG_DAYS_STEP = 14;
 /** What a Time entry is called: its own title, else its Task's, else a placeholder. */
 export function entryTitle(
   entry: TimeEntryResponse,
-  taskTitles: ReadonlyMap<number, string>,
+  taskTitles: ReadonlyMap<string, string>,
 ): string {
   if (entry.title) return entry.title;
   if (entry.taskId == null) return "Bez tytułu";
-  return taskTitles.get(entry.taskId) ?? `Zadanie #${entry.taskId}`;
+  // The Task's title has not loaded; name it by a short slice of its id.
+  return taskTitles.get(entry.taskId) ?? `Zadanie #${entry.taskId.slice(0, 8)}`;
 }
 
 /** The date key of the day `days` before `now`. */

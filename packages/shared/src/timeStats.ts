@@ -10,6 +10,7 @@ import type {
   TaskResponse,
   TimeEntryResponse,
 } from "./generated/api";
+import { compareIds } from "./ids";
 import { dateKey, entryMinutes } from "./timeFormat";
 import { entryTitle } from "./timeLog";
 
@@ -241,7 +242,7 @@ export function seriesResolver(
   );
   const slotOf = new Map(
     [...projects]
-      .sort((a, b) => a.id - b.id)
+      .sort((a, b) => compareIds(a.id, b.id))
       .map((project, index) => [project.id, index]),
   );
   const taskProject = new Map(tasks.map((task) => [task.id, task.projectId]));

@@ -7,6 +7,7 @@ import type {
   AttemptResponse,
   BibliographyItemResponse,
 } from "./generated/api";
+import { compareIds } from "./ids";
 
 /** One row of the year view: an item with one of its Attempts (`null` while planned). */
 export type YearRow = {
@@ -86,7 +87,7 @@ function newestFirst(a: AttemptResponse, b: AttemptResponse) {
   return (
     attemptDay(b).getTime() - attemptDay(a).getTime() ||
     Number(b.outcome === "in_progress") - Number(a.outcome === "in_progress") ||
-    b.id - a.id
+    compareIds(b.id, a.id)
   );
 }
 
@@ -99,7 +100,7 @@ export function groupByYear(
   attempts: readonly AttemptResponse[],
 ): YearGroup[] {
   const byId = new Map(items.map((item) => [item.id, item]));
-  const attempted = new Set<number>();
+  const attempted = new Set<string>();
   const years = new Map<number, YearRow[]>();
   for (const attempt of [...attempts].sort(newestFirst)) {
     const item = byId.get(attempt.itemId);

@@ -67,7 +67,7 @@ export function attemptFormFields(
 /** The request an Attempt form sends: a new Attempt, or changes to one. */
 export type AttemptWrite =
   | { create: AttemptRequest }
-  | { update: { id: number; changes: PatchedAttemptRequest } };
+  | { update: { id: string; changes: PatchedAttemptRequest } };
 
 /**
  * What submitting the form for `action` sends. Only the dates the form shows
@@ -81,7 +81,7 @@ export function attemptWrite(
     startedOn,
     endedOn,
   }: {
-    itemId: number;
+    itemId: string;
     attempt: AttemptResponse | null;
     startedOn: Date | null;
     endedOn: Date | null;

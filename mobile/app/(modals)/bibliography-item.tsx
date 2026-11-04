@@ -44,7 +44,7 @@ function numberText(value: number | null | undefined) {
  */
 export default function BibliographyItemEditorScreen() {
   const params = useLocalSearchParams<{ itemId?: string }>();
-  const itemId = params.itemId ? Number(params.itemId) : null;
+  const itemId = params.itemId ?? null;
   const item = useBibliographyItem(itemId).data ?? null;
   const createItem = useCreateBibliographyItem();
   const updateItem = useUpdateBibliographyItem();

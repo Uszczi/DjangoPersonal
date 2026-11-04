@@ -41,11 +41,11 @@ export default function TaskEditorScreen() {
     projectId?: string;
     taskId?: string;
   }>();
-  const taskId = params.taskId ? Number(params.taskId) : null;
+  const taskId = params.taskId ?? null;
 
   const { data: projects = [] } = useProjects();
   const listProject =
-    projects.find((item) => item.id === Number(params.projectId)) ?? null;
+    projects.find((item) => item.id === params.projectId) ?? null;
   const { data: listTasks = [] } = useProjectTasks(
     taskId === null ? null : listProject,
   );
@@ -62,7 +62,7 @@ export default function TaskEditorScreen() {
   const rememberStatus = useNewTaskStatusStore((state) => state.rememberStatus);
 
   const [form_, setForm] = useState<TaskInput>(() => {
-    const projectId = task?.projectId ?? Number(params.projectId ?? 0);
+    const projectId = task?.projectId ?? params.projectId ?? "";
     return {
       title: task?.title ?? "",
       description: task?.description ?? "",
@@ -105,7 +105,7 @@ export default function TaskEditorScreen() {
       setFormError("Podaj tytuł zadania.");
       return;
     }
-    if (!Number.isInteger(input.project) || input.project <= 0) {
+    if (!input.project) {
       setFormError("Wybierz projekt dla zadania.");
       return;
     }

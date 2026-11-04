@@ -5,10 +5,11 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { renderApp } from "../../renderApp";
+import { UID, uid } from "../../ids";
 
 // API returns snake_case; the generated client maps it to camelCase.
 const personalWalletApi = {
-  id: 1,
+  id: uid(1),
   name: "Personal",
   color: "#477c7c",
   transaction_count: 2,
@@ -16,28 +17,28 @@ const personalWalletApi = {
 };
 
 const categoriesApi = [
-  { id: 5, name: "Jedzenie", icon: "utensils", kind: "expense" },
+  { id: uid(5), name: "Jedzenie", icon: "utensils", kind: "expense" },
 ];
 
 const coffeeTransactionApi = {
-  id: 10,
+  id: uid(10),
   title: "Kawa",
   amount: "8.00",
   date: "2026-10-16",
   description: "Na rynku",
-  category_id: 5,
-  wallet_id: 1,
+  category_id: uid(5),
+  wallet_id: uid(1),
   kind: "expense",
 };
 
 const lunchTransactionApi = {
-  id: 11,
+  id: uid(11),
   title: "Obiad",
   amount: "45.99",
   date: "2026-10-18",
   description: "",
   category_id: null,
-  wallet_id: 1,
+  wallet_id: uid(1),
   kind: "expense",
 };
 
@@ -101,7 +102,7 @@ function routeByUrl({
     if (path.includes("/categories/")) {
       return Promise.resolve(jsonResponse(categories));
     }
-    if (/\/wallets\/\d+\/$/.test(path)) {
+    if (new RegExp(`/wallets/${UID}/$`).test(path)) {
       return Promise.resolve(jsonResponse(wallet()));
     }
     if (path.includes("/wallets/")) {
@@ -110,7 +111,7 @@ function routeByUrl({
     if (path.includes("/projects/")) {
       return Promise.resolve(
         jsonResponse([
-          { id: 1, name: "Inbox", description: "", is_inbox: true },
+          { id: uid(1), name: "Inbox", description: "", is_inbox: true },
         ]),
       );
     }
@@ -119,7 +120,7 @@ function routeByUrl({
 }
 
 /** The demo rows are dated in October 2026. */
-const OCTOBER = "/expenses/1?month=2026-10";
+const OCTOBER = `/expenses/${uid(1)}?month=2026-10`;
 
 /** The month's list once its rows have loaded. */
 async function monthList() {
@@ -166,7 +167,7 @@ describe("Transactions", () => {
   test("another month asks only for its own days", async () => {
     fetchMock.mockImplementation(routeByUrl());
 
-    renderApp("/expenses/1?month=2026-11");
+    renderApp(`/expenses/${uid(1)}?month=2026-11`);
 
     expect(
       await screen.findByText("Brak transakcji w tym miesiącu."),
@@ -180,23 +181,23 @@ describe("Transactions", () => {
       date: "2026-10-17",
     };
     const incomeApi = {
-      id: 20,
+      id: uid(20),
       title: "Wynagrodzenie",
       amount: "500.00",
       date: "2026-10-17",
       description: "",
-      category_id: 6,
-      wallet_id: 1,
+      category_id: uid(6),
+      wallet_id: uid(1),
       kind: "income",
     };
     const systemApi = {
-      id: 21,
+      id: uid(21),
       title: "Stan początkowy",
       amount: "100.00",
       date: "2026-10-17",
       description: "",
-      category_id: 9,
-      wallet_id: 1,
+      category_id: uid(9),
+      wallet_id: uid(1),
       kind: null,
     };
     fetchMock.mockImplementation(
@@ -204,8 +205,13 @@ describe("Transactions", () => {
         transactions: [incomeApi, expenseApi, systemApi],
         categories: [
           ...categoriesApi,
-          { id: 6, name: "Wynagrodzenie", icon: "banknote", kind: "income" },
-          { id: 9, name: "System", is_system: true, kind: null },
+          {
+            id: uid(6),
+            name: "Wynagrodzenie",
+            icon: "banknote",
+            kind: "income",
+          },
+          { id: uid(9), name: "System", is_system: true, kind: null },
         ],
       }),
     );
@@ -221,13 +227,13 @@ describe("Transactions", () => {
 
   test("user can add a transaction via a modal", async () => {
     const createdApi = {
-      id: 12,
+      id: uid(12),
       title: "Książka",
       amount: "34.90",
       date: "2026-10-18",
       description: "Księgarnia",
-      category_id: 5,
-      wallet_id: 1,
+      category_id: uid(5),
+      wallet_id: uid(1),
       kind: "expense",
     };
     fetchMock.mockImplementation(
@@ -247,7 +253,7 @@ describe("Transactions", () => {
     await user.clear(screen.getByLabelText("Data"));
     await user.type(screen.getByLabelText("Data"), "2026-10-18");
     await user.type(screen.getByLabelText("Opis"), "Księgarnia");
-    await user.selectOptions(screen.getByLabelText("Kategoria"), "5");
+    await user.selectOptions(screen.getByLabelText("Kategoria"), uid(5));
     await user.click(screen.getByRole("button", { name: "Dodaj wydatek" }));
 
     const list = await monthList();
@@ -262,8 +268,8 @@ describe("Transactions", () => {
           amount: "34.90",
           date: "2026-10-18",
           description: "Księgarnia",
-          category: 5,
-          wallet: 1,
+          category: uid(5),
+          wallet: uid(1),
         }),
       }),
     );
@@ -271,13 +277,13 @@ describe("Transactions", () => {
 
   test("an added transaction lands in newest-first order", async () => {
     const createdApi = {
-      id: 12,
+      id: uid(12),
       title: "Książka",
       amount: "34.90",
       date: "2026-10-18",
       description: "",
       category_id: null,
-      wallet_id: 1,
+      wallet_id: uid(1),
       kind: "expense",
     };
     fetchMock.mockImplementation(
@@ -412,7 +418,7 @@ describe("Transactions", () => {
 
     expect(await within(day).findByText("Kawa specjalna")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/v1/transactions/10/",
+      `/api/v1/transactions/${uid(10)}/`,
       expect.objectContaining({
         method: "PATCH",
         body: JSON.stringify({
@@ -420,8 +426,8 @@ describe("Transactions", () => {
           amount: "8.00",
           date: "2026-10-16",
           description: "Na rynku",
-          category: 5,
-          wallet: 1,
+          category: uid(5),
+          wallet: uid(1),
         }),
       }),
     );
@@ -451,7 +457,7 @@ describe("Transactions", () => {
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
-        "/api/v1/transactions/10/",
+        `/api/v1/transactions/${uid(10)}/`,
         expect.objectContaining({
           method: "PATCH",
           body: expect.stringContaining('"description":"Na rynku\\nz Anią"'),
@@ -465,7 +471,7 @@ describe("Transactions", () => {
       routeByUrl({
         categories: [
           ...categoriesApi,
-          { id: 9, name: "System", is_system: true, kind: null },
+          { id: uid(9), name: "System", is_system: true, kind: null },
         ],
       }),
     );
@@ -487,7 +493,7 @@ describe("Transactions", () => {
 
   test("the picker groups Wydatki and Przychody and the labels follow the kind", async () => {
     const incomeCategory = {
-      id: 6,
+      id: uid(6),
       name: "Wynagrodzenie",
       icon: "banknote",
       kind: "income",
@@ -517,7 +523,7 @@ describe("Transactions", () => {
     ).toBeInTheDocument();
 
     // Choosing an Income category flips the kicker, title and submit button.
-    await user.selectOptions(screen.getByLabelText("Kategoria"), "6");
+    await user.selectOptions(screen.getByLabelText("Kategoria"), uid(6));
     expect(screen.getByText("NOWY PRZYCHÓD")).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "Nowy przychód" }),
@@ -531,13 +537,13 @@ describe("Transactions", () => {
 
   test("a System entry opens read-only with only Usuń and Zamknij", async () => {
     const correction = {
-      id: 12,
+      id: uid(12),
       title: "Korekta stanu",
       amount: "-20.00",
       date: "2026-10-18",
       description: "",
-      category_id: 9,
-      wallet_id: 1,
+      category_id: uid(9),
+      wallet_id: uid(1),
       kind: null,
     };
     fetchMock.mockImplementation(
@@ -545,7 +551,7 @@ describe("Transactions", () => {
         transactions: [correction],
         categories: [
           ...categoriesApi,
-          { id: 9, name: "System", is_system: true, kind: null },
+          { id: uid(9), name: "System", is_system: true, kind: null },
         ],
       }),
     );
@@ -601,7 +607,7 @@ describe("Transactions", () => {
       await screen.findByText("Brak transakcji w tym miesiącu."),
     ).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/v1/transactions/10/",
+      `/api/v1/transactions/${uid(10)}/`,
       expect.objectContaining({ method: "DELETE" }),
     );
   });
@@ -611,7 +617,7 @@ describe("Transactions", () => {
     fetchMock.mockImplementation(
       routeByUrl({
         transactions: [lunchTransactionApi],
-        created: { ...coffeeTransactionApi, id: 12 },
+        created: { ...coffeeTransactionApi, id: uid(12) },
         wallet: () => ({ ...personalWalletApi, balance }),
       }),
     );
@@ -633,7 +639,7 @@ describe("Transactions", () => {
       await screen.findByText("Saldo portfela: -53.99"),
     ).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/v1/wallets/1/",
+      `/api/v1/wallets/${uid(1)}/`,
       expect.anything(),
     );
   });
@@ -670,7 +676,7 @@ describe("Transactions", () => {
   test("a month longer than one page is loaded whole", async () => {
     const firstPage = Array.from({ length: 200 }, (_, n) => ({
       ...lunchTransactionApi,
-      id: 1000 - n,
+      id: uid(1000 - n),
       title: `Zakup ${n + 1}`,
     }));
     fetchMock.mockImplementation(
@@ -717,8 +723,12 @@ describe("Transactions", () => {
   });
 
   test("a transaction moved to another wallet leaves this list", async () => {
-    const businessWalletApi = { ...personalWalletApi, id: 2, name: "Business" };
-    const movedApi = { ...coffeeTransactionApi, wallet_id: 2 };
+    const businessWalletApi = {
+      ...personalWalletApi,
+      id: uid(2),
+      name: "Business",
+    };
+    const movedApi = { ...coffeeTransactionApi, wallet_id: uid(2) };
     fetchMock.mockImplementation(
       (url: string | URL | Request, init?: RequestInit) => {
         if (String(url) === "/api/v1/wallets/") {
@@ -740,7 +750,7 @@ describe("Transactions", () => {
       screen.getByRole("button", { name: "Edytuj transakcję: Kawa" }),
     );
     await user.click(await screen.findByRole("button", { name: "Edytuj" }));
-    await user.selectOptions(screen.getByLabelText("Portfel"), "2");
+    await user.selectOptions(screen.getByLabelText("Portfel"), uid(2));
     await user.click(screen.getByRole("button", { name: "Zapisz zmiany" }));
 
     expect(

@@ -34,8 +34,8 @@ export default function NotatnikNameScreen() {
     parentId?: string;
   }>();
   const isFolder = params.target === "folder";
-  const id = params.id ? Number(params.id) : null;
-  const parentId = params.parentId ? Number(params.parentId) : null;
+  const id = params.id ?? null;
+  const parentId = params.parentId ?? null;
   const { data: folders = [] } = useFolders();
   const { data: items = [] } = useWhiteboards();
   const existing =

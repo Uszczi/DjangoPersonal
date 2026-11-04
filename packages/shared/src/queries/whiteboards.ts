@@ -53,7 +53,7 @@ export function useCreateItem() {
       folderId = null,
     }: {
       kind: ItemKind;
-      folderId?: number | null;
+      folderId?: string | null;
     }) =>
       api.whiteboardsCreate({
         whiteboardRequest: { kind, name: "Bez tytułu", folderId },
@@ -70,7 +70,7 @@ export function useCreateItem() {
 export function useDeleteWhiteboard() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => api.whiteboardsDestroy({ id }),
+    mutationFn: (id: string) => api.whiteboardsDestroy({ id }),
     onSuccess: (_, id) => {
       queryClient.setQueryData(whiteboardsQuery.queryKey, (list) =>
         list?.filter((item) => item.id !== id),
@@ -83,7 +83,7 @@ export function useDeleteWhiteboard() {
 export function useMoveWhiteboard() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, folderId }: { id: number; folderId: number | null }) =>
+    mutationFn: ({ id, folderId }: { id: string; folderId: string | null }) =>
       api.whiteboardsPartialUpdate({
         id,
         patchedWhiteboardRequest: { folderId },
@@ -98,7 +98,7 @@ export function useMoveWhiteboard() {
  * its own copy. Dropped as soon as the editor closes (`gcTime: 0`), so the
  * next opening always loads what was last saved.
  */
-export function useWhiteboard(id: number) {
+export function useWhiteboard(id: string) {
   return useQuery({
     queryKey: whiteboardKeys.detail(id),
     queryFn: ({ signal }) => api.whiteboardsRetrieve({ id }, { signal }),
@@ -130,7 +130,7 @@ function placeSaved(queryClient: QueryClient, updated: WhiteboardResponse) {
 export function useRenameWhiteboard() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, name }: { id: number; name: string }) =>
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
       api.whiteboardsPartialUpdate({ id, patchedWhiteboardRequest: { name } }),
     onSuccess: (updated) => placeSaved(queryClient, updated),
   });
@@ -140,7 +140,7 @@ export function useRenameWhiteboard() {
 export function useSaveNoteMarkdown() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, markdown }: { id: number; markdown: string }) =>
+    mutationFn: ({ id, markdown }: { id: string; markdown: string }) =>
       api.whiteboardsPartialUpdate({
         id,
         patchedWhiteboardRequest: { content: { markdown } },

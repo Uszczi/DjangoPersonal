@@ -7,12 +7,13 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { useWalletSelectionStore } from "@personal/shared/stores/walletSelection";
 
 import { renderApp } from "../renderApp";
+import { uid } from "../ids";
 
-const inbox = { id: 1, name: "Inbox", description: "", is_inbox: true };
+const inbox = { id: uid(1), name: "Inbox", description: "", is_inbox: true };
 
 // API returns snake_case; the generated client maps it to camelCase.
 const personalWalletApi = {
-  id: 1,
+  id: uid(1),
   name: "Personal",
   color: "#477c7c",
   transaction_count: 0,
@@ -20,7 +21,7 @@ const personalWalletApi = {
 };
 
 const businessWalletApi = {
-  id: 2,
+  id: uid(2),
   name: "Business",
   color: "#d45b3e",
   transaction_count: 3,
@@ -131,7 +132,7 @@ describe("Wallets", () => {
       within(switcher()).getByRole("link", { name: /^Personal/ }),
     );
     await screen.findByRole("region", { name: "Portfel: Personal" });
-    expect(useWalletSelectionStore.getState().selectedWalletId).toBe(1);
+    expect(useWalletSelectionStore.getState().selectedWalletId).toBe(uid(1));
 
     await router.navigate({ to: "/expenses" });
     expect(
@@ -176,7 +177,7 @@ describe("Wallets", () => {
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
-        "/api/v1/wallets/2/",
+        `/api/v1/wallets/${uid(2)}/`,
         expect.objectContaining({
           method: "PATCH",
           body: JSON.stringify({ position: 1 }),
@@ -190,7 +191,7 @@ describe("Wallets", () => {
       routeByUrl({
         wallets: [],
         written: {
-          id: 1,
+          id: uid(1),
           name: "Personal",
           color: "#477c7c",
           transaction_count: 0,
@@ -227,7 +228,7 @@ describe("Wallets", () => {
       routeByUrl({
         wallets: [],
         written: {
-          id: 1,
+          id: uid(1),
           name: "Personal",
           color: "#477c7c",
           transaction_count: 1,
@@ -268,7 +269,7 @@ describe("Wallets", () => {
     fetchMock.mockImplementation(
       routeByUrl({
         written: {
-          id: 1,
+          id: uid(1),
           name: "Personal",
           color: "#477c7c",
           transaction_count: 1,
@@ -292,7 +293,7 @@ describe("Wallets", () => {
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
-        "/api/v1/wallets/1/",
+        `/api/v1/wallets/${uid(1)}/`,
         expect.objectContaining({
           method: "PATCH",
           body: JSON.stringify({ name: "Personal", current_balance: "75" }),
@@ -303,13 +304,13 @@ describe("Wallets", () => {
 
   test("a new balance shows up as a correction transaction straight away", async () => {
     const correctionApi = {
-      id: 50,
+      id: uid(50),
       title: "Korekta stanu",
       amount: "75.00",
       date: "2026-10-24",
       description: "",
       category_id: null,
-      wallet_id: 1,
+      wallet_id: uid(1),
       kind: "expense",
     };
     let ledger: unknown[] = [];
@@ -374,7 +375,7 @@ describe("Wallets", () => {
     fetchMock.mockImplementation(
       routeByUrl({
         written: {
-          id: 1,
+          id: uid(1),
           name: "Personal renamed",
           color: "#477c7c",
           transaction_count: 0,
@@ -401,7 +402,7 @@ describe("Wallets", () => {
       await screen.findByRole("region", { name: "Portfel: Personal renamed" }),
     ).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/v1/wallets/1/",
+      `/api/v1/wallets/${uid(1)}/`,
       expect.objectContaining({
         method: "PATCH",
         body: JSON.stringify({ name: "Personal renamed" }),
@@ -414,7 +415,7 @@ describe("Wallets", () => {
       routeByUrl({
         wallets: [],
         written: {
-          id: 1,
+          id: uid(1),
           name: "Personal",
           color: "#3d6fb6",
           transaction_count: 0,
@@ -460,7 +461,7 @@ describe("Wallets", () => {
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
-        "/api/v1/wallets/1/",
+        `/api/v1/wallets/${uid(1)}/`,
         expect.objectContaining({
           method: "PATCH",
           body: JSON.stringify({ name: "Personal", color: "#4f8a3c" }),
@@ -493,7 +494,7 @@ describe("Wallets", () => {
       await screen.findByRole("region", { name: "Portfel: Personal" }),
     ).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/v1/wallets/2/",
+      `/api/v1/wallets/${uid(2)}/`,
       expect.objectContaining({ method: "DELETE" }),
     );
   });
@@ -590,7 +591,7 @@ describe("Wallets", () => {
 
     await waitFor(() =>
       expect(fetchMock).toHaveBeenCalledWith(
-        "/api/v1/wallets/1/",
+        `/api/v1/wallets/${uid(1)}/`,
         expect.objectContaining({
           method: "PATCH",
           body: JSON.stringify({ name: "Personal", icon: null }),
@@ -618,7 +619,7 @@ describe("Wallets", () => {
     );
 
     await waitFor(() =>
-      expect(router.state.location.pathname).toBe("/expenses/2"),
+      expect(router.state.location.pathname).toBe(`/expenses/${uid(2)}`),
     );
     expect(
       await screen.findByRole("region", { name: "Portfel: Business" }),
@@ -638,7 +639,7 @@ describe("Wallets", () => {
   test("unknown wallet URL redirects to the expenses page", async () => {
     fetchMock.mockImplementation(routeByUrl({ wallets: [] }));
 
-    const { router } = renderApp("/expenses/9999");
+    const { router } = renderApp(`/expenses/${uid(9999)}`);
 
     expect(
       await screen.findByText("Brak portfeli. Utwórz pierwszy portfel."),
@@ -653,14 +654,14 @@ describe("The wallet's month", () => {
   const fetchMock = vi.fn();
 
   const food = {
-    id: 7,
+    id: uid(7),
     name: "Jedzenie",
     icon: "utensils",
     is_system: false,
     kind: "expense",
   };
   const salary = {
-    id: 8,
+    id: uid(8),
     name: "Wynagrodzenie",
     icon: "banknote",
     is_system: false,
@@ -668,7 +669,7 @@ describe("The wallet's month", () => {
   };
 
   function transaction(
-    id: number,
+    id: string,
     title: string,
     amount: string,
     date: string,
@@ -681,15 +682,15 @@ describe("The wallet's month", () => {
       date,
       description: "",
       category_id: category?.id ?? null,
-      wallet_id: 1,
+      wallet_id: uid(1),
       kind: category?.kind ?? "expense",
     };
   }
 
   const october = [
-    transaction(3, "Pensja", "5000.00", "2026-10-24", salary),
-    transaction(2, "Obiad", "40.10", "2026-10-24", food),
-    transaction(1, "Bilet", "9.90", "2026-10-02", null),
+    transaction(uid(3), "Pensja", "5000.00", "2026-10-24", salary),
+    transaction(uid(2), "Obiad", "40.10", "2026-10-24", food),
+    transaction(uid(1), "Bilet", "9.90", "2026-10-02", null),
   ];
 
   beforeEach(() => {

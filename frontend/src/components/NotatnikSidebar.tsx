@@ -33,7 +33,7 @@ import { iconClasses, smallIconButton } from "./notatnik/classes";
 
 type NotatnikSidebarProps = {
   /** The open item, highlighted and revealed in the tree; none on the Notatnik page. */
-  activeId: number | null;
+  activeId: string | null;
   /** Something fills the right side (an item, or the questions page); on small screens the tree then steps aside. */
   detailOpen?: boolean;
 };
@@ -70,12 +70,12 @@ export function NotatnikSidebar({
     .map((f) => f.id)
     .join(",");
   useEffect(() => {
-    if (activePath) expand(activePath.split(",").map(Number));
+    if (activePath) expand(activePath.split(","));
     // `expand` is a fresh function each render; the path is what matters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePath]);
 
-  async function handleCreate(kind: ItemKind, folderId: number | null = null) {
+  async function handleCreate(kind: ItemKind, folderId: string | null = null) {
     let created;
     try {
       created = await createItem.mutateAsync({ kind, folderId });
@@ -84,7 +84,7 @@ export function NotatnikSidebar({
     }
     navigate({
       to: "/whiteboard/$boardId",
-      params: { boardId: String(created.id) },
+      params: { boardId: created.id },
     });
   }
 

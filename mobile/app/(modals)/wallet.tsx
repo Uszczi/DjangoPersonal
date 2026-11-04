@@ -33,7 +33,7 @@ import { common, form } from "@/ui/classes";
  */
 export default function WalletEditorScreen() {
   const params = useLocalSearchParams<{ walletId?: string }>();
-  const walletId = params.walletId ? Number(params.walletId) : null;
+  const walletId = params.walletId ?? null;
   const { data: wallets = [] } = useWallets();
   const wallet =
     walletId === null

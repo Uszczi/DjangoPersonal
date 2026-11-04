@@ -24,7 +24,7 @@ function WalletDetailPage() {
   const { data: wallets = [], isPending: isLoading, isError } = useWallets();
   const selectWallet = useWalletSelectionStore((state) => state.selectWallet);
 
-  const wallet = wallets.find((item) => item.id === Number(walletId));
+  const wallet = wallets.find((item) => item.id === walletId);
   const activeWalletId = wallet?.id;
 
   useEffect(() => {
@@ -41,5 +41,5 @@ function WalletDetailPage() {
     return <LoadingStatus>Przekierowywanie…</LoadingStatus>;
   }
 
-  return <ExpensesPage walletId={Number(walletId)} month={month} />;
+  return <ExpensesPage walletId={walletId} month={month} />;
 }

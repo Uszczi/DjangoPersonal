@@ -14,7 +14,7 @@ export const Route = createFileRoute("/whiteboard")({
 /** One Notatnik screen: the file tree on the left, the open item (or a hint) on the right. */
 function WhiteboardLayout() {
   const { boardId } = useParams({ strict: false });
-  const activeId = boardId != null ? Number(boardId) : null;
+  const activeId = boardId ?? null;
   const asking = useLocation({
     select: (location) => location.pathname.startsWith("/whiteboard/ask"),
   });

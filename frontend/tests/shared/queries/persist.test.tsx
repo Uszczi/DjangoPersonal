@@ -9,18 +9,19 @@ import {
 import { useAuthStore } from "@personal/shared/stores/auth";
 
 import { renderApp } from "../../renderApp";
+import { uid } from "../../ids";
 
 const CACHE_KEY = "personal-query-cache";
 
 const inbox = {
-  id: 1,
+  id: uid(1),
   name: "Inbox",
   description: "",
   is_inbox: true,
   project_statuses: ["Todo", "Zrobione"],
   terminal_status: "Zrobione",
 };
-const planning = { ...inbox, id: 2, name: "Planning", is_inbox: false };
+const planning = { ...inbox, id: uid(2), name: "Planning", is_inbox: false };
 
 function jsonResponse(data: unknown) {
   return new Response(JSON.stringify(data), {

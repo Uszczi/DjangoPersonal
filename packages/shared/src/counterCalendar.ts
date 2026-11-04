@@ -20,7 +20,7 @@ export type CounterMonth = {
 
 export function counterMonths(
   counters: CounterResponse[],
-  entriesOf: (counterId: number) => CounterEntryResponse[] | undefined,
+  entriesOf: (counterId: string) => CounterEntryResponse[] | undefined,
   month: MonthKey,
 ): CounterMonth[] {
   const length = daysInMonth(month);

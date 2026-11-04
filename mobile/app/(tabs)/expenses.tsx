@@ -59,7 +59,7 @@ export default function ExpensesScreen() {
   const [month, setMonth] = useState<MonthKey>(() => monthKeyOf(new Date()));
   const [day, setDay] = useState<number | null>(null);
   // `undefined`: every Category; `null`: the uncategorised Expenses.
-  const [categoryId, setCategoryId] = useState<number | null | undefined>();
+  const [categoryId, setCategoryId] = useState<string | null | undefined>();
 
   const shownWalletId = validSelection(wallets, selectedWalletId);
   const wallet = wallets.find((item) => item.id === shownWalletId);
@@ -90,7 +90,7 @@ export default function ExpensesScreen() {
     setCategoryId(undefined);
   }
 
-  function showWallet(id: number) {
+  function showWallet(id: string) {
     selectWallet(id);
     clearFilters();
   }
@@ -135,7 +135,8 @@ export default function ExpensesScreen() {
       : [
           {
             label:
-              categoriesById.get(categoryId ?? -1)?.name ?? "Bez kategorii",
+              (categoryId === null ? undefined : categoriesById.get(categoryId))
+                ?.name ?? "Bez kategorii",
             onClear: () => setCategoryId(undefined),
           },
         ]),

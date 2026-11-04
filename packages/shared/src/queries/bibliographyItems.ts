@@ -44,7 +44,7 @@ export function useBibliographyItems(filters: BibliographyItemFilters = {}) {
   });
 }
 
-export const bibliographyItemQuery = (itemId: number) =>
+export const bibliographyItemQuery = (itemId: string) =>
   queryOptions({
     queryKey: bibliographyItemKeys.detail(itemId),
     queryFn: ({ signal }) =>
@@ -55,10 +55,10 @@ export const bibliographyItemQuery = (itemId: number) =>
  * One item with its status; `null` waits for an id. A cached list's copy is
  * shown while it loads, so opening an item from the list is instant.
  */
-export function useBibliographyItem(itemId: number | null) {
+export function useBibliographyItem(itemId: string | null) {
   const queryClient = useQueryClient();
   return useQuery({
-    ...bibliographyItemQuery(itemId ?? 0),
+    ...bibliographyItemQuery(itemId ?? ""),
     enabled: itemId !== null,
     placeholderData: () => {
       for (const [, list] of queryClient.getQueriesData<
@@ -116,7 +116,7 @@ export function useUpdateBibliographyItem() {
       id,
       changes,
     }: {
-      id: number;
+      id: string;
       changes: PatchedBibliographyItemRequest;
     }) =>
       api.bibliographyItemsPartialUpdate({
@@ -141,7 +141,7 @@ export function useUpdateBibliographyItem() {
 export function useDeleteBibliographyItem() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => api.bibliographyItemsDestroy({ id }),
+    mutationFn: (id: string) => api.bibliographyItemsDestroy({ id }),
     onSuccess: (_, id) => {
       queryClient.setQueriesData<BibliographyItemResponse[]>(
         { queryKey: bibliographyItemKeys.lists },

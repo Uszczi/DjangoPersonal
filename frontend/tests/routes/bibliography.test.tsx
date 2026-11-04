@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { renderApp } from "../renderApp";
+import { UID, uid } from "../ids";
 
 /** Opens the Filtry dialog unless it is open already, and returns it. */
 async function filtersDialog() {
@@ -24,7 +25,7 @@ async function inFilters(name: string) {
 type Outcome = "in_progress" | "finished" | "abandoned";
 
 type BibliographyItem = {
-  id: number;
+  id: string;
   kind: "film" | "book" | "series";
   title: string;
   creator: string;
@@ -36,8 +37,8 @@ type BibliographyItem = {
 };
 
 type Attempt = {
-  id: number;
-  item_id: number;
+  id: string;
+  item_id: string;
   outcome: Outcome;
   started_on: string | null;
   ended_on: string | null;
@@ -57,7 +58,7 @@ function latestFirst(attempts: Attempt[]) {
   const rank = (p: Attempt) =>
     p.outcome === "in_progress" ? "9999-99-99" : (p.ended_on ?? "");
   return [...attempts].sort(
-    (a, b) => rank(b).localeCompare(rank(a)) || b.id - a.id,
+    (a, b) => rank(b).localeCompare(rank(a)) || b.id.localeCompare(a.id),
   );
 }
 
@@ -97,7 +98,7 @@ function fakeBackend(
           length: null,
           note: "",
           ...body,
-          id: nextId++,
+          id: uid(nextId++),
           title: body.title.trim(),
           status: "planned",
           created_at: "2026-10-29T10:00:00Z",
@@ -118,9 +119,9 @@ function fakeBackend(
           ),
       );
     }
-    const itemMatch = path.match(/\/bibliography-items\/(\d+)\/$/);
+    const itemMatch = path.match(new RegExp(`/bibliography-items/(${UID})/$`));
     if (itemMatch) {
-      const item = items.find((item) => item.id === Number(itemMatch[1]));
+      const item = items.find((item) => item.id === itemMatch[1]);
       if (!item)
         return jsonResponse({ detail: "BibliographyItem not found." }, 404);
       if (method === "DELETE") {
@@ -137,15 +138,17 @@ function fakeBackend(
     if (path.endsWith("/bibliography-attempts/") && method === "GET") {
       return jsonResponse(latestFirst(attempts));
     }
-    const listMatch = path.match(/\/bibliography-attempts\/\?item=(\d+)$/);
+    const listMatch = path.match(
+      new RegExp(`/bibliography-attempts/\\?item=(${UID})$`),
+    );
     if (listMatch) {
       return jsonResponse(
-        latestFirst(attempts.filter((p) => p.item_id === Number(listMatch[1]))),
+        latestFirst(attempts.filter((p) => p.item_id === listMatch[1])),
       );
     }
     if (path.endsWith("/bibliography-attempts/") && method === "POST") {
       const attempt: Attempt = {
-        id: nextId++,
+        id: uid(nextId++),
         item_id: body.item,
         outcome: body.outcome,
         started_on: body.started_on ?? null,
@@ -156,19 +159,17 @@ function fakeBackend(
       attempts.push(attempt);
       return jsonResponse(attempt, 201);
     }
-    const attemptMatch = path.match(/\/bibliography-attempts\/(\d+)\/$/);
+    const attemptMatch = path.match(
+      new RegExp(`/bibliography-attempts/(${UID})/$`),
+    );
     if (attemptMatch && method === "DELETE") {
-      const index = attempts.findIndex(
-        (item) => item.id === Number(attemptMatch[1]),
-      );
+      const index = attempts.findIndex((item) => item.id === attemptMatch[1]);
       if (index < 0) return jsonResponse({ detail: "Not found." }, 404);
       attempts.splice(index, 1);
       return new Response(null, { status: 204 });
     }
     if (attemptMatch && method === "PATCH") {
-      const attempt = attempts.find(
-        (item) => item.id === Number(attemptMatch[1]),
-      );
+      const attempt = attempts.find((item) => item.id === attemptMatch[1]);
       if (!attempt) return jsonResponse({ detail: "Not found." }, 404);
       Object.assign(attempt, body);
       if (attempt.outcome !== "in_progress") attempt.progress = null;
@@ -180,7 +181,7 @@ function fakeBackend(
 }
 
 const lalka: BibliographyItem = {
-  id: 1,
+  id: uid(1),
   kind: "book",
   title: "Lalka",
   creator: "Bolesław Prus",
@@ -193,7 +194,7 @@ const lalka: BibliographyItem = {
 
 const rejs: BibliographyItem = {
   ...lalka,
-  id: 2,
+  id: uid(2),
   kind: "film",
   title: "Rejs",
   creator: "",
@@ -202,7 +203,7 @@ const rejs: BibliographyItem = {
 
 function attempt(fields: Partial<Attempt>): Attempt {
   return {
-    id: 50,
+    id: uid(50),
     item_id: lalka.id,
     outcome: "finished",
     started_on: null,
@@ -271,8 +272,8 @@ describe("Bibliography", () => {
       fakeBackend(
         [rejs, lalka],
         [
-          attempt({ id: 51, item_id: lalka.id, ended_on: "2025-05-10" }),
-          attempt({ id: 52, item_id: lalka.id, ended_on: "2026-02-01" }),
+          attempt({ id: uid(51), item_id: lalka.id, ended_on: "2025-05-10" }),
+          attempt({ id: uid(52), item_id: lalka.id, ended_on: "2026-02-01" }),
         ],
       ).handler,
     );
@@ -325,7 +326,7 @@ describe("Bibliography", () => {
     fetchMock.mockImplementation(
       fakeBackend(
         [rejs, lalka],
-        [attempt({ id: 51, item_id: lalka.id, ended_on: "2025-05-10" })],
+        [attempt({ id: uid(51), item_id: lalka.id, ended_on: "2025-05-10" })],
       ).handler,
     );
     const user = userEvent.setup();
@@ -366,9 +367,9 @@ describe("Bibliography", () => {
       fakeBackend(
         [lalka],
         [
-          attempt({ id: 51, item_id: lalka.id, ended_on: "2025-05-10" }),
-          attempt({ id: 52, item_id: lalka.id, ended_on: "2026-02-01" }),
-          attempt({ id: 53, item_id: lalka.id, ended_on: "2026-03-15" }),
+          attempt({ id: uid(51), item_id: lalka.id, ended_on: "2025-05-10" }),
+          attempt({ id: uid(52), item_id: lalka.id, ended_on: "2026-02-01" }),
+          attempt({ id: uid(53), item_id: lalka.id, ended_on: "2026-03-15" }),
         ],
       ).handler,
     );
@@ -536,7 +537,7 @@ describe("Bibliography", () => {
   test("an unknown BibliographyItem leads back to the list", async () => {
     fetchMock.mockImplementation(fakeBackend([lalka]).handler);
 
-    renderApp("/bibliography/999");
+    renderApp(`/bibliography/${uid(999)}`);
 
     const list = await screen.findByRole("list", { name: "Pozycje" });
     expect(within(list).getByText("Lalka")).toBeInTheDocument();
@@ -547,7 +548,7 @@ describe("Bibliography", () => {
     fetchMock.mockImplementation(backend.handler);
     const user = userEvent.setup();
 
-    renderApp("/bibliography/1");
+    renderApp(`/bibliography/${uid(1)}`);
     await user.click(
       await screen.findByRole("button", { name: "Edytuj pozycję" }),
     );
@@ -575,7 +576,7 @@ describe("Bibliography", () => {
     fetchMock.mockImplementation(backend.handler);
     const user = userEvent.setup();
 
-    renderApp("/bibliography/1");
+    renderApp(`/bibliography/${uid(1)}`);
     await user.click(await screen.findByRole("button", { name: "Zacznij" }));
     const startDialog = screen.getByRole("dialog");
     expect(within(startDialog).getByLabelText("Data rozpoczęcia")).toHaveValue(
@@ -612,7 +613,7 @@ describe("Bibliography", () => {
       (r) => r.path.includes("/bibliography-attempts/") && r.method !== "GET",
     );
     expect(start.body).toEqual({
-      item: 1,
+      item: uid(1),
       outcome: "in_progress",
       started_on: "2026-10-20",
       ended_on: null,
@@ -632,7 +633,7 @@ describe("Bibliography", () => {
     );
     const user = userEvent.setup();
 
-    renderApp("/bibliography/1");
+    renderApp(`/bibliography/${uid(1)}`);
     await user.click(await screen.findByRole("button", { name: "Porzuć" }));
     const dialog = screen.getByRole("dialog");
     await user.clear(within(dialog).getByLabelText("Data zakończenia"));
@@ -652,7 +653,7 @@ describe("Bibliography", () => {
     fetchMock.mockImplementation(backend.handler);
     const user = userEvent.setup();
 
-    renderApp("/bibliography/2");
+    renderApp(`/bibliography/${uid(2)}`);
     await user.click(
       await screen.findByRole("button", { name: "Dodaj ukończone" }),
     );
@@ -672,7 +673,7 @@ describe("Bibliography", () => {
       (r) => r.path.includes("/bibliography-attempts/") && r.method === "POST",
     );
     expect(created?.body).toEqual({
-      item: 2,
+      item: uid(2),
       outcome: "finished",
       started_on: null,
       ended_on: "2026-10-28",
@@ -684,7 +685,7 @@ describe("Bibliography", () => {
     fetchMock.mockImplementation(backend.handler);
     const user = userEvent.setup();
 
-    renderApp("/bibliography/1");
+    renderApp(`/bibliography/${uid(1)}`);
     await user.click(
       await screen.findByRole("button", { name: "Dodaj ukończone" }),
     );
@@ -717,14 +718,14 @@ describe("Bibliography", () => {
     const backend = fakeBackend(
       [lalka],
       [
-        attempt({ id: 51, outcome: "finished", ended_on: "2026-03-01" }),
-        attempt({ id: 52, outcome: "abandoned", ended_on: "2019-05-01" }),
+        attempt({ id: uid(51), outcome: "finished", ended_on: "2026-03-01" }),
+        attempt({ id: uid(52), outcome: "abandoned", ended_on: "2019-05-01" }),
       ],
     );
     fetchMock.mockImplementation(backend.handler);
     const user = userEvent.setup();
 
-    renderApp("/bibliography/1");
+    renderApp(`/bibliography/${uid(1)}`);
     const history = await screen.findByRole("list", { name: "Podejścia" });
     const [first, second] = within(history).getAllByRole("listitem");
     expect(within(first).getByText("Ukończone")).toBeInTheDocument();
@@ -747,7 +748,8 @@ describe("Bibliography", () => {
     ).toBeInTheDocument();
     const patch = backend.requests.find(
       (r) =>
-        r.path.includes("/bibliography-attempts/52/") && r.method === "PATCH",
+        r.path.includes(`/bibliography-attempts/${uid(52)}/`) &&
+        r.method === "PATCH",
     );
     expect(patch?.body).toEqual({
       started_on: "2019-04-01",
@@ -756,11 +758,11 @@ describe("Bibliography", () => {
   });
 
   test("user can delete a BibliographyItem and lands back on the list", async () => {
-    const backend = fakeBackend([lalka, rejs], [attempt({ id: 51 })]);
+    const backend = fakeBackend([lalka, rejs], [attempt({ id: uid(51) })]);
     fetchMock.mockImplementation(backend.handler);
     const user = userEvent.setup();
 
-    renderApp("/bibliography/1");
+    renderApp(`/bibliography/${uid(1)}`);
     await user.click(
       await screen.findByRole("button", { name: "Usuń pozycję" }),
     );
@@ -776,7 +778,8 @@ describe("Bibliography", () => {
     expect(
       backend.requests.some(
         (r) =>
-          r.path.includes("/bibliography-items/1/") && r.method === "DELETE",
+          r.path.includes(`/bibliography-items/${uid(1)}/`) &&
+          r.method === "DELETE",
       ),
     ).toBe(true);
   });
@@ -785,14 +788,14 @@ describe("Bibliography", () => {
     const backend = fakeBackend(
       [lalka],
       [
-        attempt({ id: 51, outcome: "abandoned", ended_on: "2026-03-01" }),
-        attempt({ id: 52, outcome: "finished", ended_on: "2019-05-01" }),
+        attempt({ id: uid(51), outcome: "abandoned", ended_on: "2026-03-01" }),
+        attempt({ id: uid(52), outcome: "finished", ended_on: "2019-05-01" }),
       ],
     );
     fetchMock.mockImplementation(backend.handler);
     const user = userEvent.setup();
 
-    renderApp("/bibliography/1");
+    renderApp(`/bibliography/${uid(1)}`);
     const history = await screen.findByRole("list", { name: "Podejścia" });
     expect(screen.getByLabelText("Status")).toHaveTextContent("Porzucone");
     const [latest] = within(history).getAllByRole("listitem");
@@ -821,7 +824,7 @@ describe("Bibliography", () => {
     fetchMock.mockImplementation(backend.handler);
     const user = userEvent.setup();
 
-    renderApp("/bibliography/1");
+    renderApp(`/bibliography/${uid(1)}`);
     await user.click(await screen.findByRole("button", { name: "Postęp" }));
     const dialog = screen.getByRole("dialog");
     await user.type(within(dialog).getByLabelText("Strona"), "170");
@@ -833,7 +836,8 @@ describe("Bibliography", () => {
     expect(screen.getByLabelText("Status")).toHaveTextContent("W trakcie");
     const patch = backend.requests.find(
       (r) =>
-        r.path.includes("/bibliography-attempts/50/") && r.method === "PATCH",
+        r.path.includes(`/bibliography-attempts/${uid(50)}/`) &&
+        r.method === "PATCH",
     );
     expect(patch?.body).toEqual({ progress: 170 });
   });
@@ -853,7 +857,7 @@ describe("Bibliography", () => {
       ).handler,
     );
 
-    renderApp("/bibliography/2");
+    renderApp(`/bibliography/${uid(2)}`);
 
     expect(await screen.findByLabelText("Postęp")).toHaveTextContent(
       /^Minuta 45$/,
@@ -868,7 +872,7 @@ describe("Bibliography", () => {
     fetchMock.mockImplementation(backend.handler);
     const user = userEvent.setup();
 
-    renderApp("/bibliography/1");
+    renderApp(`/bibliography/${uid(1)}`);
     await user.click(await screen.findByRole("button", { name: "Postęp" }));
     const dialog = screen.getByRole("dialog");
     const field = within(dialog).getByLabelText("Strona");
@@ -888,7 +892,7 @@ describe("Bibliography", () => {
       fakeBackend([lalka], [attempt({ outcome: "finished" })]).handler,
     );
 
-    renderApp("/bibliography/1");
+    renderApp(`/bibliography/${uid(1)}`);
 
     expect(
       await screen.findByRole("list", { name: "Podejścia" }),
@@ -900,19 +904,23 @@ describe("Bibliography", () => {
   });
 
   describe("filters", () => {
-    const chlopi: BibliographyItem = { ...lalka, id: 3, title: "Chłopi" };
-    const seksmisja: BibliographyItem = { ...rejs, id: 4, title: "Seksmisja" };
+    const chlopi: BibliographyItem = { ...lalka, id: uid(3), title: "Chłopi" };
+    const seksmisja: BibliographyItem = {
+      ...rejs,
+      id: uid(4),
+      title: "Seksmisja",
+    };
     const shelf = () =>
       fakeBackend(
         [seksmisja, chlopi, rejs, lalka],
         [
           attempt({
-            id: 61,
+            id: uid(61),
             item_id: chlopi.id,
             outcome: "in_progress",
             ended_on: null,
           }),
-          attempt({ id: 62, item_id: rejs.id, outcome: "finished" }),
+          attempt({ id: uid(62), item_id: rejs.id, outcome: "finished" }),
         ],
       );
 

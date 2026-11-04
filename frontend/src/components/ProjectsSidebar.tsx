@@ -9,7 +9,7 @@ const toggleButtonClasses =
   "inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md border bg-transparent text-[20px] leading-none text-nav-text transition-colors hover:border-nav-line-strong hover:bg-nav-selected";
 
 type ProjectNavListProps = {
-  selectedProjectId: number | null;
+  selectedProjectId: string | null;
   /** `dark` on the deep-ink sidebar, `light` in the mobile drawer. */
   tone: "dark" | "light";
   /** Called after a project is picked, e.g. to close the drawer. */
@@ -68,7 +68,7 @@ export function ProjectNavList({
 }
 
 type ProjectsSidebarProps = {
-  selectedProjectId: number | null;
+  selectedProjectId: string | null;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
 };

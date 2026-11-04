@@ -84,12 +84,12 @@ export function CountersCalendar({
 
 /** The month as one grid; the legend hides Counters, a day opens its sums. */
 function MonthGrid({ months, month, todayDay }: MonthProps) {
-  const [hidden, setHidden] = useState<ReadonlySet<number>>(new Set());
+  const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
   const [selected, setSelected] = useState<number | null>(null);
   const shown = months.filter(({ counter }) => !hidden.has(counter.id));
   const days = Array.from({ length: daysInMonth(month) }, (_, i) => i + 1);
 
-  function toggle(id: number) {
+  function toggle(id: string) {
     setHidden((current) => {
       const next = new Set(current);
       if (!next.delete(id)) next.add(id);

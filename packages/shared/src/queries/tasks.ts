@@ -13,12 +13,13 @@ import { useCallback } from "react";
 
 import { api } from "../api";
 import type { ProjectResponse, TaskResponse } from "../generated/api";
+import { compareIds } from "../ids";
 import { projectKeys, taskKeys } from "./keys";
 
 export type TaskInput = {
   title: string;
   description: string;
-  project: number;
+  project: string;
   status?: string;
 };
 
@@ -34,14 +35,13 @@ export function orderTasks(tasks: TaskResponse[], statuses: string[]) {
   return [...tasks].sort((left, right) => {
     const byStatus = statusIndex(left) - statusIndex(right);
     if (byStatus !== 0) return byStatus;
-    const leftPosition = left.position ?? left.id;
-    const rightPosition = right.position ?? right.id;
-    if (leftPosition !== rightPosition) return leftPosition - rightPosition;
-    return left.id - right.id;
+    const byPosition = (left.position ?? 0) - (right.position ?? 0);
+    if (byPosition !== 0) return byPosition;
+    return compareIds(left.id, right.id);
   });
 }
 
-export const projectTasksQuery = (projectId: number) =>
+export const projectTasksQuery = (projectId: string) =>
   queryOptions({
     queryKey: taskKeys.project(projectId),
     queryFn: ({ signal }) => api.tasksList({ project: projectId }, { signal }),
@@ -63,7 +63,7 @@ export function useProjectTasks(project: ProjectResponse | null) {
     [statuses],
   );
   return useQuery({
-    ...projectTasksQuery(project?.id ?? 0),
+    ...projectTasksQuery(project?.id ?? ""),
     enabled: project !== null,
     select,
   });
@@ -76,7 +76,7 @@ export function useAllTasks() {
 /** Change one Project's cached list, if it is loaded. */
 export function updateProjectTasks(
   queryClient: QueryClient,
-  projectId: number,
+  projectId: string,
   update: (tasks: TaskResponse[]) => TaskResponse[],
 ) {
   queryClient.setQueryData(
@@ -162,8 +162,7 @@ export function moveTaskInList(
   status: string = task.status,
 ): TaskResponse[] {
   const byPosition = (left: TaskResponse, right: TaskResponse) =>
-    (left.position ?? left.id) - (right.position ?? right.id) ||
-    left.id - right.id;
+    (left.position ?? 0) - (right.position ?? 0) || compareIds(left.id, right.id);
   const group = tasks
     .filter((item) => item.status === status && item.id !== task.id)
     .sort(byPosition);
