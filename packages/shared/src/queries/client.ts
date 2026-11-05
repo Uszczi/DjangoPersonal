@@ -6,6 +6,7 @@ import { QueryClient } from "@tanstack/react-query";
 
 import { useAuthStore } from "../stores/auth";
 import { CACHE_MAX_AGE_MS } from "./persist";
+import { registerTimerWrites } from "./timer";
 
 /**
  * A fresh-enough window: a page shown again within it reuses the cache
@@ -21,6 +22,10 @@ export function createQueryClient(): QueryClient {
       queries: { staleTime: STALE_TIME_MS, gcTime: CACHE_MAX_AGE_MS },
     },
   });
+
+  // The Outbox writes, registered by key so writes restored after a restart
+  // find their functions (`outbox.ts`).
+  registerTimerWrites(queryClient);
 
   // The cache holds one account's data: drop it when that account signs out or
   // another signs in, so nobody sees the previous user's data. A token refresh

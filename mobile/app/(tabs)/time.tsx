@@ -1,3 +1,4 @@
+import { onlineManager } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { RefreshControl, ScrollView, Text, View } from "react-native";
 
@@ -75,7 +76,8 @@ export default function TimeScreen() {
 
   async function refresh() {
     setIsRefreshing(true);
-    await reload();
+    // Offline the refetches would wait for a connection, and the spinner with them.
+    if (onlineManager.isOnline()) await reload();
     setNowTick(Date.now());
     setIsRefreshing(false);
   }

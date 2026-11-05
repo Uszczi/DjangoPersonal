@@ -71,4 +71,6 @@ export const persistOptions: PersistQueryClientProviderProps["persistOptions"] =
     }),
     maxAge: CACHE_MAX_AGE_MS,
     buster: CACHE_VERSION,
+    // Pending writes are saved apart, without the 24-hour limit (`outbox.ts`).
+    dehydrateOptions: { shouldDehydrateMutation: () => false },
   };

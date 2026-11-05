@@ -8,11 +8,14 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
+import { onlineManager } from "@tanstack/react-query";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
+import { useOutboxErrorsStore } from "@personal/shared/stores/outboxErrors";
+
 import { renderApp } from "../renderApp";
-import { uid } from "../ids";
+import { UID, uid } from "../ids";
 
 const inbox = {
   id: uid(1),
@@ -69,6 +72,25 @@ function entryPayload(
   };
 }
 
+/**
+ * A timer Start's body: `fields`, plus the new entry's id and the moment it
+ * was pressed, both made on the device (so a Start can wait offline).
+ */
+function startBody(fields: Record<string, unknown>) {
+  return {
+    asymmetricMatch(actual: unknown) {
+      if (typeof actual !== "string") return false;
+      const { id, at, ...rest } = JSON.parse(actual) as Record<string, unknown>;
+      return (
+        typeof id === "string" &&
+        typeof at === "string" &&
+        JSON.stringify(rest) === JSON.stringify(fields)
+      );
+    },
+    toString: () => `startBody(${JSON.stringify(fields)})`,
+  };
+}
+
 function requestUrl(input: RequestInfo | URL) {
   return typeof input === "string"
     ? input
@@ -96,6 +118,8 @@ describe("Time tracking", () => {
   afterEach(() => {
     cleanup();
     vi.unstubAllGlobals();
+    onlineManager.setOnline(true);
+    useOutboxErrorsStore.setState({ message: null });
   });
 
   test("user can open the timer page and sees its sections", async () => {
@@ -243,7 +267,7 @@ describe("Time tracking", () => {
       "/api/v1/timer/start/",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ title: planningTask.title }),
+        body: startBody({ title: planningTask.title }),
       }),
     );
   });
@@ -285,7 +309,7 @@ describe("Time tracking", () => {
       "/api/v1/timer/start/",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ task: task.id }),
+        body: startBody({ task: task.id }),
       }),
     );
 
@@ -683,16 +707,19 @@ describe("Time tracking", () => {
     );
     expect(fetchMock).toHaveBeenLastCalledWith(
       "/api/v1/timer/start/",
-      expect.objectContaining({ body: JSON.stringify({ task: task.id }) }),
+      expect.objectContaining({ body: startBody({ task: task.id }) }),
     );
 
     await user.click(
       screen.getByRole("button", { name: "Wznów: Code review" }),
     );
-    expect(fetchMock).toHaveBeenLastCalledWith(
-      "/api/v1/timer/start/",
+    // The second Start ends the first timer, so the entries are read again.
+    const starts = fetchMock.mock.calls.filter(
+      ([input]) => requestUrl(input as RequestInfo) === "/api/v1/timer/start/",
+    );
+    expect(starts.at(-1)?.[1]).toEqual(
       expect.objectContaining({
-        body: JSON.stringify({ title: "Code review" }),
+        body: startBody({ title: "Code review" }),
       }),
     );
     expect(
@@ -836,7 +863,7 @@ describe("Time tracking", () => {
       "/api/v1/timer/start/",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ title: "Plan release" }),
+        body: startBody({ title: "Plan release" }),
       }),
     );
   });
@@ -899,7 +926,7 @@ describe("Time tracking", () => {
       "/api/v1/timer/start/",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ title: "Deep work", duration_minutes: 25 }),
+        body: startBody({ title: "Deep work", duration_minutes: 25 }),
       }),
     );
   });
@@ -1028,5 +1055,154 @@ describe("Time tracking", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  describe("offline", () => {
+    type Sent = {
+      url: string;
+      body: Record<string, unknown>;
+      key: string | null;
+    };
+
+    /** A server that records the timer writes it gets; `refuse` answers them 400. */
+    function serveTimer(sent: Sent[], refuse = false) {
+      fetchMock.mockImplementation(
+        (input: RequestInfo | URL, init?: RequestInit) => {
+          const url = requestUrl(input);
+          if (url === "/api/v1/projects/")
+            return Promise.resolve(jsonResponse([inbox]));
+          if (url === "/api/v1/timer/")
+            return Promise.resolve(timerResponse(null));
+          if (url === "/api/v1/time-entries/")
+            return Promise.resolve(jsonResponse([]));
+          if (url === "/api/v1/tasks/?all=true")
+            return Promise.resolve(jsonResponse([task]));
+          if (url === "/api/v1/timer/start/" || url === "/api/v1/timer/stop/") {
+            const body = JSON.parse(String(init?.body ?? "{}")) as Record<
+              string,
+              unknown
+            >;
+            const headers = new Headers(init?.headers);
+            sent.push({ url, body, key: headers.get("Idempotency-Key") });
+            if (refuse)
+              return Promise.resolve(
+                jsonResponse(
+                  { detail: "This action is more than 7 days old." },
+                  400,
+                ),
+              );
+            const entry = {
+              id: body.id ?? body.entry,
+              task_id: null,
+              title: "Offline work",
+              start: "2026-10-15T11:00:00Z",
+              end: url.endsWith("stop/") ? body.at : null,
+            };
+            return Promise.resolve(timerResponse(entry));
+          }
+          return Promise.reject(new Error(`Unexpected request: ${url}`));
+        },
+      );
+    }
+
+    async function startOffline() {
+      const user = userEvent.setup();
+      renderApp("/timer");
+      const timerSection = await screen.findByRole("region", {
+        name: "Bieżący timer",
+      });
+      act(() => onlineManager.setOnline(false));
+      await user.type(
+        within(timerSection).getByLabelText("Zadanie"),
+        "Offline work",
+      );
+      await user.click(
+        within(timerSection).getByRole("button", { name: "Rozpocznij timer" }),
+      );
+      return { user, timerSection };
+    }
+
+    test("a timer started offline runs at once and is sent once back online", async () => {
+      const sent: Sent[] = [];
+      serveTimer(sent);
+
+      const { timerSection } = await startOffline();
+
+      expect(
+        await screen.findByRole("button", { name: "Zatrzymaj timer" }),
+      ).toBeInTheDocument();
+      expect(timerSection).toHaveTextContent("Offline work");
+      expect(within(timerSection).getByRole("status")).toHaveTextContent(
+        "Offline · 1 zmiana czeka na wysłanie",
+      );
+      expect(sent).toEqual([]);
+
+      act(() => onlineManager.setOnline(true));
+
+      await waitFor(() => expect(sent).toHaveLength(1));
+      expect(sent[0].body).toMatchObject({ title: "Offline work" });
+      expect(sent[0].key).toMatch(new RegExp(`^${UID}$`));
+      await waitFor(() =>
+        expect(
+          within(timerSection).queryByRole("status"),
+        ).not.toBeInTheDocument(),
+      );
+      expect(
+        screen.getByRole("button", { name: "Zatrzymaj timer" }),
+      ).toBeInTheDocument();
+    });
+
+    test("a Start and a Stop made offline are sent in order, naming the same entry", async () => {
+      const sent: Sent[] = [];
+      serveTimer(sent);
+      const { user, timerSection } = await startOffline();
+
+      await user.click(
+        await screen.findByRole("button", { name: "Zatrzymaj timer" }),
+      );
+
+      expect(
+        await within(timerSection).findByRole("button", {
+          name: "Rozpocznij timer",
+        }),
+      ).toBeInTheDocument();
+      expect(within(timerSection).getByRole("status")).toHaveTextContent(
+        "Offline · 2 zmiany czekają na wysłanie",
+      );
+
+      act(() => onlineManager.setOnline(true));
+
+      await waitFor(() => expect(sent).toHaveLength(2));
+      const [start, stop] = sent;
+      expect(start.url).toBe("/api/v1/timer/start/");
+      expect(stop.url).toBe("/api/v1/timer/stop/");
+      expect(stop.body.entry).toBe(start.body.id);
+      expect(start.key).not.toBe(stop.key);
+      await waitFor(() =>
+        expect(
+          within(timerSection).queryByRole("status"),
+        ).not.toBeInTheDocument(),
+      );
+    });
+
+    test("a queued Start the server refuses is undone and explained", async () => {
+      const sent: Sent[] = [];
+      serveTimer(sent, true);
+      const { timerSection } = await startOffline();
+      await screen.findByRole("button", { name: "Zatrzymaj timer" });
+
+      act(() => onlineManager.setOnline(true));
+
+      expect(
+        await within(timerSection).findByText(
+          "Zmiana wysłana później nie została zapisana: This action is more than 7 days old.",
+        ),
+      ).toBeInTheDocument();
+      expect(
+        await within(timerSection).findByRole("button", {
+          name: "Rozpocznij timer",
+        }),
+      ).toBeInTheDocument();
+    });
   });
 });

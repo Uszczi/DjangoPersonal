@@ -48,6 +48,17 @@ export const timerKeys = {
   titles: (search: string) => ["timeEntries", "titles", search] as const,
 };
 
+/**
+ * The Running timer's Outbox writes. Mutation keys, not query keys: each is
+ * registered once (`registerTimerWrites`) so a write restored after a
+ * restart finds its function.
+ */
+export const timerWriteKeys = {
+  start: ["timer", "start"] as const,
+  stop: ["timer", "stop"] as const,
+  discard: ["timer", "discard"] as const,
+};
+
 export const walletKeys = {
   all: ["wallets"] as const,
 };

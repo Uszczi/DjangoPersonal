@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 from http import HTTPStatus
 from typing import Any
+from uuid import uuid7
 
 import pytest
 
@@ -212,3 +213,38 @@ def test_starting_after_an_expired_timer_closes_it_at_its_limit(
 
     entries = api_client.get(f"/api/v1/time-entries/?task={first['id']}").json()
     assert datetime.fromisoformat(entries[0]['end']) == FIXED_NOW + timedelta(minutes=5)
+
+
+def test_a_start_sent_late_carries_its_id_and_moment(post_json: Any, fixed_clock: Any) -> None:
+    pressed = FIXED_NOW - timedelta(minutes=40)
+    entry_id = str(uuid7())
+
+    response = post_json(
+        '/api/v1/timer/start/', {'id': entry_id, 'title': 'Raport', 'at': pressed.isoformat()}
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    entry = response.json()['entry']
+    assert entry['id'] == entry_id
+    assert datetime.fromisoformat(entry['start']) == pressed
+
+
+def test_a_stop_sent_late_names_its_entry_and_moment(post_json: Any, fixed_clock: Any) -> None:
+    started = post_json(
+        '/api/v1/timer/start/',
+        {'title': 'Raport', 'at': (FIXED_NOW - timedelta(hours=1)).isoformat()},
+    ).json()['entry']
+    pressed = FIXED_NOW - timedelta(minutes=20)
+
+    response = post_json(
+        '/api/v1/timer/stop/', {'entry': started['id'], 'at': pressed.isoformat()}
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    assert datetime.fromisoformat(response.json()['entry']['end']) == pressed
+
+
+def test_a_moment_without_a_time_zone_is_refused(post_json: Any, fixed_clock: Any) -> None:
+    response = post_json('/api/v1/timer/start/', {'title': 'Raport', 'at': '2026-10-15T11:00:00'})
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY

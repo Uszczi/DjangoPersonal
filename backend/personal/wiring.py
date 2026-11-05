@@ -33,6 +33,7 @@ from personal.infra.repo import (
     CounterEntryRepository,
     CounterRepository,
     FolderRepository,
+    IdempotencyKeyRepository,
     MobileSettingsRepository,
     NoteChunkRepository,
     ProjectRepository,
@@ -79,6 +80,10 @@ def comment_attachment_repository(session: Session) -> CommentAttachmentReposito
 
 def time_entry_repository(session: Session) -> TimeEntryRepository:
     return TimeEntryRepository(session)
+
+
+def idempotency_key_repository(session: Session) -> IdempotencyKeyRepository:
+    return IdempotencyKeyRepository(session)
 
 
 def whiteboard_repository(session: Session) -> WhiteboardRepository:

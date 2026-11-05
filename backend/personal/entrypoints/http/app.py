@@ -22,6 +22,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from personal import wiring
 from personal.entrypoints.http import ops
 from personal.entrypoints.http.errors import register_fastapi_error_handlers
+from personal.entrypoints.http.idempotency import IdempotencyMiddleware
 from personal.entrypoints.http.metrics import BUILD_INFO
 from personal.entrypoints.http.routers import router as api_router
 from personal.infra import tracing
@@ -91,6 +92,8 @@ def create_app(
     app.include_router(ops.router)
     app.include_router(api_router, prefix=API_PREFIX)
 
+    # Inside the metrics, so a replayed answer is counted like any other.
+    app.add_middleware(IdempotencyMiddleware)
     app.add_middleware(ops.MetricsMiddleware)
     # Added last, so it runs first: the allowed-hosts check. Requests for
     # a foreign host are refused before routing and stay out of the metrics.

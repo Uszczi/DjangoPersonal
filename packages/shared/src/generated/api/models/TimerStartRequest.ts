@@ -13,13 +13,17 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { mapValues, parseDate, parseDateTime, serializeDate, serializeDateTime } from '../runtime';
 /**
  *
  * @export
  * @interface TimerStartRequest
  */
 export interface TimerStartRequest {
+    /**
+     *
+     */
+    id?: string | null;
     /**
      *
      */
@@ -32,6 +36,10 @@ export interface TimerStartRequest {
      *
      */
     durationMinutes?: number | null;
+    /**
+     *
+     */
+    at?: Date | null;
 }
 
 /**
@@ -51,9 +59,11 @@ export function TimerStartRequestFromJSONTyped(json: any, ignoreDiscriminator: b
     }
     return {
 
+        'id': json['id'] === undefined ? undefined : json['id'] === null ? null : json['id'],
         'task': json['task'] === undefined ? undefined : json['task'] === null ? null : json['task'],
         'title': json['title'] == null ? undefined : json['title'],
         'durationMinutes': json['duration_minutes'] === undefined ? undefined : json['duration_minutes'] === null ? null : json['duration_minutes'],
+        'at': json['at'] === undefined ? undefined : json['at'] === null ? null : (parseDateTime(json['at'])),
     };
 }
 
@@ -68,9 +78,11 @@ export function TimerStartRequestToJSONTyped(value?: TimerStartRequest | null, i
 
     return {
 
+        'id': value['id'],
         'task': value['task'],
         'title': value['title'],
         'duration_minutes': value['durationMinutes'],
+        'at': value['at'] == null ? value['at'] : serializeDateTime(value['at']),
     };
 }
 

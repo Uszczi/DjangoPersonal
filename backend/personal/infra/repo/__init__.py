@@ -8,7 +8,9 @@ from .errors import (
     AttemptAlreadyInProgress,
     DuplicateCategoryName,
     DuplicateFolderName,
+    DuplicateIdempotencyKey,
     DuplicateProjectName,
+    DuplicateTimeEntryId,
     DuplicateUsername,
     DuplicateWalletName,
     DuplicateWhiteboardName,
@@ -19,6 +21,7 @@ from .errors import (
     TaskHasTimeEntries,
 )
 from .folders import FolderRepository
+from .idempotency_keys import IdempotencyKeyRepository
 from .mobile_settings import MobileSettingsRepository
 from .note_chunks import NoteChunkRepository, ScoredChunk
 from .projects import ProjectRepository
@@ -41,11 +44,14 @@ __all__ = [
     'CounterRepository',
     'DuplicateCategoryName',
     'DuplicateFolderName',
+    'DuplicateIdempotencyKey',
     'DuplicateProjectName',
+    'DuplicateTimeEntryId',
     'DuplicateUsername',
     'DuplicateWalletName',
     'DuplicateWhiteboardName',
     'FolderRepository',
+    'IdempotencyKeyRepository',
     'InboxProtected',
     'InvalidFolderName',
     'MobileSettingsRepository',

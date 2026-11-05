@@ -51,6 +51,7 @@ export * from './TimeEntryResponse';
 export * from './TimeEntryTitleResponse';
 export * from './TimerResponse';
 export * from './TimerStartRequest';
+export * from './TimerStopRequest';
 export * from './TransactionPageResponse';
 export * from './TransactionRequest';
 export * from './TransactionResponse';

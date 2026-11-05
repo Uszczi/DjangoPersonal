@@ -32,6 +32,9 @@ The single Time entry that has a start but no end. At most one running timer exi
 **Timer limit**:
 An optional length chosen when starting a timer (stored as the entry's planned end). When it passes, the timer stops by itself and the Time entry ends exactly at the planned end, even if nobody is watching.
 
+**Outbox** (Zmiany do wysłania):
+The writes a client has made but not yet delivered to the server, kept on the device and sent in order once it is back online. Each keeps the moment the user acted, so a timer started offline at 9:00 still starts at 9:00. Today it holds the Running timer's Start, Stop and Discard.
+
 **Whiteboard**:
 A named space that holds one freeform drawing — freehand strokes, shapes, and sticky notes. A user may keep several Whiteboards. Its name is trimmed and unique (case matters: "Plan" and "plan" are different names) among the Whiteboards and Notatki in the same Folder (or at the top level); a new one without a name becomes "Bez tytułu", numbered ("Bez tytułu 2", …) when that is taken.
 

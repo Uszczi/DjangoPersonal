@@ -51,6 +51,7 @@ models/TimeEntryResponse.ts
 models/TimeEntryTitleResponse.ts
 models/TimerResponse.ts
 models/TimerStartRequest.ts
+models/TimerStopRequest.ts
 models/TransactionPageResponse.ts
 models/TransactionRequest.ts
 models/TransactionResponse.ts

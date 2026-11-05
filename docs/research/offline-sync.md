@@ -2,7 +2,7 @@
 
 Research for the task "Jak uruchamiać licznik nawet bez internetu i synchronizować później". The ask: start the timer without a connection and sync it later, using a general approach that later also covers adding and editing Tasks offline.
 
-Status: research only, nothing implemented. Written 2026-11-04.
+Status: step 1 (timer offline) implemented 2026-11-05, with the open questions settled as: an `at` up to 7 days old, a refused queued write is dropped with a message, Discard is queued too, and the web gets the same code as mobile. Written 2026-11-04.
 
 ## Where the app is today
 

@@ -255,6 +255,11 @@ import {
     TimerStartRequestToJSON,
 } from '../models/TimerStartRequest';
 import {
+    type TimerStopRequest,
+    TimerStopRequestFromJSON,
+    TimerStopRequestToJSON,
+} from '../models/TimerStopRequest';
+import {
     type TransactionPageResponse,
     TransactionPageResponseFromJSON,
     TransactionPageResponseToJSON,
@@ -780,6 +785,13 @@ export interface TimerStartOperationRequest {
      *
      */
     timerStartRequest: TimerStartRequest;
+}
+
+export interface TimerStopOperationRequest {
+    /**
+     *
+     */
+    timerStopRequest?: TimerStopRequest | null;
 }
 
 export interface TransactionsCreateRequest {
@@ -4428,10 +4440,12 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * Creates request options for timerStop without sending the request
      */
-    async timerStopRequestOpts(): Promise<runtime.RequestOpts> {
+    async timerStopRequestOpts(requestParameters: TimerStopOperationRequest): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
 
         if (this.configuration && this.configuration.accessToken) {
             const token = this.configuration.accessToken;
@@ -4449,14 +4463,15 @@ export class PersonalApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
+            body: TimerStopRequestToJSON(requestParameters['timerStopRequest']),
         };
     }
 
     /**
      * Stop Timer
      */
-    async timerStopRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TimerResponse>> {
-        const requestOptions = await this.timerStopRequestOpts();
+    async timerStopRaw(requestParameters: TimerStopOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TimerResponse>> {
+        const requestOptions = await this.timerStopRequestOpts(requestParameters);
         const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => TimerResponseFromJSON(jsonValue));
@@ -4465,8 +4480,8 @@ export class PersonalApi extends runtime.BaseAPI {
     /**
      * Stop Timer
      */
-    async timerStop(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TimerResponse> {
-        const response = await this.timerStopRaw(initOverrides);
+    async timerStop(requestParameters: TimerStopOperationRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TimerResponse> {
+        const response = await this.timerStopRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

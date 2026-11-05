@@ -38,6 +38,14 @@ class AttemptAlreadyInProgress(RepositoryError):
     """The partial unique index: this BibliographyItem already has an Attempt in progress."""
 
 
+class DuplicateIdempotencyKey(RepositoryError):
+    """The user has already sent a request with this ``Idempotency-Key``."""
+
+
+class DuplicateTimeEntryId(RepositoryError):
+    """A client-chosen time entry id that another row already has."""
+
+
 class TaskHasTimeEntries(RepositoryError):
     """A task cannot be deleted while time entries still reference it."""
 

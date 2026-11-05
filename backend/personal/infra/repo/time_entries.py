@@ -11,6 +11,9 @@ from personal.infra.models import TimeEntry as TimeEntryModel
 from personal.infra.models import User
 from personal.infra.rules import day_start
 
+from ._flush import flush
+from .errors import DuplicateTimeEntryId
+
 #: Newest first; the id breaks ties between entries started at the same moment.
 _NEWEST_FIRST = (TimeEntryModel.start.desc(), TimeEntryModel.id.desc())
 
@@ -74,12 +77,16 @@ class TimeEntryRepository:
         start: datetime,
         end: datetime | None = None,
         planned_end: datetime | None = None,
+        entry_id: UUID | None = None,
     ) -> TimeEntryModel:
+        """Add an entry; ``entry_id`` is a client-chosen id, else a fresh one."""
         entry = TimeEntryModel(
             user=user, task=task, title=title, start=start, end=end, planned_end=planned_end
         )
+        if entry_id is not None:
+            entry.id = entry_id
         self.session.add(entry)
-        self.session.flush()
+        flush(self.session, on_conflict=DuplicateTimeEntryId)
         return entry
 
     def save(self, entry: TimeEntryModel) -> TimeEntryModel:
@@ -104,6 +111,7 @@ class TimeEntryRepository:
         title: str = '',
         at: datetime,
         planned_end: datetime | None = None,
+        entry_id: UUID | None = None,
     ) -> TimeEntryModel:
         """End any running entry and start a fresh one.
 
@@ -117,4 +125,6 @@ class TimeEntryRepository:
         ).first()
         if running is not None:
             self.close(running, at=at)
-        return self.create(user=user, task=task, title=title, start=at, planned_end=planned_end)
+        return self.create(
+            user=user, task=task, title=title, start=at, planned_end=planned_end, entry_id=entry_id
+        )

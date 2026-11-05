@@ -5,6 +5,7 @@ import { ModalHost } from "@/components/modals/ModalHost";
 import { Navbar } from "@/components/Navbar";
 import { authGuard } from "@/guards/auth";
 import { queryClient } from "@/queryClient";
+import { restoreOutbox } from "@personal/shared/queries/outbox";
 import { persistOptions } from "@personal/shared/queries/persist";
 import { useAccountThemeSync } from "@personal/shared/queries/settings";
 
@@ -24,6 +25,7 @@ function App() {
     <PersistQueryClientProvider
       client={queryClient}
       persistOptions={persistOptions}
+      onSuccess={() => restoreOutbox(queryClient)}
     >
       <AccountThemeSync />
       <div className="flex min-h-screen flex-col">

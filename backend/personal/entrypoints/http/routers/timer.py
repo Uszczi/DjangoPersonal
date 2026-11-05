@@ -3,7 +3,12 @@
 from fastapi import APIRouter
 
 from personal.core.work import clock, handlers
-from personal.core.work.contracts import TimeEntryResponse, TimerResponse, TimerStartRequest
+from personal.core.work.contracts import (
+    TimeEntryResponse,
+    TimerResponse,
+    TimerStartRequest,
+    TimerStopRequest,
+)
 from personal.entrypoints.http.deps import CurrentUser, TaskRepositoryDep, TimeEntryRepositoryDep
 from personal.infra.models import TimeEntry as TimeEntryModel
 
@@ -35,5 +40,9 @@ def get_timer(user: CurrentUser, time_entries: TimeEntryRepositoryDep) -> TimerR
 
 
 @router.post('/timer/stop/', operation_id='timer_stop')
-def stop_timer(user: CurrentUser, time_entries: TimeEntryRepositoryDep) -> TimerResponse:
-    return _state(handlers.StopTimer(time_entries, user).execute())
+def stop_timer(
+    user: CurrentUser,
+    time_entries: TimeEntryRepositoryDep,
+    payload: TimerStopRequest | None = None,
+) -> TimerResponse:
+    return _state(handlers.StopTimer(time_entries, user).execute(payload))

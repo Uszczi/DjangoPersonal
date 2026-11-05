@@ -7,13 +7,16 @@ import type {
   TaskResponse,
   TimeEntryResponse,
 } from "@personal/shared/generated/api";
+import { backlogLabel } from "@personal/shared/queries/outbox";
 import { defaultProject } from "@personal/shared/queries/projects";
 import {
   useDiscardTimer,
   useRefreshTimer,
   useStartTimer,
   useStopTimer,
+  useTimerBacklog,
 } from "@personal/shared/queries/timer";
+import { useOutboxErrorsStore } from "@personal/shared/stores/outboxErrors";
 import { formatClock, formatElapsed } from "@personal/shared/timeFormat";
 import { timerLimitOptions, timerRemaining } from "@personal/shared/timerLimit";
 
@@ -53,6 +56,9 @@ export function TimerCard({
   const stopTimer = useStopTimer();
   const discardTimer = useDiscardTimer();
   const refreshTimer = useRefreshTimer();
+  const backlog = useTimerBacklog();
+  const lateError = useOutboxErrorsStore((state) => state.message);
+  const dismissLateError = useOutboxErrorsStore((state) => state.dismiss);
 
   const [startProjectId, setStartProjectId] = useState<string | null>(null);
   const [startTitle, setStartTitle] = useState("");
@@ -84,6 +90,7 @@ export function TimerCard({
       return;
     }
     setStartError("");
+    dismissLateError();
     setIsBusy(true);
     try {
       await startTimer.mutateAsync({
@@ -103,6 +110,7 @@ export function TimerCard({
   async function run(action: () => Promise<unknown>) {
     setIsBusy(true);
     setActionError("");
+    dismissLateError();
     try {
       await action();
     } catch (error) {
@@ -216,7 +224,11 @@ export function TimerCard({
           </View>
         </>
       )}
+      {backlog > 0 && (
+        <Text className={common.muted}>Offline · {backlogLabel(backlog)}</Text>
+      )}
       {actionError !== "" && <Text className={form.error}>{actionError}</Text>}
+      {lateError !== null && <Text className={form.error}>{lateError}</Text>}
     </View>
   );
 }

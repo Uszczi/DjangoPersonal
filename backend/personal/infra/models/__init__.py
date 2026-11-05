@@ -12,6 +12,7 @@ from .bibliography_item import BibliographyItem
 from .category import Category
 from .counter import Counter, CounterEntry
 from .folder import Folder
+from .idempotency_key import IdempotencyKey
 from .mobile_settings import MobileSettings
 from .note_chunk import NoteChunk
 from .project import Project
@@ -33,6 +34,7 @@ __all__ = [
     'Counter',
     'CounterEntry',
     'Folder',
+    'IdempotencyKey',
     'MobileSettings',
     'NoteChunk',
     'Project',

@@ -7,12 +7,15 @@ import type {
   TaskResponse,
   TimeEntryResponse,
 } from "@personal/shared/generated/api";
+import { backlogLabel } from "@personal/shared/queries/outbox";
 import {
   useDiscardTimer,
   useRefreshTimer,
   useStartTimer,
   useStopTimer,
+  useTimerBacklog,
 } from "@personal/shared/queries/timer";
+import { useOutboxErrorsStore } from "@personal/shared/stores/outboxErrors";
 import { formatClock, formatElapsed } from "@personal/shared/timeFormat";
 import { timerLimitOptions, timerRemaining } from "@personal/shared/timerLimit";
 import { Button, Select } from "@/design-system";
@@ -57,6 +60,9 @@ export function TimerBar({
   const stopTimer = useStopTimer();
   const discardTimer = useDiscardTimer();
   const refreshTimer = useRefreshTimer();
+  const backlog = useTimerBacklog();
+  const lateError = useOutboxErrorsStore((state) => state.message);
+  const dismissLateError = useOutboxErrorsStore((state) => state.dismiss);
 
   const plannedEnd = runningEntry?.plannedEnd ?? null;
   const plannedEndMs = plannedEnd?.getTime() ?? null;
@@ -101,6 +107,7 @@ export function TimerBar({
   /** Run a stop or discard, showing its failure under the entries. */
   async function act(action: () => Promise<unknown>) {
     onActionError("");
+    dismissLateError();
     try {
       await action();
     } catch (error) {
@@ -164,8 +171,26 @@ export function TimerBar({
           tasks={tasks}
           defaultProjectId={defaultProjectId}
           finishedTitle={finishedTitle}
-          onStart={() => setFinishedTitle(null)}
+          onStart={() => {
+            setFinishedTitle(null);
+            dismissLateError();
+          }}
         />
+      )}
+      {(backlog > 0 || lateError !== null) && (
+        <div
+          role="status"
+          className="flex flex-wrap gap-x-3 border-t border-line-soft px-4 py-2 text-[13px] sm:px-5"
+        >
+          {backlog > 0 && (
+            <span className="text-muted">
+              Offline · {backlogLabel(backlog)}
+            </span>
+          )}
+          {lateError !== null && (
+            <span className="text-danger">{lateError}</span>
+          )}
+        </div>
       )}
       {remaining != null && limitTotal != null && limitTotal > 0 && (
         <div className="h-1 bg-line-soft" aria-hidden="true">

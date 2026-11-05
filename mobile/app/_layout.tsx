@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
+import { restoreOutbox } from "@personal/shared/queries/outbox";
 import { persistOptions } from "@personal/shared/queries/persist";
 import { useAuthStore } from "@personal/shared/stores/auth";
 import { useBibliographyViewStore } from "@personal/shared/stores/bibliographyView";
@@ -83,6 +84,7 @@ export default function RootLayout() {
       <PersistQueryClientProvider
         client={queryClient}
         persistOptions={persistOptions}
+        onSuccess={() => restoreOutbox(queryClient)}
       >
         <AccountThemeSync />
         <TabBarSync />

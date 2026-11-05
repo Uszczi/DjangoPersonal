@@ -741,6 +741,14 @@ paths:
       - personal
       summary: Stop Timer
       operationId: timer_stop
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/TimerStopRequest'
+              - type: 'null'
+              title: Payload
       responses:
         '200':
           description: Successful Response
@@ -3297,6 +3305,12 @@ components:
       title: TimerResponse
     TimerStartRequest:
       properties:
+        id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Id
         task:
           anyOf:
           - type: string
@@ -3314,8 +3328,30 @@ components:
             minimum: 1.0
           - type: 'null'
           title: Duration Minutes
+        at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: At
       type: object
       title: TimerStartRequest
+    TimerStopRequest:
+      properties:
+        entry:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Entry
+        at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: At
+      type: object
+      title: TimerStopRequest
     TransactionPageResponse:
       properties:
         items:

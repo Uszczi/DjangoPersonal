@@ -21,7 +21,7 @@ from .time_entries import (
     TimeEntryResponse,
     TimeEntryTitleResponse,
 )
-from .timer import TimerResponse, TimerStartRequest
+from .timer import TimerResponse, TimerStartRequest, TimerStopRequest
 
 __all__ = [
     'CommentAttachmentResponse',
@@ -40,4 +40,5 @@ __all__ = [
     'TimeEntryTitleResponse',
     'TimerResponse',
     'TimerStartRequest',
+    'TimerStopRequest',
 ]
