@@ -98,6 +98,9 @@ export function TimerNotificationSync(): null {
           type: Notifications.SchedulableTriggerInputTypes.DATE,
           date: fireAt,
           channelId: END_CHANNEL_ID,
+          // Android otherwise moves the alarm by minutes to save battery.
+          // Needs the exact alarm permission declared in app.json.
+          delivery: "alarmClock",
         },
       });
     })().catch(() => {

@@ -7,7 +7,8 @@
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "android": {
-      "package": "com.roalec.djangopersonal"
+      "package": "com.roalec.djangopersonal",
+      "permissions": ["USE_EXACT_ALARM", "SCHEDULE_EXACT_ALARM"]
     },
     "plugins": [
       "expo-router",
