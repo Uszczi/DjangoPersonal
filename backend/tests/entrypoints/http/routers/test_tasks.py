@@ -268,3 +268,15 @@ def test_tasks_carry_their_comment_count(post_json: Any, api_client: Any) -> Non
 
     listed = api_client.get('/api/v1/tasks/').json()
     assert [task['comment_count'] for task in listed if task['id'] == task_id] == [2]
+
+
+def test_a_task_lists_its_tags_by_id(post_json: Any, patch_json: Any) -> None:
+    tag = post_json('/api/v1/tags/', {'name': 'Pilne', 'color': '#D45B3E'}).json()
+    assert tag['color'] == '#d45b3e'
+
+    created = post_json('/api/v1/tasks/', {'title': 'Call', 'tags': [tag['id']]})
+
+    assert created.status_code == HTTPStatus.CREATED
+    assert created.json()['tags'] == [tag['id']]
+    cleared = patch_json(f"/api/v1/tasks/{created.json()['id']}/", {'tags': []})
+    assert cleared.json()['tags'] == []

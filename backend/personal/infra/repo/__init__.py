@@ -10,6 +10,7 @@ from .errors import (
     DuplicateFolderName,
     DuplicateIdempotencyKey,
     DuplicateProjectName,
+    DuplicateTagName,
     DuplicateTimeEntryId,
     DuplicateUsername,
     DuplicateWalletName,
@@ -25,6 +26,7 @@ from .idempotency_keys import IdempotencyKeyRepository
 from .mobile_settings import MobileSettingsRepository
 from .note_chunks import NoteChunkRepository, ScoredChunk
 from .projects import ProjectRepository
+from .tags import TagRepository
 from .task_comments import CommentAttachmentRepository, TaskCommentRepository
 from .tasks import TaskRepository
 from .time_entries import TimeEntryRepository
@@ -46,6 +48,7 @@ __all__ = [
     'DuplicateFolderName',
     'DuplicateIdempotencyKey',
     'DuplicateProjectName',
+    'DuplicateTagName',
     'DuplicateTimeEntryId',
     'DuplicateUsername',
     'DuplicateWalletName',
@@ -60,6 +63,7 @@ __all__ = [
     'ProjectRepository',
     'RepositoryError',
     'ScoredChunk',
+    'TagRepository',
     'TaskCommentRepository',
     'TaskHasTimeEntries',
     'TaskRepository',

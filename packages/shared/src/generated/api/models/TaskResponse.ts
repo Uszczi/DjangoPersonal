@@ -48,6 +48,10 @@ export interface TaskResponse {
      *
      */
     readonly commentCount?: number;
+    /**
+     *
+     */
+    tags?: Array<string>;
 }
 
 /**
@@ -79,6 +83,7 @@ export function TaskResponseFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'status': json['status'],
         'position': json['position'] == null ? undefined : json['position'],
         'commentCount': json['comment_count'] == null ? undefined : json['comment_count'],
+        'tags': json['tags'] == null ? undefined : json['tags'],
     };
 }
 
@@ -95,6 +100,7 @@ export function TaskResponseToJSONTyped(value?: Omit<TaskResponse, 'id'|'project
 
         'title': value['title'],
         'description': value['description'],
+        'tags': value['tags'],
     };
 }
 

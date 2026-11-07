@@ -20,6 +20,7 @@ from personal.core.whiteboard.contracts import FolderResponse, WhiteboardRespons
 from personal.core.work.contracts import (
     TaskCommentResponse,
     ProjectResponse,
+    TagResponse,
     TaskResponse,
     TimeEntryResponse,
     TimerResponse,
@@ -31,6 +32,7 @@ from personal.infra.models import (
     CounterEntry,
     Folder,
     Project,
+    Tag,
     Task,
     TaskComment,
     TimeEntry,
@@ -47,6 +49,14 @@ def project(obj: Project) -> dict[str, Any]:
 
 def projects(objs: Iterable[Project]) -> list[dict[str, Any]]:
     return [project(o) for o in objs]
+
+
+def tag(obj: Tag) -> dict[str, Any]:
+    return TagResponse.model_validate(obj).model_dump(mode='json')
+
+
+def tags(objs: Iterable[Tag]) -> list[dict[str, Any]]:
+    return [tag(o) for o in objs]
 
 
 def task(obj: Task) -> dict[str, Any]:

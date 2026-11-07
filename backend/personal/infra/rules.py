@@ -114,6 +114,19 @@ def category_name_key(name: str) -> str:
     return normalize_category_name(name).casefold()
 
 
+def normalize_tag_name(name: str) -> str:
+    return name.strip()
+
+
+def tag_name_key(name: str) -> str:
+    return normalize_tag_name(name).casefold()
+
+
+#: The colour a Tag gets when none is chosen.
+DEFAULT_TAG_COLOR = '#477c7c'
+MAX_TAG_NAME_LENGTH = 50
+
+
 def normalize_counter_name(name: str) -> str:
     return name.strip()
 

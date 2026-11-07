@@ -26,6 +26,7 @@ from personal.infra.models import (
     CounterEntry,
     Folder,
     Project,
+    Tag,
     Task,
     TimeEntry,
     Transaction,
@@ -171,6 +172,14 @@ class WhiteboardFactory(_Factory[Whiteboard]):
     kind = Whiteboard.KIND_WHITEBOARD
     content = LazyFunction(default_board_content)
     folder_id = None
+
+
+class TagFactory(_Factory[Tag]):
+    class Meta:
+        model = Tag
+
+    user = SubFactory(UserFactory)
+    name = Sequence(lambda n: f'Tag {n}')
 
 
 class CounterFactory(_Factory[Counter]):

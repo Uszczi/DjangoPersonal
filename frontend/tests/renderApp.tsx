@@ -8,8 +8,11 @@ import {
 
 import { queryClient } from "@/queryClient";
 import { routeTree } from "@/routeTree.gen";
-import type { UserSettingsResponse } from "@personal/shared/generated/api";
-import { settingsKeys } from "@personal/shared/queries/keys";
+import type {
+  TagResponse,
+  UserSettingsResponse,
+} from "@personal/shared/generated/api";
+import { settingsKeys, tagKeys } from "@personal/shared/queries/keys";
 import { useAuthStore } from "@personal/shared/stores/auth";
 import { useBibliographyViewStore } from "@personal/shared/stores/bibliographyView";
 import { useCounterViewStore } from "@personal/shared/stores/counterView";
@@ -51,6 +54,8 @@ export function resetStores(options?: { preserveStorage?: boolean }) {
  * `settings` seeds the account's settings, which the root route loads for
  * every signed-in page, so tests of other pages need not answer
  * `/api/v1/settings/`; pass `null` to leave them to the (mocked) server.
+ * `tags` seeds the Tags (none by default), which every Task list loads, the
+ * same way.
  */
 export function renderApp(
   path = "/",
@@ -58,6 +63,7 @@ export function renderApp(
     authenticated?: boolean;
     preserveStorage?: boolean;
     settings?: UserSettingsResponse | null;
+    tags?: TagResponse[] | null;
   },
 ) {
   resetStores({ preserveStorage: options?.preserveStorage });
@@ -73,6 +79,8 @@ export function renderApp(
         ? { theme: useThemeStore.getState().preference }
         : options.settings;
     if (settings) queryClient.setQueryData(settingsKeys.all, settings);
+    const tags = options?.tags === undefined ? [] : options.tags;
+    if (tags) queryClient.setQueryData(tagKeys.all, tags);
   }
 
   const router = createRouter({

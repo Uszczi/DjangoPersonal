@@ -25,6 +25,7 @@ import { TASK_TITLE_MAX_LENGTH } from "@personal/shared/taskTitle";
 
 import { Button } from "@/ui/Button";
 import { ChipGroup } from "@/ui/ChipGroup";
+import { TagPicker } from "@/features/tasks/TagPicker";
 import { TaskComments } from "@/features/tasks/TaskComments";
 import { confirmDestructive } from "@/ui/confirm";
 import { common, form } from "@/ui/classes";
@@ -74,6 +75,7 @@ export default function TaskEditorScreen() {
           projectId,
           projects.find((item) => item.id === projectId)?.projectStatuses ?? [],
         ),
+      tags: task?.tags ?? [],
     };
   });
   const [formError, setFormError] = useState("");
@@ -100,6 +102,7 @@ export default function TaskEditorScreen() {
       description: form_.description.trim(),
       project: form_.project,
       status: selectedStatus,
+      tags: form_.tags,
     };
     if (!input.title) {
       setFormError("Podaj tytuł zadania.");
@@ -215,6 +218,12 @@ export default function TaskEditorScreen() {
             />
           </>
         )}
+
+        <TagPicker
+          value={form_.tags ?? []}
+          onChange={(tags) => setForm((current) => ({ ...current, tags }))}
+          disabled={isSaving}
+        />
 
         {formError !== "" && <Text className={form.error}>{formError}</Text>}
         <View className={form.actions}>

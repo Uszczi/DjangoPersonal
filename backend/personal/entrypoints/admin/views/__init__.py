@@ -19,6 +19,7 @@ from .whiteboard import FolderView, WhiteboardView
 from .work import (
     CommentAttachmentView,
     ProjectView,
+    TagView,
     TaskCommentView,
     TaskView,
     TimeEntryView,
@@ -28,6 +29,7 @@ VIEWS: list[type[ModelView]] = [
     UserView,
     ProjectView,
     TaskView,
+    TagView,
     TaskCommentView,
     CommentAttachmentView,
     TimeEntryView,

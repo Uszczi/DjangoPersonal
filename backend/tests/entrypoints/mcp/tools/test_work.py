@@ -49,3 +49,14 @@ def test_task_comment_tools(mcp_user: User) -> None:
 
     assert call('delete_task_comment', comment_id=comment['id']) == 'deleted'
     assert call('list_task_comments', task_id=task['id']) == []
+
+
+def test_tag_tools(mcp_user: User) -> None:
+    tag = call('create_tag', name='Pilne')
+    task = call('create_task', title='Call', tag_ids=[tag['id']])
+    assert task['tags'] == [tag['id']]
+    assert [item['name'] for item in call('list_tags')] == ['Pilne']
+
+    assert call('update_tag', tag_id=tag['id'], color='#3d6fb6')['name'] == 'Pilne'
+    assert call('update_task', task_id=task['id'], tag_ids=[])['tags'] == []
+    assert call('delete_tag', tag_id=tag['id']) == 'deleted'

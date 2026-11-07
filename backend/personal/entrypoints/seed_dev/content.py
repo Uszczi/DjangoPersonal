@@ -23,6 +23,17 @@ class TaskSeed:
     #: The status ``demo`` gets; the random accounts draw one from the project.
     status: str
     description: str = ''
+    #: Names from :data:`TAGS`.
+    tags: tuple[str, ...] = ()
+
+
+#: The Tags put on the seeded Tasks, with their colours.
+TAGS: dict[str, str] = {
+    'Pilne': '#d45b3e',
+    'Czekam': '#c2922b',
+    'Szybkie': '#4f8a3c',
+    'Zakupy': '#3d6fb6',
+}
 
 
 @dataclass(frozen=True)
@@ -50,10 +61,20 @@ PROJECTS: tuple[ProjectSeed, ...] = (
                 'W trakcie',
                 'Komponenty z makiet; zacząć od nagłówka i stopki.',
             ),
-            TaskSeed('Poprawić RWD w stopce', 'W trakcie'),
-            TaskSeed('Podpiąć formularz kontaktowy', 'Todo', 'Wysyłka na adres biura + kopia do CRM.'),
+            TaskSeed('Poprawić RWD w stopce', 'W trakcie', tags=('Szybkie',)),
+            TaskSeed(
+                'Podpiąć formularz kontaktowy',
+                'Todo',
+                'Wysyłka na adres biura + kopia do CRM.',
+                tags=('Pilne',),
+            ),
             TaskSeed('Skonfigurować analitykę', 'Todo'),
-            TaskSeed('Przenieść stronę na nowy hosting', 'Todo', 'Najpierw sprawdzić limity planu.'),
+            TaskSeed(
+                'Przenieść stronę na nowy hosting',
+                'Todo',
+                'Najpierw sprawdzić limity planu.',
+                tags=('Czekam',),
+            ),
         ),
     ),
     ProjectSeed(
@@ -67,6 +88,7 @@ PROJECTS: tuple[ProjectSeed, ...] = (
                 'Ekran kalendarza wizyt',
                 'W trakcie',
                 'Widok tygodnia, przeciąganie wizyt między dniami.',
+                tags=('Pilne',),
             ),
             TaskSeed('Powiadomienia push o wizycie', 'Testy', 'Przypomnienie 24 h i 1 h przed.'),
             TaskSeed('Rejestracja i logowanie', 'Gotowe'),
@@ -79,9 +101,14 @@ PROJECTS: tuple[ProjectSeed, ...] = (
         tasks=(
             TaskSeed('Wymierzyć kuchnię pod nowe szafki', 'Zrobione'),
             TaskSeed('Wybrać płytki do łazienki', 'Zrobione', 'Szare 60×60 na podłogę, białe na ściany.'),
-            TaskSeed('Zebrać trzy oferty od ekip', 'W trakcie'),
-            TaskSeed('Zamówić blat kuchenny', 'Todo', 'Konglomerat albo drewno — porównać ceny.'),
-            TaskSeed('Wybrać firmę do wywozu gruzu', 'Todo'),
+            TaskSeed('Zebrać trzy oferty od ekip', 'W trakcie', tags=('Czekam', 'Pilne')),
+            TaskSeed(
+                'Zamówić blat kuchenny',
+                'Todo',
+                'Konglomerat albo drewno — porównać ceny.',
+                tags=('Zakupy',),
+            ),
+            TaskSeed('Wybrać firmę do wywozu gruzu', 'Todo', tags=('Szybkie',)),
             TaskSeed('Ustalić budżet z zapasem 15%', 'Todo'),
         ),
     ),
@@ -103,8 +130,8 @@ PROJECTS: tuple[ProjectSeed, ...] = (
             TaskSeed('Kupić bilety lotnicze', 'Zrobione', 'Lot do Lizbony, bagaż podręczny.'),
             TaskSeed('Zarezerwować nocleg w Lizbonie', 'Zrobione'),
             TaskSeed('Ułożyć plan zwiedzania', 'W trakcie', 'Sintra, Belém, jeden dzień na plaży.'),
-            TaskSeed('Wykupić ubezpieczenie podróżne', 'Todo'),
-            TaskSeed('Wymienić euro', 'Todo'),
+            TaskSeed('Wykupić ubezpieczenie podróżne', 'Todo', tags=('Pilne', 'Szybkie')),
+            TaskSeed('Wymienić euro', 'Todo', tags=('Zakupy',)),
         ),
     ),
 )
@@ -112,7 +139,7 @@ PROJECTS: tuple[ProjectSeed, ...] = (
 #: Loose tasks waiting in the Inbox (default statuses).
 INBOX_TASKS: tuple[TaskSeed, ...] = (
     TaskSeed('Oddać książkę do biblioteki', 'Todo'),
-    TaskSeed('Zadzwonić do dentysty', 'Todo', 'Przegląd co pół roku.'),
+    TaskSeed('Zadzwonić do dentysty', 'Todo', 'Przegląd co pół roku.', tags=('Szybkie',)),
     TaskSeed('Przedłużyć abonament telefonu', 'Zrobione'),
 )
 

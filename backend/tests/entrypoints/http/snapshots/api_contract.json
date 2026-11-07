@@ -385,6 +385,46 @@
   },
   {
     "method": "GET",
+    "path": "/api/v1/tags/",
+    "operation_id": "tags_list",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/tags/",
+    "operation_id": "tags_create",
+    "status_codes": [
+      "201"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/tags/{id}/",
+    "operation_id": "tags_destroy",
+    "status_codes": [
+      "204"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/tags/{id}/",
+    "operation_id": "tags_retrieve",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/tags/{id}/",
+    "operation_id": "tags_partial_update",
+    "status_codes": [
+      "200"
+    ]
+  },
+  {
+    "method": "GET",
     "path": "/api/v1/task-comments/",
     "operation_id": "task_comments_list",
     "status_codes": [

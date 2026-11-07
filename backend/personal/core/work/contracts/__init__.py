@@ -14,6 +14,7 @@ from .comments import (
     TaskCommentResponse,
 )
 from .projects import PatchedProjectRequest, ProjectRequest, ProjectResponse
+from .tags import PatchedTagRequest, TagRequest, TagResponse
 from .tasks import PatchedTaskUpdateRequest, TaskCreateRequest, TaskResponse
 from .time_entries import (
     PatchedTimeEntryRequest,
@@ -33,6 +34,9 @@ __all__ = [
     'PatchedTimeEntryRequest',
     'ProjectRequest',
     'ProjectResponse',
+    'PatchedTagRequest',
+    'TagRequest',
+    'TagResponse',
     'TaskCreateRequest',
     'TaskResponse',
     'TimeEntryCreateRequest',

@@ -1,4 +1,4 @@
-"""Work tools: projects, tasks, time entries and the running timer."""
+"""Work tools: projects, tasks and their tags, time entries and the running timer."""
 
 from datetime import date as date_type
 from typing import Any
@@ -8,10 +8,12 @@ from personal import wiring
 from personal.core.work import clock, handlers
 from personal.core.work.contracts import (
     PatchedProjectRequest,
+    PatchedTagRequest,
     PatchedTaskCommentRequest,
     PatchedTaskUpdateRequest,
     PatchedTimeEntryRequest,
     ProjectRequest,
+    TagRequest,
     TaskCommentCreateRequest,
     TaskCreateRequest,
     TimeEntryCreateRequest,
@@ -22,6 +24,8 @@ from ..serialization import (
     parse_date,
     project,
     projects,
+    tag,
+    tags,
     task,
     task_comment,
     task_comments,
@@ -117,15 +121,21 @@ def create_task(
     description: str = '',
     project_id: UUID | None = None,
     status: str | None = None,
+    tag_ids: list[UUID] | None = None,
 ) -> dict[str, Any]:
-    """Create a task (defaults to the inbox project)."""
+    """Create a task (defaults to the inbox project); ``tag_ids`` are ids from ``list_tags``."""
     payload = TaskCreateRequest.model_validate(
-        {'title': title, 'description': description, **provided(project=project_id, status=status)}
+        {
+            'title': title,
+            'description': description,
+            **provided(project=project_id, status=status, tags=tag_ids),
+        }
     )
     with unit_of_work(ctx) as (session, user):
         handler = handlers.CreateTask(
             projects=wiring.project_repository(session),
             tasks=wiring.task_repository(session),
+            tags=wiring.tag_repository(session),
             user=user,
         )
         return task(handler.execute(payload))
@@ -140,8 +150,9 @@ def update_task(
     project_id: UUID | None = None,
     status: str | None = None,
     position: int | None = None,
+    tag_ids: list[UUID] | None = None,
 ) -> dict[str, Any]:
-    """Update a task (partial)."""
+    """Update a task (partial). ``tag_ids`` replaces its tags (``[]`` removes them all)."""
     payload = PatchedTaskUpdateRequest.model_validate(
         provided(
             title=title,
@@ -149,12 +160,14 @@ def update_task(
             project=project_id,
             status=status,
             position=position,
+            tags=tag_ids,
         )
     )
     with unit_of_work(ctx) as (session, user):
         handler = handlers.UpdateTask(
             projects=wiring.project_repository(session),
             tasks=wiring.task_repository(session),
+            tags=wiring.tag_repository(session),
             user=user,
         )
         return task(handler.execute(task_id, payload))
@@ -165,6 +178,40 @@ def delete_task(ctx: ToolContext, task_id: UUID) -> str:
     """Delete a task (refused if time has been recorded)."""
     with unit_of_work(ctx) as (session, user):
         handlers.DeleteTask(wiring.task_repository(session), user).execute(task_id)
+        return 'deleted'
+
+
+@tool
+def list_tags(ctx: ToolContext) -> list[dict[str, Any]]:
+    """List the user's tags (shared by every project), alphabetically."""
+    with unit_of_work(ctx) as (session, user):
+        return tags(handlers.ListTags(wiring.tag_repository(session), user).execute())
+
+
+@tool
+def create_tag(ctx: ToolContext, name: str, color: str | None = None) -> dict[str, Any]:
+    """Create a tag; names are unique ignoring case. ``color`` is ``#RRGGBB``."""
+    payload = TagRequest.model_validate({'name': name, **provided(color=color)})
+    with unit_of_work(ctx) as (session, user):
+        return tag(handlers.CreateTag(wiring.tag_repository(session), user).execute(payload))
+
+
+@tool
+def update_tag(
+    ctx: ToolContext, tag_id: UUID, name: str | None = None, color: str | None = None
+) -> dict[str, Any]:
+    """Rename or recolour a tag (partial)."""
+    payload = PatchedTagRequest.model_validate(provided(name=name, color=color))
+    with unit_of_work(ctx) as (session, user):
+        handler = handlers.UpdateTag(wiring.tag_repository(session), user)
+        return tag(handler.execute(tag_id, payload))
+
+
+@tool
+def delete_tag(ctx: ToolContext, tag_id: UUID) -> str:
+    """Delete a tag, taking it off every task."""
+    with unit_of_work(ctx) as (session, user):
+        handlers.DeleteTag(wiring.tag_repository(session), user).execute(tag_id)
         return 'deleted'
 
 

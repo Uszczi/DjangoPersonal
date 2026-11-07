@@ -1,9 +1,10 @@
 from uuid import UUID
 
 from sqlalchemy import Select, func, select
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from personal.infra.models import Project as ProjectModel
+from personal.infra.models import Tag as TagModel
 from personal.infra.models import Task as TaskModel
 from personal.infra.models import User
 
@@ -25,7 +26,7 @@ class TaskRepository:
             select(TaskModel)
             .join(TaskModel.project)
             .where(ProjectModel.user_id == user.id)
-            .options(joinedload(TaskModel.project))
+            .options(joinedload(TaskModel.project), selectinload(TaskModel.tags))
             .order_by(TaskModel.status, TaskModel.position, TaskModel.id)
         )
 
@@ -49,6 +50,7 @@ class TaskRepository:
         project: ProjectModel,
         status: str,
         position: int = 0,
+        tags: list[TagModel] | None = None,
     ) -> TaskModel:
         task = TaskModel(
             title=title,
@@ -56,6 +58,7 @@ class TaskRepository:
             project=project,
             status=status,
             position=position,
+            tags=tags or [],
         )
         self.session.add(task)
         self.session.flush()

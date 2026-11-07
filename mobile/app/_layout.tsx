@@ -35,6 +35,7 @@ import { StackHeader } from "@/ui/NavigationHeader";
 const modalScreens = [
   ["project", "Projekt"],
   ["task", "Zadanie"],
+  ["tags", "Tagi"],
   ["time-entry", "Wpis czasu"],
   ["wallet", "Portfel"],
   ["wallet-order", "Kolejność portfeli"],

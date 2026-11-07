@@ -35,6 +35,11 @@ export const taskKeys = {
   everything: ["tasks", "everything"] as const,
 };
 
+/** The user's Tags, shared by every Project. */
+export const tagKeys = {
+  all: ["tags"] as const,
+};
+
 export const taskCommentKeys = {
   all: ["taskComments"] as const,
   /** One Task's comments, oldest first. */

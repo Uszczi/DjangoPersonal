@@ -38,6 +38,7 @@ from personal.infra.repo import (
     NoteChunkRepository,
     ProjectRepository,
     TaskCommentRepository,
+    TagRepository,
     TaskRepository,
     TimeEntryRepository,
     TransactionRepository,
@@ -68,6 +69,10 @@ def project_repository(session: Session) -> ProjectRepository:
 
 def task_repository(session: Session) -> TaskRepository:
     return TaskRepository(session)
+
+
+def tag_repository(session: Session) -> TagRepository:
+    return TagRepository(session)
 
 
 def task_comment_repository(session: Session) -> TaskCommentRepository:

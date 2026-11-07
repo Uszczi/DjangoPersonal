@@ -40,6 +40,10 @@ export interface TaskCreateRequest {
      *
      */
     position?: number | null;
+    /**
+     *
+     */
+    tags?: Array<string>;
 }
 
 /**
@@ -65,6 +69,7 @@ export function TaskCreateRequestFromJSONTyped(json: any, ignoreDiscriminator: b
         'project': json['project'] === undefined ? undefined : json['project'] === null ? null : json['project'],
         'status': json['status'] === undefined ? undefined : json['status'] === null ? null : json['status'],
         'position': json['position'] === undefined ? undefined : json['position'] === null ? null : json['position'],
+        'tags': json['tags'] == null ? undefined : json['tags'],
     };
 }
 
@@ -84,6 +89,7 @@ export function TaskCreateRequestToJSONTyped(value?: TaskCreateRequest | null, i
         'project': value['project'],
         'status': value['status'],
         'position': value['position'],
+        'tags': value['tags'],
     };
 }
 

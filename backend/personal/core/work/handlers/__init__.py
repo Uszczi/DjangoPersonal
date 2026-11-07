@@ -1,4 +1,4 @@
-"""Use cases for ``work``: projects, tasks, time entries and the timer.
+"""Use cases for ``work``: projects, tasks and their tags, time entries and the timer.
 
 Every use case is a class named after the action it performs, with a single
 public ``execute`` method. It receives the repositories it needs through its
@@ -31,6 +31,7 @@ from .projects import (
     ReplaceProject,
     UpdateProject,
 )
+from .tags import CreateTag, DeleteTag, GetTag, ListTags, UpdateTag
 from .tasks import CreateTask, DeleteTask, ListTasks, UpdateTask
 from .time_entries import (
     DEFAULT_TITLE_SUGGESTIONS,
@@ -52,15 +53,19 @@ __all__ = [
     'ListTaskComments',
     'UpdateTaskComment',
     'CreateProject',
+    'CreateTag',
     'CreateTask',
     'CreateTimeEntry',
     'DeleteProject',
+    'DeleteTag',
     'DeleteTask',
     'DeleteTimeEntry',
     'DomainError',
     'GetProject',
     'GetRunningEntry',
+    'GetTag',
     'ListProjects',
+    'ListTags',
     'ListTasks',
     'ListTimeEntries',
     'NotFound',
@@ -69,6 +74,7 @@ __all__ = [
     'StopTimer',
     'SuggestTimeEntryTitles',
     'UpdateProject',
+    'UpdateTag',
     'UpdateTask',
     'UpdateTimeEntry',
 ]

@@ -21,6 +21,8 @@ export type TaskInput = {
   description: string;
   project: string;
   status?: string;
+  /** The ids of the Task's Tags; the whole set, replacing the old one. */
+  tags?: string[];
 };
 
 /**

@@ -37,6 +37,7 @@ from personal.infra.repo import (
     BibliographyItemRepository,
     ProjectRepository,
     TaskCommentRepository,
+    TagRepository,
     TaskRepository,
     TimeEntryRepository,
     TransactionRepository,
@@ -94,6 +95,7 @@ def _per_session[T](provider: Callable[[Session], T]) -> Any:
 UserRepositoryDep = Annotated[UserRepository, _per_session(wiring.user_repository)]
 ProjectRepositoryDep = Annotated[ProjectRepository, _per_session(wiring.project_repository)]
 TaskRepositoryDep = Annotated[TaskRepository, _per_session(wiring.task_repository)]
+TagRepositoryDep = Annotated[TagRepository, _per_session(wiring.tag_repository)]
 TaskCommentRepositoryDep = Annotated[
     TaskCommentRepository, _per_session(wiring.task_comment_repository)
 ]

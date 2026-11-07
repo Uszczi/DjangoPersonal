@@ -33,7 +33,7 @@ class _TaskPayload(BaseModel):
         return value
 
     @field_validator(
-        'title', 'description', 'project', 'status', 'position', check_fields=False
+        'title', 'description', 'project', 'status', 'position', 'tags', check_fields=False
     )
     @classmethod
     def reject_null(cls, value: object) -> object:
@@ -49,6 +49,8 @@ class TaskCreateRequest(_TaskPayload):
     project: UUID | None = None
     status: str | None = None
     position: int | None = None
+    #: The ids of the user's Tags to put on the Task.
+    tags: list[UUID] = Field(default_factory=list)
 
 
 class PatchedTaskUpdateRequest(_TaskPayload):
@@ -57,6 +59,8 @@ class PatchedTaskUpdateRequest(_TaskPayload):
     project: UUID | None = None
     status: str | None = None
     position: int | None = None
+    #: Replaces the Task's Tags: every id given, and only those.
+    tags: list[UUID] | None = None
 
 
 class TaskResponse(BaseModel):
@@ -67,3 +71,13 @@ class TaskResponse(BaseModel):
     status: str = Field(..., json_schema_extra={'readOnly': True})
     position: int = Field(default=0, json_schema_extra={'readOnly': True})
     comment_count: int = Field(default=0, json_schema_extra={'readOnly': True})
+    #: The ids of the Task's Tags, alphabetically by name.
+    tags: list[UUID] = Field(default_factory=list)
+
+    @field_validator('tags', mode='before')
+    @classmethod
+    def tag_ids(cls, value: object) -> object:
+        """Read off the ORM, ``tags`` holds the Tag rows; the response carries their ids."""
+        if isinstance(value, list):
+            return [getattr(tag, 'id', tag) for tag in value]
+        return value

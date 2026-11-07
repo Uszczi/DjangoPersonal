@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from personal.core.work.contracts import PatchedTaskUpdateRequest, TaskCreateRequest
 from personal.core.work.handlers import CreateTask, ListTasks, UpdateTask
 from personal.infra.models import Project, User
-from personal.infra.repo import ProjectRepository, TaskRepository, UserRepository
+from personal.infra.repo import ProjectRepository, TagRepository, TaskRepository, UserRepository
 
 
 @pytest.fixture
@@ -23,13 +23,18 @@ def project(session: Session, user: User) -> Project:
 
 def _create(session: Session, user: User, project: Project, title: str, status: str) -> UUID:
     request = TaskCreateRequest(title=title, project=project.id, status=status)
-    handler = CreateTask(ProjectRepository(session), TaskRepository(session), user)
+    handler = CreateTask(
+        ProjectRepository(session), TaskRepository(session), TagRepository(session), user
+    )
     return handler.execute(request).id
 
 
 def _update(session: Session, user: User, task_id: UUID, **fields: object) -> None:
     request = PatchedTaskUpdateRequest.model_validate(fields)
-    UpdateTask(ProjectRepository(session), TaskRepository(session), user).execute(task_id, request)
+    handler = UpdateTask(
+        ProjectRepository(session), TaskRepository(session), TagRepository(session), user
+    )
+    handler.execute(task_id, request)
 
 
 def _titles(session: Session, user: User, project: Project, status: str) -> list[str]:

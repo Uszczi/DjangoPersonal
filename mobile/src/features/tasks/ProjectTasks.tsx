@@ -1,7 +1,14 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { router } from "expo-router";
 import { useCallback, useState } from "react";
-import { Platform, Pressable, RefreshControl, Text, View } from "react-native";
+import {
+  Platform,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import {
   NestedReorderableList,
   reorderItems,
@@ -14,6 +21,7 @@ import { scheduleOnRN } from "react-native-worklets";
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import type {
   ProjectResponse,
+  TagResponse,
   TaskResponse,
 } from "@personal/shared/generated/api";
 import { TASKS_LOAD_ERROR } from "@personal/shared/loadErrors";
@@ -22,9 +30,11 @@ import {
   useProjectTasks,
   useToggleTaskStatus,
 } from "@personal/shared/queries/tasks";
+import { tagsOfTask, useTags } from "@personal/shared/queries/tags";
 import { useStartTimer } from "@personal/shared/queries/timer";
 import { useCollapsedStatuses } from "@personal/shared/useCollapsedStatuses";
 
+import { TagChip, TagDot } from "@/features/tasks/TagChip";
 import { Fab } from "@/ui/Fab";
 import { useTaskListSettingsStore } from "@personal/shared/stores/taskListSettings";
 import { commentCountLabel } from "@personal/shared/queries/taskComments";
@@ -92,23 +102,41 @@ function rowKey(row: Row): string {
 
 /**
  * Where a dropped Task lands: the status of the nearest heading above it (the
- * first status when dropped above every heading) and its index among that
- * status's Tasks shown above it.
+ * first status when dropped above every heading) and the Task shown right
+ * above it in that status, if any.
  */
 function dropTarget(
   rows: Row[],
   index: number,
-): { status: string; position: number } | null {
-  let position = 0;
+): { status: string; after: TaskResponse | null } | null {
+  let after: TaskResponse | null = null;
   for (let i = index - 1; i >= 0; i--) {
     const row = rows[i];
-    if (row.kind === "header") return { status: row.section.title, position };
-    if (row.kind === "task") position++;
+    if (row.kind === "header") return { status: row.section.title, after };
+    if (row.kind === "task" && after === null) after = row.task;
   }
   const first = rows.find((row) => row.kind === "header");
   return first?.kind === "header"
-    ? { status: first.section.title, position: 0 }
+    ? { status: first.section.title, after: null }
     : null;
+}
+
+/**
+ * The dropped Task's position among every Task of its new status, right
+ * after `after`; counted in the whole list, so a drop in a list narrowed
+ * by a Tag lands where it shows.
+ */
+function positionAfter(
+  tasks: TaskResponse[],
+  dragged: TaskResponse,
+  status: string,
+  after: TaskResponse | null,
+): number {
+  if (after === null) return 0;
+  const siblings = tasks.filter(
+    (task) => task.status === status && task.id !== dragged.id,
+  );
+  return siblings.findIndex((task) => task.id === after.id) + 1;
 }
 
 /**
@@ -137,6 +165,9 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
   const [actionError, setActionError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const { data: tags = [] } = useTags();
+  // The Tag the list is narrowed to; `null` shows every Task.
+  const [tagFilter, setTagFilter] = useState<string | null>(null);
   const { collapsed: collapsedStatuses, toggle: toggleSection } =
     useCollapsedStatuses(project?.terminalStatus);
 
@@ -175,14 +206,14 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
     const isSameStatus = target.status === task.status;
     if (isSameStatus) {
       const before = dropTarget(rows, from);
-      if (before?.position === target.position) return;
+      if (before?.after?.id === target.after?.id) return;
     }
     setActionError("");
     try {
       // The cached list moves at once; a refused move snaps back on reload.
       await moveTask.mutateAsync({
         task,
-        position: target.position,
+        position: positionAfter(tasks ?? [], task, target.status, target.after),
         status: isSameStatus ? undefined : target.status,
       });
     } catch (error) {
@@ -202,10 +233,14 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
   }, []);
 
   const tasks = tasksQuery.data ?? null;
+  const shownTasks =
+    tagFilter && tags.some((tag) => tag.id === tagFilter)
+      ? (tasks ?? []).filter((task) => task.tags?.includes(tagFilter))
+      : (tasks ?? []);
   const terminalStatus = project?.terminalStatus;
   const errorMessage = tasksQuery.isError ? TASKS_LOAD_ERROR : actionError;
   const sections = sectionsByStatus(
-    tasks ?? [],
+    shownTasks,
     project?.projectStatuses ?? [],
     collapsedStatuses,
   );
@@ -230,6 +265,13 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
           ) : null}
           {errorMessage !== "" && (
             <Text className="text-danger">{errorMessage}</Text>
+          )}
+          {tags.length > 0 && (
+            <TagFilter
+              tags={tags}
+              selected={tagFilter}
+              onSelect={setTagFilter}
+            />
           )}
         </View>
         {tasks !== null && sections.length === 0 && (
@@ -284,6 +326,7 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
             return (
               <TaskRow
                 task={task}
+                tags={tagsOfTask(task, tags)}
                 isDone={task.status === terminalStatus}
                 onOpen={() =>
                   router.push({
@@ -321,6 +364,7 @@ export function ProjectTasks({ project }: { project: ProjectResponse | null }) {
  */
 function TaskRow({
   task,
+  tags,
   isDone,
   onOpen,
   onToggle,
@@ -329,6 +373,8 @@ function TaskRow({
   showCommentCount,
 }: {
   task: TaskResponse;
+  /** The Task's Tags, shown as chips under its title. */
+  tags: TagResponse[];
   isDone: boolean;
   onOpen: () => void;
   onToggle: () => void;
@@ -378,6 +424,13 @@ function TaskRow({
             {task.description}
           </Text>
         )}
+        {tags.length > 0 && (
+          <View className="mt-1 flex-row flex-wrap gap-1">
+            {tags.map((tag) => (
+              <TagChip key={tag.id} tag={tag} />
+            ))}
+          </View>
+        )}
       </View>
       {showCommentCount && (task.commentCount ?? 0) > 0 && (
         <View
@@ -416,5 +469,64 @@ function TaskRow({
         </Pressable>
       )}
     </Pressable>
+  );
+}
+
+/**
+ * Narrows the list to one Tag, like the web's filter; tapping the chosen Tag
+ * again shows every Task. The last chip opens the Tag manager.
+ */
+function TagFilter({
+  tags,
+  selected,
+  onSelect,
+}: {
+  tags: TagResponse[];
+  selected: string | null;
+  onSelect: (tagId: string | null) => void;
+}) {
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerClassName="gap-2"
+      accessibilityLabel="Filtruj po tagu"
+    >
+      {tags.map((tag) => {
+        const isSelected = tag.id === selected;
+        return (
+          <Pressable
+            key={tag.id}
+            accessibilityRole="button"
+            accessibilityLabel={`Tag: ${tag.name}`}
+            accessibilityState={{ selected: isSelected }}
+            onPress={() => onSelect(isSelected ? null : tag.id)}
+            className={
+              isSelected
+                ? "flex-row items-center gap-1.5 rounded-full border border-ink bg-paper px-3 py-1.5"
+                : "flex-row items-center gap-1.5 rounded-full border border-transparent bg-wash px-3 py-1.5 active:opacity-60"
+            }
+          >
+            <TagDot color={tag.color} />
+            <Text
+              className={
+                isSelected
+                  ? "text-xs font-semibold text-ink"
+                  : "text-xs text-ink-soft"
+              }
+            >
+              {tag.name}
+            </Text>
+          </Pressable>
+        );
+      })}
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => router.push("/tags")}
+        className="justify-center rounded-full px-3 py-1.5 active:bg-wash"
+      >
+        <Text className="text-xs text-muted">Zarządzaj tagami</Text>
+      </Pressable>
+    </ScrollView>
   );
 }

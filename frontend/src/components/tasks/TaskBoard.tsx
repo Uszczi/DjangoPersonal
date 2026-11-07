@@ -65,9 +65,13 @@ export function TaskBoard({
   onToggleTaskStatus,
   onStartTimer,
   onEditTask,
+  allTasks = tasks,
 }: {
   project: ProjectResponse;
+  /** The Tasks shown, maybe narrowed by a filter. */
   tasks: TaskResponse[];
+  /** Every Task of the Project, so a drop among filtered Tasks lands at the right position. */
+  allTasks?: TaskResponse[];
   collapsedStatuses: ReadonlySet<string>;
   onToggleCollapsed: (status: string) => void;
   onToggleTaskStatus: (task: TaskResponse) => void;
@@ -134,7 +138,7 @@ export function TaskBoard({
     }
 
     // Placed among the target status's other Tasks: at the hovered Task, else last.
-    const targetGroupTasks = tasks.filter(
+    const targetGroupTasks = allTasks.filter(
       (task) => task.status === overStatus && task.id !== draggedTask.id,
     );
     const overIndex = targetGroupTasks.findIndex((task) => task.id === over.id);

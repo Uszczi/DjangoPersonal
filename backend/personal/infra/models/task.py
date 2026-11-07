@@ -11,6 +11,7 @@ from personal.infra.rules import (
 
 from .base import Base, new_id
 from .project import Project
+from .tag import Tag, task_tags
 
 # The comments table by name only: `TaskComment` imports this module.
 _comments = table('task_comments', column('task_id'))
@@ -47,6 +48,8 @@ class Task(Base):
     )
 
     project: Mapped[Project] = relationship()
+    #: The Task's Tags, alphabetically.
+    tags: Mapped[list[Tag]] = relationship(secondary=task_tags, order_by=Tag.normalized_name)
 
     @property
     def is_done(self) -> bool:

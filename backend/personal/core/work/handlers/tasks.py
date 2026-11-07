@@ -9,11 +9,13 @@ from personal.infra.models import Task as TaskModel
 from personal.infra.models import User
 from personal.infra.repo import (
     ProjectRepository,
+    TagRepository,
     TaskHasTimeEntries,
     TaskRepository,
 )
 
 from .projects import _resolve_project
+from .tags import resolve_tags
 
 
 def _get_task(repository: TaskRepository, task_id: UUID, *, user: User) -> TaskModel:
@@ -86,10 +88,12 @@ class CreateTask:
         self,
         projects: ProjectRepository,
         tasks: TaskRepository,
+        tags: TagRepository,
         user: User,
     ):
         self.projects = projects
         self.tasks = tasks
+        self.tags = tags
         self.user = user
 
     def execute(self, data: TaskCreateRequest) -> TaskModel:
@@ -100,6 +104,7 @@ class CreateTask:
         )
 
         status = _resolve_status(project, data.status)
+        tags = resolve_tags(self.tags, data.tags, user=self.user)
         position = (
             data.position
             if data.position is not None
@@ -111,6 +116,7 @@ class CreateTask:
             project=project,
             status=status,
             position=position,
+            tags=tags,
         )
         if data.position is None and project.is_terminal(status):
             self.tasks.reorder(task, index=0)
@@ -122,10 +128,12 @@ class UpdateTask:
         self,
         projects: ProjectRepository,
         tasks: TaskRepository,
+        tags: TagRepository,
         user: User,
     ):
         self.projects = projects
         self.tasks = tasks
+        self.tags = tags
         self.user = user
 
     def execute(self, task_id: UUID, data: PatchedTaskUpdateRequest) -> TaskModel:
@@ -138,7 +146,8 @@ class UpdateTask:
             data,
             task,
             resolve={
-                'project': partial(_resolve_project, self.projects, user=self.user)
+                'project': partial(_resolve_project, self.projects, user=self.user),
+                'tags': partial(resolve_tags, self.tags, user=self.user),
             },
         )
 

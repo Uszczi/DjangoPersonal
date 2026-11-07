@@ -111,6 +111,14 @@ RESOURCES = [
         name='title',
     ),
     Resource(
+        '/api/v1/tags/',
+        lambda _: {'name': 'Pilne'},
+        edit={'color': '#3d6fb6'},
+        required='name',
+        name='name',
+        unique_name=True,
+    ),
+    Resource(
         '/api/v1/task-comments/',
         lambda client: {'task': _task(client), 'body': 'Looks good'},
         edit={'body': 'Looks better'},

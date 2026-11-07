@@ -28,6 +28,7 @@ from personal.infra.factories import (
     CounterFactory,
     FolderFactory,
     ProjectFactory,
+    TagFactory,
     TaskFactory,
     TimeEntryFactory,
     TransactionFactory,
@@ -41,6 +42,7 @@ from personal.infra.models import (
     CounterEntry,
     Folder,
     Project,
+    Tag,
     Task,
     TimeEntry,
     Transaction,
@@ -69,6 +71,7 @@ from .content import (
     INBOX_TASKS,
     NOTES,
     PROJECTS,
+    TAGS,
     USERS,
     WALLETS,
     BoardSeed,
@@ -152,6 +155,7 @@ class _UserSeeder:
         self.now = now
         self.full = full
         self.stats: Tally[str] = Tally()
+        self.tags: dict[str, Tag] = {}
 
     def run(self) -> Tally[str]:
         self._seed_work()
@@ -177,6 +181,11 @@ class _UserSeeder:
     # -- projects, tasks, time --------------------------------------------
 
     def _seed_work(self) -> None:
+        self.tags = {
+            name: TagFactory.create(user=self.user, name=name, color=color)
+            for name, color in TAGS.items()
+        }
+        self.stats['tags'] += len(self.tags)
         tasks: list[Task] = []
         for position, project_seed in enumerate(self._some(PROJECTS, 3, 3), start=1):
             project = ProjectFactory.create(
@@ -211,6 +220,7 @@ class _UserSeeder:
                     description=task_seed.description,
                     status=status,
                     position=positions[status],
+                    tags=[self.tags[name] for name in task_seed.tags],
                 )
             )
             positions[status] += 1

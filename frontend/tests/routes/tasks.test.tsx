@@ -635,6 +635,7 @@ describe("Projects", () => {
           description: "Talk to the team",
           project: uid(2),
           status: "Todo",
+          tags: [],
         }),
       }),
     );
@@ -893,6 +894,7 @@ describe("Projects", () => {
           description: "Confirm with the team",
           project: uid(3),
           status: "Todo",
+          tags: [],
         }),
       }),
     );
@@ -963,6 +965,7 @@ describe("Projects", () => {
           description: "New note",
           project: uid(2),
           status: "Todo",
+          tags: [],
         }),
       }),
     );

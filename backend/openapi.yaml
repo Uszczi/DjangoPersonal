@@ -393,6 +393,113 @@ paths:
       responses:
         '204':
           description: Successful Response
+  /api/v1/tags/:
+    get:
+      tags:
+      - personal
+      summary: List Tags
+      operationId: tags_list
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TagResponse'
+                type: array
+                title: Response Tags List
+      security:
+      - JWTAuth: []
+    post:
+      tags:
+      - personal
+      summary: Create Tag
+      operationId: tags_create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagResponse'
+      security:
+      - JWTAuth: []
+  /api/v1/tags/{id}/:
+    get:
+      tags:
+      - personal
+      summary: Get Tag
+      operationId: tags_retrieve
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagResponse'
+    patch:
+      tags:
+      - personal
+      summary: Update Tag
+      operationId: tags_partial_update
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTagRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagResponse'
+    delete:
+      tags:
+      - personal
+      summary: Delete Tag
+      operationId: tags_destroy
+      security:
+      - JWTAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Id
+      responses:
+        '204':
+          description: Successful Response
   /api/v1/task-comments/:
     get:
       tags:
@@ -2786,6 +2893,23 @@ components:
           title: Terminal Status
       type: object
       title: PatchedProjectRequest
+    PatchedTagRequest:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 50
+            minLength: 1
+          - type: 'null'
+          title: Name
+        color:
+          anyOf:
+          - type: string
+            pattern: ^#[0-9a-fA-F]{6}$
+          - type: 'null'
+          title: Color
+      type: object
+      title: PatchedTagRequest
     PatchedTaskCommentRequest:
       properties:
         body:
@@ -2826,6 +2950,14 @@ components:
           - type: integer
           - type: 'null'
           title: Position
+        tags:
+          anyOf:
+          - items:
+              type: string
+              format: uuid
+            type: array
+          - type: 'null'
+          title: Tags
       type: object
       title: PatchedTaskUpdateRequest
     PatchedTimeEntryRequest:
@@ -3083,6 +3215,41 @@ components:
       - password
       - password_confirm
       title: RegisterRequest
+    TagRequest:
+      properties:
+        name:
+          type: string
+          maxLength: 50
+          minLength: 1
+          title: Name
+        color:
+          type: string
+          pattern: ^#[0-9a-fA-F]{6}$
+          title: Color
+          default: '#477c7c'
+      type: object
+      required:
+      - name
+      title: TagRequest
+    TagResponse:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+          readOnly: true
+        name:
+          type: string
+          title: Name
+        color:
+          type: string
+          title: Color
+      type: object
+      required:
+      - id
+      - name
+      - color
+      title: TagResponse
     TaskCommentCreateRequest:
       properties:
         task:
@@ -3159,6 +3326,12 @@ components:
           - type: integer
           - type: 'null'
           title: Position
+        tags:
+          items:
+            type: string
+            format: uuid
+          type: array
+          title: Tags
       type: object
       required:
       - title
@@ -3195,6 +3368,12 @@ components:
           title: Comment Count
           default: 0
           readOnly: true
+        tags:
+          items:
+            type: string
+            format: uuid
+          type: array
+          title: Tags
       type: object
       required:
       - id

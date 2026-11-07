@@ -10,12 +10,14 @@ import {
   ListRowSubtitle,
   ListRowTitle,
 } from "@/design-system";
+import { TagChip } from "@/components/tags/TagChip";
 import type { TaskResponse } from "@personal/shared/generated/api";
+import { tagsOfTask, useTags } from "@personal/shared/queries/tags";
 import { useTaskListSettingsStore } from "@personal/shared/stores/taskListSettings";
 import { commentCountLabel } from "@personal/shared/queries/taskComments";
 import { shortTaskTitle } from "@personal/shared/taskTitle";
 
-/** One Task in its status list: drag handle, done checkbox, title (opens the editor), timer start (unless turned off in the list's settings). */
+/** One Task in its status list: drag handle, done checkbox, title and Tags (opens the editor), timer start (unless turned off in the list's settings). */
 export function SortableTaskRow({
   task,
   isCompleted,
@@ -44,6 +46,8 @@ export function SortableTaskRow({
     (state) => state.showCommentCount,
   );
   const commentCount = task.commentCount ?? 0;
+  const { data: allTags = [] } = useTags();
+  const tags = tagsOfTask(task, allTags);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -83,6 +87,13 @@ export function SortableTaskRow({
             </ListRowTitle>
             {task.description && (
               <ListRowSubtitle>{task.description}</ListRowSubtitle>
+            )}
+            {tags.length > 0 && (
+              <span className="mt-1 flex flex-wrap gap-1">
+                {tags.map((tag) => (
+                  <TagChip key={tag.id} tag={tag} />
+                ))}
+              </span>
             )}
           </div>
         </ListRowButton>

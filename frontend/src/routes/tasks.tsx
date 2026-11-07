@@ -22,8 +22,9 @@ import {
   ProjectsDrawer,
   ProjectsDrawerToggle,
 } from "@/components/tasks/ProjectsDrawer";
+import { TagFilter } from "@/components/tags/TagFilter";
 import { TaskBoard } from "@/components/tasks/TaskBoard";
-import { validateProjectSearch } from "@/lib/projectSearch";
+import { validateProjectSearch, type ProjectSearch } from "@/lib/projectSearch";
 import { useProjectSearchParam } from "@/lib/useProjectSearchParam";
 import { useLayoutStore } from "@/stores/layout";
 import { ShowModal } from "@/stores/modal";
@@ -35,6 +36,7 @@ import {
   useProjectTasks,
   useToggleTaskStatus,
 } from "@personal/shared/queries/tasks";
+import { useTags } from "@personal/shared/queries/tags";
 import { useStartTimer } from "@personal/shared/queries/timer";
 import {
   initialNewTaskStatus,
@@ -42,13 +44,23 @@ import {
 } from "@personal/shared/stores/newTaskStatus";
 import { useCollapsedStatuses } from "@personal/shared/useCollapsedStatuses";
 
+/** `?project=` plus `?tag=`, the Tag the list is narrowed to. */
+function validateTasksSearch(
+  search: Record<string, unknown>,
+): ProjectSearch & { tag?: string } {
+  return {
+    ...validateProjectSearch(search),
+    tag: typeof search.tag === "string" ? search.tag : undefined,
+  };
+}
+
 export const Route = createFileRoute("/tasks")({
-  validateSearch: validateProjectSearch,
+  validateSearch: validateTasksSearch,
   component: TasksPage,
 });
 
 function TasksPage() {
-  const { project } = useSearch({ from: "/tasks" });
+  const { project, tag } = useSearch({ from: "/tasks" });
   const navigate = useNavigate();
   useProjectSearchParam(project);
 
@@ -71,6 +83,12 @@ function TasksPage() {
     isPending: isTasksLoading,
     isError: isTasksError,
   } = useProjectTasks(selectedProject);
+  const { data: tags = [] } = useTags();
+  // A Tag deleted meanwhile no longer narrows the list.
+  const tagFilter = tags.some((item) => item.id === tag) ? tag : undefined;
+  const shownTasks = tagFilter
+    ? tasks.filter((task) => task.tags?.includes(tagFilter))
+    : tasks;
   const [isProjectsDrawerOpen, setProjectsDrawerOpen] = useState(false);
   const {
     collapsed: collapsedStatuses,
@@ -161,7 +179,8 @@ function TasksPage() {
             actions={
               <>
                 <span className="mr-2 font-utility text-[11px] font-semibold tracking-[0.08em] text-muted">
-                  {tasks.length} {tasks.length === 1 ? "ZADANIE" : "ZADAŃ"}
+                  {shownTasks.length}{" "}
+                  {shownTasks.length === 1 ? "ZADANIE" : "ZADAŃ"}
                 </span>
                 <IconButton
                   aria-label="Ustawienia listy zadań"
@@ -178,6 +197,18 @@ function TasksPage() {
             }
           />
 
+          {tags.length > 0 && (
+            <TagFilter
+              tags={tags}
+              selected={tagFilter}
+              onSelect={(next) =>
+                void navigate({
+                  to: ".",
+                  search: (prev) => ({ ...prev, tag: next }),
+                })
+              }
+            />
+          )}
           {isTasksLoading ? (
             <LoadingStatus variant="inline">Wczytywanie zadań…</LoadingStatus>
           ) : isTasksError ? (
@@ -186,10 +217,15 @@ function TasksPage() {
             <p className="py-4 text-[13px] text-muted">
               Nie ma tu jeszcze zadań.
             </p>
+          ) : shownTasks.length === 0 ? (
+            <p className="py-4 text-[13px] text-muted">
+              Żadne zadanie w tym projekcie nie ma tego tagu.
+            </p>
           ) : (
             <TaskBoard
               project={selectedProject}
-              tasks={tasks}
+              tasks={shownTasks}
+              allTasks={tasks}
               collapsedStatuses={collapsedStatuses}
               onToggleCollapsed={toggleStatusSection}
               onToggleTaskStatus={(task) => void toggleTask(task)}

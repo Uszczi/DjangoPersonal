@@ -1,10 +1,11 @@
-"""Views for the Work domain (Projects, Tasks, comments, attachments, time)."""
+"""Views for the Work domain (Projects, Tasks, Tags, comments, attachments, time)."""
 
 from sqlalchemy.orm import Session
 
 from personal.infra.models import (
     CommentAttachment,
     Project,
+    Tag,
     Task,
     TaskComment,
     TimeEntry,
@@ -31,6 +32,14 @@ class TaskView(_AppView, model=Task):
     column_searchable_list = [Task.title]
     column_sortable_list = [Task.id, Task.title]
     form_columns = [Task.title, Task.description]
+
+
+class TagView(_AppView, model=Tag):
+    icon = 'fa-solid fa-tag'
+    column_list = [Tag.id, Tag.user, Tag.name, Tag.color]
+    column_searchable_list = [Tag.name]
+    column_sortable_list = [Tag.id, Tag.name]
+    form_columns = [Tag.name]
 
 
 class TaskCommentView(_AppView, model=TaskComment):

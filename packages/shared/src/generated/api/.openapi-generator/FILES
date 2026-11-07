@@ -30,6 +30,7 @@ models/PatchedCounterRequest.ts
 models/PatchedFolderRequest.ts
 models/PatchedMobileSettingsRequest.ts
 models/PatchedProjectRequest.ts
+models/PatchedTagRequest.ts
 models/PatchedTaskCommentRequest.ts
 models/PatchedTaskUpdateRequest.ts
 models/PatchedTimeEntryRequest.ts
@@ -42,6 +43,8 @@ models/ProjectResponse.ts
 models/RefreshRequest.ts
 models/RefreshResponse.ts
 models/RegisterRequest.ts
+models/TagRequest.ts
+models/TagResponse.ts
 models/TaskCommentCreateRequest.ts
 models/TaskCommentResponse.ts
 models/TaskCreateRequest.ts

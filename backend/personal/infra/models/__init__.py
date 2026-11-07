@@ -16,6 +16,7 @@ from .idempotency_key import IdempotencyKey
 from .mobile_settings import MobileSettings
 from .note_chunk import NoteChunk
 from .project import Project
+from .tag import Tag
 from .task import Task
 from .task_comment import INLINE_IMAGE_TYPES, CommentAttachment, TaskComment
 from .time_entry import TimeEntry
@@ -39,6 +40,7 @@ __all__ = [
     'NoteChunk',
     'Project',
     'INLINE_IMAGE_TYPES',
+    'Tag',
     'Task',
     'TaskComment',
     'TimeEntry',

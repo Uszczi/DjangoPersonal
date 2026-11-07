@@ -4,7 +4,12 @@ from fastapi import APIRouter, Response, status
 
 from personal.core.work import handlers
 from personal.core.work.contracts import PatchedTaskUpdateRequest, TaskCreateRequest, TaskResponse
-from personal.entrypoints.http.deps import CurrentUser, ProjectRepositoryDep, TaskRepositoryDep
+from personal.entrypoints.http.deps import (
+    CurrentUser,
+    ProjectRepositoryDep,
+    TagRepositoryDep,
+    TaskRepositoryDep,
+)
 
 router = APIRouter(tags=['personal'])
 
@@ -30,8 +35,9 @@ def create_task(
     user: CurrentUser,
     projects: ProjectRepositoryDep,
     tasks: TaskRepositoryDep,
+    tags: TagRepositoryDep,
 ) -> TaskResponse:
-    handler = handlers.CreateTask(projects=projects, tasks=tasks, user=user)
+    handler = handlers.CreateTask(projects=projects, tasks=tasks, tags=tags, user=user)
     return TaskResponse.model_validate(handler.execute(payload))
 
 
@@ -42,8 +48,9 @@ def update_task(
     user: CurrentUser,
     projects: ProjectRepositoryDep,
     tasks: TaskRepositoryDep,
+    tags: TagRepositoryDep,
 ) -> TaskResponse:
-    handler = handlers.UpdateTask(projects=projects, tasks=tasks, user=user)
+    handler = handlers.UpdateTask(projects=projects, tasks=tasks, tags=tags, user=user)
     return TaskResponse.model_validate(handler.execute(id, payload))
 
 

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { apiErrorMessage } from "@personal/shared/apiErrorMessage";
 import { DeleteTaskModal } from "@/components/modals/DeleteTaskModal";
+import { TagPicker } from "@/components/tags/TagPicker";
 import { TaskComments } from "@/components/tasks/TaskComments";
 import {
   Button,
@@ -56,6 +57,7 @@ export function TaskEditorModal({
         projects.find((item) => item.id === initialProjectId)
           ?.projectStatuses ?? [],
       ),
+    tags: task?.tags ?? [],
   }));
   const [formError, setFormError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -97,6 +99,7 @@ export function TaskEditorModal({
       description: form.description.trim(),
       project: form.project,
       status,
+      tags: form.tags,
     };
 
     if (!input.title) {
@@ -207,6 +210,11 @@ export function TaskEditorModal({
             </Field>
           )}
         </fieldset>
+        <TagPicker
+          value={form.tags ?? []}
+          onChange={(tags) => setForm((current) => ({ ...current, tags }))}
+          disabled={!isEditing}
+        />
         {formError && <ErrorAlert>{formError}</ErrorAlert>}
         {isEditing && (
           <ModalFooter>

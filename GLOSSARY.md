@@ -10,6 +10,10 @@ A named space that groups tasks.
 **Task**:
 An action item with a title, optional description, and a status drawn from its project's ordered list of statuses. Every task belongs to exactly one project.
 
+**Tag**:
+A coloured label a user puts on Tasks to group them across Projects (e.g. "Pilne", "Zakupy"). A Task may carry any number of Tags; the Task list can be narrowed to one. Tag names are unique per user, ignoring case. Deleting a Tag takes it off every Task; the Tasks stay.
+_Avoid_: Label, Category (a Category files Transactions)
+
 **Comment** (Komentarz):
 A note left on a Task: optional text plus any number of Attachments. A Task's comments read oldest first, like a conversation. Deleting a Task deletes its comments.
 

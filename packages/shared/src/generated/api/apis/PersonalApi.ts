@@ -150,6 +150,11 @@ import {
     PatchedProjectRequestToJSON,
 } from '../models/PatchedProjectRequest';
 import {
+    type PatchedTagRequest,
+    PatchedTagRequestFromJSON,
+    PatchedTagRequestToJSON,
+} from '../models/PatchedTagRequest';
+import {
     type PatchedTaskCommentRequest,
     PatchedTaskCommentRequestFromJSON,
     PatchedTaskCommentRequestToJSON,
@@ -209,6 +214,16 @@ import {
     RegisterRequestFromJSON,
     RegisterRequestToJSON,
 } from '../models/RegisterRequest';
+import {
+    type TagRequest,
+    TagRequestFromJSON,
+    TagRequestToJSON,
+} from '../models/TagRequest';
+import {
+    type TagResponse,
+    TagResponseFromJSON,
+    TagResponseToJSON,
+} from '../models/TagResponse';
 import {
     type TaskCommentCreateRequest,
     TaskCommentCreateRequestFromJSON,
@@ -652,6 +667,38 @@ export interface SettingsPartialUpdateRequest {
      *
      */
     patchedUserSettingsRequest: PatchedUserSettingsRequest;
+}
+
+export interface TagsCreateRequest {
+    /**
+     *
+     */
+    tagRequest: TagRequest;
+}
+
+export interface TagsDestroyRequest {
+    /**
+     *
+     */
+    id: string;
+}
+
+export interface TagsPartialUpdateRequest {
+    /**
+     *
+     */
+    id: string;
+    /**
+     *
+     */
+    patchedTagRequest: PatchedTagRequest;
+}
+
+export interface TagsRetrieveRequest {
+    /**
+     *
+     */
+    id: string;
 }
 
 export interface TaskCommentsAttachmentsCreateRequest {
@@ -3526,6 +3573,274 @@ export class PersonalApi extends runtime.BaseAPI {
      */
     async settingsRetrieve(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserSettingsResponse> {
         const response = await this.settingsRetrieveRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for tagsCreate without sending the request
+     */
+    async tagsCreateRequestOpts(requestParameters: TagsCreateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['tagRequest'] == null) {
+            throw new runtime.RequiredError(
+                'tagRequest',
+                'Required parameter "tagRequest" was null or undefined when calling tagsCreate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/tags/`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: TagRequestToJSON(requestParameters['tagRequest']),
+        };
+    }
+
+    /**
+     * Create Tag
+     */
+    async tagsCreateRaw(requestParameters: TagsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TagResponse>> {
+        const requestOptions = await this.tagsCreateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => TagResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Create Tag
+     */
+    async tagsCreate(requestParameters: TagsCreateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TagResponse> {
+        const response = await this.tagsCreateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for tagsDestroy without sending the request
+     */
+    async tagsDestroyRequestOpts(requestParameters: TagsDestroyRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling tagsDestroy().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/tags/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Delete Tag
+     */
+    async tagsDestroyRaw(requestParameters: TagsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.tagsDestroyRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Delete Tag
+     */
+    async tagsDestroy(requestParameters: TagsDestroyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.tagsDestroyRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Creates request options for tagsList without sending the request
+     */
+    async tagsListRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/tags/`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * List Tags
+     */
+    async tagsListRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<TagResponse>>> {
+        const requestOptions = await this.tagsListRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(TagResponseFromJSON));
+    }
+
+    /**
+     * List Tags
+     */
+    async tagsList(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<TagResponse>> {
+        const response = await this.tagsListRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for tagsPartialUpdate without sending the request
+     */
+    async tagsPartialUpdateRequestOpts(requestParameters: TagsPartialUpdateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling tagsPartialUpdate().'
+            );
+        }
+
+        if (requestParameters['patchedTagRequest'] == null) {
+            throw new runtime.RequiredError(
+                'patchedTagRequest',
+                'Required parameter "patchedTagRequest" was null or undefined when calling tagsPartialUpdate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/tags/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: PatchedTagRequestToJSON(requestParameters['patchedTagRequest']),
+        };
+    }
+
+    /**
+     * Update Tag
+     */
+    async tagsPartialUpdateRaw(requestParameters: TagsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TagResponse>> {
+        const requestOptions = await this.tagsPartialUpdateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => TagResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Update Tag
+     */
+    async tagsPartialUpdate(requestParameters: TagsPartialUpdateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TagResponse> {
+        const response = await this.tagsPartialUpdateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for tagsRetrieve without sending the request
+     */
+    async tagsRetrieveRequestOpts(requestParameters: TagsRetrieveRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling tagsRetrieve().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("JWTAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/v1/tags/{id}/`;
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Get Tag
+     */
+    async tagsRetrieveRaw(requestParameters: TagsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TagResponse>> {
+        const requestOptions = await this.tagsRetrieveRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => TagResponseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get Tag
+     */
+    async tagsRetrieve(requestParameters: TagsRetrieveRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TagResponse> {
+        const response = await this.tagsRetrieveRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
