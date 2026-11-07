@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { ChevronsLeft, ChevronsRight, Plus } from "lucide-react";
 
 import { ProjectEditorModal } from "@/components/modals/ProjectEditorModal";
 import { InboxIcon } from "@/design-system";
@@ -6,7 +7,7 @@ import { ShowModal } from "@/stores/modal";
 import { useProjects } from "@personal/shared/queries/projects";
 
 const toggleButtonClasses =
-  "inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md border bg-transparent text-[20px] leading-none text-nav-text transition-colors hover:border-nav-line-strong hover:bg-nav-selected";
+  "inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md border bg-transparent text-nav-text transition-colors hover:border-nav-line-strong hover:bg-nav-selected";
 
 type ProjectNavListProps = {
   selectedProjectId: string | null;
@@ -94,7 +95,7 @@ export function ProjectsSidebar({
           aria-label="Rozwiń panel projektów"
           title="Rozwiń panel projektów"
         >
-          <span aria-hidden="true">»</span>
+          <ChevronsRight aria-hidden="true" className="size-4" />
         </button>
       </aside>
     );
@@ -115,7 +116,7 @@ export function ProjectsSidebar({
           aria-label="Nowy projekt"
           title="Nowy projekt"
         >
-          <span aria-hidden="true">+</span>
+          <Plus aria-hidden="true" className="size-4" />
         </button>
         <button
           className={`${toggleButtonClasses} border-transparent`}
@@ -123,7 +124,7 @@ export function ProjectsSidebar({
           aria-label="Zwiń panel projektów"
           title="Zwiń panel projektów"
         >
-          <span aria-hidden="true">«</span>
+          <ChevronsLeft aria-hidden="true" className="size-4" />
         </button>
       </div>
 
