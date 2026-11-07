@@ -5,7 +5,7 @@
  */
 import {
   useMutation,
-  useQuery,
+  useQueries,
   useQueryClient,
   type QueryClient,
 } from "@tanstack/react-query";
@@ -63,12 +63,33 @@ async function fetchMonth(
   return items;
 }
 
-/** One month (`yyyy-mm`) of the wallet's transactions, newest first; `null` waits for a wallet. */
-export function useMonthTransactions(walletId: string | null, month: MonthKey) {
-  return useQuery({
-    queryKey: transactionKeys.month(walletId ?? "", month),
-    queryFn: ({ signal }) => fetchMonth(walletId ?? "", month, signal),
-    enabled: walletId !== null,
+function monthQuery(walletId: string, month: MonthKey) {
+  return {
+    queryKey: transactionKeys.month(walletId, month),
+    queryFn: ({ signal }: { signal: AbortSignal }) =>
+      fetchMonth(walletId, month, signal),
+  };
+}
+
+/**
+ * One month (`yyyy-mm`) of the given wallets' transactions together, newest
+ * first: one wallet's, or every wallet's for the "Wszystkie" view. Each wallet
+ * keeps its own cached month, so the writes below update this view too.
+ * `data` waits for every wallet; with no wallets it is empty.
+ */
+export function useWalletsMonth(walletIds: string[], month: MonthKey) {
+  return useQueries({
+    queries: walletIds.map((walletId) => monthQuery(walletId, month)),
+    combine: (results) => ({
+      data: results.every((result) => result.data !== undefined)
+        ? results
+            .flatMap((result) => result.data ?? [])
+            .sort(compareNewestFirst)
+        : undefined,
+      isPending: results.some((result) => result.isPending),
+      isError: results.some((result) => result.isError),
+      refetch: () => Promise.all(results.map((result) => result.refetch())),
+    }),
   });
 }
 
@@ -94,7 +115,10 @@ export function findCachedTransaction(
 function updateMonths(
   queryClient: QueryClient,
   walletId: string,
-  update: (items: TransactionResponse[], month: MonthKey) => TransactionResponse[],
+  update: (
+    items: TransactionResponse[],
+    month: MonthKey,
+  ) => TransactionResponse[],
 ) {
   for (const [key, items] of queryClient.getQueriesData<TransactionResponse[]>({
     queryKey: transactionKeys.months(walletId),

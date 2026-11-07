@@ -20,15 +20,27 @@ type TransactionRowProps = {
   transaction: TransactionResponse;
   /** The transaction's category, when it has one. */
   category: CategoryResponse | undefined;
+  /** The wallet's name, when the list mixes wallets. */
+  walletName?: string;
 };
 
 /** One transaction, like the web: the day, its category mark, the title and a signed amount; a tap edits it. */
-export function TransactionRow({ transaction, category }: TransactionRowProps) {
+export function TransactionRow({
+  transaction,
+  category,
+  walletName,
+}: TransactionRowProps) {
   const { colors } = useTheme();
   // A system entry (no kind) carries its own sign; others are signed by kind.
   const isSystem = transaction.kind === null;
   const income = transaction.kind === "income";
   const amountText = formatCents(signedCents(transaction), { sign: true });
+  const subtitle = [
+    walletName,
+    isSystem ? "Wpis systemowy" : transaction.description,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const amountClass = isSystem
     ? "font-utility text-[13px] font-semibold text-muted tabular-nums"
     : income
@@ -66,14 +78,10 @@ export function TransactionRow({ transaction, category }: TransactionRowProps) {
         <Text className="text-sm text-ink" numberOfLines={1}>
           {transaction.title}
         </Text>
-        {isSystem ? (
-          <Text className="text-[11px] text-muted">Wpis systemowy</Text>
-        ) : (
-          transaction.description !== "" && (
-            <Text className="text-[11px] text-muted" numberOfLines={1}>
-              {transaction.description}
-            </Text>
-          )
+        {subtitle !== "" && (
+          <Text className="text-[11px] text-muted" numberOfLines={1}>
+            {subtitle}
+          </Text>
         )}
       </View>
       <Text className={amountClass}>{amountText}</Text>

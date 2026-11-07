@@ -27,6 +27,7 @@ import { Route as CountersIndexRouteImport } from './routes/counters/index'
 import { Route as CountersCounterIdRouteImport } from './routes/counters/$counterId'
 import { Route as ExpensesIndexRouteImport } from './routes/expenses/index'
 import { Route as ExpensesWalletIdRouteImport } from './routes/expenses/$walletId'
+import { Route as ExpensesAllRouteImport } from './routes/expenses/all'
 import { Route as WhiteboardIndexRouteImport } from './routes/whiteboard/index'
 import { Route as WhiteboardBoardIdRouteImport } from './routes/whiteboard/$boardId'
 import { Route as WhiteboardAskRouteImport } from './routes/whiteboard/ask'
@@ -121,6 +122,11 @@ const ExpensesWalletIdRoute = ExpensesWalletIdRouteImport.update({
   path: '/$walletId',
   getParentRoute: () => ExpensesRoute,
 } as any)
+const ExpensesAllRoute = ExpensesAllRouteImport.update({
+  id: '/all',
+  path: '/all',
+  getParentRoute: () => ExpensesRoute,
+} as any)
 const WhiteboardIndexRoute = WhiteboardIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -153,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/bibliography/$itemId': typeof BibliographyItemIdRoute
   '/counters/$counterId': typeof CountersCounterIdRoute
   '/expenses/$walletId': typeof ExpensesWalletIdRoute
+  '/expenses/all': typeof ExpensesAllRoute
   '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
   '/whiteboard/ask': typeof WhiteboardAskRoute
   '/bibliography/': typeof BibliographyIndexRoute
@@ -172,6 +179,7 @@ export interface FileRoutesByTo {
   '/bibliography/$itemId': typeof BibliographyItemIdRoute
   '/counters/$counterId': typeof CountersCounterIdRoute
   '/expenses/$walletId': typeof ExpensesWalletIdRoute
+  '/expenses/all': typeof ExpensesAllRoute
   '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
   '/whiteboard/ask': typeof WhiteboardAskRoute
   '/bibliography': typeof BibliographyIndexRoute
@@ -196,6 +204,7 @@ export interface FileRoutesById {
   '/bibliography/$itemId': typeof BibliographyItemIdRoute
   '/counters/$counterId': typeof CountersCounterIdRoute
   '/expenses/$walletId': typeof ExpensesWalletIdRoute
+  '/expenses/all': typeof ExpensesAllRoute
   '/whiteboard/$boardId': typeof WhiteboardBoardIdRoute
   '/whiteboard/ask': typeof WhiteboardAskRoute
   '/bibliography/': typeof BibliographyIndexRoute
@@ -221,6 +230,7 @@ export interface FileRouteTypes {
     | '/bibliography/$itemId'
     | '/counters/$counterId'
     | '/expenses/$walletId'
+    | '/expenses/all'
     | '/whiteboard/$boardId'
     | '/whiteboard/ask'
     | '/bibliography/'
@@ -240,6 +250,7 @@ export interface FileRouteTypes {
     | '/bibliography/$itemId'
     | '/counters/$counterId'
     | '/expenses/$walletId'
+    | '/expenses/all'
     | '/whiteboard/$boardId'
     | '/whiteboard/ask'
     | '/bibliography'
@@ -263,6 +274,7 @@ export interface FileRouteTypes {
     | '/bibliography/$itemId'
     | '/counters/$counterId'
     | '/expenses/$walletId'
+    | '/expenses/all'
     | '/whiteboard/$boardId'
     | '/whiteboard/ask'
     | '/bibliography/'
@@ -414,6 +426,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExpensesWalletIdRouteImport
       parentRoute: typeof ExpensesRoute
     }
+    '/expenses/all': {
+      id: '/expenses/all'
+      path: '/all'
+      fullPath: '/expenses/all'
+      preLoaderRoute: typeof ExpensesAllRouteImport
+      parentRoute: typeof ExpensesRoute
+    }
     '/whiteboard/': {
       id: '/whiteboard/'
       path: '/'
@@ -468,11 +487,13 @@ const CountersRouteWithChildren = CountersRoute._addFileChildren(
 
 interface ExpensesRouteChildren {
   ExpensesWalletIdRoute: typeof ExpensesWalletIdRoute
+  ExpensesAllRoute: typeof ExpensesAllRoute
   ExpensesIndexRoute: typeof ExpensesIndexRoute
 }
 
 const ExpensesRouteChildren: ExpensesRouteChildren = {
   ExpensesWalletIdRoute: ExpensesWalletIdRoute,
+  ExpensesAllRoute: ExpensesAllRoute,
   ExpensesIndexRoute: ExpensesIndexRoute,
 }
 

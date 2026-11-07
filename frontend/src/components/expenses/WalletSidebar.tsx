@@ -6,27 +6,33 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Link } from "@tanstack/react-router";
-import { Settings2 } from "lucide-react";
+import { Layers, Settings2 } from "lucide-react";
 
 import { DragHandle } from "@/design-system";
 import { WalletCreateModal } from "@/components/modals/WalletCreateModal";
 import { WalletMark } from "@/components/WalletMark";
 import { useSortSensors } from "@/lib/useSortSensors";
-import { formatCents, toCents } from "@personal/shared/expenseMonth";
+import {
+  formatCents,
+  toCents,
+  totalBalanceCents,
+} from "@personal/shared/expenseMonth";
 import type { WalletResponse } from "@personal/shared/generated/api";
 import { useMoveWallet } from "@personal/shared/queries/wallets";
+import { ALL_WALLETS } from "@personal/shared/stores/walletSelection";
 import { ShowModal } from "@/stores/modal";
 
 type WalletSidebarProps = {
   wallets: WalletResponse[];
+  /** The shown wallet's id, or `ALL_WALLETS`. */
   activeWalletId: string;
   onManageCategories: () => void;
 };
 
 /**
- * Every wallet with its balance and the sum of them all. Each links to its
- * `/expenses/$walletId` route, keeping the shown month. A column on wide
- * screens, a row scrolling sideways on narrow ones.
+ * Every wallet with its balance and the sum of them all, after a "Wszystkie"
+ * entry for every wallet together. Each links to its route, keeping the shown
+ * month. A column on wide screens, a row scrolling sideways on narrow ones.
  */
 export function WalletSidebar({
   wallets,
@@ -43,8 +49,9 @@ export function WalletSidebar({
     moveWallet.mutate({ id: String(active.id), position });
   }
 
-  const total = wallets.reduce(
-    (sum, wallet) => sum + toCents(wallet.balance ?? "0"),
+  const total = totalBalanceCents(wallets);
+  const transactionCount = wallets.reduce(
+    (sum, wallet) => sum + (wallet.transactionCount ?? 0),
     0,
   );
 
@@ -63,6 +70,31 @@ export function WalletSidebar({
         aria-label="Wybierz portfel"
         className="flex gap-2 lg:flex-col lg:gap-1"
       >
+        <div className="flex shrink-0 items-center lg:shrink">
+          {/* Lines the entry up with the wallets behind their drag handles. */}
+          <span aria-hidden="true" className="mx-1 w-5 shrink-0" />
+          <Link
+            to="/expenses/all"
+            search={(prev) => ({ month: prev.month })}
+            aria-current={activeWalletId === ALL_WALLETS ? "page" : undefined}
+            className={walletLinkClasses}
+          >
+            <span className="grid size-9 shrink-0 place-items-center rounded-full bg-icon-wash text-icon">
+              <Layers aria-hidden="true" className="size-4" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold text-ink">
+                Wszystkie
+              </span>
+              <span className="block font-utility text-[12px] text-muted">
+                {transactionCount} transakcji
+              </span>
+            </span>
+            <span className="font-utility text-[13px] font-semibold text-ink-soft">
+              {formatCents(total)}
+            </span>
+          </Link>
+        </div>
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -100,6 +132,9 @@ export function WalletSidebar({
     </aside>
   );
 }
+
+const walletLinkClasses =
+  "flex min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-3 text-left no-underline transition-colors hover:bg-wash aria-[current]:bg-paper aria-[current]:ring-1 aria-[current]:ring-card-line";
 
 /** One wallet's link, with a handle to drag it elsewhere in the list. */
 function SortableWallet({
@@ -139,7 +174,7 @@ function SortableWallet({
         params={{ walletId: String(wallet.id) }}
         search={(prev) => ({ month: prev.month })}
         aria-current={isActive ? "page" : undefined}
-        className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-3 text-left no-underline transition-colors hover:bg-wash aria-[current]:bg-paper aria-[current]:ring-1 aria-[current]:ring-card-line"
+        className={walletLinkClasses}
       >
         <span className="grid size-9 shrink-0 place-items-center rounded-full bg-icon-wash">
           <WalletMark wallet={wallet} />

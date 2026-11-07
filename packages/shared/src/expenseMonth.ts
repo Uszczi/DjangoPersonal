@@ -85,6 +85,16 @@ export function formatCents(cents: number, { sign = false } = {}): string {
   return cents < 0 ? `−${text}` : text;
 }
 
+/** The Wallets' balances added up, in grosze. */
+export function totalBalanceCents(wallets: { balance?: string }[]): number {
+  return wallets.reduce((sum, wallet) => sum + toCents(wallet.balance ?? "0"), 0);
+}
+
+/** Grosze as the API's decimal string, e.g. `-4599` → `"-45.99"`. */
+export function centsToAmount(cents: number): string {
+  return (cents / 100).toFixed(2);
+}
+
 /**
  * A Transaction's effect on the balance in grosze: an Expense takes away, an
  * Income adds, a System entry (no kind) carries its own sign.

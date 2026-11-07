@@ -4,7 +4,10 @@ import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { useWalletSelectionStore } from "@personal/shared/stores/walletSelection";
+import {
+  ALL_WALLETS,
+  useWalletSelectionStore,
+} from "@personal/shared/stores/walletSelection";
 
 import { renderApp } from "../renderApp";
 import { uid } from "../ids";
@@ -47,8 +50,8 @@ function routeByUrl({
   /** The body answered to a wallet POST/PATCH. */
   written?: unknown;
   walletsStatus?: number;
-  /** The transaction list, asked for on every request (so it can change mid-test). */
-  transactions?: () => unknown[];
+  /** The transaction list, asked for on every request (so it can change mid-test); gets the request URL. */
+  transactions?: (url: string) => unknown[];
   categories?: unknown[];
 } = {}) {
   return (
@@ -74,7 +77,7 @@ function routeByUrl({
       return Promise.resolve(jsonResponse([inbox]));
     if (path.includes("/transactions/")) {
       return Promise.resolve(
-        jsonResponse({ items: transactions(), next_cursor: null }),
+        jsonResponse({ items: transactions(path), next_cursor: null }),
       );
     }
     if (path.includes("/categories/"))
@@ -611,6 +614,7 @@ describe("Wallets", () => {
 
     const links = within(switcher()).getAllByRole("link");
     expect(links.map((link) => link.textContent)).toEqual([
+      expect.stringMatching(/^Wszystkie/),
       expect.stringMatching(/^Personal/),
       expect.stringMatching(/^Business/),
     ]);
@@ -787,5 +791,107 @@ describe("The wallet's month", () => {
       .getAllByRole("button")
       .map((row) => row.getAttribute("aria-label"));
     expect(titles).toEqual(["Edytuj transakcję: Bilet"]);
+  });
+});
+
+describe("Every wallet together", () => {
+  const fetchMock = vi.fn();
+
+  function transaction(
+    id: string,
+    title: string,
+    amount: string,
+    walletId: string,
+  ) {
+    return {
+      id,
+      title,
+      amount,
+      date: "2026-10-24",
+      description: "",
+      category_id: null,
+      wallet_id: walletId,
+      kind: "expense",
+    };
+  }
+
+  /** Each wallet's October, answered by the `wallet=` the request asks for. */
+  function byWallet(url: string) {
+    const wallet = new URL(url, "http://localhost").searchParams.get("wallet");
+    if (!url.includes("date_from=2026-10")) return [];
+    if (wallet === uid(1))
+      return [transaction(uid(11), "Obiad", "40.00", uid(1))];
+    if (wallet === uid(2))
+      return [transaction(uid(12), "Serwer", "60.50", uid(2))];
+    return [];
+  }
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    vi.stubGlobal("fetch", fetchMock);
+    fetchMock.mockImplementation(
+      routeByUrl({
+        wallets: [personalWalletApi, businessWalletApi],
+        transactions: byWallet,
+      }),
+    );
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  test("Wszystkie adds up every wallet's month and lists their transactions", async () => {
+    const user = userEvent.setup();
+
+    const { router } = renderApp("/expenses?month=2026-10");
+    await screen.findByRole("region", { name: "Portfel: Personal" });
+    await user.click(
+      within(switcher()).getByRole("link", { name: /^Wszystkie/ }),
+    );
+
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe("/expenses/all"),
+    );
+    const shown = await screen.findByRole("region", {
+      name: "Wszystkie portfele",
+    });
+    expect(
+      within(switcher()).getByRole("link", { name: /^Wszystkie/ }),
+    ).toHaveAttribute("aria-current", "page");
+    await waitFor(() =>
+      expect(
+        within(shown).getByRole("region", { name: "Wydatki" }),
+      ).toHaveTextContent("100,50"),
+    );
+    expect(
+      within(shown).getByText("Saldo portfeli: 120.00"),
+    ).toBeInTheDocument();
+    const rows = within(
+      await within(shown).findByRole("list", { name: "Transakcje miesiąca" }),
+    ).getAllByRole("button");
+    expect(rows.map((row) => row.textContent)).toEqual([
+      expect.stringMatching(/Serwer.*Business/),
+      expect.stringMatching(/Obiad.*Personal/),
+    ]);
+    expect(
+      within(shown).queryByRole("button", { name: /^Edytuj portfel/ }),
+    ).not.toBeInTheDocument();
+    expect(useWalletSelectionStore.getState().selectedWalletId).toBe(
+      ALL_WALLETS,
+    );
+  });
+
+  test("the expenses page reopens Wszystkie when it was the last choice", async () => {
+    const { router } = renderApp("/expenses/all?month=2026-10");
+    await screen.findByRole("region", { name: "Wszystkie portfele" });
+
+    await router.navigate({ to: "/projects" });
+    await router.navigate({ to: "/expenses" });
+
+    expect(
+      await screen.findByRole("region", { name: "Wszystkie portfele" }),
+    ).toBeInTheDocument();
   });
 });

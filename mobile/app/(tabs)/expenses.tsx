@@ -3,19 +3,23 @@ import { useCallback, useState } from "react";
 import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 
 import {
+  centsToAmount,
   dayOfMonth,
   formatCents,
   monthKeyOf,
   shiftMonth,
   summarizeMonth,
-  toCents,
+  totalBalanceCents,
   type MonthKey,
 } from "@personal/shared/expenseMonth";
 import { WALLETS_LOAD_ERROR } from "@personal/shared/loadErrors";
 import { useCategories } from "@personal/shared/queries/categories";
-import { useMonthTransactions } from "@personal/shared/queries/transactions";
+import { useWalletsMonth } from "@personal/shared/queries/transactions";
 import { useWallets, validSelection } from "@personal/shared/queries/wallets";
-import { useWalletSelectionStore } from "@personal/shared/stores/walletSelection";
+import {
+  ALL_WALLETS,
+  useWalletSelectionStore,
+} from "@personal/shared/stores/walletSelection";
 import { TRANSACTIONS_LOAD_ERROR } from "@personal/shared/transactionList";
 
 import { CategoryBreakdown } from "@/features/expenses/CategoryBreakdown";
@@ -39,8 +43,9 @@ const filterDay = new Intl.DateTimeFormat("pl-PL", {
 });
 
 /**
- * The web Wydatki page: the wallets, then one wallet's month — its totals, a
- * calendar of daily spending, the transactions and where the money went.
+ * The web Wydatki page: the wallets, then one wallet's month (or every
+ * wallet's together) — its totals, a calendar of daily spending, the
+ * transactions and where the money went.
  */
 export default function ExpensesScreen() {
   const {
@@ -63,9 +68,15 @@ export default function ExpensesScreen() {
 
   const shownWalletId = validSelection(wallets, selectedWalletId);
   const wallet = wallets.find((item) => item.id === shownWalletId);
-  const walletId = wallet?.id ?? null;
-  const current = useMonthTransactions(walletId, month);
-  const previous = useMonthTransactions(walletId, shiftMonth(month, -1));
+  const showsAll = shownWalletId === ALL_WALLETS;
+  const hasMonth = wallet !== undefined || showsAll;
+  const walletIds = wallet
+    ? [wallet.id]
+    : showsAll
+      ? wallets.map((item) => item.id)
+      : [];
+  const current = useWalletsMonth(walletIds, month);
+  const previous = useWalletsMonth(walletIds, shiftMonth(month, -1));
 
   // Balances and categories may have changed in a modal or on another device.
   const reloadOnFocus = useCallback(
@@ -79,7 +90,7 @@ export default function ExpensesScreen() {
     await Promise.all([
       refetchWallets(),
       refetchCategories(),
-      walletId != null ? current.refetch() : Promise.resolve(),
+      current.refetch(),
     ]);
     setIsRefreshing(false);
   }
@@ -102,7 +113,7 @@ export default function ExpensesScreen() {
 
   const pageError = isWalletsError ? WALLETS_LOAD_ERROR : "";
   const loadError = current.isError ? TRANSACTIONS_LOAD_ERROR : "";
-  const transactions = wallet ? (current.data ?? []) : [];
+  const transactions = hasMonth ? (current.data ?? []) : [];
   const summary = summarizeMonth(transactions, month);
   const previousSummary = previous.data
     ? summarizeMonth(previous.data, shiftMonth(month, -1))
@@ -117,10 +128,10 @@ export default function ExpensesScreen() {
   const categoriesById = new Map(
     categories.map((category) => [category.id, category]),
   );
-  const total = wallets.reduce(
-    (sum, item) => sum + toCents(item.balance ?? "0"),
-    0,
-  );
+  const total = totalBalanceCents(wallets);
+  const walletNames = showsAll
+    ? new Map(wallets.map((item) => [item.id, item.name]))
+    : undefined;
   const filters = [
     ...(day === null
       ? []
@@ -187,12 +198,12 @@ export default function ExpensesScreen() {
             {wallets.length > 0 && (
               <WalletTabs
                 wallets={wallets}
-                selectedId={wallet?.id}
+                selectedId={shownWalletId ?? undefined}
                 onSelect={showWallet}
               />
             )}
-            {wallet ? (
-              <WalletCard wallet={wallet} />
+            {hasMonth ? (
+              <WalletCard wallet={wallet ?? null} />
             ) : (
               !isLoading &&
               pageError === "" && (
@@ -211,13 +222,20 @@ export default function ExpensesScreen() {
                 />
               </View>
             )}
-            {wallet && (
+            {hasMonth && (
               <>
                 <MonthSwitcher month={month} onChange={showMonth} />
                 <MonthTotals
                   summary={summary}
                   previousExpenseCents={previousSummary?.expenseCents}
-                  walletBalance={wallet.balance}
+                  balance={
+                    wallet
+                      ? { label: "Saldo portfela", value: wallet.balance }
+                      : {
+                          label: "Saldo portfeli",
+                          value: centsToAmount(total),
+                        }
+                  }
                 />
                 <MonthCalendar
                   month={month}
@@ -251,7 +269,7 @@ export default function ExpensesScreen() {
           </View>
         }
         ListEmptyComponent={
-          wallet && !current.isPending && !current.isError ? (
+          hasMonth && !current.isPending && !current.isError ? (
             <Text className="p-6 text-center text-xs text-muted">
               {filters.length > 0
                 ? "Nic nie pasuje do filtrów."
@@ -260,7 +278,7 @@ export default function ExpensesScreen() {
           ) : undefined
         }
         ListFooterComponent={
-          wallet ? (
+          hasMonth ? (
             <CategoryBreakdown
               summary={summary}
               categories={categories}
@@ -275,16 +293,17 @@ export default function ExpensesScreen() {
             category={
               item.categoryId ? categoriesById.get(item.categoryId) : undefined
             }
+            walletName={walletNames?.get(item.walletId)}
           />
         )}
       />
-      {wallet && (
+      {hasMonth && walletIds.length > 0 && (
         <Fab
           accessibilityLabel="Nowa transakcja"
           onPress={() =>
             router.push({
               pathname: "/transaction",
-              params: { walletId: wallet.id },
+              params: { walletId: walletIds[0] },
             })
           }
         />

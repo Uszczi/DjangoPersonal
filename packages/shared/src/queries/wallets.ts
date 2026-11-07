@@ -13,7 +13,10 @@ import {
 
 import { api } from "../api";
 import type { WalletResponse } from "../generated/api";
-import { useWalletSelectionStore } from "../stores/walletSelection";
+import {
+  ALL_WALLETS,
+  useWalletSelectionStore,
+} from "../stores/walletSelection";
 import { transactionKeys, walletKeys } from "./keys";
 
 /** What the create modal collects: a name, a colour and, optionally, an icon and an opening balance. */
@@ -46,11 +49,13 @@ export function balanceChange(
     : currentBalance.trim() || undefined;
 }
 
-/** The selected Wallet if it still exists, else the first one. */
+/** The selected Wallet (or `ALL_WALLETS`) if it still exists, else the first one. */
 export function validSelection(
   wallets: WalletResponse[],
   selectedWalletId: string | null,
 ) {
+  if (selectedWalletId === ALL_WALLETS && wallets.length > 0)
+    return ALL_WALLETS;
   if (wallets.some((wallet) => wallet.id === selectedWalletId))
     return selectedWalletId;
   return wallets[0]?.id ?? null;

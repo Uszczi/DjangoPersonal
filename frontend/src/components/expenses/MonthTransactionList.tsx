@@ -14,7 +14,10 @@ import { TRANSACTIONS_LOAD_ERROR } from "@personal/shared/transactionList";
 type Filter = { label: string; onClear: () => void };
 
 type MonthTransactionListProps = {
+  /** The wallet a new transaction defaults to. */
   walletId: string;
+  /** Wallet names by id when the list mixes wallets; each row then names its wallet. */
+  walletNames?: Map<string, string>;
   transactions: TransactionResponse[];
   categories: CategoryResponse[];
   /** The active narrowings (a day, a Category), each removable. */
@@ -37,6 +40,7 @@ function amountTone(transaction: TransactionResponse) {
 /** The month's transactions, one compact row each; a row opens its editor. */
 export function MonthTransactionList({
   walletId,
+  walletNames,
   transactions,
   categories,
   filters,
@@ -76,6 +80,14 @@ export function MonthTransactionList({
           const category = categories.find(
             (item) => item.id === transaction.categoryId,
           );
+          const subtitle = [
+            walletNames?.get(transaction.walletId),
+            transaction.kind === null
+              ? "Wpis systemowy"
+              : transaction.description,
+          ]
+            .filter(Boolean)
+            .join(" · ");
           return (
             <li key={transaction.id}>
               <button
@@ -98,16 +110,10 @@ export function MonthTransactionList({
                   <span className="block truncate text-sm text-ink">
                     {transaction.title}
                   </span>
-                  {transaction.kind === null ? (
-                    <span className="block text-[11px] text-muted">
-                      Wpis systemowy
+                  {subtitle && (
+                    <span className="block truncate text-[11px] text-muted">
+                      {subtitle}
                     </span>
-                  ) : (
-                    transaction.description && (
-                      <span className="block truncate text-[11px] text-muted">
-                        {transaction.description}
-                      </span>
-                    )
                   )}
                 </span>
                 <span

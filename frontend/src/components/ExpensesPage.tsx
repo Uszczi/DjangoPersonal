@@ -22,29 +22,35 @@ import {
 } from "@/design-system";
 import { ShowModal } from "@/stores/modal";
 import {
+  centsToAmount,
   dayOfMonth,
   monthKeyOf,
   shiftMonth,
   summarizeMonth,
+  totalBalanceCents,
   type MonthKey,
 } from "@personal/shared/expenseMonth";
 import type { WalletResponse } from "@personal/shared/generated/api";
 import { WALLETS_LOAD_ERROR } from "@personal/shared/loadErrors";
 import { useCategories } from "@personal/shared/queries/categories";
-import { useMonthTransactions } from "@personal/shared/queries/transactions";
+import { useWalletsMonth } from "@personal/shared/queries/transactions";
 import { useWallets, validSelection } from "@personal/shared/queries/wallets";
-import { useWalletSelectionStore } from "@personal/shared/stores/walletSelection";
+import {
+  ALL_WALLETS,
+  useWalletSelectionStore,
+} from "@personal/shared/stores/walletSelection";
 
 type ExpensesPageProps = {
-  /** The wallet named by the URL; without one the page shows the store's selected wallet. */
+  /** The wallet named by the URL (or `ALL_WALLETS`); without one the page shows the store's selection. */
   walletId?: string;
   /** The month from `?month=`; without one, the current month. */
   month?: MonthKey;
 };
 
 /**
- * The Wydatki page: the wallets beside one wallet's month — its totals, a
- * calendar of daily spending, where the money went, and the transactions.
+ * The Wydatki page: the wallets beside one wallet's month (or every wallet's
+ * together) — its totals, a calendar of daily spending, where the money went,
+ * and the transactions.
  */
 export function ExpensesPage({ walletId, month }: ExpensesPageProps) {
   const { data: wallets = [], isPending, isError } = useWallets();
@@ -57,6 +63,7 @@ export function ExpensesPage({ walletId, month }: ExpensesPageProps) {
 
   const shownWalletId = walletId ?? validSelection(wallets, selectedWalletId);
   const wallet = wallets.find((item) => item.id === shownWalletId);
+  const showsAll = shownWalletId === ALL_WALLETS && wallets.length > 0;
   const shownMonth = month ?? currentMonth;
 
   function showMonth(next: MonthKey) {
@@ -83,7 +90,7 @@ export function ExpensesPage({ walletId, month }: ExpensesPageProps) {
     </Drawer>
   );
 
-  if (!wallet) {
+  if (!wallet && !showsAll) {
     return (
       <>
         <PageHeader
@@ -121,13 +128,14 @@ export function ExpensesPage({ walletId, month }: ExpensesPageProps) {
     <div className="flex flex-col gap-5 pt-2 lg:grid lg:grid-cols-[260px_1fr] lg:gap-8">
       <WalletSidebar
         wallets={wallets}
-        activeWalletId={wallet.id}
+        activeWalletId={wallet?.id ?? ALL_WALLETS}
         onManageCategories={() => setCategoriesOpen(true)}
       />
       {/* Keyed so the day and Category filters start empty for another wallet or month. */}
       <WalletMonth
-        key={`${wallet.id}:${shownMonth}`}
-        wallet={wallet}
+        key={`${wallet?.id ?? ALL_WALLETS}:${shownMonth}`}
+        wallet={wallet ?? null}
+        wallets={wallets}
         month={shownMonth}
         onMonthChange={showMonth}
       />
@@ -141,19 +149,26 @@ const filterDay = new Intl.DateTimeFormat("pl-PL", {
   month: "short",
 });
 
-/** One wallet's month: header, totals, calendar, Categories and the transaction list. */
+/**
+ * One wallet's month, or every wallet's (`wallet` null): header, totals,
+ * calendar, Categories and the transaction list.
+ */
 function WalletMonth({
   wallet,
+  wallets,
   month,
   onMonthChange,
 }: {
-  wallet: WalletResponse;
+  wallet: WalletResponse | null;
+  wallets: WalletResponse[];
   month: MonthKey;
   onMonthChange: (month: MonthKey) => void;
 }) {
   const { data: categories = [] } = useCategories();
-  const current = useMonthTransactions(wallet.id, month);
-  const previous = useMonthTransactions(wallet.id, shiftMonth(month, -1));
+  const walletIds = wallet ? [wallet.id] : wallets.map((item) => item.id);
+  const current = useWalletsMonth(walletIds, month);
+  const previous = useWalletsMonth(walletIds, shiftMonth(month, -1));
+  const title = wallet ? wallet.name : "Wszystkie portfele";
   const [day, setDay] = useState<number | null>(null);
   // `undefined`: every Category; `null`: the uncategorised Expenses.
   const [categoryId, setCategoryId] = useState<string | null | undefined>();
@@ -192,25 +207,30 @@ function WalletMonth({
   ];
 
   return (
-    <section className="min-w-0" aria-label={`Portfel: ${wallet.name}`}>
+    <section
+      className="min-w-0"
+      aria-label={wallet ? `Portfel: ${wallet.name}` : title}
+    >
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3 lg:gap-4">
         <div className="flex items-center gap-2">
           <h1 className="font-display text-[28px] font-bold tracking-[-0.02em] text-ink">
-            {wallet.name}
+            {title}
           </h1>
-          <IconButton
-            aria-label={`Edytuj portfel: ${wallet.name}`}
-            onClick={() => ShowModal(WalletEditModal, { wallet })}
-          >
-            <Pencil aria-hidden="true" className="size-4" />
-          </IconButton>
+          {wallet && (
+            <IconButton
+              aria-label={`Edytuj portfel: ${wallet.name}`}
+              onClick={() => ShowModal(WalletEditModal, { wallet })}
+            >
+              <Pencil aria-hidden="true" className="size-4" />
+            </IconButton>
+          )}
         </div>
         <div className="flex w-full items-center gap-3 lg:w-auto">
           <MonthSwitcher month={month} onChange={onMonthChange} />
           <Button
             variant="primary"
             onClick={() =>
-              ShowModal(TransactionEditorModal, { walletId: wallet.id })
+              ShowModal(TransactionEditorModal, { walletId: walletIds[0] })
             }
           >
             <span aria-hidden="true">+</span>
@@ -222,7 +242,14 @@ function WalletMonth({
       <MonthTotals
         summary={summary}
         previousExpenseCents={previousSummary?.expenseCents}
-        walletBalance={wallet.balance}
+        balance={
+          wallet
+            ? { label: "Saldo portfela", value: wallet.balance }
+            : {
+                label: "Saldo portfeli",
+                value: centsToAmount(totalBalanceCents(wallets)),
+              }
+        }
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
@@ -241,7 +268,12 @@ function WalletMonth({
           />
         </div>
         <MonthTransactionList
-          walletId={wallet.id}
+          walletId={walletIds[0]}
+          walletNames={
+            wallet
+              ? undefined
+              : new Map(wallets.map((item) => [item.id, item.name]))
+          }
           transactions={shown}
           categories={categories}
           filters={filters}

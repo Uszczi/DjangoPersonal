@@ -10,14 +10,15 @@ type MonthTotalsProps = {
   summary: MonthSummary;
   /** Spent in the month before, for the change against it. */
   previousExpenseCents: number | undefined;
-  walletBalance: string | undefined;
+  /** The balance under the difference tile: the wallet's, or every wallet's together. */
+  balance: { label: string; value: string | undefined };
 };
 
 /** The month in three tiles: spent (and the change on last month), earned, and the difference. */
 export function MonthTotals({
   summary,
   previousExpenseCents,
-  walletBalance,
+  balance,
 }: MonthTotalsProps) {
   const change =
     previousExpenseCents === undefined
@@ -47,8 +48,10 @@ export function MonthTotals({
         value={formatCents(summary.netCents, { sign: true })}
         tone={summary.netCents < 0 ? "text-expense" : "text-income"}
       >
-        {walletBalance !== undefined && (
-          <span>Saldo portfela: {walletBalance}</span>
+        {balance.value !== undefined && (
+          <span>
+            {balance.label}: {balance.value}
+          </span>
         )}
       </Tile>
     </div>
